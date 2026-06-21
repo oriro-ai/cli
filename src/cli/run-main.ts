@@ -90,8 +90,7 @@ const loadProgressModule = async () => await import("./progress.js");
 function createGatewayCliMainStartupTrace(argv: string[]) {
   // Startup trace is scoped to gateway invocations to avoid routine CLI stderr noise.
   const enabled =
-    isTruthyEnvValue(process.env.ORIRO_GATEWAY_STARTUP_TRACE) &&
-    argv.slice(2).includes("gateway");
+    isTruthyEnvValue(process.env.ORIRO_GATEWAY_STARTUP_TRACE) && argv.slice(2).includes("gateway");
   const started = performance.now();
   let last = started;
   const emit = (name: string, durationMs: number, totalMs: number) => {
@@ -1024,7 +1023,7 @@ export async function runCli(argv: string[] = process.argv) {
           return;
         }
         for (const line of formatCliFailureLines({
-          title: "Oriro hit an unexpected runtime error.",
+          title: "ORIRO hit an unexpected runtime error.",
           error,
           argv: normalizedArgv,
         })) {

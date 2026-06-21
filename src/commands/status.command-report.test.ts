@@ -35,7 +35,7 @@ describe("buildStatusCommandReportLines", () => {
     });
 
     expect(lines).toEqual([
-      "# Oriro status",
+      "# ORIRO status",
       "",
       "# Overview",
       "table:Item:1",

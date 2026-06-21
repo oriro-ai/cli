@@ -56,7 +56,7 @@ export function formatCliBannerLine(version: string, options: BannerOptions = {}
     emojiOptions,
   );
   const rich = options.richTty ?? isRich();
-  const title = decorativePrefix("ORIRO", "Oriro", emojiOptions);
+  const title = decorativePrefix("ORIRO", "ORIRO", emojiOptions);
   const prefix = decorativeEmoji("ORIRO", emojiOptions);
   const indent = prefix ? `${prefix} ` : "";
   const columns = options.columns ?? process.stdout.columns ?? 120;

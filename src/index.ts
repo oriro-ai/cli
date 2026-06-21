@@ -104,7 +104,7 @@ if (isMain) {
       return;
     }
     for (const line of formatCliFailureLines({
-      title: "Oriro hit an unexpected runtime error.",
+      title: "ORIRO hit an unexpected runtime error.",
       error,
       argv: process.argv,
     })) {

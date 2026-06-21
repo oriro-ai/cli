@@ -69,7 +69,7 @@ export async function buildStatusAllReportLines(params: {
   const tableWidth = getTerminalTableWidth();
 
   const lines: string[] = [];
-  lines.push(heading("Oriro status --all"));
+  lines.push(heading("ORIRO status --all"));
   appendStatusReportSections({
     lines,
     heading,

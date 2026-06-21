@@ -491,12 +491,7 @@ describe("runCli exit behavior", () => {
       argv: ["node", "oriro", "gateway", "--force"],
     });
     expect(addGatewayRunCommandMock).toHaveBeenCalledTimes(2);
-    expect(commanderParseAsyncMock).toHaveBeenCalledWith([
-      "node",
-      "oriro",
-      "gateway",
-      "--force",
-    ]);
+    expect(commanderParseAsyncMock).toHaveBeenCalledWith(["node", "oriro", "gateway", "--force"]);
   });
 
   it("installs console capture before parsing the gateway foreground fast path", async () => {
@@ -1378,16 +1373,11 @@ describe("runCli exit behavior", () => {
     await fs.mkdir(selectedStateDir, { recursive: true });
     await fs.writeFile(
       path.join(defaultStateDir, ".env"),
-      [
-        `ORIRO_STATE_DIR=${selectedStateDir}`,
-        "ORIRO_GATEWAY_TOKEN=superseded-token",
-        "",
-      ].join("\n"),
+      [`ORIRO_STATE_DIR=${selectedStateDir}`, "ORIRO_GATEWAY_TOKEN=superseded-token", ""].join(
+        "\n",
+      ),
     );
-    await fs.writeFile(
-      path.join(selectedStateDir, ".env"),
-      "ORIRO_GATEWAY_TOKEN=selected-token\n",
-    );
+    await fs.writeFile(path.join(selectedStateDir, ".env"), "ORIRO_GATEWAY_TOKEN=selected-token\n");
     try {
       await withEnvAsync(
         {
@@ -1416,17 +1406,12 @@ describe("runCli exit behavior", () => {
     await fs.mkdir(defaultStateDir, { recursive: true });
     await fs.mkdir(selectedStateDir, { recursive: true });
     await fs.mkdir(gatewayEnvDir, { recursive: true });
-    await fs.writeFile(
-      path.join(defaultStateDir, ".env"),
-      `ORIRO_STATE_DIR=${selectedStateDir}\n`,
-    );
+    await fs.writeFile(path.join(defaultStateDir, ".env"), `ORIRO_STATE_DIR=${selectedStateDir}\n`);
     await fs.writeFile(
       path.join(gatewayEnvDir, "gateway.env"),
-      [
-        "ORIRO_CONFIG_PATH=/tmp/wrong-oriro.json",
-        "ORIRO_GATEWAY_TOKEN=fallback-token",
-        "",
-      ].join("\n"),
+      ["ORIRO_CONFIG_PATH=/tmp/wrong-oriro.json", "ORIRO_GATEWAY_TOKEN=fallback-token", ""].join(
+        "\n",
+      ),
     );
     await fs.writeFile(
       path.join(selectedStateDir, ".env"),
@@ -1468,14 +1453,9 @@ describe("runCli exit behavior", () => {
     await fs.mkdir(gatewayEnvDir, { recursive: true });
     await fs.writeFile(
       path.join(gatewayEnvDir, "gateway.env"),
-      [`ORIRO_STATE_DIR=${selectedStateDir}`, "ORIRO_GATEWAY_TOKEN=fallback-token", ""].join(
-        "\n",
-      ),
+      [`ORIRO_STATE_DIR=${selectedStateDir}`, "ORIRO_GATEWAY_TOKEN=fallback-token", ""].join("\n"),
     );
-    await fs.writeFile(
-      path.join(selectedStateDir, ".env"),
-      "ORIRO_GATEWAY_TOKEN=selected-token\n",
-    );
+    await fs.writeFile(path.join(selectedStateDir, ".env"), "ORIRO_GATEWAY_TOKEN=selected-token\n");
     try {
       await withEnvAsync(
         {
@@ -1510,10 +1490,7 @@ describe("runCli exit behavior", () => {
       path.join(defaultStateDir, ".env"),
       "ORIRO_GATEWAY_TOKEN=superseded-token\n",
     );
-    await fs.writeFile(
-      path.join(selectedStateDir, ".env"),
-      "ORIRO_GATEWAY_TOKEN=selected-token\n",
-    );
+    await fs.writeFile(path.join(selectedStateDir, ".env"), "ORIRO_GATEWAY_TOKEN=selected-token\n");
     try {
       await withEnvAsync(
         {
@@ -1553,10 +1530,7 @@ describe("runCli exit behavior", () => {
     await fs.mkdir(defaultStateDir, { recursive: true });
     await fs.mkdir(selectedStateDir, { recursive: true });
     await fs.writeFile(path.join(defaultStateDir, ".env"), "ORIRO_GATEWAY_TOKEN=early-token\n");
-    await fs.writeFile(
-      path.join(selectedStateDir, ".env"),
-      "ORIRO_GATEWAY_TOKEN=selected-token\n",
-    );
+    await fs.writeFile(path.join(selectedStateDir, ".env"), "ORIRO_GATEWAY_TOKEN=selected-token\n");
     try {
       await withEnvAsync(
         {
@@ -1770,29 +1744,26 @@ describe("runCli exit behavior", () => {
   });
 
   it("does not let config env authorize or retarget an explicit reset", async () => {
-    await withEnvAsync(
-      { ORIRO_PROFILE: undefined, ORIRO_WORKSPACE_DIR: undefined },
-      async () => {
-        readConfigFileSnapshotMock.mockResolvedValue({
-          exists: true,
-          valid: true,
-          sourceConfig: {
-            env: {
-              vars: {
-                ORIRO_PROFILE: "dev",
-                ORIRO_WORKSPACE_DIR: "/tmp/oriro-config-workspace",
-              },
+    await withEnvAsync({ ORIRO_PROFILE: undefined, ORIRO_WORKSPACE_DIR: undefined }, async () => {
+      readConfigFileSnapshotMock.mockResolvedValue({
+        exists: true,
+        valid: true,
+        sourceConfig: {
+          env: {
+            vars: {
+              ORIRO_PROFILE: "dev",
+              ORIRO_WORKSPACE_DIR: "/tmp/oriro-config-workspace",
             },
-            gateway: { mode: "local" },
           },
-        });
+          gateway: { mode: "local" },
+        },
+      });
 
-        await runCli(["node", "oriro", "gateway", "--reset"]);
+      await runCli(["node", "oriro", "gateway", "--reset"]);
 
-        expect(process.env.ORIRO_PROFILE).toBeUndefined();
-        expect(process.env.ORIRO_WORKSPACE_DIR).toBeUndefined();
-      },
-    );
+      expect(process.env.ORIRO_PROFILE).toBeUndefined();
+      expect(process.env.ORIRO_WORKSPACE_DIR).toBeUndefined();
+    });
   });
 
   it("honors banner suppression on the gateway foreground fast path", async () => {
@@ -1813,12 +1784,7 @@ describe("runCli exit behavior", () => {
 
     await runCli(["node", "oriro", "browser", "--help"]);
 
-    expect(maybeRunCliInContainerMock).toHaveBeenCalledWith([
-      "node",
-      "oriro",
-      "browser",
-      "--help",
-    ]);
+    expect(maybeRunCliInContainerMock).toHaveBeenCalledWith(["node", "oriro", "browser", "--help"]);
     expect(tryRouteCliMock).not.toHaveBeenCalled();
     expect(outputPrecomputedBrowserHelpTextMock).toHaveBeenCalledTimes(1);
     expect(outputRootHelpMock).not.toHaveBeenCalled();
@@ -2747,7 +2713,7 @@ describe("runCli exit behavior", () => {
     try {
       expect(() => handler(new Error("boom"))).toThrow("process.exit(1)");
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "[oriro] Oriro hit an unexpected runtime error.",
+        "[oriro] ORIRO hit an unexpected runtime error.",
       );
       expect(consoleErrorSpy).toHaveBeenCalledWith("[oriro] Reason: boom");
       expect(restoreTerminalStateMock).toHaveBeenCalledWith("uncaught exception", {

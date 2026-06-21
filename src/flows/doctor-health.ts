@@ -29,7 +29,7 @@ export async function doctorCommand(runtime?: RuntimeEnv, options: DoctorOptions
   const { printWizardHeader } = await import("../commands/onboard-helpers.js");
   const prompter = createDoctorPrompter({ runtime: effectiveRuntime, options });
   printWizardHeader(effectiveRuntime);
-  intro("Oriro doctor");
+  intro("ORIRO doctor");
 
   const { resolveOriroPackageRoot } = await import("../infra/oriro-root.js");
   const root = await resolveOriroPackageRoot({

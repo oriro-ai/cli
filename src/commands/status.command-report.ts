@@ -38,7 +38,7 @@ export async function buildStatusCommandReportLines(params: {
   footerLines: string[];
 }) {
   const lines: string[] = [];
-  lines.push(params.heading("Oriro status"));
+  lines.push(params.heading("ORIRO status"));
 
   appendStatusReportSections({
     lines,

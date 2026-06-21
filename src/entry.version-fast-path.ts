@@ -46,7 +46,7 @@ export function tryHandleRootVersionFastPath(
   resolveVersion()
     .then(({ VERSION, resolveCommitHash }) => {
       const commit = resolveCommitHash({ moduleUrl: deps.moduleUrl ?? import.meta.url });
-      output(commit ? `Oriro ${VERSION} (${commit})` : `Oriro ${VERSION}`);
+      output(commit ? `ORIRO ${VERSION} (${commit})` : `ORIRO ${VERSION}`);
       exit(0);
     })
     .catch(onError);

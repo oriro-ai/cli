@@ -1132,7 +1132,7 @@ describe("statusCommand", () => {
     ]);
     const logs = await runStatusAndGetLogs({ verbose: true });
     for (const token of [
-      "Oriro status",
+      "ORIRO status",
       "Overview",
       "Security audit",
       "Skipped in fast status",
