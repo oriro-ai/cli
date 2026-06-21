@@ -6,6 +6,42 @@ A terminal coder that **sees the web**, **speaks and listens in 99 languages**, 
 
 ---
 
+## ⬇️ Install
+
+ORIRO ships as a **prebuilt npm package** — no compiled binary, **no code signing ever**. Pick whichever line fits your machine:
+
+**1. With npm / Node (already have Node ≥ 22.19):**
+
+```sh
+npm i -g oriro
+# or run it once, no install:
+npx oriro
+```
+
+**2. No Node? Use bun (installs its own runtime — zero Node needed):**
+
+```sh
+curl -fsSL https://bun.sh/install | bash && bun install -g oriro
+```
+
+**3. One‑line installer (auto‑detects npm or bun, downloads the prebuilt package):**
+
+```sh
+# macOS / Linux
+curl -fsSL https://oriro.ai/cli/install.sh | bash
+```
+
+```powershell
+# Windows (PowerShell)
+irm https://oriro.ai/cli/install.ps1 | iex
+```
+
+> None of these require code signing or a compiled binary — it's the same `oriro-<version>.tgz` prebuilt package `npm publish` produces, run on your existing JS runtime. While the repo is private, the one‑line installer reads a GitHub token from `ORIRO_GITHUB_TOKEN`, `GITHUB_TOKEN`, or `gh auth token`; after public launch no token is needed.
+
+Then run `oriro`. First launch picks your language and turns on Guardian automatically.
+
+---
+
 ## 🧭 ORIRO‑Head
 
 - **Goes to the URL** → crawls it in a real browser (Playwright).
