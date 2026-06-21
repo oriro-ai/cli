@@ -1,0 +1,129 @@
+# ORIRO CLI — standalone binary release via `bun build --compile`.
+# C2 lane: build-tooling/CI only (scripts/native/ + .github). Does not touch src/.
+#
+# Produces one self-contained executable per OS/arch — `oriro-<os>-<arch>[.exe]` —
+# plus its native .node sidecars, built ON each OS so the sidecars are correct
+# (the per-OS fallback for "bun fights native addons"). bun keeps ESM + top-level
+# await intact, which the SEA path cannot.
+#
+# NOTE for C1: runner labels below are GitHub-hosted defaults — swap to the repo's
+# custom runners (testbox/blacksmith) to match house style, and wire the artifacts
+# into the existing release-publish flow. The install scripts (scripts/install.sh /
+# install.ps1) must be taught to download these asset names (currently they install
+# Node + the npm package) — that wiring is scripts/ root, i.e. C1's call.
+#
+# KIMI-INFORMED (ref: MoonshotAI/kimi-cli `release-kimi-cli.yml`):
+#  • kimi ships BOTH onefile + onedir. bun --compile = onefile; our binary + native/
+#    sidecars folder ≈ onedir. Pure-onefile only works where no native .node is needed.
+#  • macOS binaries MUST be codesigned (hardened runtime) + notarized or Gatekeeper blocks
+#    them on users' machines — kimi does codesign --options runtime + xcrun notarytool. The
+#    optional sign step below is gated on a signing secret; C1 completes cert import + notary
+#    creds (repo already has scripts/codesign-mac-app.sh + scripts/notarize-mac-artifact.sh).
+#  • kimi covers windows-arm64 (PyInstaller). bun has NO win-arm64 --compile target → that
+#    slice stays on the SEA builder (build-binary.mjs).
+#  • kimi's install.sh uses `uv tool install` (runtime path), not a binary download — ours
+#    likewise installs Node + npm. So these binaries are the *secondary* "no-runtime download"
+#    channel (attached to releases), which de-risks the install-script wiring item.
+
+name: oriro-binary-bun-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      upload_to_release:
+        description: "Attach binaries to the release for the current tag"
+        type: boolean
+        default: false
+  release:
+    types: [published]
+
+permissions:
+  contents: write   # only used when attaching to a release
+
+jobs:
+  build:
+    name: build ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { label: linux-x64,    runner: ubuntu-latest }
+          - { label: linux-arm64,  runner: ubuntu-24.04-arm }
+          - { label: darwin-x64,   runner: macos-13 }
+          - { label: darwin-arm64, runner: macos-14 }
+          - { label: windows-x64,  runner: windows-latest }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build dist
+        run: pnpm build
+
+      - name: Build standalone binary (bun --compile)
+        run: node scripts/native/build-binary-bun.mjs
+
+      # KIMI-INFORMED: sign the macOS binary before packaging (Gatekeeper). Gated on a
+      # signing secret; skips with a loud warning if absent. C1 wires cert import + notarize.
+      - name: macOS — sign binary (optional; gated on APPLE_SIGNING_IDENTITY)
+        if: startsWith(matrix.label, 'darwin-')
+        shell: bash
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          set -euo pipefail
+          BIN="dist-native/bin/${{ matrix.label }}/oriro-${{ matrix.label }}"
+          if [ -z "${APPLE_SIGNING_IDENTITY:-}" ]; then
+            echo "::warning::Unsigned macOS binary — Gatekeeper will block it on user machines."
+            echo "C1: sign + notarize before shipping (kimi: codesign --options runtime + xcrun notarytool --wait; repo has scripts/codesign-mac-app.sh + scripts/notarize-mac-artifact.sh). Needs cert import into a CI keychain + notary creds."
+            exit 0
+          fi
+          codesign --force --options runtime --timestamp --sign "$APPLE_SIGNING_IDENTITY" "$BIN" \
+            || { echo "::error::codesign failed — ensure the signing cert is imported into the runner keychain (C1 to wire)"; exit 1; }
+          codesign -dv --verbose=2 "$BIN"
+          echo "Signed. Notarize the packaged archive next (C1: wire scripts/notarize-mac-artifact.sh / xcrun notarytool --wait; bare-binary stapling is unsupported — Gatekeeper checks notarization online)."
+
+      - name: Package artifact (binary + native sidecars)
+        shell: bash
+        run: |
+          set -euo pipefail
+          DIR="dist-native/bin/${{ matrix.label }}"
+          test -d "$DIR" || { echo "missing $DIR"; ls -R dist-native || true; exit 1; }
+          mkdir -p out
+          # Rename to the install-script contract name so curl|bash / irm|iex find it after
+          # extract: install.sh expects `oriro` + native/, install.ps1 expects `oriro.exe` +
+          # native\, and install.ps1 downloads the asset as oriro-win32-<arch>.zip.
+          if [[ "${{ matrix.label }}" == windows-* ]]; then
+            mv "$DIR/oriro-${{ matrix.label }}.exe" "$DIR/oriro.exe"
+            arch="${{ matrix.label }}"; arch="${arch#windows-}"
+            ( cd "$DIR" && 7z a -tzip "../../../out/oriro-win32-${arch}.zip" . >/dev/null )
+          else
+            mv "$DIR/oriro-${{ matrix.label }}" "$DIR/oriro"
+            tar -C "$DIR" -czf "out/oriro-${{ matrix.label }}.tar.gz" .
+          fi
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oriro-${{ matrix.label }}
+          path: out/*
+          if-no-files-found: error
+
+      - name: Attach to release
+        if: ${{ github.event_name == 'release' || inputs.upload_to_release }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: out/*
