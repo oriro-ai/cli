@@ -54,4 +54,4 @@ A fun factor baked into the work: choose your own **avatar** in the terminal —
 
 As a forward integration to the base CLI terminal of the **pi‑mono** foundation — inherited by **OpenClaw** and **Kimi** — we used the same foundation and carried it forward, instead of building backward bottom‑up.
 
-Thanks to the foundation work by **[@OpenClaw](https://github.com/openclaw)**, **[@Moonshot.AI / Kimi](https://github.com/MoonshotAI)**, **@Claude / (https://github.com/anthropics)**, and all other contributors.
+Thanks to the foundation work by **[@OpenClaw](https://github.com/openclaw)**, **[@Moonshot.AI / Kimi](https://github.com/MoonshotAI)**, **[@Claude / (https://github.com/anthropics)]**, and all other contributors.
