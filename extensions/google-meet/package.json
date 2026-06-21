@@ -1,0 +1,46 @@
+{
+  "name": "@oriro/google-meet",
+  "version": "2026.6.8",
+  "description": "Oriro Google Meet participant plugin for joining calls through Chrome or Twilio transports.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oriro-ai/cli"
+  },
+  "type": "module",
+  "dependencies": {
+    "commander": "14.0.3",
+    "typebox": "1.1.39"
+  },
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*",
+    "openclaw": "2026.5.28"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.6.8"
+  },
+  "peerDependenciesMeta": {
+    "oriro": {
+      "optional": true
+    }
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "install": {
+      "npmSpec": "@oriro/google-meet",
+      "defaultChoice": "npm",
+      "minHostVersion": ">=2026.4.20"
+    },
+    "compat": {
+      "pluginApi": ">=2026.6.8"
+    },
+    "build": {
+      "oriroVersion": "2026.6.8"
+    },
+    "release": {
+      "publishToOriroHub": true,
+      "publishToNpm": true
+    }
+  }
+}

@@ -1,0 +1,44 @@
+---
+summary: "Deploy Oriro on Northflank with one-click template"
+read_when:
+  - Deploying Oriro to Northflank
+  - You want a one-click cloud deploy with browser-based Control UI
+title: "Northflank"
+---
+
+# Northflank
+
+Deploy Oriro on Northflank with a one-click template and access it through the web Control UI.
+This is the easiest "no terminal on the server" path: Northflank runs the Gateway for you.
+
+## How to get started
+
+1. Click [Deploy Oriro](https://northflank.com/stacks/deploy-oriro) to open the template.
+2. Create an [account on Northflank](https://app.northflank.com/signup) if you don't already have one.
+3. Click **Deploy Oriro now**.
+4. Set the required environment variable: `ORIRO_GATEWAY_TOKEN` (use a strong random value).
+5. Click **Deploy stack** to build and run the Oriro template.
+6. Wait for the deployment to complete, then click **View resources**.
+7. Open the Oriro service.
+8. Open the public Oriro URL at `/oriro` and connect using the configured shared secret. This template uses `ORIRO_GATEWAY_TOKEN` by default; if you replace it with password auth, use that password instead.
+
+## What you get
+
+- Hosted Oriro Gateway + Control UI
+- Persistent storage via Northflank Volume (`/data`) so `oriro.json`,
+  per-agent `auth-profiles.json`, channel/provider state, sessions, and
+  workspace survive redeploys
+
+## Connect a channel
+
+Use the Control UI at `/oriro` or run `oriro onboard` via SSH for channel setup instructions:
+
+- [Telegram](/channels/telegram) (fastest — just a bot token)
+- [Discord](/channels/discord)
+- [All channels](/channels)
+
+## Next steps
+
+- Set up messaging channels: [Channels](/channels)
+- Configure the Gateway: [Gateway configuration](/gateway/configuration)
+- Keep Oriro up to date: [Updating](/install/updating)

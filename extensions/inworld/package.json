@@ -1,0 +1,35 @@
+{
+  "name": "@oriro/inworld-speech",
+  "version": "2026.6.8",
+  "description": "Oriro Inworld speech plugin.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oriro-ai/cli"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "install": {
+      "orirohubSpec": "orirohub:@oriro/inworld-speech",
+      "npmSpec": "@oriro/inworld-speech",
+      "defaultChoice": "npm",
+      "minHostVersion": ">=2026.6.8"
+    },
+    "compat": {
+      "pluginApi": ">=2026.6.8"
+    },
+    "build": {
+      "oriroVersion": "2026.6.8",
+      "bundledDist": false
+    },
+    "release": {
+      "publishToOriroHub": true,
+      "publishToNpm": true
+    }
+  }
+}

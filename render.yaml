@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: oriro
+    runtime: docker
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: ORIRO_GATEWAY_PORT
+        value: "8080"
+      - key: ORIRO_STATE_DIR
+        value: /data/.oriro
+      - key: ORIRO_WORKSPACE_DIR
+        value: /data/workspace
+      - key: ORIRO_GATEWAY_TOKEN
+        generateValue: true
+    disk:
+      name: oriro-data
+      mountPath: /data
+      sizeGB: 1

@@ -1,0 +1,18 @@
+{
+  "name": "@oriro/ollama-provider",
+  "version": "2026.6.8",
+  "private": true,
+  "description": "Oriro Ollama provider plugin",
+  "type": "module",
+  "dependencies": {
+    "typebox": "1.1.39"
+  },
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

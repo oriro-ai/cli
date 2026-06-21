@@ -1,0 +1,7 @@
+<resources>
+    <string-array name="ask_oriro_query_patterns">
+        <item>ask Oriro $prompt</item>
+        <item>tell Oriro to $prompt</item>
+        <item>open Oriro and ask $prompt</item>
+    </string-array>
+</resources>

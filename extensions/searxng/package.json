@@ -1,0 +1,15 @@
+{
+  "name": "@oriro/searxng-plugin",
+  "version": "2026.6.8",
+  "private": true,
+  "description": "Oriro SearXNG plugin",
+  "type": "module",
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

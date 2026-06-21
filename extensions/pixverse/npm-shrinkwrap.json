@@ -1,0 +1,20 @@
+{
+  "name": "@oriro/pixverse-provider",
+  "version": "2026.6.8",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "@oriro/pixverse-provider",
+      "version": "2026.6.8",
+      "peerDependencies": {
+        "oriro": ">=2026.6.8"
+      },
+      "peerDependenciesMeta": {
+        "oriro": {
+          "optional": true
+        }
+      }
+    }
+  }
+}

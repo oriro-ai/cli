@@ -1,0 +1,233 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2023", "ScriptHost"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noEmit": true,
+    "noEmitOnError": true,
+    "noUncheckedSideEffectImports": true,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2023",
+    "types": ["node"],
+    "useDefineForClassFields": false,
+    "verbatimModuleSyntax": true,
+    "paths": {
+      "oriro/extension-api": ["./src/extensionAPI.ts"],
+      "oriro/plugin-sdk": ["./src/plugin-sdk/index.ts"],
+      "oriro/plugin-sdk/*": ["./src/plugin-sdk/*.ts"],
+      "@oriro/agent-core": ["./packages/agent-core/src/index.ts"],
+      "@oriro/agent-core/*": ["./packages/agent-core/src/*"],
+      "@oriro/llm-core": ["./packages/llm-core/src/index.ts"],
+      "@oriro/llm-core/diagnostics": ["./packages/llm-core/src/utils/diagnostics.ts"],
+      "@oriro/llm-core/event-stream": ["./packages/llm-core/src/utils/event-stream.ts"],
+      "@oriro/llm-core/validation": ["./packages/llm-core/src/validation.ts"],
+      "@oriro/llm-core/*": ["./packages/llm-core/src/*"],
+      "@oriro/llm-runtime": ["./packages/llm-runtime/src/index.ts"],
+      "@oriro/llm-runtime/*": ["./packages/llm-runtime/src/*"],
+      "@oriro/model-catalog-core": ["./packages/model-catalog-core/src/index.ts"],
+      "@oriro/model-catalog-core/configured-model-refs": [
+        "./packages/model-catalog-core/src/configured-model-refs.ts"
+      ],
+      "@oriro/model-catalog-core/model-catalog-normalize": [
+        "./packages/model-catalog-core/src/model-catalog-normalize.ts"
+      ],
+      "@oriro/model-catalog-core/model-catalog-refs": [
+        "./packages/model-catalog-core/src/model-catalog-refs.ts"
+      ],
+      "@oriro/model-catalog-core/model-catalog-types": [
+        "./packages/model-catalog-core/src/model-catalog-types.ts"
+      ],
+      "@oriro/model-catalog-core/provider-id": [
+        "./packages/model-catalog-core/src/provider-id.ts"
+      ],
+      "@oriro/model-catalog-core/provider-model-id-normalization": [
+        "./packages/model-catalog-core/src/provider-model-id-normalization.ts"
+      ],
+      "@oriro/model-catalog-core/provider-model-id-normalize": [
+        "./packages/model-catalog-core/src/provider-model-id-normalize.ts"
+      ],
+      "@oriro/model-catalog-core/*": ["./packages/model-catalog-core/src/*"],
+      "@oriro/gateway-client": ["./packages/gateway-client/src/index.ts"],
+      "@oriro/gateway-client/*": ["./packages/gateway-client/src/*"],
+      "@oriro/gateway-protocol": ["./packages/gateway-protocol/src/index.ts"],
+      "@oriro/gateway-protocol/client-info": [
+        "./packages/gateway-protocol/src/client-info.ts"
+      ],
+      "@oriro/gateway-protocol/connect-error-details": [
+        "./packages/gateway-protocol/src/connect-error-details.ts"
+      ],
+      "@oriro/gateway-protocol/schema": ["./packages/gateway-protocol/src/schema.ts"],
+      "@oriro/gateway-protocol/startup-unavailable": [
+        "./packages/gateway-protocol/src/startup-unavailable.ts"
+      ],
+      "@oriro/gateway-protocol/version": ["./packages/gateway-protocol/src/version.ts"],
+      "@oriro/gateway-protocol/*": ["./packages/gateway-protocol/src/*"],
+      "@oriro/media-generation-core": ["./packages/media-generation-core/src/index.ts"],
+      "@oriro/media-generation-core/capability-model-ref": [
+        "./packages/media-generation-core/src/capability-model-ref.ts"
+      ],
+      "@oriro/media-generation-core/catalog": [
+        "./packages/media-generation-core/src/catalog.ts"
+      ],
+      "@oriro/media-generation-core/model-ref": [
+        "./packages/media-generation-core/src/model-ref.ts"
+      ],
+      "@oriro/media-generation-core/normalization": [
+        "./packages/media-generation-core/src/normalization.ts"
+      ],
+      "@oriro/media-generation-core/*": ["./packages/media-generation-core/src/*"],
+      "@oriro/media-core": ["./packages/media-core/src/index.ts"],
+      "@oriro/media-core/base64": ["./packages/media-core/src/base64.ts"],
+      "@oriro/media-core/constants": ["./packages/media-core/src/constants.ts"],
+      "@oriro/media-core/content-length": ["./packages/media-core/src/content-length.ts"],
+      "@oriro/media-core/file-name": ["./packages/media-core/src/file-name.ts"],
+      "@oriro/media-core/inbound-path-policy": [
+        "./packages/media-core/src/inbound-path-policy.ts"
+      ],
+      "@oriro/media-core/inline-image-data-url": [
+        "./packages/media-core/src/inline-image-data-url.ts"
+      ],
+      "@oriro/media-core/media-source-url": [
+        "./packages/media-core/src/media-source-url.ts"
+      ],
+      "@oriro/media-core/mime": ["./packages/media-core/src/mime.ts"],
+      "@oriro/media-core/read-byte-stream-with-limit": [
+        "./packages/media-core/src/read-byte-stream-with-limit.ts"
+      ],
+      "@oriro/media-core/read-response-with-limit": [
+        "./packages/media-core/src/read-response-with-limit.ts"
+      ],
+      "@oriro/media-core/*": ["./packages/media-core/src/*"],
+      "@oriro/media-understanding-common": [
+        "./packages/media-understanding-common/src/index.ts"
+      ],
+      "@oriro/media-understanding-common/*": [
+        "./packages/media-understanding-common/src/*"
+      ],
+      "@oriro/markdown-core": ["./packages/markdown-core/src/index.ts"],
+      "@oriro/markdown-core/code-spans": ["./packages/markdown-core/src/code-spans.ts"],
+      "@oriro/markdown-core/fences": ["./packages/markdown-core/src/fences.ts"],
+      "@oriro/markdown-core/frontmatter": ["./packages/markdown-core/src/frontmatter.ts"],
+      "@oriro/markdown-core/ir": ["./packages/markdown-core/src/ir.ts"],
+      "@oriro/markdown-core/render": ["./packages/markdown-core/src/render.ts"],
+      "@oriro/markdown-core/render-aware-chunking": [
+        "./packages/markdown-core/src/render-aware-chunking.ts"
+      ],
+      "@oriro/markdown-core/tables": ["./packages/markdown-core/src/tables.ts"],
+      "@oriro/markdown-core/types": ["./packages/markdown-core/src/types.ts"],
+      "@oriro/markdown-core/*": ["./packages/markdown-core/src/*"],
+      "@oriro/normalization-core": ["./packages/normalization-core/src/index.ts"],
+      "@oriro/normalization-core/number-coercion": [
+        "./packages/normalization-core/src/number-coercion.ts"
+      ],
+      "@oriro/normalization-core/record-coerce": [
+        "./packages/normalization-core/src/record-coerce.ts"
+      ],
+      "@oriro/normalization-core/string-coerce": [
+        "./packages/normalization-core/src/string-coerce.ts"
+      ],
+      "@oriro/normalization-core/string-normalization": [
+        "./packages/normalization-core/src/string-normalization.ts"
+      ],
+      "@oriro/normalization-core/*": ["./packages/normalization-core/src/*"],
+      "@oriro/acp-core": ["./packages/acp-core/src/index.ts"],
+      "@oriro/acp-core/meta": ["./packages/acp-core/src/meta.ts"],
+      "@oriro/acp-core/numeric-options": ["./packages/acp-core/src/numeric-options.ts"],
+      "@oriro/acp-core/normalize-text": ["./packages/acp-core/src/normalize-text.ts"],
+      "@oriro/acp-core/record-shared": ["./packages/acp-core/src/record-shared.ts"],
+      "@oriro/acp-core/session": ["./packages/acp-core/src/session.ts"],
+      "@oriro/acp-core/session-interaction-mode": [
+        "./packages/acp-core/src/session-interaction-mode.ts"
+      ],
+      "@oriro/acp-core/session-lineage-meta": [
+        "./packages/acp-core/src/session-lineage-meta.ts"
+      ],
+      "@oriro/acp-core/types": ["./packages/acp-core/src/types.ts"],
+      "@oriro/acp-core/runtime/error-text": [
+        "./packages/acp-core/src/runtime/error-text.ts"
+      ],
+      "@oriro/acp-core/runtime/errors": ["./packages/acp-core/src/runtime/errors.ts"],
+      "@oriro/acp-core/runtime/session-identifiers": [
+        "./packages/acp-core/src/runtime/session-identifiers.ts"
+      ],
+      "@oriro/acp-core/runtime/session-identity": [
+        "./packages/acp-core/src/runtime/session-identity.ts"
+      ],
+      "@oriro/acp-core/runtime/types": ["./packages/acp-core/src/runtime/types.ts"],
+      "@oriro/acp-core/*": ["./packages/acp-core/src/*"],
+      "@oriro/terminal-core": ["./packages/terminal-core/src/index.ts"],
+      "@oriro/terminal-core/ansi": ["./packages/terminal-core/src/ansi.ts"],
+      "@oriro/terminal-core/decorative-emoji": [
+        "./packages/terminal-core/src/decorative-emoji.ts"
+      ],
+      "@oriro/terminal-core/health-style": [
+        "./packages/terminal-core/src/health-style.ts"
+      ],
+      "@oriro/terminal-core/links": ["./packages/terminal-core/src/links.ts"],
+      "@oriro/terminal-core/note": ["./packages/terminal-core/src/note.ts"],
+      "@oriro/terminal-core/osc-progress": ["./packages/terminal-core/src/osc-progress.ts"],
+      "@oriro/terminal-core/palette": ["./packages/terminal-core/src/palette.ts"],
+      "@oriro/terminal-core/progress-line": [
+        "./packages/terminal-core/src/progress-line.ts"
+      ],
+      "@oriro/terminal-core/prompt-select-styled": [
+        "./packages/terminal-core/src/prompt-select-styled.ts"
+      ],
+      "@oriro/terminal-core/prompt-select-styled-params": [
+        "./packages/terminal-core/src/prompt-select-styled-params.ts"
+      ],
+      "@oriro/terminal-core/prompt-style": [
+        "./packages/terminal-core/src/prompt-style.ts"
+      ],
+      "@oriro/terminal-core/restore": ["./packages/terminal-core/src/restore.ts"],
+      "@oriro/terminal-core/safe-text": ["./packages/terminal-core/src/safe-text.ts"],
+      "@oriro/terminal-core/stream-writer": [
+        "./packages/terminal-core/src/stream-writer.ts"
+      ],
+      "@oriro/terminal-core/table": ["./packages/terminal-core/src/table.ts"],
+      "@oriro/terminal-core/terminal-link": [
+        "./packages/terminal-core/src/terminal-link.ts"
+      ],
+      "@oriro/terminal-core/theme": ["./packages/terminal-core/src/theme.ts"],
+      "@oriro/terminal-core/*": ["./packages/terminal-core/src/*"],
+      "@oriro/net-policy": ["./packages/net-policy/src/index.ts"],
+      "@oriro/net-policy/ip": ["./packages/net-policy/src/ip.ts"],
+      "@oriro/net-policy/ipv4": ["./packages/net-policy/src/ipv4.ts"],
+      "@oriro/net-policy/redact-sensitive-url": [
+        "./packages/net-policy/src/redact-sensitive-url.ts"
+      ],
+      "@oriro/net-policy/url-userinfo": ["./packages/net-policy/src/url-userinfo.ts"],
+      "@oriro/net-policy/*": ["./packages/net-policy/src/*"],
+      "@oriro/web-content-core": ["./packages/web-content-core/src/index.ts"],
+      "@oriro/web-content-core/provider-runtime-shared": [
+        "./packages/web-content-core/src/provider-runtime-shared.ts"
+      ],
+      "@oriro/web-content-core/*": ["./packages/web-content-core/src/*"],
+      "@oriro/speech-core": ["./packages/speech-core/runtime-api.ts"],
+      "@oriro/speech-core/api": ["./packages/speech-core/api.ts"],
+      "@oriro/speech-core/runtime-api": ["./packages/speech-core/runtime-api.ts"],
+      "@oriro/speech-core/speaker": ["./packages/speech-core/speaker.ts"],
+      "@oriro/speech-core/voice-models": ["./packages/speech-core/voice-models.ts"],
+      "@oriro/speech-core/*": ["./packages/speech-core/*"],
+      "@oriro/sdk": ["./packages/sdk/src/index.ts"],
+      "@oriro/plugin-sdk": ["./src/plugin-sdk/index.ts"],
+      "@oriro/plugin-sdk/*": ["./src/plugin-sdk/*.ts"],
+      "oriro/plugin-sdk/account-id": ["./src/plugin-sdk/account-id.ts"],
+      "@oriro/*": ["./extensions/*"]
+    }
+  },
+  "include": ["src/**/*", "ui/**/*", "extensions/**/*", "packages/**/*"],
+  "exclude": ["node_modules", "dist", "**/dist/**"]
+}

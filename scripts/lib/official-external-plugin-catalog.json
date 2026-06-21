@@ -1,0 +1,521 @@
+{
+  "entries": [
+    {
+      "name": "@oriro/acpx",
+      "description": "Oriro ACP runtime backend",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "acpx",
+          "label": "ACPX Runtime"
+        },
+        "install": {
+          "npmSpec": "@oriro/acpx",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.4.25"
+        }
+      }
+    },
+    {
+      "name": "@oriro/brave-plugin",
+      "description": "Oriro Brave plugin",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "brave",
+          "label": "Brave"
+        },
+        "webSearchProviders": [
+          {
+            "id": "brave",
+            "label": "Brave Search",
+            "hint": "Brave Search web results.",
+            "onboardingScopes": ["text-inference"],
+            "credentialLabel": "Brave Search API key",
+            "envVars": ["BRAVE_API_KEY"],
+            "placeholder": "BSA...",
+            "signupUrl": "https://api-dashboard.search.brave.com/app/keys",
+            "docsUrl": "https://docs.oriro.ai/tools/brave-search",
+            "credentialPath": "plugins.entries.brave.config.webSearch.apiKey",
+            "autoDetectOrder": 10
+          }
+        ],
+        "install": {
+          "npmSpec": "@oriro/brave-plugin",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.4.10",
+          "allowInvalidConfigRecovery": true
+        }
+      }
+    },
+    {
+      "name": "@oriro/copilot",
+      "description": "Oriro GitHub Copilot agent runtime plugin",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "copilot",
+          "label": "GitHub Copilot agent runtime"
+        },
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/copilot",
+          "npmSpec": "@oriro/copilot",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.5.28"
+        }
+      }
+    },
+    {
+      "name": "@oriro/diagnostics-otel",
+      "description": "Oriro diagnostics OpenTelemetry exporter",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "diagnostics-otel",
+          "label": "Diagnostics OpenTelemetry"
+        },
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/diagnostics-otel",
+          "npmSpec": "@oriro/diagnostics-otel",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.4.25"
+        }
+      }
+    },
+    {
+      "name": "@oriro/diagnostics-prometheus",
+      "description": "Oriro diagnostics Prometheus exporter",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "diagnostics-prometheus",
+          "label": "Diagnostics Prometheus"
+        },
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/diagnostics-prometheus",
+          "npmSpec": "@oriro/diagnostics-prometheus",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.4.25"
+        }
+      }
+    },
+    {
+      "name": "@oriro/diffs",
+      "description": "Oriro diff viewer plugin",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "diffs",
+          "label": "Diffs"
+        },
+        "install": {
+          "npmSpec": "@oriro/diffs",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.4.30"
+        }
+      }
+    },
+    {
+      "name": "@oriro/diffs-language-pack",
+      "description": "Oriro diffs viewer syntax highlighting language pack",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "diffs-language-pack",
+          "label": "Diff Viewer Language Pack"
+        },
+        "install": {
+          "npmSpec": "@oriro/diffs-language-pack",
+          "orirohubSpec": "orirohub:@oriro/diffs-language-pack",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.5.27"
+        }
+      }
+    },
+    {
+      "name": "@oriro/exa-plugin",
+      "description": "Oriro Exa plugin.",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "exa",
+          "label": "Exa"
+        },
+        "contracts": {
+          "webSearchProviders": [
+            "exa"
+          ]
+        },
+        "webSearchProviders": [
+          {
+            "id": "exa",
+            "label": "Exa Search",
+            "hint": "Neural + keyword search with date filters and content extraction",
+            "onboardingScopes": [
+              "text-inference"
+            ],
+            "credentialLabel": "Exa API key",
+            "envVars": [
+              "EXA_API_KEY"
+            ],
+            "placeholder": "exa-...",
+            "signupUrl": "https://exa.ai/",
+            "docsUrl": "https://docs.oriro.ai/tools/web",
+            "credentialPath": "plugins.entries.exa.config.webSearch.apiKey",
+            "autoDetectOrder": 65
+          }
+        ],
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/exa-plugin",
+          "npmSpec": "@oriro/exa-plugin",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.6.8"
+        }
+      }
+    },
+    {
+      "name": "@oriro/firecrawl-plugin",
+      "description": "Oriro Firecrawl plugin.",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "firecrawl",
+          "label": "Firecrawl"
+        },
+        "contracts": {
+          "webFetchProviders": [
+            "firecrawl"
+          ],
+          "webSearchProviders": [
+            "firecrawl"
+          ],
+          "tools": [
+            "firecrawl_search",
+            "firecrawl_scrape"
+          ]
+        },
+        "webSearchProviders": [
+          {
+            "id": "firecrawl",
+            "label": "Firecrawl Search",
+            "hint": "Structured results with optional result scraping",
+            "onboardingScopes": [
+              "text-inference"
+            ],
+            "credentialLabel": "Firecrawl API key",
+            "envVars": [
+              "FIRECRAWL_API_KEY"
+            ],
+            "placeholder": "fc-...",
+            "signupUrl": "https://www.firecrawl.dev/",
+            "docsUrl": "https://docs.oriro.ai/tools/firecrawl",
+            "credentialPath": "plugins.entries.firecrawl.config.webSearch.apiKey",
+            "autoDetectOrder": 60
+          }
+        ],
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/firecrawl-plugin",
+          "npmSpec": "@oriro/firecrawl-plugin",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.6.8"
+        }
+      }
+    },
+    {
+      "name": "@oriro/google-meet",
+      "description": "Oriro Google Meet participant plugin",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "google-meet",
+          "label": "Google Meet"
+        },
+        "install": {
+          "npmSpec": "@oriro/google-meet",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.4.20"
+        }
+      }
+    },
+    {
+      "name": "@oriro/gradium-speech",
+      "description": "Oriro Gradium speech plugin.",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "gradium",
+          "label": "Gradium"
+        },
+        "contracts": {
+          "speechProviders": [
+            "gradium"
+          ]
+        },
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/gradium-speech",
+          "npmSpec": "@oriro/gradium-speech",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.6.8"
+        }
+      }
+    },
+    {
+      "name": "@oriro/inworld-speech",
+      "description": "Oriro Inworld speech plugin.",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "inworld",
+          "label": "Inworld"
+        },
+        "contracts": {
+          "speechProviders": [
+            "inworld"
+          ]
+        },
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/inworld-speech",
+          "npmSpec": "@oriro/inworld-speech",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.6.8"
+        }
+      }
+    },
+    {
+      "name": "@oriro-ai/cli",
+      "description": "Oriro workflow tool plugin (typed pipelines + resumable approvals)",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "oriro",
+          "label": "Oriro"
+        },
+        "install": {
+          "npmSpec": "@oriro-ai/cli",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.4.25"
+        }
+      }
+    },
+    {
+      "name": "@oriro/memory-lancedb",
+      "description": "Oriro LanceDB-backed long-term memory plugin with auto-recall/capture",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "memory-lancedb",
+          "label": "Memory LanceDB"
+        },
+        "install": {
+          "npmSpec": "@oriro/memory-lancedb",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.5.31"
+        }
+      }
+    },
+    {
+      "name": "@oriro/llama-cpp-provider",
+      "description": "Oriro llama.cpp embedding provider plugin",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "llama-cpp",
+          "label": "llama.cpp Provider"
+        },
+        "contracts": {
+          "embeddingProviders": ["local"]
+        },
+        "install": {
+          "npmSpec": "@oriro/llama-cpp-provider",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.6.2"
+        }
+      }
+    },
+    {
+      "name": "@oriro/openshell-sandbox",
+      "description": "Oriro OpenShell sandbox backend",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "openshell",
+          "label": "OpenShell Sandbox"
+        },
+        "install": {
+          "npmSpec": "@oriro/openshell-sandbox",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.5.12-beta.1"
+        }
+      }
+    },
+    {
+      "name": "@oriro/parallel-plugin",
+      "description": "Oriro Parallel web search plugin.",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "parallel",
+          "label": "Parallel"
+        },
+        "contracts": {
+          "webSearchProviders": [
+            "parallel",
+            "parallel-free"
+          ]
+        },
+        "webSearchProviders": [
+          {
+            "id": "parallel",
+            "label": "Parallel Search",
+            "hint": "LLM-optimized dense excerpts from web sources",
+            "onboardingScopes": [
+              "text-inference"
+            ],
+            "credentialLabel": "Parallel API key",
+            "envVars": [
+              "PARALLEL_API_KEY"
+            ],
+            "placeholder": "par-...",
+            "signupUrl": "https://platform.parallel.ai",
+            "docsUrl": "https://docs.oriro.ai/tools/parallel-search",
+            "credentialPath": "plugins.entries.parallel.config.webSearch.apiKey",
+            "autoDetectOrder": 75
+          },
+          {
+            "id": "parallel-free",
+            "label": "Parallel Search (Free)",
+            "hint": "Free web search via Parallel's hosted Search MCP — no API key required",
+            "onboardingScopes": [
+              "text-inference"
+            ],
+            "requiresCredential": false,
+            "envVars": [],
+            "placeholder": "(no key needed)",
+            "signupUrl": "https://parallel.ai",
+            "docsUrl": "https://docs.oriro.ai/tools/parallel-search",
+            "credentialPath": ""
+          }
+        ],
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/parallel-plugin",
+          "npmSpec": "@oriro/parallel-plugin",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.6.8"
+        }
+      }
+    },
+    {
+      "name": "@oriro/perplexity-plugin",
+      "description": "Oriro Perplexity plugin.",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "perplexity",
+          "label": "Perplexity"
+        },
+        "contracts": {
+          "webSearchProviders": [
+            "perplexity"
+          ]
+        },
+        "webSearchProviders": [
+          {
+            "id": "perplexity",
+            "label": "Perplexity Search",
+            "hint": "Requires Perplexity API key or OpenRouter API key · structured results",
+            "onboardingScopes": [
+              "text-inference"
+            ],
+            "credentialLabel": "Perplexity API key",
+            "envVars": [
+              "PERPLEXITY_API_KEY",
+              "OPENROUTER_API_KEY"
+            ],
+            "placeholder": "pplx-...",
+            "signupUrl": "https://www.perplexity.ai/settings/api",
+            "docsUrl": "https://docs.oriro.ai/perplexity",
+            "credentialPath": "plugins.entries.perplexity.config.webSearch.apiKey",
+            "autoDetectOrder": 50
+          }
+        ],
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/perplexity-plugin",
+          "npmSpec": "@oriro/perplexity-plugin",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.6.8"
+        }
+      }
+    },
+    {
+      "name": "@oriro/pixverse-provider",
+      "description": "Oriro PixVerse video generation provider plugin",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "pixverse",
+          "label": "PixVerse"
+        },
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/pixverse-provider",
+          "npmSpec": "@oriro/pixverse-provider",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.5.26"
+        }
+      }
+    },
+    {
+      "name": "@oriro/tokenjuice",
+      "description": "Oriro tokenjuice exec output compaction plugin",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "tokenjuice",
+          "label": "Tokenjuice"
+        },
+        "install": {
+          "orirohubSpec": "orirohub:@oriro/tokenjuice",
+          "npmSpec": "@oriro/tokenjuice",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.5.28"
+        }
+      }
+    },
+    {
+      "name": "@oriro/voice-call",
+      "description": "Oriro voice-call plugin",
+      "source": "official",
+      "kind": "plugin",
+      "oriro": {
+        "plugin": {
+          "id": "voice-call",
+          "label": "Voice Call"
+        },
+        "install": {
+          "npmSpec": "@oriro/voice-call",
+          "defaultChoice": "npm",
+          "minHostVersion": ">=2026.4.10"
+        }
+      }
+    }
+  ]
+}

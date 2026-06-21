@@ -1,0 +1,25 @@
+// Oriro plugin entrypoint registers its Oriro integration.
+import { definePluginEntry } from "oriro/plugin-sdk/plugin-entry";
+import type { AnyAgentTool, OriroPluginApi, OriroPluginToolFactory } from "./runtime-api.js";
+import { createOriroTool } from "./src/oriro-tool.js";
+
+export default definePluginEntry({
+  id: "oriro",
+  name: "Oriro",
+  description: "Optional local shell helper tools",
+  register(api: OriroPluginApi) {
+    api.registerTool(
+      ((ctx) => {
+        if (ctx.sandboxed) {
+          return null;
+        }
+        const taskFlow =
+          api.runtime?.tasks.managedFlows && ctx.sessionKey
+            ? api.runtime.tasks.managedFlows.fromToolContext(ctx)
+            : undefined;
+        return createOriroTool(api, { taskFlow }) as AnyAgentTool;
+      }) as OriroPluginToolFactory,
+      { optional: true },
+    );
+  },
+});

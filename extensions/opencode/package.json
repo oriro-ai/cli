@@ -1,0 +1,15 @@
+{
+  "name": "@oriro/opencode-provider",
+  "version": "2026.6.8",
+  "private": true,
+  "description": "Oriro OpenCode Zen provider plugin",
+  "type": "module",
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

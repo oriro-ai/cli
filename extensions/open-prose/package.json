@@ -1,0 +1,15 @@
+{
+  "name": "@oriro/open-prose",
+  "version": "2026.6.8",
+  "private": true,
+  "description": "OpenProse VM skill pack plugin (slash command + telemetry).",
+  "type": "module",
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

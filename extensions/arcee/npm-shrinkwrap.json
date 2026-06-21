@@ -1,0 +1,12 @@
+{
+  "name": "@oriro/arcee-provider",
+  "version": "2026.6.8",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "@oriro/arcee-provider",
+      "version": "2026.6.8"
+    }
+  }
+}

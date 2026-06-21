@@ -1,0 +1,46 @@
+{
+  "name": "@oriro/synology-chat",
+  "version": "2026.6.8",
+  "description": "Synology Chat channel plugin for Oriro channels and direct messages.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oriro-ai/cli"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "setupEntry": "./setup-entry.ts",
+    "channel": {
+      "id": "synology-chat",
+      "label": "Synology Chat",
+      "selectionLabel": "Synology Chat (Webhook)",
+      "docsPath": "/channels/synology-chat",
+      "docsLabel": "synology-chat",
+      "blurb": "Connect your Synology NAS Chat to Oriro with full agent capabilities.",
+      "order": 90
+    },
+    "install": {
+      "npmSpec": "@oriro/synology-chat",
+      "defaultChoice": "npm",
+      "minHostVersion": ">=2026.4.10"
+    },
+    "compat": {
+      "pluginApi": ">=2026.6.8"
+    },
+    "build": {
+      "oriroVersion": "2026.6.8"
+    },
+    "release": {
+      "publishToOriroHub": true,
+      "publishToNpm": true
+    }
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  }
+}

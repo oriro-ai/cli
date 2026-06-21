@@ -1,0 +1,38 @@
+{
+  "name": "@oriro/firecrawl-plugin",
+  "version": "2026.6.8",
+  "description": "Oriro Firecrawl plugin.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oriro-ai/cli"
+  },
+  "type": "module",
+  "dependencies": {
+    "typebox": "1.1.39"
+  },
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "install": {
+      "orirohubSpec": "orirohub:@oriro/firecrawl-plugin",
+      "npmSpec": "@oriro/firecrawl-plugin",
+      "defaultChoice": "npm",
+      "minHostVersion": ">=2026.6.8"
+    },
+    "compat": {
+      "pluginApi": ">=2026.6.8"
+    },
+    "build": {
+      "oriroVersion": "2026.6.8",
+      "bundledDist": false
+    },
+    "release": {
+      "publishToOriroHub": true,
+      "publishToNpm": true
+    }
+  }
+}

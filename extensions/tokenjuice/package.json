@@ -1,0 +1,47 @@
+{
+  "name": "@oriro/tokenjuice",
+  "version": "2026.6.8",
+  "description": "Oriro tokenjuice exec output compaction plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oriro-ai/cli"
+  },
+  "type": "module",
+  "dependencies": {
+    "tokenjuice": "0.8.1"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.6.8"
+  },
+  "peerDependenciesMeta": {
+    "oriro": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*",
+    "openclaw": "2026.5.28"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "install": {
+      "orirohubSpec": "orirohub:@oriro/tokenjuice",
+      "npmSpec": "@oriro/tokenjuice",
+      "defaultChoice": "npm",
+      "minHostVersion": ">=2026.5.28"
+    },
+    "compat": {
+      "pluginApi": ">=2026.6.8"
+    },
+    "build": {
+      "oriroVersion": "2026.6.8",
+      "bundledDist": false
+    },
+    "release": {
+      "publishToOriroHub": true,
+      "publishToNpm": true
+    }
+  }
+}

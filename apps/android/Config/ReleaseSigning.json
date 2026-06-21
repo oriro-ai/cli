@@ -1,0 +1,14 @@
+{
+  "signingRepo": "git@github.com:oriro/apps-signing.git",
+  "signingBranch": "main",
+  "assetPath": "android/oriro",
+  "uploadKeystoreEncryptedFile": "upload-keystore.jks.enc",
+  "gradlePropertiesEncryptedFile": "gradle.properties.enc",
+  "materializedRoot": "apps/android/build/release-signing",
+  "gradlePropertyNames": [
+    "ORIRO_ANDROID_STORE_FILE",
+    "ORIRO_ANDROID_STORE_PASSWORD",
+    "ORIRO_ANDROID_KEY_ALIAS",
+    "ORIRO_ANDROID_KEY_PASSWORD"
+  ]
+}

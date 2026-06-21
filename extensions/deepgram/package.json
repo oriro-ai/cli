@@ -1,0 +1,15 @@
+{
+  "name": "@oriro/deepgram-provider",
+  "version": "2026.6.8",
+  "private": true,
+  "description": "Oriro Deepgram media-understanding provider",
+  "type": "module",
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@oriro/google-plugin",
+  "version": "2026.6.8",
+  "private": true,
+  "description": "Oriro Google plugin",
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "2.7.0",
+    "google-auth-library": "10.6.2"
+  },
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "@oriro/qa-matrix",
+  "version": "2026.6.8",
+  "private": true,
+  "description": "Oriro Matrix QA runner plugin",
+  "type": "module",
+  "dependencies": {
+    "undici": "8.5.0"
+  },
+  "devDependencies": {
+    "@oriro/matrix": "workspace:*",
+    "@oriro/plugin-sdk": "workspace:*",
+    "openclaw": "2026.5.28"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.6.8"
+  },
+  "peerDependenciesMeta": {
+    "oriro": {
+      "optional": true
+    }
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "compat": {
+      "pluginApi": ">=2026.6.8"
+    }
+  }
+}

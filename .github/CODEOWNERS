@@ -1,0 +1,71 @@
+# Protect the ownership rules themselves.
+/.github/CODEOWNERS @steipete
+
+# WARNING: GitHub CODEOWNERS uses last-match-wins semantics.
+# If you add overlapping rules below the secops block, include @oriro/oriro-secops
+# on those entries too or you can silently remove required secops review.
+# Security-sensitive code, config, and docs require secops review.
+/SECURITY.md @oriro/oriro-secops
+/.github/dependabot.yml @oriro/oriro-secops
+/.github/codeql/ @oriro/oriro-secops
+/.github/workflows/codeql.yml @oriro/oriro-secops
+/.github/workflows/codeql-android-critical-security.yml @oriro/oriro-secops
+/.github/workflows/codeql-critical-quality.yml @oriro/oriro-secops
+/.github/workflows/dependency-guard.yml @oriro/oriro-secops
+/.github/workflows/security-sensitive-guard.yml @oriro/oriro-secops
+/test/scripts/dependency-guard-workflow.test.ts @oriro/oriro-secops
+/test/scripts/dependency-guard-script.test.ts @oriro/oriro-secops
+/test/scripts/security-sensitive-guard-workflow.test.ts @oriro/oriro-secops
+/test/scripts/security-sensitive-guard-script.test.ts @oriro/oriro-secops
+/scripts/github/dependency-guard.mjs @oriro/oriro-secops
+/scripts/github/security-sensitive-guard.mjs @oriro/oriro-secops
+/.gitignore @oriro/oriro-secops
+/package-lock.json @oriro/oriro-secops
+/npm-shrinkwrap.json @oriro/oriro-secops
+/extensions/*/package-lock.json @oriro/oriro-secops
+/extensions/*/npm-shrinkwrap.json @oriro/oriro-secops
+/pnpm-lock.yaml @oriro/oriro-secops
+/scripts/generate-npm-shrinkwrap.mjs @oriro/oriro-secops
+/src/security/ @oriro/oriro-secops
+/src/secrets/ @oriro/oriro-secops
+/src/config/*secret*.ts @oriro/oriro-secops
+/src/config/**/*secret*.ts @oriro/oriro-secops
+/src/gateway/*auth*.ts @oriro/oriro-secops
+/src/gateway/**/*auth*.ts @oriro/oriro-secops
+/src/gateway/*secret*.ts @oriro/oriro-secops
+/src/gateway/**/*secret*.ts @oriro/oriro-secops
+/src/gateway/security-path*.ts @oriro/oriro-secops
+/src/gateway/resolve-configured-secret-input-string*.ts @oriro/oriro-secops
+/packages/gateway-protocol/src/**/*secret*.ts @oriro/oriro-secops
+/src/gateway/server-methods/secrets*.ts @oriro/oriro-secops
+/src/agents/*auth*.ts @oriro/oriro-secops
+/src/agents/**/*auth*.ts @oriro/oriro-secops
+/src/agents/auth-profiles*.ts @oriro/oriro-secops
+/src/agents/auth-health*.ts @oriro/oriro-secops
+/src/agents/auth-profiles/ @oriro/oriro-secops
+/src/agents/sandbox.ts @oriro/oriro-secops
+/src/agents/sandbox-*.ts @oriro/oriro-secops
+/src/agents/sandbox/ @oriro/oriro-secops
+/src/infra/secret-file*.ts @oriro/oriro-secops
+/src/cron/stagger.ts @oriro/oriro-secops
+/src/cron/service/jobs.ts @oriro/oriro-secops
+/docs/security/ @oriro/oriro-secops
+/docs/gateway/authentication.md @oriro/oriro-secops
+/docs/gateway/sandbox-vs-tool-policy-vs-elevated.md @oriro/oriro-secops
+/docs/gateway/sandboxing.md @oriro/oriro-secops
+/docs/gateway/secrets-plan-contract.md @oriro/oriro-secops
+/docs/gateway/secrets.md @oriro/oriro-secops
+/docs/gateway/security/ @oriro/oriro-secops
+/docs/cli/approvals.md @oriro/oriro-secops
+/docs/cli/sandbox.md @oriro/oriro-secops
+/docs/cli/security.md @oriro/oriro-secops
+/docs/cli/secrets.md @oriro/oriro-secops
+/docs/reference/secretref-credential-surface.md @oriro/oriro-secops
+/docs/reference/secretref-user-supplied-credentials-matrix.json @oriro/oriro-secops
+
+# Release workflow and its supporting release-path checks.
+/.github/workflows/oriro-npm-release.yml @oriro/oriro-release-managers
+/docs/reference/RELEASING.md @oriro/oriro-release-managers
+/scripts/oriro-npm-publish.sh @oriro/oriro-release-managers
+/scripts/oriro-npm-release-check.ts @oriro/oriro-release-managers
+/scripts/release-check.ts @oriro/oriro-release-managers

@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oriro-config
+  labels:
+    app: oriro
+data:
+  oriro.json: |
+    {
+      "gateway": {
+        "mode": "local",
+        "bind": "loopback",
+        "port": 18789,
+        "auth": {
+          "mode": "token"
+        },
+        "controlUi": {
+          "enabled": true
+        }
+      },
+      "agents": {
+        "defaults": {
+          "workspace": "~/.oriro/workspace"
+        },
+        "list": [
+          {
+            "id": "default",
+            "name": "Oriro Assistant",
+            "workspace": "~/.oriro/workspace"
+          }
+        ]
+      },
+      "cron": { "enabled": false }
+    }
+  AGENTS.md: |
+    # Oriro Assistant
+
+    You are a helpful AI assistant running in Kubernetes.
