@@ -1,6 +1,6 @@
 <!-- Banner: added separately by Vinay -->
 
-# ORIRO‑Terminal — Head for AI, 99 Global Languages, Live Security
+# ORIRO‑Terminal, Head for AI, 99 Global Languages, Live Security
 
 A terminal coder that **sees the web**, **speaks and listens in 99 languages**, **guards itself**, and can wear a **floating avatar that talks back in its own voice** — all on‑device.
 
