@@ -22,6 +22,37 @@ const coreCliCommandCatalog = defineCommandDescriptorCatalog([
     hasSubcommands: false,
   },
   {
+    name: "language",
+    description: "Pick your terminal language (99 supported); the AI works in English for you",
+    hasSubcommands: false,
+  },
+  {
+    name: "avatar",
+    description: "Pick an avatar that floats in your terminal and speaks replies",
+    hasSubcommands: false,
+  },
+  {
+    name: "guardian",
+    description: "Guardian V3 security — status, MCP setup, and server trust",
+    hasSubcommands: true,
+  },
+  {
+    name: "head",
+    description:
+      "Inspect live sites — structure, gaps vs competitors, screenshots, or reverse to code",
+    hasSubcommands: false,
+  },
+  {
+    name: "inspect",
+    description: "Alias for `head` — inspect a live site and report structure + gaps",
+    hasSubcommands: false,
+  },
+  {
+    name: "orirohead",
+    description: "Alias for `head` — the ORIRO Head web-sighted inspector",
+    hasSubcommands: false,
+  },
+  {
     name: "configure",
     description: "Interactive configuration for credentials, channels, gateway, and agent defaults",
     hasSubcommands: false,

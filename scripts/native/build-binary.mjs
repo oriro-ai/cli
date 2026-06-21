@@ -15,10 +15,18 @@
 // Output:  dist-native/bin/<platform>-<arch>/oriro[.exe]  (+ native/ sidecars)
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, copyFileSync, rmSync, writeFileSync, readdirSync, statSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  copyFileSync,
+  rmSync,
+  writeFileSync,
+  readdirSync,
+  statSync,
+} from "node:fs";
+import { createRequire } from "node:module";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -42,7 +50,10 @@ function log(step, msg) {
 }
 
 function run(cmd, args, opts = {}) {
-  return execFileSync(cmd, args, { stdio: "inherit", cwd: ROOT, ...opts });
+  // On Windows, .cmd/.bat wrappers (pnpm.cmd, npx.cmd) can't be spawned directly via
+  // execFileSync (EINVAL) — run them through a shell. Native exes (node) run directly.
+  const useShell = process.platform === "win32" && /\.(cmd|bat)$/i.test(cmd);
+  return execFileSync(cmd, args, { stdio: "inherit", cwd: ROOT, shell: useShell, ...opts });
 }
 
 // 1) Ensure the project is built (dist/). Skip if already present.
@@ -58,10 +69,12 @@ function ensureDist() {
 // 2) Bundle the built entry into a single CJS with esbuild, externalizing natives.
 function bundle() {
   mkdirSync(WORK, { recursive: true });
-  const esbuild = join(ROOT, "node_modules", ".bin", PLATFORM === "win32" ? "esbuild.cmd" : "esbuild");
+  // Invoke esbuild's JS entry via node (cross-platform; avoids the Windows .cmd spawn issue).
+  const esbuildBin = join(ROOT, "node_modules", "esbuild", "bin", "esbuild");
   const entry = join(ROOT, "dist", "index.js");
   log("2/6", "esbuild → single oriro.cjs…");
-  run(esbuild, [
+  run(process.execPath, [
+    esbuildBin,
     entry,
     "--bundle",
     "--platform=node",
@@ -78,7 +91,11 @@ function bundle() {
 function seaBlob() {
   writeFileSync(
     SEA_CONFIG,
-    JSON.stringify({ main: BUNDLE, output: BLOB, disableExperimentalSEAWarning: true, useSnapshot: false }, null, 2),
+    JSON.stringify(
+      { main: BUNDLE, output: BLOB, disableExperimentalSEAWarning: true, useSnapshot: false },
+      null,
+      2,
+    ),
   );
   log("3/6", "node --experimental-sea-config → blob…");
   run(process.execPath, ["--experimental-sea-config", SEA_CONFIG]);
