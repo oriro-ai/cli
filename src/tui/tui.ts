@@ -16,8 +16,16 @@ import {
 import { normalizeLowercaseStringOrEmpty } from "@oriro/normalization-core/string-coerce";
 import type { CommandEntry } from "../../packages/gateway-protocol/src/index.js";
 import { resolveAgentIdByWorkspacePath, resolveDefaultAgentId } from "../agents/agent-scope.js";
+import {
+  DEFAULT_POSTURE,
+  nextPosture,
+  postureById,
+  postureHint,
+  postureIndicator,
+} from "../cli/posture.js";
 import { getRuntimeConfig, type OriroConfig } from "../config/config.js";
 import { isChatStopCommandText } from "../gateway/chat-abort.js";
+import { resolveExecPolicyForMode } from "../infra/exec-approvals.js";
 import { registerUncaughtExceptionHandler } from "../infra/unhandled-rejections.js";
 import { setConsoleSubsystemFilter } from "../logging/console.js";
 import { loggingState } from "../logging/state.js";
@@ -83,9 +91,7 @@ const ORIRO_RUN_NODE_SCRIPT_PATH = fileURLToPath(
   new URL("../../scripts/run-node.mjs", import.meta.url),
 );
 const ORIRO_DIST_ENTRY_JS_PATH = fileURLToPath(new URL("../../dist/entry.js", import.meta.url));
-const ORIRO_DIST_ENTRY_MJS_PATH = fileURLToPath(
-  new URL("../../dist/entry.mjs", import.meta.url),
-);
+const ORIRO_DIST_ENTRY_MJS_PATH = fileURLToPath(new URL("../../dist/entry.mjs", import.meta.url));
 
 const OPENAI_CODEX_PROVIDER = "openai";
 
@@ -519,6 +525,7 @@ export function resolveTuiCtrlCAction(params: {
 function resolveEmptySessionInfoDefaults(config: OriroConfig): SessionInfo {
   return {
     verboseLevel: config.agents?.defaults?.verboseDefault,
+    posture: DEFAULT_POSTURE,
   };
 }
 
@@ -1246,6 +1253,7 @@ export async function runTui(opts: RunTuiOptions): Promise<TuiResult> {
       `agent ${agentLabel}`,
       `session ${sessionLabel}`,
       modelLabel,
+      postureIndicator(postureById(sessionInfo.posture ?? DEFAULT_POSTURE)),
       formatGoalFooter(sessionInfo.goal),
       think !== "off" ? `think ${think}` : null,
       fast ? "fast" : null,
@@ -1522,6 +1530,41 @@ export async function runTui(opts: RunTuiOptions): Promise<TuiResult> {
     if (matchesKey(data, "enter")) {
       chatLog.dismissBtw();
       tui.requestRender();
+      return { consume: true };
+    }
+    return undefined;
+  });
+
+  // Shift+Tab cycles the permission posture (Manual → Accept-Edits → Auto → Plan).
+  // The posture maps onto the gateway's exec policy (execSecurity/execAsk); the
+  // Guardian floor is never bypassed — posture never emits "full".
+  const cyclePosture = async () => {
+    const current = sessionInfo.posture ?? DEFAULT_POSTURE;
+    const next = nextPosture(current);
+    const { security, ask } = resolveExecPolicyForMode(next.execMode);
+    try {
+      const result = await client.patchSession({
+        key: currentSessionKey,
+        ...(currentSessionKey === "global" ? { agentId: currentAgentId } : {}),
+        execSecurity: security,
+        execAsk: ask,
+      });
+      sessionInfo.posture = next.id;
+      applySessionInfoFromPatch(result);
+      chatLog.addSystem(postureHint(next));
+      updateFooter();
+      tui.requestRender();
+    } catch (err) {
+      chatLog.addSystem(`posture change failed: ${String(err)}`);
+      tui.requestRender();
+    }
+  };
+
+  tui.addInputListener((data) => {
+    // Shift+Tab arrives as CSI Z ("\x1b[Z" / "backtab") on most terminals; the
+    // "shift+tab" alias covers Kitty/modern terminals, the raw seq covers the rest.
+    if (matchesKey(data, "shift+tab") || data === "\x1b[Z") {
+      void cyclePosture();
       return { consume: true };
     }
     return undefined;

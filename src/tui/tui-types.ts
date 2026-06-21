@@ -1,4 +1,5 @@
 // Defines shared TUI state, backend, and event types.
+import type { PostureId } from "../cli/posture.js";
 import type { SessionGoal } from "../config/sessions/types.js";
 
 export type TuiOptions = {
@@ -93,6 +94,12 @@ export type SessionInfo = {
   responseUsage?: ResponseUsageMode;
   updatedAt?: number | null;
   displayName?: string;
+  /**
+   * The local permission posture (shift+tab cycle). UI-only mirror of the
+   * exec policy patched to the gateway; the gateway enforces via
+   * execSecurity/execAsk (commands) — Guardian floor is never bypassed.
+   */
+  posture?: PostureId;
 };
 
 export type SessionScope = "per-sender" | "global";
