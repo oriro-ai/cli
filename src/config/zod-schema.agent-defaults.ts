@@ -238,6 +238,12 @@ export const AgentDefaultsSchema = z
     maxConcurrent: z.number().int().positive().optional(),
     subagents: z
       .object({
+        onDevice: z
+          .boolean()
+          .optional()
+          .describe(
+            "Opt-in: expose sessions_spawn/subagents and the Agent orchestration tool to embedded on-device runs. Default (unset/false) keeps spawning off for embedded runs. On-device sub-agents run on the configured local/free model only.",
+          ),
         delegationMode: z.enum(["suggest", "prefer"]).optional(),
         allowAgents: z.array(z.string()).optional(),
         maxConcurrent: z.number().int().positive().optional(),

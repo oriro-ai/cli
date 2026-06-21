@@ -527,6 +527,11 @@ export function createOriroCodingTools(options?: {
   hasRepliedRef?: { value: boolean };
   /** Allow plugin tools for this run to late-bind the gateway subagent. */
   allowGatewaySubagentBinding?: boolean;
+  /**
+   * Opt-in: allow embedded on-device runs to include the spawn surface
+   * (sessions_spawn/subagents + `Agent`). Mirrors `agents.defaults.subagents.onDevice`.
+   */
+  allowSubagents?: boolean;
   /** Runtime-scoped explicit allowlist used to materialize matching plugin tools. */
   runtimeToolAllowlist?: string[];
   /** Mutable cron creator cap ref for callers that append final runtime tools later. */
@@ -1097,6 +1102,7 @@ export function createOriroCodingTools(options?: {
           inheritedToolDenylist,
           onYield: options?.onYield,
           allowGatewaySubagentBinding: options?.allowGatewaySubagentBinding,
+          allowSubagents: options?.allowSubagents,
           recordToolPrepStage: options?.recordToolPrepStage,
         })
       : pluginToolsOnly),

@@ -460,6 +460,14 @@ export type AgentDefaultsConfig = {
   maxConcurrent?: number;
   /** Sub-agent defaults (spawned via sessions_spawn). */
   subagents?: {
+    /**
+     * Opt-in: expose sessions_spawn/subagents (and the `Agent` orchestration tool)
+     * to embedded on-device runs. Default behavior (unset/false) keeps spawning off
+     * for embedded runs so the local model cannot fan out unless explicitly enabled.
+     * On-device sub-agents always run on the user's configured local/free model and
+     * never call a paid external CLI (ACP runtime stays off by default).
+     */
+    onDevice?: boolean;
     /** Prompt-only guidance for how strongly the main agent should delegate work. Default: "suggest". */
     delegationMode?: SubagentDelegationMode;
     /** Default allowlist of target agent ids for sessions_spawn. Use "*" to allow any configured target. */

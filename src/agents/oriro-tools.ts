@@ -39,6 +39,7 @@ import type { SandboxFsBridge } from "./sandbox/fs-bridge.js";
 import type { SpawnedToolContext } from "./spawned-context.js";
 import type { ToolFsPolicy } from "./tool-fs-policy.js";
 import { resolveToolLoopDetectionConfig } from "./tool-loop-detection-config.js";
+import { createAgentTool } from "./tools/agent-tool.js";
 import { createAgentsListTool } from "./tools/agents-list-tool.js";
 import type { AnyAgentTool } from "./tools/common.js";
 import { createCronTool, type CronCreatorToolAllowlistEntry } from "./tools/cron-tool.js";
@@ -184,6 +185,13 @@ export function createOriroTools(
     onYield?: (message: string) => Promise<void> | void;
     /** Allow plugin tools for this tool set to late-bind the gateway subagent. */
     allowGatewaySubagentBinding?: boolean;
+    /**
+     * Opt-in: allow embedded on-device runs to include the spawn surface
+     * (sessions_spawn/subagents + the `Agent` orchestration tool). Mirrors the
+     * config flag `agents.defaults.subagents.onDevice`; either enables it.
+     * Outside embedded mode the spawn surface is already available.
+     */
+    allowSubagents?: boolean;
   } & SpawnedToolContext,
 ): AnyAgentTool[] {
   const resolvedConfig = options?.config ?? oriroToolsDeps.config;
@@ -401,10 +409,17 @@ export function createOriroTools(
     !embedded ||
     options?.sourceReplyDeliveryMode === "message_tool_only" ||
     messageExplicitlyAllowed;
-  const includeSubagentSpawnTool = !embedded || options?.allowGatewaySubagentBinding === true;
-  const effectiveCallGateway = embedded
-    ? createEmbeddedCallGateway()
-    : oriroToolsDeps.callGateway;
+  // On-device orchestration opt-in: embedded runs may include the spawn surface
+  // when the operator enables `agents.defaults.subagents.onDevice` (discoverable
+  // config) or a caller threads `allowSubagents`. Default stays off so the local
+  // model cannot silently fan out. Sub-agents run on the configured local/free
+  // model and never call a paid external CLI (ACP runtime stays off by default).
+  const onDeviceSubagentsEnabled =
+    options?.allowSubagents === true ||
+    resolvedConfig?.agents?.defaults?.subagents?.onDevice === true;
+  const includeSubagentSpawnTool =
+    !embedded || options?.allowGatewaySubagentBinding === true || onDeviceSubagentsEnabled;
+  const effectiveCallGateway = embedded ? createEmbeddedCallGateway() : oriroToolsDeps.callGateway;
   const includeUpdatePlanTool = shouldIncludeUpdatePlanToolForOriroTools({
     config: resolvedConfig,
     agentSessionKey: options?.agentSessionKey,
@@ -527,6 +542,26 @@ export function createOriroTools(
             agentGroupSpace: options?.agentGroupSpace,
             agentMemberRoleIds: options?.agentMemberRoleIds,
             sandboxed: options?.sandboxed,
+            config: resolvedConfig,
+            requesterAgentIdOverride: options?.requesterAgentIdOverride,
+            workspaceDir: spawnWorkspaceDir,
+            inheritedToolAllowlist: options?.inheritedToolAllowlist,
+            inheritedToolDenylist: options?.inheritedToolDenylist,
+          }),
+          // Thin Kimi-style `Agent(subagent_type, prompt, ...)` wrapper over the
+          // same spawn engine. Available wherever sessions_spawn is, so on-device
+          // runs (onDeviceSubagentsEnabled) get the scoped-role orchestration tool.
+          createAgentTool({
+            agentSessionKey: options?.agentSessionKey,
+            completionOwnerKey: options?.runSessionKey,
+            agentChannel: options?.agentChannel,
+            agentAccountId: options?.agentAccountId,
+            agentTo: options?.agentTo,
+            agentThreadId: options?.agentThreadId,
+            agentGroupId: options?.agentGroupId,
+            agentGroupChannel: options?.agentGroupChannel,
+            agentGroupSpace: options?.agentGroupSpace,
+            agentMemberRoleIds: options?.agentMemberRoleIds,
             config: resolvedConfig,
             requesterAgentIdOverride: options?.requesterAgentIdOverride,
             workspaceDir: spawnWorkspaceDir,
