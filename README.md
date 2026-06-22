@@ -46,7 +46,7 @@ Then run `oriro`. First launch picks your language and turns on Guardian automat
 
 ## 🧭 ORIRO‑Head
 
-- **Always in context;** never forgets anything; scribes everything for you locally and present the router “REAL-TIME FOREVER”. 
+- **Always in context;** never forgets anything; scribes everything for you locally and present the router “**REAL-TIME FOREVER**”. 
 - **Goes to the URL** → crawls it in a real browser (Playwright).
 - **Captures** → full‑page **screenshot** + the rendered HTML (`page.content()` — the post‑JS DOM, "what it saw").
 - **Reverse‑engineers** → feeds that HTML (+ the screenshot for visual context) to the coder model → clean, working code.
