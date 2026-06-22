@@ -1,7 +1,6 @@
 <!-- Banner: added separately by Vinay -->
 
-# ORIRO‑Terminal
-# **“Head, Memory and Eyeball for AI”**
+# ORIRO‑Terminal - **“Head, Memory and Eyeball for AI”**
 
 # **Works in 99 Global Languages, have Live Security Gaurdian-V3 (Live MCP Watch)**
 
