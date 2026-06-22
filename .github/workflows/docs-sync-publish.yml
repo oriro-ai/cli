@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   sync-publish-repo:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     env:
       ORIRO_DOCS_SYNC_TOKEN: ${{ secrets.ORIRO_DOCS_SYNC_TOKEN }}
     steps:

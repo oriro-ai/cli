@@ -46,7 +46,7 @@ env:
 
 jobs:
   preview_plugins_orirohub:
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: read
     outputs:
@@ -269,7 +269,7 @@ jobs:
     name: Validate release publish approval
     needs: preview_plugins_orirohub
     if: github.event_name == 'workflow_dispatch' && needs.preview_plugins_orirohub.outputs.has_candidates == 'true'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       actions: read
       contents: read
@@ -305,7 +305,7 @@ jobs:
   pack_plugins_orirohub_artifacts:
     needs: [preview_plugins_orirohub, validate_release_publish_approval]
     if: github.event_name == 'workflow_dispatch' && needs.preview_plugins_orirohub.outputs.has_candidates == 'true'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: read
     strategy:
@@ -374,7 +374,7 @@ jobs:
   approve_plugins_orirohub_release:
     needs: [preview_plugins_orirohub, pack_plugins_orirohub_artifacts]
     if: always() && github.event_name == 'workflow_dispatch' && inputs.dry_run != true && needs.preview_plugins_orirohub.outputs.has_candidates == 'true' && needs.pack_plugins_orirohub_artifacts.result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     environment: orirohub-plugin-release
     permissions:
       contents: read
@@ -413,7 +413,7 @@ jobs:
   verify_published_orirohub_package:
     needs: [preview_plugins_orirohub, publish_plugins_orirohub]
     if: github.event_name == 'workflow_dispatch' && inputs.dry_run != true && needs.preview_plugins_orirohub.outputs.has_candidates == 'true'
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: read
     strategy:

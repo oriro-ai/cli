@@ -323,7 +323,7 @@ env:
 
 jobs:
   validate_selected_ref:
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     outputs:
       selected_sha: ${{ steps.validate.outputs.selected_sha }}
       trusted_reason: ${{ steps.validate.outputs.trusted_reason }}
@@ -373,7 +373,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   validate_live_suite_filter:
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     if: inputs.live_suite_filter != ''
     steps:
       - name: Validate focused live suite filter
@@ -483,7 +483,7 @@ jobs:
 
   plan_release_workflow_matrices:
     needs: validate_selected_ref
-    runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     outputs:
       docker_e2e_count: ${{ steps.plan.outputs.docker_e2e_count }}
       docker_e2e_matrix: ${{ steps.plan.outputs.docker_e2e_matrix }}
