@@ -3,7 +3,7 @@
 # ORIRO‑Terminal
 **“Head, Memory and Eyeball for AI”**
 
-**Works in 99 Global Languages and, have Live Security Gaurdian-V3, Live Security MCP Watch**
+**Works in 99 Global Languages, have Live Security Gaurdian-V3 (Live MCP Watch)**
 
 A terminal coder that **sees the web**, **speaks and listens in 99 languages**, **guards itself**, and can wear a **floating avatar that talks back in its own voice** — all on‑device.
 
