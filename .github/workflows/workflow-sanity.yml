@@ -29,11 +29,19 @@ jobs:
         env:
           CHECKOUT_REPO: ${{ github.repository }}
           CHECKOUT_SHA: ${{ github.sha }}
+          # oriro-ai/cli is a PRIVATE repository, so the anonymous fetch below
+          # must authenticate. The built-in GITHUB_TOKEN is sufficient for a
+          # same-repo read; no additional secret is required.
+          GH_CHECKOUT_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git init "$GITHUB_WORKSPACE"
           git -C "$GITHUB_WORKSPACE" config gc.auto 0
           git -C "$GITHUB_WORKSPACE" remote add origin "https://github.com/${CHECKOUT_REPO}.git"
+          # Authenticate fetches over HTTPS without persisting the token on disk.
+          git -C "$GITHUB_WORKSPACE" config --local \
+            "http.https://github.com/.extraheader" \
+            "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_CHECKOUT_TOKEN" | base64 -w0)"
           fetch_checkout_ref() {
             local fetch_status
             for attempt in 1 2 3; do
@@ -88,11 +96,19 @@ jobs:
         env:
           CHECKOUT_REPO: ${{ github.repository }}
           CHECKOUT_SHA: ${{ github.sha }}
+          # oriro-ai/cli is a PRIVATE repository, so the anonymous fetch below
+          # must authenticate. The built-in GITHUB_TOKEN is sufficient for a
+          # same-repo read; no additional secret is required.
+          GH_CHECKOUT_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git init "$GITHUB_WORKSPACE"
           git -C "$GITHUB_WORKSPACE" config gc.auto 0
           git -C "$GITHUB_WORKSPACE" remote add origin "https://github.com/${CHECKOUT_REPO}.git"
+          # Authenticate fetches over HTTPS without persisting the token on disk.
+          git -C "$GITHUB_WORKSPACE" config --local \
+            "http.https://github.com/.extraheader" \
+            "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_CHECKOUT_TOKEN" | base64 -w0)"
           fetch_checkout_ref() {
             local fetch_status
             for attempt in 1 2 3; do
@@ -215,11 +231,19 @@ jobs:
         env:
           CHECKOUT_REPO: ${{ github.repository }}
           CHECKOUT_SHA: ${{ github.sha }}
+          # oriro-ai/cli is a PRIVATE repository, so the anonymous fetch below
+          # must authenticate. The built-in GITHUB_TOKEN is sufficient for a
+          # same-repo read; no additional secret is required.
+          GH_CHECKOUT_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git init "$GITHUB_WORKSPACE"
           git -C "$GITHUB_WORKSPACE" config gc.auto 0
           git -C "$GITHUB_WORKSPACE" remote add origin "https://github.com/${CHECKOUT_REPO}.git"
+          # Authenticate fetches over HTTPS without persisting the token on disk.
+          git -C "$GITHUB_WORKSPACE" config --local \
+            "http.https://github.com/.extraheader" \
+            "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_CHECKOUT_TOKEN" | base64 -w0)"
           fetch_checkout_ref() {
             local fetch_status
             for attempt in 1 2 3; do

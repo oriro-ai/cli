@@ -44,9 +44,17 @@ runs:
         REQUESTED_NODE_VERSION: ${{ inputs.node-version }}
       run: |
         set -euo pipefail
+        # A caller can pass an explicit empty string, which suppresses the
+        # action default. Coalesce empty back to package.json so an unset/empty
+        # input behaves identically to the documented default instead of
+        # failing with an empty path.
+        if [[ -z "${PACKAGE_MANAGER_FILE// }" ]]; then
+          echo "::warning::package-manager-file was empty; falling back to default 'package.json'"
+          PACKAGE_MANAGER_FILE="package.json"
+        fi
         project_dir="$(dirname "$PACKAGE_MANAGER_FILE")"
         if [[ ! -f "$PACKAGE_MANAGER_FILE" ]]; then
-          echo "::error::package manager file not found: $PACKAGE_MANAGER_FILE"
+          echo "::error::package manager file not found: '$PACKAGE_MANAGER_FILE' (cwd: $(pwd)). Ensure actions/checkout ran before this action and that the file exists at this path."
           exit 1
         fi
         echo "project-dir=$project_dir" >> "$GITHUB_OUTPUT"
@@ -62,6 +70,9 @@ runs:
         PACKAGE_MANAGER_FILE: ${{ inputs.package-manager-file }}
       run: |
         set -euo pipefail
+        if [[ -z "${PACKAGE_MANAGER_FILE// }" ]]; then
+          PACKAGE_MANAGER_FILE="package.json"
+        fi
         package_manager="$(node -e "const fs = require('node:fs'); const path = require('node:path'); const pkg = JSON.parse(fs.readFileSync(path.resolve(process.argv[1]), 'utf8')); process.stdout.write(pkg.packageManager || '')" "$PACKAGE_MANAGER_FILE")"
         case "$package_manager" in
           pnpm@*) ;;
