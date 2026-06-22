@@ -1,6 +1,9 @@
 <!-- Banner: added separately by Vinay -->
 
-# ORIRO‑Terminal; AI with Head that Reverse‑engineers, 99 Global Languages, Live Security MCP Watch.
+# ORIRO‑Terminal
+**“Head, Memory and Eyeball for AI”**
+
+**Works in 99 Global Languages and, have Live Security Gaurdian-V3, Live Security MCP Watch**
 
 A terminal coder that **sees the web**, **speaks and listens in 99 languages**, **guards itself**, and can wear a **floating avatar that talks back in its own voice** — all on‑device.
 
@@ -44,10 +47,11 @@ Then run `oriro`. First launch picks your language and turns on Guardian automat
 
 ## 🧭 ORIRO‑Head
 
+- **Always in context;** never forgets anything; scribes everything for you locally and present the router “REAL-TIME FOREVER”. 
 - **Goes to the URL** → crawls it in a real browser (Playwright).
-- **Captures** → full‑page screenshot + the rendered HTML (`page.content()` — the post‑JS DOM, "what it saw").
+- **Captures** → full‑page **screenshot** + the rendered HTML (`page.content()` — the post‑JS DOM, "what it saw").
 - **Reverse‑engineers** → feeds that HTML (+ the screenshot for visual context) to the coder model → clean, working code.
-- **Returns BOTH** → `{ html: <what it saw>, screenshot, code: <clean reproduction> }`.
+- **Returns BOTH** → `{ html: <**what it saw**>, screenshot, code: <**clean reproduction**> }`.
 
 ## 🌍 Multi‑Lingual (99 Global Languages)
 
