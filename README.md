@@ -1,6 +1,6 @@
 <!-- Banner: added separately by Vinay -->
 
-# ORIRO‑Terminal; AI with Head, 99 Global Languages, Live Security MCP Watch.
+# ORIRO‑Terminal; AI with Head that Reverse‑engineers, 99 Global Languages, Live Security MCP Watch.
 
 A terminal coder that **sees the web**, **speaks and listens in 99 languages**, **guards itself**, and can wear a **floating avatar that talks back in its own voice** — all on‑device.
 
