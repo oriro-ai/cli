@@ -141,9 +141,18 @@ allowBuilds:
   protobufjs: true
   tree-sitter-bash: false
   oriro: true
+  # openclaw is the upstream this CLI is built on; its build scripts are
+  # identical to oriro's (already approved above) — approve so CI install does
+  # not fail closed with ERR_PNPM_IGNORED_BUILDS. ("nothing cut" — it built before.)
+  openclaw: true
   "@oriro/proxyline": true
   oriropdf: true
   rastermill: true
+  # Native modules with prebuilt-binary install scripts — must be allowed to
+  # build/fetch their .node binary or image (sharp) and ONNX inference
+  # (onnxruntime-node) break at runtime. Covers both onnxruntime-node majors.
+  sharp: true
+  onnxruntime-node: true
 
 packageExtensions:
   baileys:
