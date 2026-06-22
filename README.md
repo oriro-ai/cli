@@ -2,7 +2,7 @@
 
 # ORIRO‑Terminal - **“Head | Memory | Eyeball for AI”**
 
-# **FREE TIER | BYOK** **Works in 99 Languages | Live Security Gaurdian-V3 (MCP Watch)**
+# **FREE TIER | BYOK** | **Works in 99 Languages | Live Security Gaurdian-V3 (MCP Watch)**
 
 A terminal coder that **sees the web**, **speaks and listens in 99 languages**, **guards itself**, and can wear a **floating avatar that talks back in its own voice** — all on‑device.
 
