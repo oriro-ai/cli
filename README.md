@@ -90,6 +90,6 @@ A genuinely cool stack, a terminal coder that sees the web (ORIRO-Head: Crawl �
 
 ## Foundation & Attribution
 
-As a forward integration to the base CLI terminal of the **pi‑mono** foundation — inherited by **OpenClaw** and **Kimi** — we used the same foundation and carried it forward, instead of building backward bottom‑up.
+As a forward integration to the base CLI terminal of the **pi‑mono** foundation inherited by **OpenClaw** and **Kimi** and, we used the same foundation and carried it forward, instead of building backward, we chose forward.
 
 Thanks to the foundation work by **[@OpenClaw](https://github.com/openclaw)**, **[@Moonshot.AI / Kimi](https://github.com/MoonshotAI)**, **[@Claude](https://github.com/anthropics)**, and all other contributors.
