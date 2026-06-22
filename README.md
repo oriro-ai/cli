@@ -68,6 +68,7 @@ By **[TranzGuard.com](https://tranzguard.com)** — financial‑industry‑grade
 ## 🎭 Avatar
 
 A fun factor baked into the work: choose your own **avatar** in the terminal — it floats in your terminal and talks back in its own voice.
+
 A genuinely cool stack, a terminal coder that sees the web (ORIRO-Head: Crawl → Screenshot + HTML → Reverse-engineered code), Speaks/listens in 99 languages, guards itself (Guardian V3 Lite), and can wear a **floating avatar that talks back in its own voice. All on-device**.
 
 ## ⌨️ Permission cycle / Safety
