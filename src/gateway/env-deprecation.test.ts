@@ -2,10 +2,7 @@
 // leaking secret-shaped names or values.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { captureEnv, deleteTestEnvValue, withEnv } from "../test-utils/env.js";
-import {
-  resetLegacyOriroEnvWarningForTest,
-  warnLegacyOriroEnvVars,
-} from "./env-deprecation.js";
+import { resetLegacyOriroEnvWarningForTest, warnLegacyOriroEnvVars } from "./env-deprecation.js";
 
 describe("warnLegacyOriroEnvVars", () => {
   let envSnapshot: ReturnType<typeof captureEnv>;
@@ -37,8 +34,9 @@ describe("warnLegacyOriroEnvVars", () => {
       string,
       { code: string; type: string },
     ];
-    expect(message).toContain("Legacy CLAWDBOT_*, ORIRO_* environment variables");
+    expect(message).toContain("Legacy environment variables");
     expect(message).toContain("3 total");
+    expect(message).not.toContain("CLAWDBOT");
     expect(message).toContain("replacing the legacy prefix with ORIRO_");
     expect(message).not.toContain("GATEWAY_TOKEN");
     expect(message).not.toContain("GATEWAY_PASSWORD");

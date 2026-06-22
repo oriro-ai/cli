@@ -161,17 +161,17 @@ shorthand values.
 
 ## Path-related env vars
 
-| Variable                 | Purpose                                                                                                                                                                                                                                 |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Variable              | Purpose                                                                                                                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `ORIRO_HOME`          | Override the home directory used for internal Oriro path defaults (`~/.oriro/`, agent dirs, sessions, credentials, installer onboarding, and the default dev checkout). Useful when running Oriro as a dedicated service user. |
-| `ORIRO_STATE_DIR`     | Override the state directory (default `~/.oriro`).                                                                                                                                                                                   |
-| `ORIRO_CONFIG_PATH`   | Override the config file path (default `~/.oriro-ai/cli.json`).                                                                                                                                                                    |
-| `ORIRO_INCLUDE_ROOTS` | Path-list of directories where `$include` directives may resolve files outside the config directory (default: none — `$include` is confined to the config dir). Tilde-expanded.                                                         |
+| `ORIRO_STATE_DIR`     | Override the state directory (default `~/.oriro`).                                                                                                                                                                             |
+| `ORIRO_CONFIG_PATH`   | Override the config file path (default `~/.oriro-ai/cli.json`).                                                                                                                                                                |
+| `ORIRO_INCLUDE_ROOTS` | Path-list of directories where `$include` directives may resolve files outside the config directory (default: none — `$include` is confined to the config dir). Tilde-expanded.                                                |
 
 ## Logging
 
-| Variable                         | Purpose                                                                                                                                                                                      |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Variable                      | Purpose                                                                                                                                                                                      |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ORIRO_LOG_LEVEL`             | Override log level for both file and console (e.g. `debug`, `trace`). Takes precedence over `logging.level` and `logging.consoleLevel` in config. Invalid values are ignored with a warning. |
 | `ORIRO_DEBUG_MODEL_TRANSPORT` | Emit targeted model request/response timing diagnostics at `info` level without enabling global debug logs.                                                                                  |
 | `ORIRO_DEBUG_MODEL_PAYLOAD`   | Model payload diagnostics: `summary`, `tools`, or `full-redacted`. `full-redacted` is capped and redacted but may include prompt/message text.                                               |
@@ -223,15 +223,13 @@ Do not rely on writing only to `~/.oriro/.env` for this variable; Node reads
 
 ## Legacy environment variables
 
-Oriro only reads `ORIRO_*` environment variables. The legacy
-`CLAWDBOT_*` and `ORIRO_*` prefixes from earlier releases are silently
-ignored.
+Oriro only reads `ORIRO_*` environment variables. Legacy prefixes from
+earlier releases are silently ignored.
 
 If any are still set on the Gateway process at startup, Oriro emits a
-single Node deprecation warning (`ORIRO_LEGACY_ENV_VARS`) listing the
-detected prefixes and the total count. Rename each value by replacing the
-legacy prefix with `ORIRO_` (for example `CLAWDBOT_GATEWAY_TOKEN` →
-`ORIRO_GATEWAY_TOKEN`); the old names take no effect.
+single Node deprecation warning (`ORIRO_LEGACY_ENV_VARS`) with the total
+count. Rename each value by replacing the legacy prefix with `ORIRO_`
+(for example `ORIRO_GATEWAY_TOKEN`); the old names take no effect.
 
 ## Related
 

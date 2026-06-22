@@ -30,13 +30,9 @@ export function warnLegacyOriroEnvVars(env: NodeJS.ProcessEnv = process.env): vo
     return;
   }
 
-  const detectedPrefixes = LEGACY_ENV_PREFIXES.filter((prefix) => prefixCounts.has(prefix))
-    .map((prefix) => `${prefix}*`)
-    .join(", ");
-
   process.emitWarning(
     [
-      `Legacy ${detectedPrefixes} environment variables were detected (${legacyVarCount} total), but Oriro only reads ORIRO_* names now.`,
+      `Legacy environment variables were detected (${legacyVarCount} total), but Oriro only reads ORIRO_* names now.`,
       "Rename them by replacing the legacy prefix with ORIRO_; the old names are ignored.",
     ].join("\n"),
     { code: "ORIRO_LEGACY_ENV_VARS", type: "DeprecationWarning" },

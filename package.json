@@ -1500,6 +1500,7 @@
     "check": "node scripts/check.mjs",
     "check:architecture": "pnpm check:import-cycles && pnpm check:madge-import-cycles && pnpm check:deprecated-api-usage && pnpm check:deprecated-jsdoc && pnpm db:kysely:check && pnpm lint:kysely && pnpm check:database-first-legacy-stores",
     "check:base-config-schema": "node --import tsx scripts/generate-base-config-schema.ts --check",
+    "check:brand": "node scripts/check-brand-leaks.mjs",
     "check:bundled-channel-config-metadata": "node --import tsx scripts/generate-bundled-channel-config-metadata.ts --check",
     "check:changed": "node scripts/check-changed.mjs",
     "check:changelog-attributions": "node scripts/check-changelog-attributions.mjs",
