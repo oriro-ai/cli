@@ -57,6 +57,10 @@ export function playWav(wav: Uint8Array): Promise<boolean> {
         return resolve(false);
       }
       const p = players[i];
+      if (!p) {
+        rmSync(file, { force: true });
+        return resolve(false);
+      }
       const child = spawn(p.cmd, p.args, { stdio: "ignore" });
       child.on("error", () => tryPlayer(i + 1)); // command not found → next player
       child.on("close", (code) => {

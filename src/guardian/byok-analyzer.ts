@@ -49,7 +49,7 @@ const SEV: Record<GuardianVerdict["decision"], GuardianSeverity> = {
 /** Parse the model's line into a verdict; on anything unparseable, keep the rule's verdict. */
 export function parseModelVerdict(text: string, fallback: GuardianVerdict): GuardianVerdict {
   const dm = /VERDICT\s*=\s*(allow|ask|block)/i.exec(text);
-  if (!dm) return fallback;
+  if (!dm?.[1]) return fallback;
   const decision = dm[1].toLowerCase() as GuardianVerdict["decision"];
   const rm = /REASON\s*=\s*(.+)/i.exec(text);
   const reason = (rm?.[1] ?? fallback.reason).trim().slice(0, 200);

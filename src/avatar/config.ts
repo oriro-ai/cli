@@ -2,13 +2,13 @@
 // ~/.oriro/avatar.json and becomes the terminal's face for every session until changed.
 // On-device only (OR-LOCAL-ONLY).
 
-import { homedir } from "node:os";
 import { join } from "node:path";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { avatarBySlug, type AvatarEntry } from "./manifest.js";
+import { oriroDir, ensureOriroDir } from "../config/paths.js";
 
-const DIR = join(homedir(), ".oriro");
-const FILE = join(DIR, "avatar.json");
+// Routed through the ORIRO config shim (respects ORIRO_STATE_DIR) — single source of truth.
+const FILE = (): string => join(oriroDir(), "avatar.json");
 
 export interface AvatarConfig {
   /** Chosen avatar slug. */
@@ -23,15 +23,15 @@ export interface AvatarConfig {
 
 export function readAvatarConfig(): AvatarConfig | null {
   try {
-    return JSON.parse(readFileSync(FILE, "utf8")) as AvatarConfig;
+    return JSON.parse(readFileSync(FILE(), "utf8")) as AvatarConfig;
   } catch {
     return null;
   }
 }
 
 export function writeAvatarConfig(cfg: AvatarConfig): void {
-  mkdirSync(DIR, { recursive: true });
-  writeFileSync(FILE, JSON.stringify(cfg, null, 2) + "\n", "utf8");
+  const f = join(ensureOriroDir(), "avatar.json");
+  writeFileSync(f, JSON.stringify(cfg, null, 2) + "\n", "utf8");
 }
 
 export function isAvatarConfigured(): boolean {

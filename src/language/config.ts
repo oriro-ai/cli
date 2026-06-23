@@ -2,13 +2,13 @@
 // becomes the terminal's language for every session (until changed). Stored on the
 // user's machine only (~/.oriro/language.json) — OR-LOCAL-ONLY.
 
-import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { ENGLISH, languageByCode, type OriroLanguage } from './languages.js';
+import { oriroDir, ensureOriroDir } from '../config/paths.js';
 
-const DIR = join(homedir(), '.oriro');
-const FILE = join(DIR, 'language.json');
+// Routed through the ORIRO config shim (respects ORIRO_STATE_DIR) — single source of truth.
+const file = (): string => join(oriroDir(), 'language.json');
 
 export interface LanguageConfig {
   /** ISO code of the terminal's language. */
@@ -21,15 +21,15 @@ export interface LanguageConfig {
 
 export function readLanguageConfig(): LanguageConfig | null {
   try {
-    return JSON.parse(readFileSync(FILE, 'utf8')) as LanguageConfig;
+    return JSON.parse(readFileSync(file(), 'utf8')) as LanguageConfig;
   } catch {
     return null;
   }
 }
 
 export function writeLanguageConfig(cfg: LanguageConfig): void {
-  mkdirSync(DIR, { recursive: true });
-  writeFileSync(FILE, JSON.stringify(cfg, null, 2) + '\n', 'utf8');
+  const f = join(ensureOriroDir(), 'language.json');
+  writeFileSync(f, JSON.stringify(cfg, null, 2) + '\n', 'utf8');
 }
 
 export function isLanguageConfigured(): boolean {

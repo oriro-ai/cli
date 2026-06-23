@@ -121,7 +121,8 @@ export const LANGUAGES: OriroLanguage[] = [
   { name: 'Cantonese', code: 'yue', neuralVoice: false },
 ];
 
-export const ENGLISH: OriroLanguage = LANGUAGES[0];
+export const ENGLISH: OriroLanguage =
+  LANGUAGES.find((l) => l.code === 'en') ?? { name: 'English', code: 'en', neuralVoice: true };
 
 /** Lookup by ISO code (case-insensitive). */
 export function languageByCode(code: string): OriroLanguage | undefined {

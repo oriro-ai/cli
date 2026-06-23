@@ -3,6 +3,9 @@
 // Per request: route to the best-scoring healthy router (lowest latency, has quota,
 // not cooling down); on error/429/timeout, invisible failover to the next-best.
 // More routers = more rate-limit headroom + lower latency. Self-healing, key-free logic.
+//
+// FOLDED CLEAN from oriro-ai/cli src/routers/mux.ts — pure logic, zero OpenClaw footprint
+// (only node:fs/node:path). Unchanged on fold; this is the proven engine.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -102,7 +105,7 @@ export class RouterMux {
   }
 }
 
-// ── Cross-process persistence (gap B): health survives between CLI invocations ──
+// ── Cross-process persistence: health survives between CLI invocations ──
 export function healthStatePath(dir: string): string {
   return join(dir, "routers", "health.json");
 }

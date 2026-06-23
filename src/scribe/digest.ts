@@ -21,11 +21,11 @@ export function updateDigest(summary: string, context?: string): void {
   let contextBlock = context?.trim();
   if (!contextBlock) {
     const m = existing.match(/## Context\n([\s\S]*?)\n## /);
-    contextBlock = m ? m[1].trim() : "_(not set yet)_";
+    contextBlock = m?.[1]?.trim() ?? "_(not set yet)_";
   }
 
   const recentMatch = existing.match(/## Recent activity[^\n]*\n([\s\S]*)$/);
-  const priorRecent = recentMatch ? recentMatch[1].trim() : "";
+  const priorRecent = recentMatch?.[1]?.trim() ?? "";
   let recent = summary.trim() ? `- ${summary.trim()}\n${priorRecent}` : priorRecent;
 
   const header = `# ORIRO Scribe — Digest\n\n## Context\n${contextBlock}\n\n## Recent activity (newest first)\n`;

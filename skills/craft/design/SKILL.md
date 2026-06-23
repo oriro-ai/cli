@@ -3,7 +3,8 @@ watermark: ORIRO
 name: design
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai
-description: Master design skill combining frontend engineering, UI/UX strategy, and canvas/visual creation. Activate for ANY design request — web components, landing pages, dashboards, apps, posters, banners, illustrations, social graphics, mockups, or any visual artifact. Triggers on: /design command, "design this", "make it look better", "create a UI", "build a layout", "make a poster", "create a banner", "design a logo", "build a dashboard", "make this beautiful", "improve the UI", "canvas design", "visual design", "UX this", "wireframe", "mockup", "brand design", or any request where the primary deliverable is visual. Do NOT skip this skill for any design task — it contains critical aesthetic rules and production patterns that elevate every output.
+description: >-
+  Master design skill combining frontend engineering, UI/UX strategy, and canvas/visual creation. Activate for ANY design request — web components, landing pages, dashboards, apps, posters, banners, illustrations, social graphics, mockups, or any visual artifact. Triggers on the /design command, "design this", "make it look better", "create a UI", "build a layout", "make a poster", "create a banner", "design a logo", "build a dashboard", "make this beautiful", "improve the UI", "canvas design", "visual design", "UX this", "wireframe", "mockup", "brand design", or any request where the primary deliverable is visual. Do NOT skip this skill for any design task — it contains critical aesthetic rules and production patterns that elevate every output.
 ---
 
 # /design — Master Design Skill

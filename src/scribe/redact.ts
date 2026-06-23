@@ -26,7 +26,11 @@ const RULES: Rule[] = [
   },
   { label: "anthropic-key", re: /sk-ant-[A-Za-z0-9_-]{20,}/g },
   { label: "openrouter-key", re: /sk-or-v1-[A-Za-z0-9]{20,}/g },
-  { label: "openai-key", re: /sk-(?:proj-)?[A-Za-z0-9]{20,}/g },
+  // Stripe-style keys (sk_live_/pk_live_/rk_test_/…), underscore segments.
+  { label: "stripe-key", re: /\b[srp]k_(?:live|test)_[A-Za-z0-9]{16,}/g },
+  // Generic sk- secret keys — allow hyphenated segments (sk-live-…, sk-proj-…) so a second
+  // hyphen no longer breaks the match (the gap the Scriber spike caught).
+  { label: "secret-key-sk", re: /sk[-_][A-Za-z0-9][A-Za-z0-9-]{14,}/g },
   { label: "google-key", re: /AIza[0-9A-Za-z_-]{30,}/g },
   { label: "groq-key", re: /gsk_[A-Za-z0-9]{20,}/g },
   { label: "github-pat", re: /github_pat_[A-Za-z0-9_]{20,}/g },
@@ -34,7 +38,7 @@ const RULES: Rule[] = [
   { label: "xai-key", re: /xai-[A-Za-z0-9]{20,}/g },
   { label: "aws-key", re: /AKIA[0-9A-Z]{16}/g },
   { label: "jwt", re: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{6,}/g },
-  { label: "telegram-token", re: /\b\d{8,10}:[A-Za-z0-9_-]{35}\b/g },
+  { label: "telegram-token", re: /\b\d{8,10}:[A-Za-z0-9_-]{30,}\b/g },
   { label: "email", re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g },
   { label: "phone", re: /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}/g },
 ];
@@ -62,7 +66,11 @@ function looksLikeUnknownSecret(token: string): boolean {
   if (token.length < 40) return false;
   if (token.includes("⟨REDACTED:")) return false;
   if (/^[0-9a-f]+$/i.test(token)) return false; // hex hashes/SHAs — not secrets
-  if (!/[a-z]/.test(token) || !/[A-Z]/.test(token) || !/[0-9]/.test(token)) return false;
+  // Need ≥2 distinct charset classes — catches all-UPPERCASE+digit tokens (e.g. some API/bot
+  // tokens) that an all-3-classes rule would miss, while still excluding plain words.
+  const classes =
+    (/[a-z]/.test(token) ? 1 : 0) + (/[A-Z]/.test(token) ? 1 : 0) + (/[0-9]/.test(token) ? 1 : 0);
+  if (classes < 2) return false;
   return entropy(token) >= 4.2;
 }
 

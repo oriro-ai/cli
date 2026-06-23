@@ -7,10 +7,11 @@ import { stdin, stdout } from 'node:process';
 import { LANGUAGES, searchLanguages, NEURAL_VOICE_COUNT, languageByCode, type OriroLanguage } from './languages.js';
 import { readLanguageConfig, setTerminalLanguage } from './config.js';
 
-// ORIRO palette (teal → purple, matching the logo gradient).
+// ORIRO brand palette (teal → violet, matching ui/theme.ts). Inline raw codes here because
+// this readline picker streams to stdout directly; the full pi-tui screen lands in the wrapper.
 const C = {
-  teal: '\x1b[38;2;34;184;166m',
-  purple: '\x1b[38;2;155;93;229m',
+  teal: '\x1b[38;2;45;212;191m',
+  purple: '\x1b[38;2;128;96;222m',
   dim: '\x1b[2m',
   bold: '\x1b[1m',
   reset: '\x1b[0m',
@@ -43,17 +44,17 @@ export async function selectLanguageInteractive(): Promise<OriroLanguage> {
     for (;;) {
       const ans = (await rl.question(`\n  ${C.teal}›${C.reset} Type a language, or a number to pick: `)).trim();
       const n = Number(ans);
-      if (ans && Number.isInteger(n) && n >= 1 && n <= list.length) {
-        return list[n - 1];
-      }
+      const byNumber = ans && Number.isInteger(n) && n >= 1 && n <= list.length ? list[n - 1] : undefined;
+      if (byNumber) return byNumber;
       const direct = languageByCode(ans);
       if (direct) return direct;
       list = searchLanguages(ans);
       if (list.length === 0) {
         stdout.write(`  ${C.dim}No match — try the English name or ISO code.${C.reset}\n`);
         list = searchLanguages('');
-      } else if (list.length === 1) {
-        return list[0];
+      } else {
+        const only = list.length === 1 ? list[0] : undefined;
+        if (only) return only;
       }
       stdout.write('\n');
       renderList(list);

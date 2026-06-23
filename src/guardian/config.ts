@@ -3,14 +3,14 @@
 // later tune the mode and the allow/deny lists, but "off" is deliberately not a
 // first-run choice. Stored at ~/.oriro/guardian.json (OR-LOCAL-ONLY).
 
-import { homedir } from "node:os";
 import { join } from "node:path";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import type { GuardianMode } from "./types.js";
 import type { GuardianPolicy } from "./policy.js";
+import { oriroDir, ensureOriroDir } from "../config/paths.js";
 
-const DIR = join(homedir(), ".oriro");
-const FILE = join(DIR, "guardian.json");
+// Routed through the ORIRO config shim (respects ORIRO_STATE_DIR) — single source of truth.
+const FILE = (): string => join(oriroDir(), "guardian.json");
 
 export interface GuardianConfig {
   /** Master switch. Defaults to true; first-run never offers false. */
@@ -38,7 +38,7 @@ export const DEFAULT_GUARDIAN_CONFIG: GuardianConfig = {
 
 export function readGuardianConfig(): GuardianConfig {
   try {
-    const parsed = JSON.parse(readFileSync(FILE, "utf8")) as Partial<GuardianConfig>;
+    const parsed = JSON.parse(readFileSync(FILE(), "utf8")) as Partial<GuardianConfig>;
     return { ...DEFAULT_GUARDIAN_CONFIG, ...parsed };
   } catch {
     return { ...DEFAULT_GUARDIAN_CONFIG };
@@ -46,14 +46,14 @@ export function readGuardianConfig(): GuardianConfig {
 }
 
 export function writeGuardianConfig(cfg: GuardianConfig): void {
-  mkdirSync(DIR, { recursive: true });
-  writeFileSync(FILE, JSON.stringify(cfg, null, 2) + "\n", "utf8");
+  const f = join(ensureOriroDir(), "guardian.json");
+  writeFileSync(f, JSON.stringify(cfg, null, 2) + "\n", "utf8");
 }
 
 /** True once Guardian's config file exists (i.e. it was activated during onboarding). */
 export function isGuardianActivated(): boolean {
   try {
-    readFileSync(FILE, "utf8");
+    readFileSync(FILE(), "utf8");
     return true;
   } catch {
     return false;

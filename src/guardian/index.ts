@@ -54,7 +54,9 @@ export {
   parseModelVerdict,
 } from "./byok-analyzer.js";
 
-export { buildGuardianCall, guardianBeforeToolCall } from "./hook.js";
+// Pi-native binding (replaces the OpenClaw-coupled hook.ts/extension.ts — neither folded).
+export { registerGuardian } from "./pi-gate.js";
+export { normalizeCall, buildGuardianCall } from "./normalize.js";
 
 export { vetMcpServer } from "./mcp.js";
 

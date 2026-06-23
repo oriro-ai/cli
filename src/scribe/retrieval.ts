@@ -34,8 +34,9 @@ export function searchScribe(query: string, limit = 100): ScribeHit[] {
   for (const date of listDays().reverse()) {
     const lines = readDay(date).split("\n");
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i].toLowerCase().includes(q)) {
-        hits.push({ date, line: i + 1, text: lines[i].trim().slice(0, 200) });
+      const ln = lines[i];
+      if (ln && ln.toLowerCase().includes(q)) {
+        hits.push({ date, line: i + 1, text: ln.trim().slice(0, 200) });
         if (hits.length >= limit) return hits;
       }
     }

@@ -1,3 +1,9 @@
+// NOTE: the page.evaluate(...) callbacks below run inside the BROWSER (Chromium via
+// Playwright), so they reference browser globals. Declared as `any` here so this Node CLI
+// compiles without pulling the whole DOM lib into the project.
+declare const window: any;
+declare const document: any;
+
 // @oriro/head/screenshot — the SCREENSHOT head. Visits each URL in a real browser
 // (hydration-wait + scroll-to-bottom for lazy content) and captures a full-page
 // screenshot of every screen, then assembles them into ONE visual flow HTML.
