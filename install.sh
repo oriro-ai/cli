@@ -28,7 +28,7 @@ else
   say "No JavaScript runtime found (need npm, pnpm, or bun)."
   say "Install bun (no Node.js required), then install ORIRO globally:"
   say ""
-  say "    curl -fsSL https://bun.sh/install | bash && bun install -g oriro"
+  say "    curl -fsSL https://bun.sh/install | bash && bun install -g @oriro/cli"
   say ""
   say "Then re-run this installer, or just use the bun command above."
   exit 0
