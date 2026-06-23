@@ -14,11 +14,20 @@ ORIRO ships as a **prebuilt npm package** — no compiled binary, **no code sign
 
 **1. With npm / Node (already have Node ≥ 22.19):**
 
+Install globally, then run:
+
 ```sh
 npm i -g @oriro/cli
-# or run it once, no install:
+oriro
+```
+
+Or run once, no install (same result):
+
+```sh
 npx @oriro/cli
 ```
+
+Both paths reach the **same** first‑run ORIRO setup.
 
 **2. No Node? Use bun (installs its own runtime — zero Node needed):**
 
