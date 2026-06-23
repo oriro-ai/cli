@@ -34,7 +34,7 @@ import { McpServer } from ${JSON.stringify(sdkMcpServerPath)};
 import { StdioServerTransport } from ${JSON.stringify(sdkStdioServerPath)};
 
 const server = new McpServer({ name: "agent-bundle-mcp-tools-probe", version: "1.0.0" });
-server.tool("docker_probe", "Docker Oriro MCP tool availability probe", async () => ({
+server.tool("docker_probe", "Docker ORIRO MCP tool availability probe", async () => ({
   content: [{ type: "text", text: "agent-bundle-mcp-tools-ok" }],
 }));
 

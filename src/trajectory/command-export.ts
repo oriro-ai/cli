@@ -57,7 +57,7 @@ async function resolveTrajectoryExportBaseDir(workspaceDir: string): Promise<{
   const stateDir = path.join(workspacePath, ".oriro");
   await mkdirIfMissingThenValidate({
     dir: stateDir,
-    label: "Oriro state directory",
+    label: "ORIRO state directory",
     realWorkspace,
   });
   const baseDir = path.join(stateDir, "trajectory-exports");

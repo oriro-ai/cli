@@ -65,7 +65,7 @@ struct GatewayDiscoveryModelTests {
 
     @Test func `service name does not false positive on substring host token`() {
         let local = GatewayDiscoveryModel.LocalIdentity(
-            hostTokens: ["steipete"],
+            hostTokens: ["oriro"],
             displayTokens: [])
         #expect(!GatewayDiscoveryModel.isLocalGateway(
             lanHost: nil,
@@ -77,7 +77,7 @@ struct GatewayDiscoveryModelTests {
             lanHost: nil,
             tailnetDns: nil,
             displayName: nil,
-            serviceName: "steipete (Oriro)",
+            serviceName: "oriro (Oriro)",
             local: local))
     }
 

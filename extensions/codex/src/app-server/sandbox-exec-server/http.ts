@@ -118,7 +118,7 @@ async function runStreamingSandboxHttpRequest(
   });
   const [command, ...args] = execSpec.argv;
   if (!command) {
-    throw new Error("Oriro sandbox HTTP exec spec did not provide a command.");
+    throw new Error("ORIRO sandbox HTTP exec spec did not provide a command.");
   }
 
   const child = spawn(command, args, {

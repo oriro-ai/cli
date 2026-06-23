@@ -72,7 +72,7 @@ export const slackChannelConfigUiHints = {
   },
   "socketMode.clientPingTimeout": {
     label: "Slack Socket Mode Pong Timeout",
-    help: "Milliseconds the Slack SDK waits for a pong after its client ping before treating the websocket as stale (Oriro default: 15000). Increase on hosts with event-loop starvation or slow network scheduling.",
+    help: "Milliseconds the Slack SDK waits for a pong after its client ping before treating the websocket as stale (ORIRO default: 15000). Increase on hosts with event-loop starvation or slow network scheduling.",
   },
   "socketMode.serverPingTimeout": {
     label: "Slack Socket Mode Server Ping Timeout",
@@ -81,6 +81,22 @@ export const slackChannelConfigUiHints = {
   "socketMode.pingPongLoggingEnabled": {
     label: "Slack Socket Mode Ping/Pong Logging",
     help: "Enable Slack SDK ping/pong transport logs while debugging Socket Mode websocket health.",
+  },
+  relay: {
+    label: "Slack Relay Mode",
+    help: 'Relay-delivered Slack events. Use with mode="relay" when oriro-slack-router owns the Slack Socket Mode connection.',
+  },
+  "relay.url": {
+    label: "Slack Relay URL",
+    help: "Full websocket URL for oriro-slack-router. Include the route path, for example ws://127.0.0.1:8081/gateway/ws.",
+  },
+  "relay.authToken": {
+    label: "Slack Relay Auth Token",
+    help: "Bearer token used by this gateway to authenticate its reverse websocket connection to oriro-slack-router.",
+  },
+  "relay.gatewayId": {
+    label: "Slack Relay Gateway ID",
+    help: "Destination id that oriro-slack-router uses when routing user-group mentions to this gateway.",
   },
   botToken: {
     label: "Slack Bot Token",
@@ -104,7 +120,7 @@ export const slackChannelConfigUiHints = {
   },
   execApprovals: {
     label: "Slack Exec Approvals",
-    help: "Slack-native exec approval routing and approver authorization. When unset, Oriro auto-enables DM-first native approvals if approvers can be resolved for this workspace account.",
+    help: "Slack-native exec approval routing and approver authorization. When unset, ORIRO auto-enables DM-first native approvals if approvers can be resolved for this workspace account.",
   },
   "execApprovals.enabled": {
     label: "Slack Exec Approvals Enabled",
@@ -112,7 +128,7 @@ export const slackChannelConfigUiHints = {
   },
   "execApprovals.approvers": {
     label: "Slack Exec Approval Approvers",
-    help: "Slack user IDs allowed to approve exec requests for this workspace account. Use Slack user IDs or user targets such as `U123`, `user:U123`, or `<@U123>`. If you leave this unset, Oriro falls back to commands.ownerAllowFrom when possible.",
+    help: "Slack user IDs allowed to approve exec requests for this workspace account. Use Slack user IDs or user targets such as `U123`, `user:U123`, or `<@U123>`. If you leave this unset, ORIRO falls back to commands.ownerAllowFrom when possible.",
   },
   "execApprovals.agentFilter": {
     label: "Slack Exec Approval Agent Filter",
@@ -164,7 +180,7 @@ export const slackChannelConfigUiHints = {
   },
   "streaming.progress.labels": {
     label: "Slack Progress Label Pool",
-    help: 'Candidate labels for streaming.progress.label="auto". Leave unset to use Oriro built-in progress labels.',
+    help: 'Candidate labels for streaming.progress.label="auto". Leave unset to use ORIRO built-in progress labels.',
   },
   "streaming.progress.maxLines": {
     label: "Slack Progress Max Lines",

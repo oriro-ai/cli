@@ -37,7 +37,7 @@ export function buildOpenRouterSpeechProvider(): SpeechProviderPlugin {
     baseUrlPolicy: { kind: "canonical", aliases: ["https://openrouter.ai/v1"] },
     extraHeaders: {
       "HTTP-Referer": "https://oriro.ai",
-      "X-OpenRouter-Title": "Oriro",
+      "X-OpenRouter-Title": "ORIRO",
     },
     apiErrorLabel: "OpenRouter TTS API error",
     missingApiKeyError: "OpenRouter API key missing",

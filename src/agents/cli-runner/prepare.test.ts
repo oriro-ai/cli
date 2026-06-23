@@ -112,6 +112,7 @@ function createTestMcpLoopbackServerConfig(port: number) {
       oriro: {
         type: "http",
         url: `http://127.0.0.1:${port}/mcp`,
+        alwaysLoad: true,
         headers: {
           Authorization: "Bearer ${ORIRO_MCP_TOKEN}",
           "x-session-key": "${ORIRO_MCP_SESSION_KEY}",
@@ -1005,7 +1006,7 @@ describe("shouldSkipLocalCliCredentialEpoch", () => {
     );
     expect(context.systemPrompt).toBe("BTW system prompt");
     expect(context.params.prompt).toBe("side question prompt");
-    expect(context.oriroHistoryPrompt).toBeUndefined();
+    expect(context.openOriroHistoryPrompt).toBeUndefined();
     expect(context.contextEngine).toBeUndefined();
     expect(context.contextEngineTurnPrompt).toBeUndefined();
     expect(context.hadSessionFile).toBe(false);
@@ -1235,8 +1236,8 @@ describe("shouldSkipLocalCliCredentialEpoch", () => {
 
       expect(context.reusableCliSession).toEqual({ sessionId: "cli-session" });
       expect(context.params.prompt).toBe("Current event:\nBob: yes\n\n[Oriro room event]");
-      expect(context.oriroHistoryPrompt).toContain("Room context:\nAlice: lunch?");
-      expect(context.oriroHistoryPrompt).toContain("Current event:\nBob: yes");
+      expect(context.openOriroHistoryPrompt).toContain("Room context:\nAlice: lunch?");
+      expect(context.openOriroHistoryPrompt).toContain("Current event:\nBob: yes");
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
@@ -1884,8 +1885,8 @@ describe("shouldSkipLocalCliCredentialEpoch", () => {
       });
 
       expect(context.reusableCliSession).toEqual({ invalidatedReason: "system-prompt" });
-      expect(context.oriroHistoryPrompt).toContain("prior no-compaction ask");
-      expect(context.oriroHistoryPrompt).toContain("latest ask");
+      expect(context.openOriroHistoryPrompt).toContain("prior no-compaction ask");
+      expect(context.openOriroHistoryPrompt).toContain("latest ask");
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
@@ -1924,8 +1925,8 @@ describe("shouldSkipLocalCliCredentialEpoch", () => {
       });
 
       expect(context.reusableCliSession).toEqual({ sessionId: "cli-session" });
-      expect(context.oriroHistoryPrompt).toContain("prior resumable ask");
-      expect(context.oriroHistoryPrompt).toContain("latest ask");
+      expect(context.openOriroHistoryPrompt).toContain("prior resumable ask");
+      expect(context.openOriroHistoryPrompt).toContain("latest ask");
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
@@ -3071,9 +3072,9 @@ describe("shouldSkipLocalCliCredentialEpoch", () => {
         config: createCliBackendConfig(),
       });
 
-      expect(context.oriroHistoryPrompt).toBeDefined();
-      expect(context.oriroHistoryPrompt).toContain(summaryMarker);
-      expect(context.oriroHistoryPrompt).not.toContain("Oriro reseed history truncated");
+      expect(context.openOriroHistoryPrompt).toBeDefined();
+      expect(context.openOriroHistoryPrompt).toContain(summaryMarker);
+      expect(context.openOriroHistoryPrompt).not.toContain("Oriro reseed history truncated");
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
@@ -3126,9 +3127,9 @@ describe("shouldSkipLocalCliCredentialEpoch", () => {
         config: createCliBackendConfig(),
       });
 
-      expect(context.oriroHistoryPrompt).toBeDefined();
-      expect(context.oriroHistoryPrompt).toContain(summaryMarker);
-      expect(context.oriroHistoryPrompt).not.toContain("Oriro reseed history truncated");
+      expect(context.openOriroHistoryPrompt).toBeDefined();
+      expect(context.openOriroHistoryPrompt).toContain(summaryMarker);
+      expect(context.openOriroHistoryPrompt).not.toContain("Oriro reseed history truncated");
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
@@ -3160,8 +3161,8 @@ describe("shouldSkipLocalCliCredentialEpoch", () => {
         config: createCliBackendConfig(),
       });
 
-      expect(context.oriroHistoryPrompt).toBeDefined();
-      expect(context.oriroHistoryPrompt).toContain("Oriro reseed history truncated");
+      expect(context.openOriroHistoryPrompt).toBeDefined();
+      expect(context.openOriroHistoryPrompt).toContain("Oriro reseed history truncated");
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }
@@ -3236,10 +3237,10 @@ describe("shouldSkipLocalCliCredentialEpoch", () => {
       });
 
       expect(context.reusableCliSession).toEqual({ sessionId: "cli-session" });
-      expect(context.oriroHistoryPrompt).toBeDefined();
-      expect(context.oriroHistoryPrompt).toContain(recentMarker);
-      expect(context.oriroHistoryPrompt).toContain("EARLIEST_USER");
-      expect(context.oriroHistoryPrompt).not.toContain("Oriro reseed history truncated");
+      expect(context.openOriroHistoryPrompt).toBeDefined();
+      expect(context.openOriroHistoryPrompt).toContain(recentMarker);
+      expect(context.openOriroHistoryPrompt).toContain("EARLIEST_USER");
+      expect(context.openOriroHistoryPrompt).not.toContain("Oriro reseed history truncated");
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

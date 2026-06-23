@@ -121,7 +121,7 @@ describe("install.ps1 failure handling", () => {
     const commandSafeBody = extractFunctionBody(source, "Invoke-CommandFromWindowsSafeDirectory");
     const npmCommandBody = extractFunctionBody(source, "Invoke-NpmCommand");
     const corepackCommandBody = extractFunctionBody(source, "Invoke-CorepackCommand");
-    const oriroPathBody = extractFunctionBody(source, "Ensure-OriroOnPath");
+    const openOriroPathBody = extractFunctionBody(source, "Ensure-OriroOnPath");
     const ensurePnpmBody = extractFunctionBody(source, "Ensure-Pnpm");
     const mainBody = extractFunctionBody(source, "Main");
 
@@ -131,7 +131,7 @@ describe("install.ps1 failure handling", () => {
     expect(commandSafeBody).toContain("Pop-Location");
     expect(npmCommandBody).toContain("Invoke-CommandFromWindowsSafeDirectory");
     expect(corepackCommandBody).toContain("Invoke-CommandFromWindowsSafeDirectory");
-    expect(oriroPathBody).toContain('Invoke-NpmCommand -Arguments @("config", "get", "prefix")');
+    expect(openOriroPathBody).toContain('Invoke-NpmCommand -Arguments @("config", "get", "prefix")');
     expect(ensurePnpmBody).toContain(
       'Invoke-CorepackCommand -Arguments @("prepare", $pnpmSpec, "--activate")',
     );
@@ -146,7 +146,7 @@ describe("install.ps1 failure handling", () => {
     const npmInstallBody = extractFunctionBody(source, "Install-Oriro");
     const sourceTargetBody = extractFunctionBody(source, "Test-OriroSourcePackageInstallSpec");
     expect(sourceTargetBody).toContain('$normalizedTag -eq "main"');
-    expect(sourceTargetBody).toContain("^github:oriro-ai/cli");
+    expect(sourceTargetBody).toContain("^github:oriro/oriro");
     expect(npmInstallBody).toContain("Test-OriroSourcePackageInstallSpec -RequestedTag $Tag");
     expect(npmInstallBody).toContain("npm installs do not support Oriro GitHub source targets");
     expect(npmInstallBody).toContain("-InstallMethod git -Tag main");

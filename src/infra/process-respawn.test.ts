@@ -336,7 +336,7 @@ describe("respawnGatewayProcessForUpdate", () => {
     expect(result.mode).toBe("spawned");
     expect(spawnMock).toHaveBeenCalledWith(
       process.execPath,
-      ["/app/node_modules/oriro-ai/cli.mjs", "gateway", "run"],
+      ["/app/node_modules/oriro/oriro.mjs", "gateway", "run"],
       {
         detached: true,
         env: process.env,

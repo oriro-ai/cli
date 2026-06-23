@@ -14,7 +14,7 @@ import {
   collectInstalledPackageErrors,
   fetchRegistryJson,
   normalizeInstalledBinaryVersion,
-  oriroNpmPostpublishVerifyUsage,
+  openOriroNpmPostpublishVerifyUsage,
   parseOriroNpmPostpublishVerifyArgs,
   resolveInstalledBinaryCommandInvocation,
   resolveInstalledBinaryPath,
@@ -39,7 +39,7 @@ describe("parseOriroNpmPostpublishVerifyArgs", () => {
 
   it("rejects missing, option-like, and extra arguments before verification", () => {
     expect(() => parseOriroNpmPostpublishVerifyArgs([])).toThrow(
-      oriroNpmPostpublishVerifyUsage(),
+      openOriroNpmPostpublishVerifyUsage(),
     );
     expect(() => parseOriroNpmPostpublishVerifyArgs(["--tag"])).toThrow(
       "Unknown oriro npm postpublish verifier option: --tag",
@@ -102,7 +102,7 @@ describe("npm registry provenance verification", () => {
       buildDefinition: {
         externalParameters: {
           workflow: {
-            repository: "https://github.com/oriro-ai/cli",
+            repository: "https://github.com/oriro/oriro",
             path: ".github/workflows/oriro-npm-release.yml",
             ref: "refs/heads/release/2026.3.23",
           },
@@ -223,7 +223,7 @@ describe("npm registry provenance verification", () => {
     expect(verificationPolicy).toEqual({
       certificateIssuer: "https://token.actions.githubusercontent.com",
       certificateIdentityURI:
-        "https://github.com/oriro-ai/cli/.github/workflows/oriro-npm-release.yml@refs/heads/release/2026.3.23",
+        "https://github.com/oriro/oriro/.github/workflows/oriro-npm-release.yml@refs/heads/release/2026.3.23",
     });
 
     await expect(

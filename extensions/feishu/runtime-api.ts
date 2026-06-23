@@ -17,7 +17,7 @@ export type {
   PluginRuntime,
   ReplyPayload,
 } from "oriro/plugin-sdk/core";
-export type { OriroConfig as ClawdbotConfig } from "oriro/plugin-sdk/core";
+export type { OriroConfig as OriroConfig } from "oriro/plugin-sdk/core";
 export type RuntimeEnv = {
   log: (...args: unknown[]) => void;
   error: (...args: unknown[]) => void;

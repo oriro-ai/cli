@@ -811,7 +811,7 @@ describe("collectReleasePackageMetadataErrors", () => {
         name: "oriro",
         description: "Multi-channel AI gateway with extensible messaging integrations",
         license: "MIT",
-        repository: { url: "git+https://github.com/oriro-ai/cli.git" },
+        repository: { url: "git+https://github.com/oriro/oriro.git" },
         bin: { oriro: "oriro.mjs" },
       }),
     ).toStrictEqual([]);
@@ -823,7 +823,7 @@ describe("collectReleasePackageMetadataErrors", () => {
         name: "oriro",
         description: "Multi-channel AI gateway with extensible messaging integrations",
         license: "MIT",
-        repository: { url: "git+https://github.com/oriro-ai/cli.git" },
+        repository: { url: "git+https://github.com/oriro/oriro.git" },
         bin: { oriro: "oriro.mjs" },
         peerDependencies: { "node-llama-cpp": "3.18.1" },
         peerDependenciesMeta: { "node-llama-cpp": { optional: true } },
@@ -840,7 +840,7 @@ describe("collectReleasePackageMetadataErrors", () => {
         name: "oriro",
         description: "Multi-channel AI gateway with extensible messaging integrations",
         license: "MIT",
-        repository: { url: "git+https://github.com/oriro-ai/cli.git" },
+        repository: { url: "git+https://github.com/oriro/oriro.git" },
         bin: { oriro: "oriro.mjs" },
         dependencies: { "node-llama-cpp": "3.18.1" },
       }),
@@ -853,12 +853,12 @@ describe("collectReleasePackageMetadataErrors", () => {
         name: "oriro",
         description: "Multi-channel AI gateway with extensible messaging integrations",
         license: "MIT",
-        repository: { url: "git+https://github.com/oriro-ai/cli.git" },
+        repository: { url: "git+https://github.com/oriro/oriro.git" },
         bin: { oriro: "oriro.mjs" },
-        dependencies: { "@oriro/fs-safe": "link:../fs-safe" },
+        dependencies: { "@openclaw/fs-safe": "link:../fs-safe" },
       }),
     ).toContain(
-      'package.json dependencies["@oriro/fs-safe"] must use a published semver range before npm release; found "link:../fs-safe".',
+      'package.json dependencies["@openclaw/fs-safe"] must use a published semver range before npm release; found "link:../fs-safe".',
     );
   });
 
@@ -868,7 +868,7 @@ describe("collectReleasePackageMetadataErrors", () => {
         name: "oriro",
         description: "Multi-channel AI gateway with extensible messaging integrations",
         license: "MIT",
-        repository: { url: "git+https://github.com/oriro-ai/cli.git" },
+        repository: { url: "git+https://github.com/oriro/oriro.git" },
         bin: { oriro: "oriro.mjs" },
         optionalDependencies: { "node-llama-cpp": "3.18.1" },
       }),

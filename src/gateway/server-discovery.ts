@@ -17,12 +17,12 @@ type ResolveBonjourCliPathOptions = {
 export function formatBonjourInstanceName(displayName: string) {
   const trimmed = displayName.trim();
   if (!trimmed) {
-    return "Oriro";
+    return "ORIRO";
   }
   if (/oriro/i.test(trimmed)) {
     return trimmed;
   }
-  return `${trimmed} (Oriro)`;
+  return `${trimmed} (ORIRO)`;
 }
 
 /** Resolves the CLI path advertised to Bonjour clients, preferring explicit env config. */

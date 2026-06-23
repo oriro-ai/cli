@@ -1,10 +1,10 @@
 {
   "name": "@oriro/cohere-provider",
-  "version": "2026.6.8",
-  "description": "Oriro Cohere provider plugin.",
+  "version": "2026.6.9",
+  "description": "ORIRO Cohere provider plugin.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "devDependencies": {
@@ -21,10 +21,10 @@
       "minHostVersion": ">=2026.6.8"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8",
+      "oriroVersion": "2026.6.9",
       "bundledDist": true
     },
     "release": {

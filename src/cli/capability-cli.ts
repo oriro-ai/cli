@@ -67,15 +67,9 @@ import {
 } from "../media-understanding/runtime.js";
 import { convertHeicToJpeg, getImageMetadata } from "../media/media-services.js";
 import { saveMediaBuffer } from "../media/store.js";
-import {
-  createEmbeddingProvider,
-  registerBuiltInMemoryEmbeddingProviders,
-} from "../plugin-sdk/memory-core-bundled-runtime.js";
+import { createEmbeddingProvider } from "../plugin-sdk/memory-core-bundled-runtime.js";
 import { listEmbeddingProviders } from "../plugins/embedding-provider-runtime.js";
-import {
-  listMemoryEmbeddingProviders,
-  registerMemoryEmbeddingProvider,
-} from "../plugins/memory-embedding-providers.js";
+import { listMemoryEmbeddingProviders } from "../plugins/memory-embedding-providers.js";
 import { writeRuntimeJson, defaultRuntime, type RuntimeEnv } from "../runtime.js";
 import { getProviderEnvVars } from "../secrets/provider-env-vars.js";
 import { canonicalizeSpeechProviderId, listSpeechProviders } from "../tts/provider-registry.js";
@@ -120,7 +114,7 @@ import { collectOption } from "./program/helpers.js";
 type CapabilityTransport = "local" | "gateway";
 const IMAGE_OUTPUT_FORMATS = ["png", "jpeg", "webp"] as const;
 const IMAGE_BACKGROUNDS = ["transparent", "opaque", "auto"] as const;
-const LOCAL_MODEL_RUN_SYSTEM_PROMPT = "You are a personal assistant running inside Oriro.";
+const LOCAL_MODEL_RUN_SYSTEM_PROMPT = "You are a personal assistant running inside ORIRO.";
 const HEIC_MODEL_RUN_MIMES = new Set(["image/heic", "image/heif"]);
 
 type CapabilityMetadata = {
@@ -2040,7 +2034,6 @@ async function runMemoryEmbeddingCreate(params: {
   provider?: string;
   model?: string;
 }) {
-  ensureMemoryEmbeddingProvidersRegistered();
   const cfg = await resolveLocalCapabilityRuntimeConfig({
     commandName: "infer embedding create",
     targetIds: getMemoryEmbeddingCommandSecretTargetIds(),
@@ -2073,15 +2066,6 @@ async function runMemoryEmbeddingCreate(params: {
       dimensions: embedding.length,
     })),
   } satisfies CapabilityEnvelope;
-}
-
-function ensureMemoryEmbeddingProvidersRegistered(): void {
-  if (listMemoryEmbeddingProviders().length > 0) {
-    return;
-  }
-  registerBuiltInMemoryEmbeddingProviders({
-    registerMemoryEmbeddingProvider,
-  });
 }
 
 function registerCapabilityListAndInspect(capability: Command) {
@@ -2858,7 +2842,6 @@ export function registerCapabilityCli(program: Command) {
     .option("--json", "Output JSON", false)
     .action(async (opts) => {
       await runCommandWithRuntime(defaultRuntime, async () => {
-        ensureMemoryEmbeddingProvidersRegistered();
         const cfg = getRuntimeConfig();
         const agentId = resolveDefaultAgentId(cfg);
         const resolvedMemory = resolveMemorySearchConfig(cfg, agentId);

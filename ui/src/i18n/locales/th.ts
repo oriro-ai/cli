@@ -199,6 +199,7 @@ export const th: TranslationMap = {
     inherit: "สืบทอด",
     defaultOption: "ค่าเริ่มต้น ({value})",
     offExplicit: "ปิด (ระบุชัดเจน)",
+    auto: "auto",
     on: "เปิด",
     off: "ปิด",
     full: "เต็ม",
@@ -1278,7 +1279,7 @@ export const th: TranslationMap = {
         stepDashboard:
           "เปิด dashboard ที่เสิร์ฟอีกครั้งด้วย oriro dashboard เพื่อให้ UI และ Gateway มาจากการติดตั้งเดียวกัน",
         stepDevUi: "ถ้าใช้ pnpm ui:dev ให้ build ใหม่หรือรีสตาร์ท UI dev กับ checkout ปัจจุบัน",
-        stepRestart: "รีสตาร์ท Gateway หลังอัปเดต Oriro เพื่อให้เสิร์ฟโปรโตคอลปัจจุบัน",
+        stepRestart: "รีสตาร์ท Gateway หลังอัปเดต ORIRO เพื่อให้เสิร์ฟโปรโตคอลปัจจุบัน",
       },
       network: {
         title: "เชื่อมต่อไม่ได้",
@@ -1585,6 +1586,7 @@ export const th: TranslationMap = {
       nextHeartbeat: "heartbeat ถัดไป",
       wakeModeHelp: "Now จะทริกเกอร์ทันที ส่วน Next heartbeat จะรอรอบถัดไป",
       payloadKind: "ต้องการให้รันอะไร?",
+      command: "Command",
       systemEvent: "โพสต์ข้อความไปยังไทม์ไลน์หลัก",
       agentTurn: "รันงานของผู้ช่วย (แยก)",
       systemEventHelp: "ส่งข้อความของคุณไปยังไทม์ไลน์หลักของเกตเวย์ (เหมาะสำหรับการเตือน/ทริกเกอร์)",

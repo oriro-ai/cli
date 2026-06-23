@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 
 function readOptionValue(argv, index, optionName) {
   const value = argv[index + 1];
-  if (!value || value.startsWith("--")) {
+  if (!value || value.startsWith("-")) {
     throw new Error(`${optionName} requires a value`);
   }
   return value;
@@ -557,7 +557,7 @@ export function buildMarkdown(sourceDir, baselineSourceDir) {
   const memoryDeltaRows = buildMemoryDeltaRows(current, baseline);
 
   const lines = [
-    "# Oriro Source Performance",
+    "# ORIRO Source Performance",
     "",
     `Generated: ${new Date().toISOString()}`,
     "",

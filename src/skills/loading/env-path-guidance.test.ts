@@ -24,12 +24,12 @@ const CASES: GuidanceCase[] = [
   {
     file: "skills/gh-issues/SKILL.md",
     required: ["ORIRO_CONFIG_PATH"],
-    forbidden: ["cat ~/.oriro-ai/cli.json"],
+    forbidden: ["cat ~/.oriro/oriro.json"],
   },
   {
     file: "skills/canvas/SKILL.md",
     required: ["ORIRO_CONFIG_PATH"],
-    forbidden: ["cat ~/.oriro-ai/cli.json"],
+    forbidden: ["cat ~/.oriro/oriro.json"],
   },
   {
     file: "skills/openai-whisper-api/SKILL.md",

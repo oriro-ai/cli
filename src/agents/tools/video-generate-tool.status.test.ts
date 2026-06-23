@@ -57,7 +57,7 @@ describe("createVideoGenerateTool status actions", () => {
         ownerKey: "agent:main:discord:direct:123",
         scopeKind: "session",
         runId: "tool:video_generate:active",
-        task: "friendly oriro surfing",
+        task: "friendly lobster surfing",
         status: "running",
         deliveryStatus: "not_applicable",
         notifyPolicy: "silent",
@@ -67,7 +67,7 @@ describe("createVideoGenerateTool status actions", () => {
     ]);
 
     const result = createVideoGenerateDuplicateGuardResult("agent:main:discord:direct:123", {
-      prompt: "friendly oriro surfing",
+      prompt: "friendly lobster surfing",
     });
 
     const [content] = result?.content ?? [];
@@ -116,7 +116,7 @@ describe("createVideoGenerateTool status actions", () => {
         ownerKey: "agent:main:discord:direct:123",
         scopeKind: "session",
         runId: "tool:video_generate:active",
-        task: "friendly oriro surfing",
+        task: "friendly lobster surfing",
         status: "queued",
         deliveryStatus: "not_applicable",
         notifyPolicy: "silent",
@@ -159,8 +159,8 @@ describe("createVideoGenerateTool status actions", () => {
       sourcePrefix: "video_generate",
       taskId: "task-recent-video",
       runId: "tool:video_generate:recent",
-      taskLabel: "friendly oriro surfing",
-      requestKey: "video-request:friendly-oriro",
+      taskLabel: "friendly lobster surfing",
+      requestKey: "video-request:friendly-lobster",
       providerId: "google",
       progressSummary: "Generating video",
       nowMs: now - 20_000,
@@ -175,7 +175,7 @@ describe("createVideoGenerateTool status actions", () => {
         ownerKey: "agent:main:discord:direct:123",
         scopeKind: "session",
         runId: "tool:video_generate:recent",
-        task: "friendly oriro surfing",
+        task: "friendly lobster surfing",
         status: "succeeded",
         deliveryStatus: "not_applicable",
         notifyPolicy: "silent",
@@ -186,7 +186,7 @@ describe("createVideoGenerateTool status actions", () => {
     ]);
 
     const result = createVideoGenerateDuplicateGuardResult("agent:main:discord:direct:123", {
-      requestKey: "video-request:friendly-oriro",
+      requestKey: "video-request:friendly-lobster",
     });
     const text = (result?.content?.[0] as { text: string } | undefined)?.text ?? "";
 

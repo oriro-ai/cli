@@ -10,7 +10,7 @@ export const UNSUPPORTED_PROXY_PROTOCOL_MESSAGE =
 
 type NodeProxyProtocol = "http" | "https";
 type ProxylineCreateAmbientNodeProxyAgent =
-  typeof import("@oriro/proxyline").createAmbientNodeProxyAgent;
+  typeof import("@openclaw/proxyline").createAmbientNodeProxyAgent;
 type ProxylineAgentOptions = NonNullable<Parameters<ProxylineCreateAmbientNodeProxyAgent>[0]>;
 type ProxylineEnvSnapshot = NonNullable<ProxylineAgentOptions["env"]>;
 type ProxylineTlsOptions = ProxylineAgentOptions["proxyTls"];
@@ -106,7 +106,7 @@ function fixedProxyEnv(proxyUrl: URL): ProxylineEnvSnapshot {
 }
 
 function loadCreateAmbientNodeProxyAgent(): ProxylineCreateAmbientNodeProxyAgent {
-  return (require("@oriro/proxyline") as typeof import("@oriro/proxyline"))
+  return (require("@openclaw/proxyline") as typeof import("@openclaw/proxyline"))
     .createAmbientNodeProxyAgent;
 }
 

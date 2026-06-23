@@ -79,7 +79,7 @@ async function main() {
 
   assert(
     await shouldStartOnboardingForFreshInstall(["node", "oriro"]),
-    "fresh bare Oriro invocation did not route to onboarding",
+    "fresh bare ORIRO invocation did not route to onboarding",
   );
   assert(
     shouldStartCrestodianForModernOnboard(["node", "oriro", "onboard", "--modern"]),

@@ -333,7 +333,7 @@ fun ConnectTabScreen(viewModel: MainViewModel) {
             CommandBlock("oriro devices list")
             CommandBlock("oriro devices approve <requestId>")
           }
-          Text("Oriro Android ${oriroAndroidVersionLabel()}", style = mobileCaption1, color = mobileTextSecondary)
+          Text("Oriro Android ${openOriroAndroidVersionLabel()}", style = mobileCaption1, color = mobileTextSecondary)
           Button(
             onClick = {
               copyGatewayDiagnosticsReport(

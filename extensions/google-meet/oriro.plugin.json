@@ -1,7 +1,7 @@
 {
   "id": "google-meet",
   "name": "Google Meet",
-  "description": "Oriro Google Meet participant plugin for joining calls through Chrome or Twilio transports.",
+  "description": "ORIRO Google Meet participant plugin for joining calls through Chrome or Twilio transports.",
   "enabledByDefault": false,
   "commandAliases": [{ "name": "googlemeet" }],
   "activation": {
@@ -28,7 +28,7 @@
     },
     "defaultMode": {
       "label": "Default Mode",
-      "help": "Agent uses realtime transcription plus regular Oriro TTS. Bidi uses the realtime voice model directly. Transcribe observes only."
+      "help": "Agent uses realtime transcription plus regular ORIRO TTS. Bidi uses the realtime voice model directly. Transcribe observes only."
     },
     "chrome.audioBackend": {
       "label": "Chrome Audio Backend",
@@ -51,7 +51,7 @@
     },
     "chrome.autoJoin": {
       "label": "Auto Join Guest Screen",
-      "help": "Best-effort guest-name fill and Join Now click through Oriro browser automation."
+      "help": "Best-effort guest-name fill and Join Now click through ORIRO browser automation."
     },
     "chrome.waitForInCallMs": {
       "label": "Wait For In-Call (ms)",
@@ -163,7 +163,7 @@
     },
     "realtime.transcriptionProvider": {
       "label": "Realtime Transcription Provider",
-      "help": "Agent mode uses this provider to transcribe meeting audio before regular Oriro TTS answers."
+      "help": "Agent mode uses this provider to transcribe meeting audio before regular ORIRO TTS answers."
     },
     "realtime.voiceProvider": {
       "label": "Bidi Voice Provider",
@@ -171,7 +171,7 @@
     },
     "realtime.model": {
       "label": "Bidi Realtime Model",
-      "help": "Only used by mode=bidi. Agent mode answers with the configured Oriro agent and regular TTS.",
+      "help": "Only used by mode=bidi. Agent mode answers with the configured ORIRO agent and regular TTS.",
       "advanced": true
     },
     "realtime.instructions": {
@@ -184,7 +184,7 @@
     },
     "realtime.agentId": {
       "label": "Realtime Consult Agent",
-      "help": "Oriro agent id used by oriro_agent_consult. Defaults to \"main\".",
+      "help": "ORIRO agent id used by oriro_agent_consult. Defaults to \"main\".",
       "advanced": true
     },
     "realtime.toolPolicy": {
@@ -267,7 +267,7 @@
           },
           "guestName": {
             "type": "string",
-            "default": "Oriro Agent"
+            "default": "ORIRO Agent"
           },
           "reuseExistingTab": {
             "type": "boolean",
@@ -460,7 +460,7 @@
           },
           "instructions": {
             "type": "string",
-            "default": "You are joining a private Google Meet as an Oriro voice transport. Keep spoken replies brief and natural. In agent mode, wait for Oriro consult results and speak them exactly. In bidi mode, answer directly and call oriro_agent_consult for deeper reasoning, current information, or tools."
+            "default": "You are joining a private Google Meet as an ORIRO voice transport. Keep spoken replies brief and natural. In agent mode, wait for ORIRO consult results and speak them exactly. In bidi mode, answer directly and call oriro_agent_consult for deeper reasoning, current information, or tools."
           },
           "introMessage": {
             "type": "string",
@@ -468,7 +468,7 @@
           },
           "agentId": {
             "type": "string",
-            "description": "Oriro agent id used by oriro_agent_consult. Defaults to \"main\"."
+            "description": "ORIRO agent id used by oriro_agent_consult. Defaults to \"main\"."
           },
           "toolPolicy": {
             "type": "string",

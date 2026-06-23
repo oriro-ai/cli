@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: uipm-ui-ux-pro-max
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

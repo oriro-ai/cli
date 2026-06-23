@@ -155,7 +155,7 @@ dispatches:
   `include_android=true`
 - `Plugin Prerelease` for release-only plugin static checks, extension shards,
   the release-only `agentic-plugins` shard, and plugin product Docker lanes
-- `Oriro Release Checks` for install smoke, cross-OS release checks, live and
+- `ORIRO Release Checks` for install smoke, cross-OS release checks, live and
   E2E checks, Docker release-path suites, OpenWebUI, QA Lab, fast Matrix, and
   Telegram release lanes
 - optional post-publish Telegram E2E when a package spec is supplied
@@ -165,7 +165,7 @@ or release orchestration changes, or when explicitly asked:
 
 ```bash
 gh workflow run full-release-validation.yml \
-  --repo oriro-ai/cli \
+  --repo oriro/oriro \
   --ref main \
   -f ref=<branch-or-sha> \
   -f provider=openai \
@@ -216,7 +216,7 @@ workflow only spends setup and queue time on that suite.
 
 After release-candidate validation or before a release decision, record the
 important run ids in the public `oriro/releases` evidence ledger.
-Use the manual `Oriro Release Evidence`
+Use the manual `ORIRO Release Evidence`
 (`oriro-release-evidence.yml`) workflow there. It writes durable summaries
 under `evidence/<release-id>/` and commits:
 
@@ -228,9 +228,9 @@ under `evidence/<release-id>/` and commits:
 Use one run per line:
 
 ```text
-full-release-validation oriro-ai/cli <run-id> blocking
-package-acceptance oriro-ai/cli <run-id> blocking
-release-checks oriro-ai/cli <run-id> blocking
+full-release-validation oriro/oriro <run-id> blocking
+package-acceptance oriro/oriro <run-id> blocking
+release-checks oriro/oriro <run-id> blocking
 ```
 
 Store summaries, run URLs, artifact metadata, timings, pass/fail state, and
@@ -240,7 +240,7 @@ config in git; raw logs stay in Actions artifacts.
 
 When `Full Release Validation` completes and `ORIRO_RELEASES_DISPATCH_TOKEN`
 is configured in the source repo, it requests the public
-`Oriro Release Evidence From Full Validation` workflow. That workflow reads
+`ORIRO Release Evidence From Full Validation` workflow. That workflow reads
 the parent full-validation run, extracts the child CI/release-checks/Telegram
 run ids from the parent logs, and opens the evidence PR automatically. If the
 token is absent or the run predates this wiring, trigger that workflow manually
@@ -248,7 +248,7 @@ with the full-validation run id.
 
 ### Release Checks
 
-`Oriro Release Checks` (`oriro-release-checks.yml`) is the release child
+`ORIRO Release Checks` (`oriro-release-checks.yml`) is the release child
 workflow. It is broader than normal CI but narrower than the umbrella because it
 does not dispatch the separate full normal CI child. It runs Package Acceptance
 with artifact-native delta lanes and `telegram_mode=mock-openai`, so the release
@@ -259,7 +259,7 @@ without rerunning the entire umbrella.
 
 ```bash
 gh workflow run oriro-release-checks.yml \
-  --repo oriro-ai/cli \
+  --repo oriro/oriro \
   --ref main \
   -f ref=<branch-or-sha> \
   -f provider=openai \
@@ -270,7 +270,7 @@ gh workflow run oriro-release-checks.yml \
 
 Release-check rerun groups are `all`, `install-smoke`, `cross-os`, `live-e2e`,
 `package`, `qa`, `qa-parity`, and `qa-live`.
-`Oriro Release Checks` uses the trusted workflow ref to resolve the selected
+`ORIRO Release Checks` uses the trusted workflow ref to resolve the selected
 ref once as `release-package-under-test` and passes that artifact into cross-OS
 release checks, release-path Docker live/E2E checks, and Package Acceptance.
 When `Full Release Validation` dispatches release checks, it passes the requested
@@ -285,7 +285,7 @@ If install-smoke gets slow again, first check whether the root image was reused
 or rebuilt before adding/removing coverage.
 
 The full-profile native live media shards use the prebuilt
-`ghcr.io/oriro-ai/cli-live-media-runner:ubuntu-24.04` container so
+`ghcr.io/oriro/oriro-live-media-runner:ubuntu-24.04` container so
 `ffmpeg`/`ffprobe` are already present. If those jobs suddenly spend minutes in
 dependency setup again, first check the `Live Media Runner Image` workflow and
 the `Verify preinstalled live media dependencies` step before assuming the media
@@ -317,20 +317,20 @@ default is the fast release path. Use explicit profiles:
 
 `QA-Lab - All Lanes` uses explicit fast Matrix on scheduled runs; manual
 dispatch keeps `matrix_profile=all` as the default and always shards that full
-Matrix selection. `Oriro Release Checks` uses explicit fast Matrix; run the
+Matrix selection. `ORIRO Release Checks` uses explicit fast Matrix; run the
 all-lanes workflow when release investigation needs full Matrix media/E2EE
 inventory.
 
 ### Reusable Live/E2E Checks
 
-`Oriro Live And E2E Checks (Reusable)`
+`ORIRO Live And E2E Checks (Reusable)`
 (`oriro-live-and-e2e-checks-reusable.yml`) is the preferred entry point for
 targeted live, Docker, model, and E2E proof. Inputs let you turn off unrelated
 lanes:
 
 ```bash
 gh workflow run oriro-live-and-e2e-checks-reusable.yml \
-  --repo oriro-ai/cli \
+  --repo oriro/oriro \
   --ref main \
   -f ref=<sha> \
   -f include_repo_e2e=false \

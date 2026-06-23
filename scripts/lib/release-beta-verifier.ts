@@ -54,7 +54,7 @@ type WorkflowRunSummary = {
   durationSeconds?: number;
 };
 
-const DEFAULT_REPO = "oriro-ai/cli";
+const DEFAULT_REPO = "oriro/oriro";
 const DEFAULT_ORIROHUB_REGISTRY = "https://orirohub.ai";
 const ORIROHUB_REQUEST_TIMEOUT_MS = 20_000;
 const ORIROHUB_RESPONSE_BODY_MAX_BYTES = 1024 * 1024;
@@ -672,9 +672,9 @@ export async function verifyBetaRelease(
     workflowRuns.push(
       verifyWorkflowRun({
         id: args.workflowRuns.oriroNpm,
-        label: "Oriro NPM Release",
+        label: "ORIRO NPM Release",
         repo: args.repo,
-        expectedWorkflowName: "Oriro NPM Release",
+        expectedWorkflowName: "ORIRO NPM Release",
         expectedHeadBranch: args.workflowRef,
         rerunFailed: false,
       }),

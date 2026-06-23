@@ -1,8 +1,8 @@
 {
   "name": "@oriro/clickclack",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro ClickClack channel plugin",
+  "description": "ORIRO ClickClack channel plugin",
   "type": "module",
   "exports": {
     ".": "./index.ts",
@@ -15,10 +15,10 @@
   },
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*",
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.6.8"
+    "oriro": "workspace:*"
   },
   "peerDependenciesMeta": {
     "oriro": {

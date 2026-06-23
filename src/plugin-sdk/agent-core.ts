@@ -8,7 +8,7 @@ import type { CompleteSimpleFn, StreamFn } from "../../packages/llm-core/src/ind
 import { completeSimple, streamSimple } from "./llm.js";
 
 /** Runtime adapter that lets the package agent-core use Oriro LLM helpers. */
-export const oriroAgentCoreRuntime = {
+export const openOriroAgentCoreRuntime = {
   completeSimple: completeSimple as unknown as CompleteSimpleFn,
   streamSimple: streamSimple as unknown as StreamFn,
 } satisfies AgentCoreRuntimeDeps;
@@ -16,7 +16,7 @@ export const oriroAgentCoreRuntime = {
 /** Agent-core class preconfigured with Oriro runtime dependencies. */
 export class Agent extends CoreAgent {
   constructor(options: CoreAgentOptions = {}) {
-    super({ runtime: oriroAgentCoreRuntime, ...options });
+    super({ runtime: openOriroAgentCoreRuntime, ...options });
   }
 }
 

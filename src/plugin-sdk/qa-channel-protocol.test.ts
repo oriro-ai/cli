@@ -26,7 +26,7 @@ describe("qa-channel protocol", () => {
             ["X-API-Key", "secret"],
             ["Accept", "application/json"],
           ],
-          argv: ["gh", "api", "--token", "secret-token", "repos/oriro-ai/cli"],
+          argv: ["gh", "api", "--token", "secret-token", "repos/oriro/oriro"],
           hyphenArgv: ["cmd", "--access-token", "abc123", "--ok"],
           values: ["ok", { password: "hunter2" }],
         },

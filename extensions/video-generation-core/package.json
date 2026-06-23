@@ -1,8 +1,8 @@
 {
   "name": "@oriro/video-generation-core",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro video generation runtime package",
+  "description": "ORIRO video generation runtime package",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

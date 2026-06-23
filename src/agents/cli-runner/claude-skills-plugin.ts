@@ -115,7 +115,7 @@ export async function prepareClaudeCliSkillsPlugin(params: {
   const manifest = {
     name: ORIRO_CLAUDE_PLUGIN_NAME,
     version: "0.0.0",
-    description: "Session-scoped Oriro skills selected for this agent run.",
+    description: "Session-scoped ORIRO skills selected for this agent run.",
     skills: "./skills",
   };
   await fs.writeFile(

@@ -240,13 +240,13 @@ describe("discord allowlist helpers", () => {
 
   it("matches ids by default and names only when enabled", () => {
     const allow = expectNormalizedAllowList(
-      ["123", "steipete", "Friends of Oriro"],
+      ["123", "oriro", "Friends of Oriro"],
       ["discord:", "user:", "guild:", "channel:"],
     );
     expect(allowListMatches(allow, { id: "123" })).toBe(true);
-    expect(allowListMatches(allow, { name: "steipete" })).toBe(false);
+    expect(allowListMatches(allow, { name: "oriro" })).toBe(false);
     expect(allowListMatches(allow, { name: "friends-of-oriro" })).toBe(false);
-    expect(allowListMatches(allow, { name: "steipete" }, { allowNameMatching: true })).toBe(true);
+    expect(allowListMatches(allow, { name: "oriro" }, { allowNameMatching: true })).toBe(true);
     expect(
       allowListMatches(allow, { name: "friends-of-oriro" }, { allowNameMatching: true }),
     ).toBe(true);
@@ -848,7 +848,7 @@ describe("discord reaction notification gating", () => {
           botId: "bot-1",
           messageAuthorId: "user-1",
           userId: "123",
-          userName: "steipete",
+          userName: "oriro",
           guildInfo: { users: ["123", "other"] },
         },
         expected: true,

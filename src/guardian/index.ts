@@ -1,10 +1,10 @@
 // ORIRO CLI — Guardian V3 (the always-on first layer).
 //
-// Guardian is ORIRO's security gate, inspired by TranzGuard's FastBlock + DeepExplain:
+// Guardian is ORIRO's security gate, built on a fast-gate + deep-explain design:
 //   • the deterministic GATE (rules.ts + policy.ts) judges every tool call in <1ms,
 //     $0, with no model — it ships and protects the instant the CLI is installed;
 //   • the agentic ANALYZER (analyzer.ts) deepens flagged calls using a model — either
-//     the user's own BYOK session model, or Guardian V3 Lite (Vinay's TranzGuard threat
+//     the user's own BYOK session model, or Guardian V3 Lite (the bundled local threat
 //     model, auto-downloaded at onboarding).
 //
 // It is activated automatically right after the language step (activate.ts) — no

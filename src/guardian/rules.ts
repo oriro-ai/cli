@@ -29,10 +29,26 @@ const ask = (rule: string, reason: string, severity: GuardianVerdict["severity"]
 const cmdOf = (c: { command?: string }): string => (c.command ?? "").toLowerCase();
 const norm = (s: string): string => s.replace(/\s+/g, " ").trim();
 
+// Robust `rm` danger check — resilient to flag order, split flags (-r -f),
+// long flags (--recursive --force --no-preserve-root), and system-dir targets.
+// The old single-regex form was evadable (e.g. `rm -rf --no-preserve-root /`,
+// `rm  -r  -f  /`) — a real Guardian bypass found in QA.
+function isDangerousRm(cmd: string): boolean {
+  if (!/\brm\b/i.test(cmd)) return false;
+  const hasRecursive = /(?:^|\s)-[a-z]*r/i.test(cmd) || /--recursive\b/i.test(cmd);
+  const hasForce = /(?:^|\s)-[a-z]*f/i.test(cmd) || /--force\b/i.test(cmd);
+  if (!hasRecursive || !hasForce) return false;
+  if (/--no-preserve-root\b/i.test(cmd)) return true; // explicit root-wipe intent
+  // bare dangerous targets: / ~ . * $HOME
+  if (/(?:\s|^)(\/|~|\.|\*|\$home)(?:\s|$)/i.test(cmd)) return true;
+  // recursive force-delete of a system directory
+  return /(?:\s|^)\/(etc|usr|bin|sbin|var|boot|lib|lib64|sys|proc|dev|root|home|opt|windows|system32)(?:[\\/]|\s|$)/i.test(
+    cmd,
+  );
+}
+
 // ── Destructive filesystem / system wipes ────────────────────────────────────
 const FS_DESTRUCTION: RegExp[] = [
-  /\brm\s+(-[a-z]*\s+)*-[a-z]*r[a-z]*f[a-z]*\s+(\/|~|\.|\*|\$home)(\s|$)/i, // rm -rf / ~ . *
-  /\brm\s+(-[a-z]*\s+)*-[a-z]*f[a-z]*r[a-z]*\s+(\/|~|\.|\*|\$home)(\s|$)/i, // rm -fr ...
   /\bmkfs\.?\w*\s+\/dev\//i, // reformat a disk
   /\bdd\s+.*\bof=\/dev\/(sd|nvme|disk|hd)/i, // overwrite raw disk
   /\b(shutdown|reboot|halt|poweroff)\b/i, // host disruption
@@ -75,14 +91,21 @@ const PERSISTENCE: RegExp[] = [
   /\bschtasks\b\s+\/create/i, // scheduled task
 ];
 
-// ── Disabling security / covering tracks ─────────────────────────────────────
+// ── Guardian self-defense (the floor protecting the floor) ───────────────────
+// Disabling or rewriting Guardian's own config/state is an absolute BLOCK in
+// every mode — you must not be able to turn the always-on guard off via a tool
+// call. (Legitimate changes go through `oriro guardian` interactively.)
+const GUARDIAN_TAMPER: RegExp[] = [
+  /\boriro\b.*\bguardian\b.*\b(disable|off|stop|uninstall)\b/i, // disable Guardian via command
+  /[\\\/]\.oriro[\\\/]guardian/i, // direct write to Guardian's own config/state
+];
+
+// ── Disabling other security / covering tracks ───────────────────────────────
 const TAMPER: RegExp[] = [
   /\bchmod\s+-?\s*0?777\b/i, // world-writable
   /\b(ufw|firewall-cmd|iptables)\b.*\b(disable|stop|flush|-f)\b/i, // firewall down
   /\bset-mppreference\b.*-disable/i, // disable Defender
   /\bhistory\s+-c\b|\bunset\s+histfile\b|>\s*~?\/?\.bash_history/i, // wipe history
-  /\boriro\b.*\bguardian\b.*\b(disable|off|stop|uninstall)\b/i, // tamper with Guardian itself
-  /[\\\/]\.oriro[\\\/]guardian/i, // direct write to Guardian's own config/state
 ];
 
 // ── Crypto-miners / common malware signatures ────────────────────────────────
@@ -99,7 +122,12 @@ export const DEFAULT_RULES: GuardianRule[] = [
   {
     id: "fs-destruction",
     description: "Block recursive deletes of root/home, disk reformats, fork bombs, host shutdown.",
-    match: (c) => (anyMatch(FS_DESTRUCTION, norm(cmdOf(c))) ? block("fs-destruction", "Destructive filesystem/system operation") : null),
+    match: (c) => {
+      const cmd = norm(cmdOf(c));
+      return isDangerousRm(cmd) || anyMatch(FS_DESTRUCTION, cmd)
+        ? block("fs-destruction", "Destructive filesystem/system operation")
+        : null;
+    },
   },
   {
     id: "remote-code-exec",
@@ -128,9 +156,23 @@ export const DEFAULT_RULES: GuardianRule[] = [
     match: (c) => (anyMatch(PERSISTENCE, norm(cmdOf(c))) ? ask("persistence", "Installing a persistent foothold (cron/startup/service)") : null),
   },
   {
+    id: "guardian-self-defense",
+    description: "Block any attempt to disable, uninstall, or rewrite Guardian's own config/state.",
+    match: (c) => {
+      if (anyMatch(GUARDIAN_TAMPER, norm(cmdOf(c)))) {
+        return block("guardian-self-defense", "Attempt to disable or tamper with Guardian itself");
+      }
+      // Also catch direct file writes to Guardian's own config/state (fs tool calls).
+      if (c.paths?.some((p) => /[\\/]\.oriro[\\/]guardian/i.test(p))) {
+        return block("guardian-self-defense", "Direct write to Guardian's own config/state");
+      }
+      return null;
+    },
+  },
+  {
     id: "security-tamper",
-    description: "Flag disabling firewall/Defender, wiping history, or tampering with Guardian.",
-    match: (c) => (anyMatch(TAMPER, norm(cmdOf(c))) ? ask("security-tamper", "Disabling security controls or covering tracks", "critical") : null),
+    description: "Flag disabling firewall/Defender or wiping history.",
+    match: (c) => (anyMatch(TAMPER, norm(cmdOf(c))) ? ask("security-tamper", "Disabling security controls or covering tracks") : null),
   },
   {
     id: "malware-signature",

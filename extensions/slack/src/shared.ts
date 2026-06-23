@@ -106,7 +106,7 @@ export function createSlackPluginBase(params: {
               "- Slack interactive replies are disabled. If needed, ask to set `channels.slack.capabilities.interactiveReplies=true` (or the same under `channels.slack.accounts.<account>.capabilities`).",
             ]
         ).concat([
-          "- Slack plain text sends: write standard Markdown; Oriro converts it to Slack mrkdwn, including `**bold**`, headings, lists, and `[label](url)` links.",
+          "- Slack plain text sends: write standard Markdown; ORIRO converts it to Slack mrkdwn, including `**bold**`, headings, lists, and `[label](url)` links.",
           "- When mentioning Slack users, use the stable `<@USER_ID>` token from Slack context instead of plain `@name` text so Slack notifies and links the user.",
           "- Slack Block Kit or presentation text fields are sent as Slack mrkdwn directly; use `*bold*`, `_italic_`, `~strike~`, `<url|label>` links, and avoid Markdown headings or pipe tables there.",
         ]),

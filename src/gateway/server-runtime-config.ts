@@ -153,7 +153,7 @@ export async function resolveGatewayRuntimeConfig(params: {
   }
   if (!isLoopbackHost(bindHost) && !hasSharedSecret && authMode !== "trusted-proxy") {
     throw new Error(
-      `refusing to bind gateway to ${bindHost}:${params.port} without auth (set gateway.auth.token/password, or set ORIRO_GATEWAY_TOKEN/ORIRO_GATEWAY_PASSWORD; legacy environment variables are ignored, use ORIRO_* names)`,
+      `refusing to bind gateway to ${bindHost}:${params.port} without auth (set gateway.auth.token/password, or set ORIRO_GATEWAY_TOKEN/ORIRO_GATEWAY_PASSWORD; legacy ORIRO_* and MOLTBOT_* environment variables are ignored)`,
     );
   }
   if (

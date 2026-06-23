@@ -6,41 +6,41 @@
   "appGroupId": "group.ai.orirofoundation.app.shared",
   "targets": [
     {
-      "target": "Oriro",
-      "displayName": "Oriro",
+      "target": "ORIRO",
+      "displayName": "ORIRO",
       "bundleId": "ai.orirofoundation.app",
       "platform": "IOS",
       "profileKey": "ORIRO_APP_PROFILE",
-      "profileName": "Oriro App Store ai.orirofoundation.app",
+      "profileName": "ORIRO App Store ai.orirofoundation.app",
       "capabilities": ["PUSH_NOTIFICATIONS", "APP_GROUPS"],
       "appGroups": ["group.ai.orirofoundation.app.shared"]
     },
     {
       "target": "OriroShareExtension",
-      "displayName": "Oriro Share",
+      "displayName": "ORIRO Share",
       "bundleId": "ai.orirofoundation.app.share",
       "platform": "IOS",
       "profileKey": "ORIRO_SHARE_PROFILE",
-      "profileName": "Oriro App Store ai.orirofoundation.app.share",
+      "profileName": "ORIRO App Store ai.orirofoundation.app.share",
       "capabilities": ["APP_GROUPS"],
       "appGroups": ["group.ai.orirofoundation.app.shared"]
     },
     {
       "target": "OriroActivityWidget",
-      "displayName": "Oriro Activity Widget",
+      "displayName": "ORIRO Activity Widget",
       "bundleId": "ai.orirofoundation.app.activitywidget",
       "platform": "IOS",
       "profileKey": "ORIRO_ACTIVITY_WIDGET_PROFILE",
-      "profileName": "Oriro App Store ai.orirofoundation.app.activitywidget",
+      "profileName": "ORIRO App Store ai.orirofoundation.app.activitywidget",
       "capabilities": []
     },
     {
       "target": "OriroWatchApp",
-      "displayName": "Oriro Watch App",
+      "displayName": "ORIRO Watch App",
       "bundleId": "ai.orirofoundation.app.watchkitapp",
       "platform": "IOS",
       "profileKey": "ORIRO_WATCH_APP_PROFILE",
-      "profileName": "Oriro App Store ai.orirofoundation.app.watchkitapp",
+      "profileName": "ORIRO App Store ai.orirofoundation.app.watchkitapp",
       "capabilities": []
     }
   ]

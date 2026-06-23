@@ -112,7 +112,7 @@ function fileContainsText(file, needle) {
 }
 
 function getInstallRecords() {
-  const configPath = oriroConfigPath();
+  const configPath = openOriroConfigPath();
   const config = readOriroConfig();
   const allowLegacyCompat = process.env.ORIRO_PACKAGE_ACCEPTANCE_LEGACY_COMPAT === "1";
   const index = readPluginInstallIndex({
@@ -125,22 +125,22 @@ function getInstallRecords() {
   return index.installRecords ?? {};
 }
 
-function oriroConfigPath() {
+function openOriroConfigPath() {
   return path.join(process.env.HOME, ".oriro", "oriro.json");
 }
 
 function readOriroConfig() {
-  const configPath = oriroConfigPath();
+  const configPath = openOriroConfigPath();
   return fs.existsSync(configPath) ? readRequiredOriroConfig() : {};
 }
 
 function readRequiredOriroConfig() {
-  const configPath = oriroConfigPath();
+  const configPath = openOriroConfigPath();
   try {
     return readJson(configPath);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`failed to read Oriro config ${configPath}: ${message}`, { cause: error });
+    throw new Error(`failed to read ORIRO config ${configPath}: ${message}`, { cause: error });
   }
 }
 

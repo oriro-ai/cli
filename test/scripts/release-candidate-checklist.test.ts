@@ -211,7 +211,7 @@ describe("release candidate checklist", () => {
         tag_name: "v0.6.3",
         draft: false,
         prerelease: false,
-        html_url: "https://github.com/oriro-ai/cli-windows-node/releases/tag/v0.6.3",
+        html_url: "https://github.com/oriro/oriro-windows-node/releases/tag/v0.6.3",
         assets,
       });
     });
@@ -224,7 +224,7 @@ describe("release candidate checklist", () => {
       }),
     ).resolves.toEqual({
       tag: "v0.6.3",
-      url: "https://github.com/oriro-ai/cli-windows-node/releases/tag/v0.6.3",
+      url: "https://github.com/oriro/oriro-windows-node/releases/tag/v0.6.3",
       assets,
     });
   });
@@ -271,7 +271,7 @@ describe("release candidate checklist", () => {
         tag_name: "v0.6.3",
         draft: false,
         prerelease: false,
-        html_url: "https://github.com/oriro-ai/cli-windows-node/releases/tag/v0.6.3",
+        html_url: "https://github.com/oriro/oriro-windows-node/releases/tag/v0.6.3",
         assets: [
           {
             name: "OriroCompanion-Setup-x64.exe",
@@ -337,7 +337,7 @@ describe("release candidate checklist", () => {
   it("extracts a workflow run id from gh dispatch output", () => {
     expect(
       parseRunIdFromDispatchOutput(
-        "https://github.com/oriro-ai/cli/actions/runs/25922042055\n",
+        "https://github.com/oriro/oriro/actions/runs/25922042055\n",
       ),
     ).toBe("25922042055");
   });
@@ -373,14 +373,14 @@ describe("release candidate checklist", () => {
     });
 
     await expect(
-      githubApi("repos/oriro-ai/cli/actions/runs", {
+      githubApi("repos/oriro/oriro/actions/runs", {
         fetchImpl,
         timeoutMs: 1234,
         token: "test-token",
       }),
     ).resolves.toEqual({ workflow_runs: [] });
     expect(fetchImpl).toHaveBeenCalledWith(
-      "https://api.github.com/repos/oriro-ai/cli/actions/runs",
+      "https://api.github.com/repos/oriro/oriro/actions/runs",
       expect.objectContaining({
         signal: expect.any(AbortSignal),
       }),
@@ -396,14 +396,14 @@ describe("release candidate checklist", () => {
     });
 
     await expect(
-      githubApi("repos/oriro-ai/cli/actions/runs", {
+      githubApi("repos/oriro/oriro/actions/runs", {
         fetchImpl,
         maxBodyBytes: 64,
         timeoutMs: 1234,
         token: "test-token",
       }),
     ).rejects.toThrow(
-      "GitHub API repos/oriro-ai/cli/actions/runs response body exceeded 64 bytes",
+      "GitHub API repos/oriro/oriro/actions/runs response body exceeded 64 bytes",
     );
   });
 
@@ -415,12 +415,12 @@ describe("release candidate checklist", () => {
     });
 
     await expect(
-      githubApi("repos/oriro-ai/cli/actions/runs", {
+      githubApi("repos/oriro/oriro/actions/runs", {
         fetchImpl,
         timeoutMs: 25,
         token: "test-token",
       }),
-    ).rejects.toThrow("GitHub API repos/oriro-ai/cli/actions/runs timed out after 25ms");
+    ).rejects.toThrow("GitHub API repos/oriro/oriro/actions/runs timed out after 25ms");
   });
 
   it("includes the GitHub API path when a request times out", async () => {
@@ -429,13 +429,13 @@ describe("release candidate checklist", () => {
     });
 
     await expect(
-      githubApi("repos/oriro-ai/cli/actions/runs/123/jobs", {
+      githubApi("repos/oriro/oriro/actions/runs/123/jobs", {
         fetchImpl,
         timeoutMs: 5,
         token: "test-token",
       }),
     ).rejects.toThrow(
-      "GitHub API repos/oriro-ai/cli/actions/runs/123/jobs timed out after 5ms",
+      "GitHub API repos/oriro/oriro/actions/runs/123/jobs timed out after 5ms",
     );
   });
 });

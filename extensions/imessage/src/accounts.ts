@@ -163,7 +163,7 @@ function normalizeIMessageDbPath(value: string | undefined | null): string {
 
 // Stable signature for the local Messages backend an iMessage account targets.
 // Two enabled accounts that share a signature watch the same source, which
-// caused duplicate inbound handling in oriro-ai/cli#65141.
+// caused duplicate inbound handling in oriro/oriro#65141.
 export function resolveIMessageAccountSourceSignature(account: ResolvedIMessageAccount): string {
   return JSON.stringify([
     normalizeIMessageCliPath(account.config.cliPath),
@@ -176,7 +176,7 @@ function resolveIMessageAccountSourceOwner(params: {
   signature: string;
 }): string | undefined {
   // Prefer an explicit named account over the implicit "default" so that
-  // bindings tied to the named account keep working (oriro-ai/cli#65141).
+  // bindings tied to the named account keep working (oriro/oriro#65141).
   let defaultOwner: string | undefined;
   for (const candidateAccountId of listIMessageAccountIds(params.cfg)) {
     const candidate = resolveIMessageAccount({
@@ -202,7 +202,7 @@ function resolveIMessageAccountSourceOwner(params: {
  * Returns the owner account id when `account` is an enabled duplicate of
  * another enabled account that targets the same local Messages source. Used
  * by the iMessage gateway lifecycle to skip starting redundant `imsg rpc`
- * watchers (oriro-ai/cli#65141) without otherwise marking the duplicate
+ * watchers (oriro/oriro#65141) without otherwise marking the duplicate
  * disabled — outbound selection, status surfaces, and capability listings
  * keep treating both accounts normally.
  */
@@ -259,7 +259,7 @@ export function collectIMessageDuplicateAccountSourceWarnings(params: {
     const dbPath = normalizeIMessageDbPath(owner.config.dbPath);
     const where = dbPath ? `cliPath=${cliPath}, dbPath=${dbPath}` : `cliPath=${cliPath}`;
     warnings.push(
-      `- channels.imessage: accounts "${owner.accountId}" and ${dupIds} watch the same local Messages source (${where}). Oriro runs one watcher (owner: "${owner.accountId}") and idles the duplicate; the other accounts stay enabled for outbound sends and status. Inbound messages arrive tagged with accountId="${owner.accountId}", so bindings pinned to ${dupIds} should be re-pointed at "${owner.accountId}" (or set "enabled": false on "${owner.accountId}" to flip ownership). Set "enabled": false on the unused duplicates to silence this warning.`,
+      `- channels.imessage: accounts "${owner.accountId}" and ${dupIds} watch the same local Messages source (${where}). ORIRO runs one watcher (owner: "${owner.accountId}") and idles the duplicate; the other accounts stay enabled for outbound sends and status. Inbound messages arrive tagged with accountId="${owner.accountId}", so bindings pinned to ${dupIds} should be re-pointed at "${owner.accountId}" (or set "enabled": false on "${owner.accountId}" to flip ownership). Set "enabled": false on the unused duplicates to silence this warning.`,
     );
   }
   return warnings;

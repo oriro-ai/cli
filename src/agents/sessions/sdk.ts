@@ -183,7 +183,7 @@ function getAttributionHeaders(
   if (model.provider === "openrouter" || baseUrl.includes("openrouter.ai")) {
     return {
       "HTTP-Referer": "https://oriro.ai",
-      "X-OpenRouter-Title": "Oriro",
+      "X-OpenRouter-Title": "ORIRO",
       "X-OpenRouter-Categories": "cli-agent",
     };
   }

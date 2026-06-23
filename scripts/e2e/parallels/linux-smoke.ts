@@ -596,7 +596,7 @@ JS
 python3 - <<'PY'
 import json
 from pathlib import Path
-config_path = Path("/root/.oriro-ai/cli.json")
+config_path = Path("/root/.oriro/oriro.json")
 config = json.loads(config_path.read_text()) if config_path.exists() else {}
 plugins = config.setdefault("plugins", {})
 load = plugins.setdefault("load", {})
@@ -643,7 +643,7 @@ PY`);
 rm -f /tmp/oriro-parallels-linux-gateway.log
 setsid sh -lc ` +
         shellQuote(
-          `exec env ORIRO_HOME=/root ORIRO_STATE_DIR=/root/.oriro ORIRO_CONFIG_PATH=/root/.oriro-ai/cli.json ORIRO_ALLOW_ROOT=1${bonjourEnv} ${this.auth.apiKeyEnv}=${shellQuote(
+          `exec env ORIRO_HOME=/root ORIRO_STATE_DIR=/root/.oriro ORIRO_CONFIG_PATH=/root/.oriro/oriro.json ORIRO_ALLOW_ROOT=1${bonjourEnv} ${this.auth.apiKeyEnv}=${shellQuote(
             this.auth.apiKeyValue,
           )} oriro gateway run --bind loopback --port 18789 --force >/tmp/oriro-parallels-linux-gateway.log 2>&1`,
         ) +
@@ -735,7 +735,7 @@ setsid sh -lc ` +
 python3 - <<'PY'
 import json
 from pathlib import Path
-config_path = Path("/root/.oriro-ai/cli.json")
+config_path = Path("/root/.oriro/oriro.json")
 config = json.loads(config_path.read_text()) if config_path.exists() else {}
 plugins = config.setdefault("plugins", {})
 load = plugins.setdefault("load", {})

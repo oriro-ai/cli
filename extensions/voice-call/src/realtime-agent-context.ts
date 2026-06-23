@@ -75,9 +75,9 @@ export async function buildRealtimeVoiceInstructions(params: {
 
   const agentId = config.agentId ?? "main";
   const capsule: string[] = [
-    "Oriro agent voice context:",
+    "ORIRO agent voice context:",
     `- Agent id: ${agentId}`,
-    "- Use this context to match the Oriro agent's personality and standing preferences on fast voice turns.",
+    "- Use this context to match the ORIRO agent's personality and standing preferences on fast voice turns.",
     "- Treat this as compact context only; call oriro_agent_consult when the caller needs the full agent brain, tools, memory, or workspace state.",
   ];
 

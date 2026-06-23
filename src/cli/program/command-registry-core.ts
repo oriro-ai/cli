@@ -73,14 +73,14 @@ const coreEntrySpecs: readonly CommandGroupDescriptorSpec<
         exportName: "registerLanguageCommand",
       },
       {
-        commandNames: ["avatar"],
-        loadModule: () => import("./register.avatar.js"),
-        exportName: "registerAvatarCommand",
-      },
-      {
         commandNames: ["guardian"],
         loadModule: () => import("./register.guardian.js"),
         exportName: "registerGuardianCommand",
+      },
+      {
+        commandNames: ["avatar"],
+        loadModule: () => import("./register.avatar.js"),
+        exportName: "registerAvatarCommand",
       },
       {
         commandNames: ["head", "inspect", "orirohead"],

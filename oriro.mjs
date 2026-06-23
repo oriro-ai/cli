@@ -362,7 +362,7 @@ const buildMissingEntryErrorMessage = async () => {
     "Build locally with `pnpm install && pnpm build`, or install a built package instead.",
   );
   lines.push(
-    "For pinned GitHub installs, use `npm install -g github:oriro-ai/cli#<ref>` instead of a raw `/archive/<ref>.tar.gz` URL.",
+    "For pinned GitHub installs, use `npm install -g github:oriro/oriro#<ref>` instead of a raw `/archive/<ref>.tar.gz` URL.",
   );
   lines.push("For releases, use `npm install -g oriro@latest`.");
   return lines.join("\n");
@@ -427,14 +427,14 @@ const resolveLauncherConfigPaths = () => {
   const stateOverride = process.env.ORIRO_STATE_DIR?.trim();
   if (stateOverride) {
     const stateDir = resolveLauncherUserPath(stateOverride);
-    return [path.join(stateDir, "oriro.json"), path.join(stateDir, "clawdbot.json")];
+    return [path.join(stateDir, "oriro.json"), path.join(stateDir, "oriro.json")];
   }
   const homeDir = resolveLauncherHomeDir();
   return [
     path.join(homeDir, ".oriro", "oriro.json"),
-    path.join(homeDir, ".oriro", "clawdbot.json"),
-    path.join(homeDir, ".clawdbot", "oriro.json"),
-    path.join(homeDir, ".clawdbot", "clawdbot.json"),
+    path.join(homeDir, ".oriro", "oriro.json"),
+    path.join(homeDir, ".oriro", "oriro.json"),
+    path.join(homeDir, ".oriro", "oriro.json"),
   ];
 };
 
@@ -477,7 +477,7 @@ function tryOutputLauncherVersion(argv) {
     }
     const version = resolveLauncherVersion();
     const commit = resolveLauncherCommit();
-    process.stdout.write(commit ? `Oriro ${version} (${commit})\n` : `Oriro ${version}\n`);
+    process.stdout.write(commit ? `ORIRO ${version} (${commit})\n` : `ORIRO ${version}\n`);
     return true;
   } catch {
     return false;

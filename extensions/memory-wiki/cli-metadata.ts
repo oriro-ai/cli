@@ -4,7 +4,7 @@ import { definePluginEntry } from "oriro/plugin-sdk/plugin-entry";
 export default definePluginEntry({
   id: "memory-wiki",
   name: "Memory Wiki",
-  description: "Persistent wiki compiler and Obsidian-friendly knowledge vault for Oriro.",
+  description: "Persistent wiki compiler and Obsidian-friendly knowledge vault for ORIRO.",
   register(api) {
     api.registerCli(
       async ({ program, config: appConfig }) => {

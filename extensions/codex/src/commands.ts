@@ -33,7 +33,7 @@ export function createCodexCommand(options: CodexCommandOptions): OriroPluginCom
     ownership: "reserved",
     agentPromptGuidance: [
       {
-        text: "Native Codex app-server plugin is available (`/codex ...`). For Codex bind/control/thread/resume/steer/stop requests, prefer `/codex bind`, `/codex threads`, `/codex resume`, `/codex steer`, and `/codex stop` over ACP. When Oriro sandboxing is active, native Codex execution modes are unavailable; use normal Codex harness turns.",
+        text: "Native Codex app-server plugin is available (`/codex ...`). For Codex bind/control/thread/resume/steer/stop requests, prefer `/codex bind`, `/codex threads`, `/codex resume`, `/codex steer`, and `/codex stop` over ACP. When ORIRO sandboxing is active, native Codex execution modes are unavailable; use normal Codex harness turns.",
         surfaces: ["oriro_main"],
       },
       {

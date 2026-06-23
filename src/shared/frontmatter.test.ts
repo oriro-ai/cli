@@ -63,7 +63,7 @@ describe("shared/frontmatter", () => {
     expect(
       resolveOriroManifestBlock({
         frontmatter: {
-          metadata: "{ clawdbot: { requires: { bins: ['op'] }, install: [] } }",
+          metadata: "{ oriro: { requires: { bins: ['op'] }, install: [] } }",
         },
       }),
     ).toEqual({ requires: { bins: ["op"] }, install: [] });
@@ -74,7 +74,7 @@ describe("shared/frontmatter", () => {
       resolveOriroManifestBlock({
         frontmatter: {
           metadata:
-            "{ oriro: { requires: { bins: ['current'] } }, clawdbot: { requires: { bins: ['legacy'] } } }",
+            "{ oriro: { requires: { bins: ['current'] } }, oriro: { requires: { bins: ['legacy'] } } }",
         },
       }),
     ).toEqual({ requires: { bins: ["current"] } });

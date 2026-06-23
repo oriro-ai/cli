@@ -8,8 +8,6 @@ import { setCompactionSafeguardRuntime } from "../agent-hooks/compaction-safegua
 import compactionSafeguardExtension from "../agent-hooks/compaction-safeguard.js";
 import guardianExtension from "../../guardian/extension.js";
 import headExtension from "../../head/extension.js";
-import gitExtension from "../../git/extension.js";
-import checkpointExtension from "../../checkpoint/extension.js";
 import contextPruningExtension from "../agent-hooks/context-pruning.js";
 import { setContextPruningRuntime } from "../agent-hooks/context-pruning/runtime.js";
 import { computeEffectiveSettings } from "../agent-hooks/context-pruning/settings.js";
@@ -180,13 +178,9 @@ export function buildEmbeddedExtensionFactories(params: {
   // every tool call before any other extension. Not config-gated here: Guardian reads
   // its own ~/.oriro/guardian.json and no-ops only if the user explicitly disabled it.
   factories.push(guardianExtension);
-  // ORIRO Head — registers the `inspect_site` tool so the coder can look at the web on
-  // its own judgment (the model-driven fallback when the regex auto-trigger misses).
+  // ORIRO Head — registers the `inspect_site` tool so the agent can look at live
+  // sites on its own judgment (default-on, the web-sighted inspector).
   factories.push(headExtension);
-  // ORIRO git tool (structured git + diff review) + checkpoint/undo (snapshot-before-edit,
-  // Auto-mode safety net). Both default-on, registered before the work extensions.
-  factories.push(gitExtension);
-  factories.push(checkpointExtension);
   if (resolveEffectiveCompactionMode(params.cfg) === "safeguard") {
     const compactionCfg = params.cfg?.agents?.defaults?.compaction;
     const qualityGuardCfg = compactionCfg?.qualityGuard;

@@ -1,8 +1,8 @@
 // Product/package naming constants that bridge current Oriro manifests with
-// legacy Clawdbot keys still seen in older configs and packages.
+// legacy Oriro keys still seen in older configs and packages.
 export const PROJECT_NAME = "oriro" as const;
 
-const LEGACY_PROJECT_NAMES = ["clawdbot"] as const;
+const LEGACY_PROJECT_NAMES = ["oriro"] as const;
 
 export const MANIFEST_KEY = PROJECT_NAME;
 

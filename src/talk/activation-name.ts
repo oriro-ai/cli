@@ -5,6 +5,8 @@
  * transcript, strips the name before agent routing, and keeps fuzzy matching
  * conservative so ordinary dictation does not trigger Talk turns.
  */
+import { levenshteinDistance } from "../shared/levenshtein-distance.js";
+
 export const REALTIME_VOICE_ACTIVATION_NAME_MAX_WORDS = 2;
 
 /** Transcript edge where an activation name was heard. */
@@ -162,7 +164,7 @@ function leadingActivationNameCandidates(
   text: string,
   maxWords: number,
 ): EdgeActivationNameCandidate[] {
-  // Consider both the full opener and the text after "hey/ok" so "hey Oriro"
+  // Consider both the full opener and the text after "hey/ok" so "hey Molty"
   // records a useful heardName without letting the opener become required.
   const opener = /^\s*(?:(?:hey|ok|okay)(?:\s*[-,:;]+\s*|\s+))?/i.exec(text);
   const nameStart = opener?.[0].length ?? 0;
@@ -229,7 +231,7 @@ function trailingActivationNameCandidates(
       break;
     }
     // Trailing fuzzy matches are only trusted when the speaker clearly used
-    // direct address as a question, e.g. "what changed, Oriro?".
+    // direct address as a question, e.g. "what changed, Molty?".
     const directAddressBoundary = /(^|[,.:;!?-]\s*)$/.test(text.slice(0, startIndex));
     const trailingQuestion = /\?\s*$/.test(text);
     if (wordCount > 1) {
@@ -255,40 +257,6 @@ function trailingActivationNameCandidates(
   }
 
   return candidates;
-}
-
-function levenshteinDistance(left: string, right: string): number {
-  if (left === right) {
-    return 0;
-  }
-  if (!left) {
-    return right.length;
-  }
-  if (!right) {
-    return left.length;
-  }
-
-  let previous = new Uint32Array(right.length + 1);
-  let current = new Uint32Array(right.length + 1);
-  // Keep only two rows so fuzzy matching stays allocation-light per transcript.
-  for (let index = 0; index <= right.length; index += 1) {
-    previous[index] = index;
-  }
-  for (let leftIndex = 0; leftIndex < left.length; leftIndex += 1) {
-    current[0] = leftIndex + 1;
-    for (let rightIndex = 0; rightIndex < right.length; rightIndex += 1) {
-      const cost = left[leftIndex] === right[rightIndex] ? 0 : 1;
-      current[rightIndex + 1] = Math.min(
-        current[rightIndex] + 1,
-        previous[rightIndex + 1] + 1,
-        previous[rightIndex] + cost,
-      );
-    }
-    const nextPrevious = current;
-    current = previous;
-    previous = nextPrevious;
-  }
-  return previous[right.length];
 }
 
 function hasOnlyPhoneticSubstitutions(left: string, right: string): boolean {

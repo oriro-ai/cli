@@ -202,6 +202,7 @@ export const uk: TranslationMap = {
     inherit: "успадковувати",
     defaultOption: "За замовчуванням ({value})",
     offExplicit: "вимкнено (явно)",
+    auto: "auto",
     on: "увімкнено",
     off: "вимкнено",
     full: "повний",
@@ -1312,7 +1313,7 @@ export const uk: TranslationMap = {
         stepDevUi:
           "Якщо використовуєте pnpm ui:dev, перебудуйте або перезапустіть dev UI з поточного checkout.",
         stepRestart:
-          "Перезапустіть Gateway після оновлення Oriro, щоб він надавав поточний протокол.",
+          "Перезапустіть Gateway після оновлення ORIRO, щоб він надавав поточний протокол.",
       },
       network: {
         title: "Не вдалося підключитися",
@@ -1623,6 +1624,7 @@ export const uk: TranslationMap = {
       nextHeartbeat: "Наступний heartbeat",
       wakeModeHelp: "Зараз спрацьовує негайно. Наступний heartbeat чекає наступного циклу.",
       payloadKind: "Що слід запустити?",
+      command: "Command",
       systemEvent: "Опублікувати повідомлення в основній часовій шкалі",
       agentTurn: "Запустити завдання асистента (ізольовано)",
       systemEventHelp:

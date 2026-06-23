@@ -112,11 +112,11 @@ function compareVersions(left: string | undefined, right: string): number {
 }
 
 function formatPinnedOldRemediation(pluginVersion: string, hostVersion: string) {
-  return `Codex plugin version ${pluginVersion} is older than Oriro ${hostVersion}. Run "oriro plugins update codex" or unpin codex, then rerun "oriro doctor --fix".`;
+  return `Codex plugin version ${pluginVersion} is older than ORIRO ${hostVersion}. Run "oriro plugins update codex" or unpin codex, then rerun "oriro doctor --fix".`;
 }
 
 function formatPinnedNewRemediation(pluginVersion: string, hostVersion: string) {
-  return `Codex plugin version ${pluginVersion} requires a newer Oriro host than ${hostVersion}. Upgrade Oriro or install a codex plugin version pinned to ${hostVersion}.`;
+  return `Codex plugin version ${pluginVersion} requires a newer ORIRO host than ${hostVersion}. Upgrade ORIRO or install a codex plugin version pinned to ${hostVersion}.`;
 }
 
 function collectStaleLegacyRuntimePins(config: unknown): string[] {

@@ -20,7 +20,7 @@ import {
 import type { OriroConfig } from "../../config/types.oriro.js";
 import type { ProviderAuthEvidence } from "../../secrets/provider-env-vars.js";
 import { shortenHomePath } from "../../utils.js";
-import { maskApiKey } from "./list.format.js";
+import { maskApiKey } from "../../utils/mask-api-key.js";
 import type { ProviderAuthOverview } from "./list.types.js";
 
 function formatMarkerOrSecret(value: string): string {

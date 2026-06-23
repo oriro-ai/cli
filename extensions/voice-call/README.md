@@ -121,7 +121,7 @@ streaming speech on calls. Override examples and provider caveats live here:
 ## CLI
 
 ```bash
-oriro voicecall call --to "+15555550123" --message "Hello from Oriro"
+oriro voicecall call --to "+15555550123" --message "Hello from ORIRO"
 oriro voicecall continue --call-id <id> --message "Any questions?"
 oriro voicecall speak --call-id <id> --message "One moment"
 oriro voicecall end --call-id <id>

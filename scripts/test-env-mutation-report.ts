@@ -63,7 +63,7 @@ const TRACKED_ENV_KEYS = new Set([
   "XDG_STATE_HOME",
 ]);
 const DEFAULT_ALLOWED_FILES = new Map([
-  ["src/test-utils/oriro-test-state.ts", "canonical Oriro test state helper"],
+  ["src/test-utils/oriro-test-state.ts", "canonical ORIRO test state helper"],
   ["test/non-isolated-runner.ts", "shared Vitest runner restores global env between files"],
   ["test/setup.extensions.ts", "global extension-test setup owns process env isolation"],
   ["test/setup.shared.ts", "global shared-test setup owns process env isolation"],
@@ -345,7 +345,7 @@ export function renderTestEnvMutationReport(
 ): string {
   const limit = options.limit === 0 ? Number.POSITIVE_INFINITY : (options.limit ?? 120);
   const lines = [
-    "Oriro test env mutation report",
+    "ORIRO test env mutation report",
     `Scanned files: ${report.summary.scannedFileCount}`,
     `Findings: ${report.summary.activeFindingCount} active in ${report.summary.activeFileCount} file(s), ${report.summary.allowedFindingCount} allowed in ${report.summary.allowedFileCount} file(s)`,
     "",
@@ -397,17 +397,13 @@ function parseArgs(argv: string[]): {
       continue;
     }
     if (arg === "--limit") {
-      const value = Number(argv[index + 1]);
-      if (!Number.isInteger(value) || value < 0) {
-        throw new Error("--limit expects a non-negative integer");
-      }
-      limit = value;
+      limit = readNonNegativeIntArg(argv[index + 1]);
       index += 1;
       continue;
     }
     if (arg === "--repo-root") {
       const value = argv[index + 1];
-      if (!value || value.startsWith("--")) {
+      if (!value || value.startsWith("-")) {
         throw new Error("--repo-root expects a path");
       }
       repoRoot = value;
@@ -420,8 +416,19 @@ function parseArgs(argv: string[]): {
   return { help, includeAllowed, json, limit, repoRoot };
 }
 
+function readNonNegativeIntArg(raw: string | undefined): number {
+  if (!raw || raw.startsWith("--") || !/^\d+$/u.test(raw)) {
+    throw new Error("--limit expects a non-negative integer");
+  }
+  const value = Number(raw);
+  if (!Number.isSafeInteger(value)) {
+    throw new Error("--limit expects a non-negative integer");
+  }
+  return value;
+}
+
 function printHelp(): void {
-  process.stdout.write(`Oriro test env mutation report
+  process.stdout.write(`ORIRO test env mutation report
 
 Usage:
   pnpm test:env-mutations:report [options]

@@ -20,7 +20,7 @@ export const qaChannelRuntimeMeta = {
   label: "QA Channel",
   selectionLabel: "QA Channel",
   docsPath: "/channels/qa-channel",
-  blurb: "Synthetic QA channel for Oriro QA runs.",
+  blurb: "Synthetic QA channel for ORIRO QA runs.",
 };
 
 type QaChannelPluginBase = Pick<

@@ -84,7 +84,7 @@ export function describePackageManifestContract(params: PackageManifestContractP
 
         expect(
           isAtLeast(minimum, baseline),
-          `${packagePath} should require at least Oriro ${minHostVersionBaseline}`,
+          `${packagePath} should require at least ORIRO ${minHostVersionBaseline}`,
         ).toBe(true);
       });
     }

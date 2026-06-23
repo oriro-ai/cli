@@ -190,8 +190,8 @@ function hasOriroSandboxEnvironmentSelection(value: unknown): boolean {
 
 function formatCodexNativeSandboxBlock(params: { surface: string }): string {
   return [
-    `Codex-native ${params.surface} is unavailable because Oriro sandboxing is active for this session.`,
-    "This mode cannot route execution through the Oriro sandbox backend.",
+    `Codex-native ${params.surface} is unavailable because ORIRO sandboxing is active for this session.`,
+    "This mode cannot route execution through the ORIRO sandbox backend.",
     "Use a normal Codex harness turn, or run an intentionally unsandboxed session.",
   ].join(" ");
 }

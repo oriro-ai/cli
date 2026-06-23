@@ -283,11 +283,11 @@ async function resolveAllowedTmpMediaPath(params: {
     return undefined;
   }
   const resolved = path.resolve(resolveSandboxInputPath(params.candidate, params.sandboxRoot));
-  const oriroTmpDir = path.resolve(resolvePreferredOriroTmpDir());
-  if (!isPathInside(oriroTmpDir, resolved)) {
+  const openOriroTmpDir = path.resolve(resolvePreferredOriroTmpDir());
+  if (!isPathInside(openOriroTmpDir, resolved)) {
     return undefined;
   }
-  await assertNoTmpAliasEscape({ filePath: resolved, tmpRoot: oriroTmpDir });
+  await assertNoTmpAliasEscape({ filePath: resolved, tmpRoot: openOriroTmpDir });
   return resolved;
 }
 

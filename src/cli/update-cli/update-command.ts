@@ -100,6 +100,7 @@ import {
   type PreUpdateConfigRestoreInput,
 } from "../../infra/update-post-core-context.js";
 import { runGatewayUpdate, type UpdateRunResult } from "../../infra/update-runner.js";
+import { getWindowsSystem32ExePath } from "../../infra/windows-install-roots.js";
 import { normalizePluginsConfig, resolveEffectiveEnableState } from "../../plugins/config-state.js";
 import {
   loadInstalledPluginIndexInstallRecords,
@@ -200,14 +201,14 @@ async function createUpdateConfigSnapshot(): Promise<void> {
 
 const UPDATE_QUIPS = [
   "Leveled up! New skills unlocked. You're welcome.",
-  "Fresh code, same oriro. Miss me?",
+  "Fresh code, same lobster. Miss me?",
   "Back and better. Did you even notice I was gone?",
   "Update complete. I learned some new tricks while I was out.",
   "Upgraded! Now with 23% more sass.",
   "I've evolved. Try to keep up.",
   "New version, who dis? Oh right, still me but shinier.",
   "Patched, polished, and ready to pinch. Let's go.",
-  "The oriro has molted. Harder shell, sharper oriros.",
+  "The lobster has molted. Harder shell, sharper oriros.",
   "Update done! Check the changelog or just trust me, it's good.",
   "Reborn from the boiling waters of npm. Stronger now.",
   "I went away and came back smarter. You should try it sometime.",
@@ -779,7 +780,7 @@ export function formatPostUpdateGatewayRecoveryInstructions(
   const beforeVersion = normalizeOptionalString(result.before?.version);
   if (isPackageManagerUpdateMode(result.mode) && beforeVersion) {
     lines.push(
-      `Rollback: reinstall Oriro ${beforeVersion} with the same package manager, then rerun \`${replaceCliName(formatCliCommand("oriro gateway install --force"), CLI_NAME)}\`.`,
+      `Rollback: reinstall ORIRO ${beforeVersion} with the same package manager, then rerun \`${replaceCliName(formatCliCommand("oriro gateway install --force"), CLI_NAME)}\`.`,
     );
   }
   return lines;
@@ -940,7 +941,7 @@ async function maybeStopManagedServiceBeforeMutableUpdate(params: {
     if (!params.jsonMode) {
       defaultRuntime.log(
         theme.muted(
-          "Managed gateway service points at a different Oriro root; leaving it running during this git update.",
+          "Managed gateway service points at a different ORIRO root; leaving it running during this git update.",
         ),
       );
     }
@@ -2877,10 +2878,14 @@ async function readPostCorePluginUpdateResultFile(
 function stopPostCoreUpdateChild(child: ChildProcess): void {
   if (process.platform === "win32" && child.pid) {
     try {
-      const killer = spawn("taskkill", ["/PID", String(child.pid), "/T", "/F"], {
-        stdio: "ignore",
-        windowsHide: true,
-      });
+      const killer = spawn(
+        getWindowsSystem32ExePath("taskkill.exe"),
+        ["/PID", String(child.pid), "/T", "/F"],
+        {
+          stdio: "ignore",
+          windowsHide: true,
+        },
+      );
       killer.once("error", () => {
         child.kill();
       });
@@ -3341,7 +3346,7 @@ async function updateCommandInternal(opts: UpdateCommandOptions): Promise<void> 
         );
         defaultRuntime.log(
           theme.warn(
-            `Shell Oriro root differs from the managed gateway service root: ${managedServiceRootRedirect.previousRoot}`,
+            `Shell ORIRO root differs from the managed gateway service root: ${managedServiceRootRedirect.previousRoot}`,
           ),
         );
         defaultRuntime.log(
@@ -3571,7 +3576,7 @@ async function updateCommandInternal(opts: UpdateCommandOptions): Promise<void> 
 
   const showProgress = !opts.json && process.stdout.isTTY;
   if (!opts.json) {
-    defaultRuntime.log(theme.heading("Updating Oriro..."));
+    defaultRuntime.log(theme.heading("Updating ORIRO..."));
     defaultRuntime.log("");
   }
 
@@ -3628,7 +3633,7 @@ async function updateCommandInternal(opts: UpdateCommandOptions): Promise<void> 
       defaultRuntime.error(
         [
           `${updateLabel} cannot run from inside the gateway service process.`,
-          "That path replaces the active Oriro dist tree while the live gateway may still lazy-load old chunks.",
+          "That path replaces the active ORIRO dist tree while the live gateway may still lazy-load old chunks.",
           `Run \`${replaceCliName(formatCliCommand("oriro update"), CLI_NAME)}\` from a shell outside the gateway service, or stop the gateway service first and then update.`,
         ].join("\n"),
       );
@@ -3741,7 +3746,7 @@ async function updateCommandInternal(opts: UpdateCommandOptions): Promise<void> 
     if (result.reason === "not-git-install") {
       defaultRuntime.log(
         theme.warn(
-          `Skipped: this Oriro install isn't a git checkout, and the package manager couldn't be detected. Update via your package manager, then run \`${replaceCliName(formatCliCommand("oriro doctor"), CLI_NAME)}\` and \`${replaceCliName(formatCliCommand("oriro gateway restart"), CLI_NAME)}\`.`,
+          `Skipped: this ORIRO install isn't a git checkout, and the package manager couldn't be detected. Update via your package manager, then run \`${replaceCliName(formatCliCommand("oriro doctor"), CLI_NAME)}\` and \`${replaceCliName(formatCliCommand("oriro gateway restart"), CLI_NAME)}\`.`,
         ),
       );
       defaultRuntime.log(

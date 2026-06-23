@@ -165,7 +165,7 @@ describe("doctor session snapshot stale runtime metadata", () => {
   it("ignores current bundled locations and unrelated workspace skill locations", () => {
     const currentPath = path.join(bundledSkillsDir, "doctor", "SKILL.md");
     const workspacePath = path.join(root, "workspace", "skills", "doctor", "SKILL.md");
-    const oriroWorkspacePath = path.join(
+    const openOriroWorkspacePath = path.join(
       root,
       "projects",
       "oriro",
@@ -184,7 +184,7 @@ describe("doctor session snapshot stale runtime metadata", () => {
         }),
         "agent:oriro-workspace": sessionEntry({
           skillsSnapshot: {
-            prompt: skillPrompt(oriroWorkspacePath),
+            prompt: skillPrompt(openOriroWorkspacePath),
             skills: [{ name: "doctor" }],
           },
         }),

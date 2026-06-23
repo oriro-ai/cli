@@ -1,6 +1,6 @@
 // Feishu tests cover reasoning preview plugin behavior.
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig } from "./bot-runtime-api.js";
+import type { OriroConfig } from "./bot-runtime-api.js";
 import { resolveFeishuReasoningPreviewEnabled } from "./reasoning-preview.js";
 
 const { loadSessionStoreMock } = vi.hoisted(() => ({
@@ -22,7 +22,7 @@ afterAll(() => {
 });
 
 describe("resolveFeishuReasoningPreviewEnabled", () => {
-  const emptyCfg: ClawdbotConfig = {};
+  const emptyCfg: OriroConfig = {};
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -80,7 +80,7 @@ describe("resolveFeishuReasoningPreviewEnabled", () => {
       "agent:main:feishu:dm:ou_sender_2": { reasoningLevel: "off" },
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       agents: {
         defaults: { reasoningDefault: "stream" },
         list: [{ id: "Ops", reasoningDefault: "off" }],

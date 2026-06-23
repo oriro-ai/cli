@@ -54,12 +54,12 @@ function stripInlineLeakedInternalContext(value: string): string {
   if (
     beginIndex !== -1 &&
     (value.includes(INTERNAL_RUNTIME_CONTEXT_END) ||
-      value.includes("Oriro runtime context (internal):") ||
+      value.includes("ORIRO runtime context (internal):") ||
       value.includes("[Internal task completion event]"))
   ) {
     return value.slice(0, beginIndex);
   }
-  const legacyHeaderIndex = value.indexOf("Oriro runtime context (internal):");
+  const legacyHeaderIndex = value.indexOf("ORIRO runtime context (internal):");
   if (
     legacyHeaderIndex !== -1 &&
     (value.includes("Keep internal details private.") ||

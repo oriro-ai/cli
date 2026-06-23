@@ -222,8 +222,8 @@ export async function ensureGatewayReadyForOperation(
   }
 
   const prompt = shouldInstall
-    ? `Gateway is not installed. Install and start it now so Oriro can ${options.operation}?`
-    : `Gateway is not running. Start it now so Oriro can ${options.operation}?`;
+    ? `Gateway is not installed. Install and start it now so ORIRO can ${options.operation}?`
+    : `Gateway is not running. Start it now so ORIRO can ${options.operation}?`;
   const approved = await confirmRecovery({
     message: prompt,
     yes: options.yes,

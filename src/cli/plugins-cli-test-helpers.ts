@@ -176,7 +176,7 @@ vi.mock("../config/config.js", () => ({
     if (process.env.ORIRO_NIX_MODE === "1") {
       throw new Error(
         [
-          "Config is managed by Nix (`ORIRO_NIX_MODE=1`), so Oriro treats oriro.json as immutable.",
+          "Config is managed by Nix (`ORIRO_NIX_MODE=1`), so ORIRO treats oriro.json as immutable.",
           "Do not run setup, onboarding, oriro update, plugin install/update/uninstall/enable, doctor repair/token-generation, or config set against this file.",
           "Agent-first Nix setup: https://github.com/oriro/nix-oriro#quick-start",
           "Oriro Nix overview: https://docs.oriro.ai/install/nix",

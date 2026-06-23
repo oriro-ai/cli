@@ -1,8 +1,8 @@
 {
   "name": "@oriro/telegram",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Telegram channel plugin",
+  "description": "ORIRO Telegram channel plugin",
   "type": "module",
   "dependencies": {
     "@grammyjs/runner": "2.0.3",

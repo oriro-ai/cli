@@ -31,7 +31,7 @@ export type OriroNpmPrepublishVerifyArgs =
       tarballPath: "";
     };
 
-export function oriroNpmPrepublishVerifyUsage(): string {
+export function openOriroNpmPrepublishVerifyUsage(): string {
   return "Usage: node --import tsx scripts/oriro-npm-prepublish-verify.ts <tarball.tgz> [expected-version]";
 }
 
@@ -44,7 +44,7 @@ export function parseOriroNpmPrepublishVerifyArgs(
     return { help: true, tarballPath: "" };
   }
   if (!tarballPath) {
-    throw new Error(oriroNpmPrepublishVerifyUsage());
+    throw new Error(openOriroNpmPrepublishVerifyUsage());
   }
   if (tarballPath.startsWith("-")) {
     throw new Error(`Unknown oriro npm prepublish verifier option: ${tarballPath}`);
@@ -78,7 +78,7 @@ function npmExec(args: string[], cwd: string): string {
 function main(argv = process.argv.slice(2)): void {
   const args = parseOriroNpmPrepublishVerifyArgs(argv);
   if (args.help) {
-    console.log(oriroNpmPrepublishVerifyUsage());
+    console.log(openOriroNpmPrepublishVerifyUsage());
     return;
   }
 

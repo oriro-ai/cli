@@ -1441,7 +1441,7 @@ describe("Invalid engine fallback", () => {
   });
 
   it("accepts resolved engines whose info.id differs from the registered slot id (#66601)", async () => {
-    // Regression for oriro-ai/cli#66601: third-party plugins like
+    // Regression for oriro/oriro#66601: third-party plugins like
     // lossless-oriro register under an external slot id ("lossless-oriro") but
     // the ContextEngine they return uses the plugin's own internal id
     // (e.g. "lcm"). That id is metadata, not the lookup key.

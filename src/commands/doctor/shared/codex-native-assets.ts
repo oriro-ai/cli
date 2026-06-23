@@ -198,7 +198,7 @@ export async function collectCodexNativeAssetInfoNotes(params: {
   ];
   return [
     [
-      "- Personal Codex CLI assets were found, but native Codex-mode Oriro agents use isolated per-agent Codex homes.",
+      "- Personal Codex CLI assets were found, but native Codex-mode ORIRO agents use isolated per-agent Codex homes.",
       `- Sources: ${resolveCodexHome(env)} and ${resolvePersonalAgentSkillsDir(env)} (${counts.join(", ")}).`,
       "- These assets will not be loaded by the Codex app-server child unless you intentionally promote them.",
       "- If the Codex plugin is not installed, run `oriro plugins install npm:@oriro/codex` first. Then run `oriro migrate plan codex` to inventory them. Applying that migration copies skills into the current Oriro agent workspace; Codex plugins, hooks, and config stay manual-review only.",

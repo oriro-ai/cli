@@ -366,6 +366,7 @@ const { updateCommand, updateFinalizeCommand, updateStatusCommand, updateWizardC
 const updateCliShared = await import("./update-cli/shared.js");
 const { ensureGitCheckout, resolveGitInstallDir } = updateCliShared;
 const { spawnSync } = await import("node:child_process");
+const { readRestartSentinel } = await import("../infra/restart-sentinel.js");
 
 function requireValue<T>(value: T | undefined, label: string): T {
   if (value === undefined) {
@@ -2457,39 +2458,39 @@ describe("update-cli", () => {
         mockPackageInstallStatus(createCaseDir("oriro-update"));
         await updateCommand({ yes: true, tag: "main" });
       },
-      expectedSpec: "github:oriro-ai/cli#main",
+      expectedSpec: "github:oriro/oriro#main",
     },
     {
       name: "explicit git package spec",
       run: async () => {
         mockPackageInstallStatus(createCaseDir("oriro-update"));
-        await updateCommand({ yes: true, tag: "github:oriro-ai/cli#main" });
+        await updateCommand({ yes: true, tag: "github:oriro/oriro#main" });
       },
-      expectedSpec: "github:oriro-ai/cli#main",
+      expectedSpec: "github:oriro/oriro#main",
     },
     {
       name: "aliased git package spec",
       run: async () => {
         mockPackageInstallStatus(createCaseDir("oriro-update"));
-        await updateCommand({ yes: true, tag: "Oriro@github:oriro-ai/cli#main" });
+        await updateCommand({ yes: true, tag: "Oriro@github:oriro/oriro#main" });
       },
-      expectedSpec: "Oriro@github:oriro-ai/cli#main",
+      expectedSpec: "Oriro@github:oriro/oriro#main",
     },
     {
       name: "full git URL package spec",
       run: async () => {
         mockPackageInstallStatus(createCaseDir("oriro-update"));
-        await updateCommand({ yes: true, tag: "https://github.com/oriro-ai/cli.git#main" });
+        await updateCommand({ yes: true, tag: "https://github.com/oriro/oriro.git#main" });
       },
-      expectedSpec: "https://github.com/oriro-ai/cli.git#main",
+      expectedSpec: "https://github.com/oriro/oriro.git#main",
     },
     {
       name: "hosted GitHub URL package spec without git suffix",
       run: async () => {
         mockPackageInstallStatus(createCaseDir("oriro-update"));
-        await updateCommand({ yes: true, tag: "https://github.com/oriro-ai/cli#main" });
+        await updateCommand({ yes: true, tag: "https://github.com/oriro/oriro#main" });
       },
-      expectedSpec: "https://github.com/oriro-ai/cli#main",
+      expectedSpec: "https://github.com/oriro/oriro#main",
     },
     {
       name: "aliased hosted GitHub URL package spec without git suffix",
@@ -2497,26 +2498,26 @@ describe("update-cli", () => {
         mockPackageInstallStatus(createCaseDir("oriro-update"));
         await updateCommand({
           yes: true,
-          tag: "oriro@https://github.com/oriro-ai/cli#main",
+          tag: "oriro@https://github.com/oriro/oriro#main",
         });
       },
-      expectedSpec: "https://github.com/oriro-ai/cli#main",
+      expectedSpec: "https://github.com/oriro/oriro#main",
     },
     {
       name: "GitHub shorthand package spec",
       run: async () => {
         mockPackageInstallStatus(createCaseDir("oriro-update"));
-        await updateCommand({ yes: true, tag: "oriro-ai/cli#main" });
+        await updateCommand({ yes: true, tag: "oriro/oriro#main" });
       },
-      expectedSpec: "oriro-ai/cli#main",
+      expectedSpec: "oriro/oriro#main",
     },
     {
       name: "SCP-style SSH package spec",
       run: async () => {
         mockPackageInstallStatus(createCaseDir("oriro-update"));
-        await updateCommand({ yes: true, tag: "git@github.com:oriro-ai/cli.git#main" });
+        await updateCommand({ yes: true, tag: "git@github.com:oriro/oriro.git#main" });
       },
-      expectedSpec: "git@github.com:oriro-ai/cli.git#main",
+      expectedSpec: "git@github.com:oriro/oriro.git#main",
     },
     {
       name: "ORIRO_UPDATE_PACKAGE_SPEC override",
@@ -5891,23 +5892,17 @@ describe("update-cli", () => {
       },
     );
 
-    const raw = await fs.readFile(path.join(stateDir, "restart-sentinel.json"), "utf-8");
-    const sentinel = JSON.parse(raw) as {
-      payload?: {
-        status?: string;
-        message?: string | null;
-        continuation?: { kind?: string; message?: string };
-        stats?: { mode?: string; after?: { version?: string | null } };
-      };
-    };
-    expect(sentinel.payload?.status).toBe("ok");
-    expect(sentinel.payload?.message).toBe("Update requested from the agent.");
-    expect(sentinel.payload?.continuation).toEqual({
+    const sentinel = await readRestartSentinel({
+      ORIRO_STATE_DIR: stateDir,
+    } as NodeJS.ProcessEnv);
+    expect(sentinel?.payload.status).toBe("ok");
+    expect(sentinel?.payload.message).toBe("Update requested from the agent.");
+    expect(sentinel?.payload.continuation).toEqual({
       kind: "agentTurn",
       message: "Check the running version and finish the update report.",
     });
-    expect(sentinel.payload?.stats?.mode).toBe("npm");
-    expect(sentinel.payload?.stats?.after?.version).toBe("2026.4.24");
+    expect(sentinel?.payload.stats?.mode).toBe("npm");
+    expect(sentinel?.payload.stats?.after?.version).toBe("2026.4.24");
   });
 
   it("marks the control-plane update sentinel failed when restart health verification fails", async () => {
@@ -5966,17 +5961,12 @@ describe("update-cli", () => {
       },
     );
 
-    const raw = await fs.readFile(path.join(stateDir, "restart-sentinel.json"), "utf-8");
-    const sentinel = JSON.parse(raw) as {
-      payload?: {
-        status?: string;
-        continuation?: unknown;
-        stats?: { reason?: string | null };
-      };
-    };
-    expect(sentinel.payload?.status).toBe("error");
-    expect(sentinel.payload?.stats?.reason).toBe("restart-unhealthy");
-    expect(sentinel.payload?.continuation).toBeUndefined();
+    const sentinel = await readRestartSentinel({
+      ORIRO_STATE_DIR: stateDir,
+    } as NodeJS.ProcessEnv);
+    expect(sentinel?.payload.status).toBe("error");
+    expect(sentinel?.payload.stats?.reason).toBe("restart-unhealthy");
+    expect(sentinel?.payload.continuation).toBeUndefined();
     expect(defaultRuntime.exit).toHaveBeenCalledWith(1);
   });
 
@@ -6576,7 +6566,7 @@ describe("update-cli", () => {
     expect(cloneCall?.[0]).toEqual([
       "git",
       "clone",
-      "https://github.com/oriro-ai/cli.git",
+      "https://github.com/oriro/oriro.git",
       checkoutDir,
     ]);
   });

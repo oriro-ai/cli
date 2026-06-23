@@ -34,7 +34,7 @@ export function resetCleanupCommandMocks() {
   vi.clearAllMocks();
   resolveCleanupPlanFromDisk.mockReturnValue({
     stateDir: "/tmp/.oriro",
-    configPath: "/tmp/.oriro-ai/cli.json",
+    configPath: "/tmp/.oriro/oriro.json",
     oauthDir: "/tmp/.oriro/credentials",
     configInsideState: true,
     oauthInsideState: true,

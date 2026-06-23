@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { stripLeadingPackageManagerSeparator } from "./lib/arg-utils.mjs";
 import { readBoundedResponseText } from "./lib/bounded-response.mjs";
 
-const DEFAULT_REPO = "oriro-ai/cli";
+const DEFAULT_REPO = "oriro/oriro";
 const DEFAULT_PROVIDER = "openai";
 const DEFAULT_MODE = "both";
 const DEFAULT_NPM_DIST_TAG = "beta";
@@ -17,7 +17,7 @@ const DEFAULT_TELEGRAM_PROVIDER_MODE = "mock-openai";
 const DEFAULT_GITHUB_API_TIMEOUT_MS = 30_000;
 const DEFAULT_GITHUB_API_RESPONSE_BODY_MAX_BYTES = 16 * 1024 * 1024;
 const WINDOWS_NODE_TAG_PATTERN = /^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z]+([.-][0-9A-Za-z]+)*)?$/u;
-const WINDOWS_NODE_REPO = "oriro-ai/cli-windows-node";
+const WINDOWS_NODE_REPO = "oriro/oriro-windows-node";
 const WINDOWS_NODE_REQUIRED_ASSETS = [
   "OriroCompanion-Setup-x64.exe",
   "OriroCompanion-Setup-arm64.exe",
@@ -29,14 +29,14 @@ function usage() {
 
 Dispatches or consumes release validation runs, validates the prepared npm tarball,
 builds plugin publish plans, writes a green evidence bundle, then prints the exact
-Oriro Release Publish command only after everything is green.
+ORIRO Release Publish command only after everything is green.
 
 Options:
   --tag <tag>                         Release tag to validate.
   --workflow-ref <ref>                Workflow branch/ref. Default: current branch.
   --repo <owner/repo>                 GitHub repo. Default: ${DEFAULT_REPO}
   --full-release-run <id>             Reuse successful Full Release Validation run.
-  --npm-preflight-run <id>            Reuse successful Oriro NPM Release preflight run.
+  --npm-preflight-run <id>            Reuse successful ORIRO NPM Release preflight run.
   --windows-node-tag <tag>            Exact Windows Node release tag. Required for stable.
   --skip-dispatch                     Require both run ids; do not dispatch workflows.
   --skip-local-generated-check        Do not run local generated release baseline checks before dispatch.
@@ -170,7 +170,7 @@ export function parseArgs(argv) {
   }
   if (options.pluginPublishScope === "selected") {
     throw new Error(
-      "--plugin-publish-scope selected is only for plugin-only repair publishes; release candidates publish Oriro with --plugin-publish-scope all-publishable",
+      "--plugin-publish-scope selected is only for plugin-only repair publishes; release candidates publish ORIRO with --plugin-publish-scope all-publishable",
     );
   }
   if (options.pluginPublishScope === "all-publishable" && options.plugins.trim()) {
@@ -766,7 +766,7 @@ async function main() {
     workflowRef: options.workflowRef,
   });
   const npmRun = await waitForSuccessfulRun(options.repo, options.npmPreflightRunId, {
-    workflowName: "Oriro NPM Release",
+    workflowName: "ORIRO NPM Release",
     workflowRef: options.workflowRef,
   });
   if (fullRun.headSha !== targetSha || npmRun.headSha !== targetSha) {

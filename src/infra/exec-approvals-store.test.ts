@@ -199,14 +199,14 @@ describe("exec approvals store helpers", () => {
 
   it("keeps the default approvals path when only legacy state exists", () => {
     const dir = createHomeDir();
-    fs.mkdirSync(path.join(dir, ".clawdbot"), { recursive: true });
+    fs.mkdirSync(path.join(dir, ".oriro"), { recursive: true });
 
     expect(path.normalize(resolveExecApprovalsPath())).toBe(path.normalize(approvalsFilePath(dir)));
 
     ensureExecApprovals();
 
     expect(fs.existsSync(approvalsFilePath(dir))).toBe(true);
-    expect(fs.existsSync(path.join(dir, ".clawdbot", "exec-approvals.json"))).toBe(false);
+    expect(fs.existsSync(path.join(dir, ".oriro", "exec-approvals.json"))).toBe(false);
   });
 
   it("merges socket defaults from normalized, current, and built-in fallback", () => {

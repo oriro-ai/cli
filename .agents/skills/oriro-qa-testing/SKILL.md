@@ -90,7 +90,7 @@ op account list
 ```
 
 - Direct Telegram npm live test secrets currently live in 1Password item:
-  - vault: `Oriro`
+  - vault: `ORIRO`
   - item: `Telegram E2E`
 - That item is the first place to look for:
   - `ORIRO_QA_TELEGRAM_DRIVER_BOT_TOKEN`
@@ -98,7 +98,7 @@ op account list
   - `ORIRO_QA_PROVIDER_MODE`
   - `ORIRO_NPM_TELEGRAM_PACKAGE_SPEC`
 - Convex QA secrets currently live in 1Password items:
-  - vault: `Oriro`
+  - vault: `ORIRO`
   - item: `ORIRO_QA_CONVEX_SITE_URL`
   - item: `ORIRO_QA_CONVEX_SECRET_MAINTAINER`
   - item: `ORIRO_QA_CONVEX_SECRET_CI`
@@ -142,7 +142,7 @@ pnpm test:docker:npm-telegram-live
 - If direct Telegram env is missing locally and `op signin` blocks, prefer dispatching the manual GitHub lane because the `qa-live-shared` environment already has Convex CI credentials:
 
 ```bash
-gh workflow run "NPM Telegram Beta E2E" --repo oriro-ai/cli --ref main \
+gh workflow run "NPM Telegram Beta E2E" --repo oriro/oriro --ref main \
   -f package_spec=oriro@YYYY.M.D-beta.N \
   -f package_label=oriro@YYYY.M.D-beta.N \
   -f provider_mode=mock-openai
@@ -151,7 +151,7 @@ gh workflow run "NPM Telegram Beta E2E" --repo oriro-ai/cli --ref main \
 - Poll the exact run id from the dispatch URL. `gh run view --json artifacts` is not supported; list artifacts with:
 
 ```bash
-gh api repos/oriro-ai/cli/actions/runs/<run-id>/artifacts
+gh api repos/oriro/oriro/actions/runs/<run-id>/artifacts
 ```
 
 ## WhatsApp live credentials

@@ -6,12 +6,14 @@
  */
 
 import { html, nothing, type TemplateResult } from "lit";
+import { formatFastModeValue } from "../../../../src/shared/fast-mode.js";
 import { t } from "../../i18n/index.ts";
 import { icons } from "../icons.ts";
 import type { BorderRadiusStop, TextScaleStop } from "../storage.ts";
 import { normalizeOptionalString } from "../string-coerce.ts";
 import type { ThemeTransitionContext } from "../theme-transition.ts";
 import type { ThemeMode, ThemeName } from "../theme.ts";
+import type { FastMode } from "../types.ts";
 import {
   normalizeLocalUserIdentity,
   resolveLocalUserAvatarText,
@@ -56,10 +58,10 @@ export type QuickSettingsProps = {
   // Model & Thinking
   currentModel: string;
   thinkingLevel: string;
-  fastMode: boolean;
+  fastMode: FastMode | undefined;
   onModelChange?: () => void;
   onThinkingChange?: (level: string) => void;
-  onFastModeToggle?: () => void;
+  onFastModeChange?: (mode: FastMode) => void;
 
   // Channels
   channels: QuickSettingsChannel[];
@@ -129,7 +131,7 @@ export type QuickSettingsProps = {
 
 type ThemeOption = { id: ThemeName; label: string };
 const BUILTIN_THEME_OPTIONS: ThemeOption[] = [
-  { id: "oriro", label: "Oriro" },
+  { id: "oriro", label: "ORIRO" },
   { id: "knot", label: "Knot" },
   { id: "dash", label: "Dash" },
 ];
@@ -406,7 +408,12 @@ function renderCardHeader(icon: TemplateResult, title: string, action?: Template
   `;
 }
 
+function fastModeOptionValue(value: "auto" | "on" | "off"): FastMode {
+  return value === "auto" ? "auto" : value === "on";
+}
+
 function renderModelCard(props: QuickSettingsProps) {
+  const fastMode = formatFastModeValue(props.fastMode);
   return html`
     <div class="qs-card qs-card--model">
       ${renderCardHeader(icons.brain, "Model & Thinking")}
@@ -437,13 +444,27 @@ function renderModelCard(props: QuickSettingsProps) {
         </div>
         <div class="qs-row">
           <span class="qs-row__label">Fast mode</span>
-          <label class="qs-toggle">
-            <input type="checkbox" .checked=${props.fastMode} @change=${props.onFastModeToggle} />
-            <span class="qs-toggle__track"></span>
-            <span class="qs-toggle__hint muted"
-              >${props.fastMode ? "On — cheaper, less capable" : "Off"}</span
-            >
-          </label>
+          <div class="qs-segmented">
+            ${(
+              [
+                ["auto", "Auto"],
+                ["on", "Fast"],
+                ["off", "Standard"],
+              ] as const
+            ).map(
+              ([value, label]) => html`
+                <button
+                  class="qs-segmented__btn ${fastMode === value ? "qs-segmented__btn--active" : ""}"
+                  @click=${() =>
+                    fastMode === value
+                      ? undefined
+                      : props.onFastModeChange?.(fastModeOptionValue(value))}
+                >
+                  ${label}
+                </button>
+              `,
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -743,7 +764,7 @@ function renderPersonalCard(props: QuickSettingsProps) {
                     type="text"
                     maxlength="16"
                     .value=${avatarText}
-                    placeholder="JD or ORIRO"
+                    placeholder="JD or 🦞"
                     @input=${(e: Event) => {
                       const value = (e.target as HTMLInputElement).value;
                       props.onUserAvatarChange?.(value.trim() ? value : null);
@@ -931,7 +952,7 @@ function renderPresetsCard(props: QuickSettingsProps) {
         <div class="qs-profiles__copy">
           <div class="qs-profiles__eyebrow">Bootstrap Context</div>
           <p class="qs-profiles__intro">
-            Choose how much workspace context Oriro injects into each run. These profiles do not
+            Choose how much workspace context ORIRO injects into each run. These profiles do not
             change your model, tools, channels, or theme.
           </p>
           ${stateBanner}

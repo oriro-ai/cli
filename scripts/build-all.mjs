@@ -248,7 +248,7 @@ export function buildAllUsage() {
   return [
     "Usage: node scripts/build-all.mjs [profile]",
     "",
-    "Builds Oriro artifacts for the selected profile.",
+    "Builds ORIRO artifacts for the selected profile.",
     "",
     "Profiles:",
     ...Object.keys(BUILD_ALL_PROFILES).map((profile) => `  ${profile}`),
@@ -341,7 +341,7 @@ export function resolveBuildAllStep(step, params = {}) {
       pnpmArgs: step.pnpmArgs,
       nodeExecPath: params.nodeExecPath ?? nodeBin,
       npmExecPath: params.npmExecPath ?? env.npm_execpath,
-      comSpec: params.comSpec ?? env.ComSpec,
+      comSpec: params.comSpec,
       platform,
     });
     return {

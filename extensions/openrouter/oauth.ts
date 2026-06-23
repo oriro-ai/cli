@@ -258,7 +258,7 @@ export async function waitForOpenRouterOAuthCallback(params: {
         res.end(
           "<!doctype html><html><head><meta charset='utf-8'/></head>" +
             "<body><h2>OpenRouter OAuth complete</h2>" +
-            "<p>You can close this window and return to Oriro.</p></body></html>",
+            "<p>You can close this window and return to ORIRO.</p></body></html>",
         );
         finish(undefined, { code, state: params.expectedState });
       } catch (err) {

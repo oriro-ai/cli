@@ -92,7 +92,7 @@ describe("pixverse video generation provider", () => {
     const result = await provider.generateVideo({
       provider: "pixverse",
       model: "pixverse/v6",
-      prompt: "a tiny oriro DJ under neon lights",
+      prompt: "a tiny lobster DJ under neon lights",
       cfg: {},
       durationSeconds: 4,
       aspectRatio: "21:9",
@@ -111,7 +111,7 @@ describe("pixverse video generation provider", () => {
     expect(createRequest.body).toEqual({
       duration: 4,
       model: "v6",
-      prompt: "a tiny oriro DJ under neon lights",
+      prompt: "a tiny lobster DJ under neon lights",
       quality: "720p",
       aspect_ratio: "21:9",
       negative_prompt: "blur",

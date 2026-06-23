@@ -1,8 +1,8 @@
 {
   "name": "@oriro/qa-channel",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro QA synthetic channel plugin",
+  "description": "ORIRO QA synthetic channel plugin",
   "type": "module",
   "exports": {
     ".": "./index.ts",
@@ -16,10 +16,10 @@
   },
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*",
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.6.8"
+    "oriro": "workspace:*"
   },
   "peerDependenciesMeta": {
     "oriro": {
@@ -38,7 +38,7 @@
       "detailLabel": "QA Channel",
       "docsPath": "/channels/qa-channel",
       "docsLabel": "qa-channel",
-      "blurb": "Synthetic Slack-class transport for automated Oriro QA scenarios.",
+      "blurb": "Synthetic Slack-class transport for automated ORIRO QA scenarios.",
       "systemImage": "checklist",
       "order": 999,
       "exposure": {

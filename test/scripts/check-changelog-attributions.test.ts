@@ -83,7 +83,7 @@ describe("check-changelog-attributions", () => {
     const content = [
       "- Internal cleanup. Thanks @codex.",
       "- Org-owned fix. Thanks @oriro.",
-      "- Maintainer-owned fix. Thanks @steipete.",
+      "- Maintainer-owned fix. Thanks @oriro.",
       "- Mixed credit. Thanks @contributor and @Oriro.",
       "- Bot repair. Thanks @orirosweeper[bot].",
       "- Dependency bump. Thanks @dependabot[bot].",
@@ -93,7 +93,7 @@ describe("check-changelog-attributions", () => {
     expect(findForbiddenChangelogThanks(content)).toEqual([
       { line: 1, handle: "codex", text: "- Internal cleanup. Thanks @codex." },
       { line: 2, handle: "oriro", text: "- Org-owned fix. Thanks @oriro." },
-      { line: 3, handle: "steipete", text: "- Maintainer-owned fix. Thanks @steipete." },
+      { line: 3, handle: "oriro", text: "- Maintainer-owned fix. Thanks @oriro." },
       { line: 4, handle: "oriro", text: "- Mixed credit. Thanks @contributor and @Oriro." },
       { line: 5, handle: "orirosweeper[bot]", text: "- Bot repair. Thanks @orirosweeper[bot]." },
       { line: 6, handle: "dependabot[bot]", text: "- Dependency bump. Thanks @dependabot[bot]." },
@@ -127,7 +127,7 @@ describe("check-changelog-attributions", () => {
     expect(isForbiddenChangelogThanksHandle("app/any-bot")).toBe(true);
     expect(isForbiddenChangelogThanksHandle("codex")).toBe(true);
     expect(isForbiddenChangelogThanksHandle("oriro")).toBe(true);
-    expect(isForbiddenChangelogThanksHandle("steipete")).toBe(true);
+    expect(isForbiddenChangelogThanksHandle("oriro")).toBe(true);
     expect(isForbiddenChangelogThanksHandle("app/orirosweeper")).toBe(true);
     expect(isForbiddenChangelogThanksHandle("orirosweeper")).toBe(true);
     expect(isForbiddenChangelogThanksHandle("orirosweeper[bot]")).toBe(true);
@@ -148,7 +148,7 @@ describe("check-changelog-attributions", () => {
     expect(requiresExplicitHumanChangelogThanks("dependabot[bot]")).toBe(true);
     expect(requiresExplicitHumanChangelogThanks("app/orirosweeper")).toBe(true);
     expect(requiresExplicitHumanChangelogThanks("human-orirosweeper-fan")).toBe(false);
-    expect(requiresExplicitHumanChangelogThanks("steipete")).toBe(false);
+    expect(requiresExplicitHumanChangelogThanks("oriro")).toBe(false);
     expect(requiresExplicitHumanChangelogThanks("")).toBe(false);
   });
 
@@ -179,7 +179,7 @@ describe("check-changelog-attributions", () => {
   it("keeps non-bot forbidden contributors on the no-thanks fallback", () => {
     const repo = createRepoWithPrChangelogDiff("- Maintainer repair (#123).");
     try {
-      expect(validateChangelogEntry(repo, "steipete")).toContain("skipping thanks check");
+      expect(validateChangelogEntry(repo, "oriro")).toContain("skipping thanks check");
     } finally {
       rmSync(repo, { recursive: true, force: true });
     }

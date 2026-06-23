@@ -340,8 +340,8 @@ describe("discordPlugin outbound", () => {
     const result = await discordPlugin.outbound!.sendMedia!({
       cfg: EMPTY_DISCORD_TEST_CONFIG,
       to: "channel:123",
-      text: "done - tiny cyber-oriro clip incoming",
-      mediaUrl: "/tmp/oriro.mp4",
+      text: "done - tiny cyber-lobster clip incoming",
+      mediaUrl: "/tmp/molty.mp4",
       accountId: "work",
       replyToId: "reply-123",
       threadId: "thread-123",
@@ -352,11 +352,11 @@ describe("discordPlugin outbound", () => {
 
     expect(sendMessageDiscord).toHaveBeenCalledTimes(2);
     expect(argAt(sendMessageDiscord, 0, 0)).toBe("channel:thread-123");
-    expect(argAt(sendMessageDiscord, 0, 1)).toBe("done - tiny cyber-oriro clip incoming");
+    expect(argAt(sendMessageDiscord, 0, 1)).toBe("done - tiny cyber-lobster clip incoming");
     expect(objectArgAt(sendMessageDiscord, 0, 2).replyTo).toBe("reply-123");
     expect(argAt(sendMessageDiscord, 1, 0)).toBe("channel:thread-123");
     expect(argAt(sendMessageDiscord, 1, 1)).toBe("");
-    expect(objectArgAt(sendMessageDiscord, 1, 2).mediaUrl).toBe("/tmp/oriro.mp4");
+    expect(objectArgAt(sendMessageDiscord, 1, 2).mediaUrl).toBe("/tmp/molty.mp4");
     expect(result.channel).toBe("discord");
     expect(result.messageId).toBe("video-1");
   });
@@ -370,7 +370,7 @@ describe("discordPlugin outbound", () => {
         to: "channel:123",
         poll: {
           question: "Best shell?",
-          options: ["oriro", "molter"],
+          options: ["molty", "molter"],
         },
         accountId: "work",
         threadId: "thread-123",
@@ -379,7 +379,7 @@ describe("discordPlugin outbound", () => {
       expect(argAt(sendPollDiscord, 0, 0)).toBe("channel:thread-123");
       expect(argAt(sendPollDiscord, 0, 1)).toEqual({
         question: "Best shell?",
-        options: ["oriro", "molter"],
+        options: ["molty", "molter"],
       });
       expect(objectArgAt(sendPollDiscord, 0, 2).accountId).toBe("work");
       const pollResult = result as { channel?: string; messageId?: string };

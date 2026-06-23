@@ -36,7 +36,7 @@ export const REALTIME_VOICE_AGENT_CONTROL_TOOL: RealtimeVoiceTool = {
   type: "function",
   name: REALTIME_VOICE_AGENT_CONTROL_TOOL_NAME,
   description:
-    "Control an active Oriro tool-backed voice run. Use this when the caller asks in any language for status/progress, cancellation, a redirect/change to the active work, or a follow-up after the current work. Do not use this for ordinary greetings or chatter unless the caller is asking about the active work.",
+    "Control an active ORIRO tool-backed voice run. Use this when the caller asks in any language for status/progress, cancellation, a redirect/change to the active work, or a follow-up after the current work. Do not use this for ordinary greetings or chatter unless the caller is asking about the active work.",
   parameters: {
     type: "object",
     properties: {
@@ -273,16 +273,16 @@ function parseRealtimeVoiceAgentControlToolArgsRecord(args: unknown): unknown {
 /** Build the system-style instruction that forces exact spoken status output. */
 export function buildRealtimeVoiceAgentControlSpeechMessage(text: string): string {
   return [
-    "Internal Oriro voice control result.",
+    "Internal ORIRO voice control result.",
     "Do not call oriro_agent_consult or any other tool for this message.",
-    "Speak this exact Oriro status to the voice call, without adding, removing, or rephrasing words.",
+    "Speak this exact ORIRO status to the voice call, without adding, removing, or rephrasing words.",
     `Status: ${JSON.stringify(text)}`,
   ].join("\n");
 }
 
 /** Provider result payload used when the control tool cancels active work. */
 export function buildRealtimeVoiceAgentCancelProviderResult(
-  message = "Cancelled the active Oriro run.",
+  message = "Cancelled the active ORIRO run.",
 ): RealtimeVoiceAgentControlProviderResult {
   return {
     status: "cancelled",
@@ -306,14 +306,14 @@ export function formatRealtimeVoiceAgentQueueRejection(
   reason: string,
 ): string {
   if (reason === "compacting") {
-    return "Oriro is compacting the active run and cannot accept voice steering yet.";
+    return "ORIRO is compacting the active run and cannot accept voice steering yet.";
   }
   if (reason === "not_streaming") {
-    return "Oriro has an active run, but it is not currently accepting steering.";
+    return "ORIRO has an active run, but it is not currently accepting steering.";
   }
   return mode === "followup"
-    ? "Oriro could not queue that follow-up."
-    : "Oriro could not steer the active run.";
+    ? "ORIRO could not queue that follow-up."
+    : "ORIRO could not steer the active run.";
 }
 
 function isRealtimeVoiceAgentControlToolEvent(event: TalkEvent): boolean {
@@ -337,7 +337,7 @@ export function formatRealtimeVoiceAgentStatus(params: {
   if (!params.active) {
     const turnEnded = recent.find((event) => event.type === "turn.ended");
     return turnEnded
-      ? "Oriro finished the last voice request."
+      ? "ORIRO finished the last voice request."
       : "I'm not working on an active request right now.";
   }
 
@@ -352,29 +352,29 @@ export function formatRealtimeVoiceAgentStatus(params: {
     const name = normalizeOptionalString(payload.name);
     const phase = normalizeOptionalString(payload.phase);
     if (toolEvent.type === "tool.call") {
-      return name ? `Oriro is starting ${name}.` : "Oriro is starting a tool.";
+      return name ? `ORIRO is starting ${name}.` : "ORIRO is starting a tool.";
     }
     if (toolEvent.type === "tool.result") {
       return name
-        ? `Oriro finished ${name} and is continuing.`
-        : "Oriro finished a tool and is continuing.";
+        ? `ORIRO finished ${name} and is continuing.`
+        : "ORIRO finished a tool and is continuing.";
     }
     if (toolEvent.type === "tool.progress") {
       return name
-        ? `Oriro is working in ${name}${phase ? ` (${phase})` : ""}.`
-        : "Oriro is still working.";
+        ? `ORIRO is working in ${name}${phase ? ` (${phase})` : ""}.`
+        : "ORIRO is still working.";
     }
   }
 
   if (params.activity?.activeToolName) {
-    return `Oriro is running ${params.activity.activeToolName}.`;
+    return `ORIRO is running ${params.activity.activeToolName}.`;
   }
   if (params.activity?.activeWorkKind === "model_call") {
-    return "Oriro is waiting on the model.";
+    return "ORIRO is waiting on the model.";
   }
   if (params.activity?.activeWorkKind === "embedded_run" || params.activity?.hasActiveEmbeddedRun) {
-    return "Oriro is working on the current voice request.";
+    return "ORIRO is working on the current voice request.";
   }
 
-  return "Oriro is working on the current voice request.";
+  return "ORIRO is working on the current voice request.";
 }

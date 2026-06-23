@@ -78,7 +78,7 @@ export async function runQaSelfCheckAgainstState(params: {
     }
   });
   const report = renderQaMarkdownReport({
-    title: "Oriro QA E2E Self-Check",
+    title: "ORIRO QA E2E Self-Check",
     startedAt,
     finishedAt,
     checks,

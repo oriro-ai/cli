@@ -160,7 +160,7 @@ async function runBoundedCodexAppServerTurnInWorkspace(
           cwd: workspace.cwd,
           approvalPolicy: "on-request",
           sandbox: "read-only",
-          serviceName: "Oriro",
+          serviceName: "ORIRO",
           developerInstructions: params.developerInstructions,
           config: buildCodexRuntimeThreadConfig(resolveBoundedThreadConfig(params, workspace), {
             nativeCodeModeEnabled: false,
@@ -258,7 +258,7 @@ function createCodexBoundedApprovalHandler(taskLabel: string) {
     ) {
       return {
         decision: "decline",
-        reason: `Oriro Codex ${taskLabel} does not grant tool or file approvals.`,
+        reason: `ORIRO Codex ${taskLabel} does not grant tool or file approvals.`,
       };
     }
     if (request.method === "item/permissions/requestApproval") {
@@ -267,7 +267,7 @@ function createCodexBoundedApprovalHandler(taskLabel: string) {
     if (request.method.includes("requestApproval")) {
       return {
         decision: "decline",
-        reason: `Oriro Codex ${taskLabel} does not grant native approvals.`,
+        reason: `ORIRO Codex ${taskLabel} does not grant native approvals.`,
       };
     }
     if (request.method === "mcpServer/elicitation/request") {

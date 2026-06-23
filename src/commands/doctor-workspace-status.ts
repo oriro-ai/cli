@@ -11,7 +11,6 @@ import {
 import { buildWorkspaceSkillStatus } from "../skills/discovery/status.js";
 import { listTasksForFlowId } from "../tasks/runtime-internal.js";
 import { listTaskFlowRecords } from "../tasks/task-flow-runtime-internal.js";
-import { detectLegacyWorkspaceDirs, formatLegacyWorkspaceWarning } from "./doctor-workspace.js";
 
 type NoteWorkspaceStatusOptions = {
   pluginVersionDrift?: PluginVersionDriftReport;
@@ -66,7 +65,7 @@ function notePluginVersionDrift(drift: PluginVersionDriftReport | undefined) {
   const lines = [
     `${drift.drifts.length} active official plugin${
       drift.drifts.length === 1 ? "" : "s"
-    } not on Oriro ${drift.gatewayVersion}`,
+    } not on ORIRO ${drift.gatewayVersion}`,
     ...drift.drifts.map((entry) => {
       const sourceLabel = entry.source === "orirohub" ? "orirohub" : "npm";
       return `- ${entry.pluginId}: ${entry.installedVersion} (${sourceLabel}) -> expected ${drift.gatewayVersion}`;
@@ -85,11 +84,6 @@ function notePluginVersionDrift(drift: PluginVersionDriftReport | undefined) {
 /** Emits workspace, skills, plugin, and TaskFlow recovery status notes for doctor. */
 export function noteWorkspaceStatus(cfg: OriroConfig, options: NoteWorkspaceStatusOptions = {}) {
   const workspaceDir = resolveAgentWorkspaceDir(cfg, resolveDefaultAgentId(cfg));
-  const legacyWorkspace = detectLegacyWorkspaceDirs({ workspaceDir });
-  if (legacyWorkspace.legacyDirs.length > 0) {
-    note(formatLegacyWorkspaceWarning(legacyWorkspace), "Extra workspace");
-  }
-
   const skillsReport = buildWorkspaceSkillStatus(workspaceDir, { config: cfg });
   const platformIncompatibleCount = skillsReport.skills.filter(
     (s) => s.platformIncompatible && !s.disabled && !s.blockedByAllowlist,

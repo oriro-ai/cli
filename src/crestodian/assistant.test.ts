@@ -35,7 +35,7 @@ function overview(overrides: Partial<CrestodianOverview["tools"]> = {}): Crestod
     },
     references: {
       docsUrl: "https://docs.oriro.ai",
-      sourceUrl: "https://github.com/oriro-ai/cli",
+      sourceUrl: "https://github.com/oriro/oriro",
     },
   };
 }
@@ -102,7 +102,7 @@ describe("Crestodian assistant", () => {
           docsPath: "/tmp/oriro/docs",
           docsUrl: "https://docs.oriro.ai",
           sourcePath: "/tmp/oriro",
-          sourceUrl: "https://github.com/oriro-ai/cli",
+          sourceUrl: "https://github.com/oriro/oriro",
         },
       },
     });

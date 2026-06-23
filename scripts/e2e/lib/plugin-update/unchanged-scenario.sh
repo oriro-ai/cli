@@ -4,7 +4,7 @@ set -euo pipefail
 source scripts/lib/oriro-e2e-instance.sh
 
 oriro_e2e_eval_test_state_from_b64 "${ORIRO_TEST_STATE_SCRIPT_B64:?missing ORIRO_TEST_STATE_SCRIPT_B64}"
-oriro_e2e_install_package /tmp/oriro-install.log "mounted Oriro package" /tmp/npm-prefix
+oriro_e2e_install_package /tmp/oriro-install.log "mounted ORIRO package" /tmp/npm-prefix
 
 package_root="$(oriro_e2e_package_root /tmp/npm-prefix)"
 entry="$(oriro_e2e_package_entrypoint "$package_root")"

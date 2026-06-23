@@ -490,7 +490,7 @@ describe("imessage approval capability", () => {
   });
 
   it("does not suppress target-only forwarding when native delivery cannot bind that target", () => {
-    // Locks down the behavior the live Oriro deploy exercised: with
+    // Locks down the behavior the live Lobster deploy exercised: with
     // mode=targets and no matching iMessage session-origin, the suppression
     // gate must stay off so the legacy forwarding path can deliver the
     // prompt. Regressing this would leave targets-only operators with no

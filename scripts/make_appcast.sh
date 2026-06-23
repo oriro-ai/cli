@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-ZIP=${1:?"Usage: $0 Oriro-<ver>.zip"}
+ZIP=${1:?"Usage: $0 ORIRO-<ver>.zip"}
 FEED_URL=${2:-"https://raw.githubusercontent.com/oriro/oriro/main/appcast.xml"}
 PRIVATE_KEY_FILE=${SPARKLE_PRIVATE_KEY_FILE:-}
 

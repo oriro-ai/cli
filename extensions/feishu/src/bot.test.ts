@@ -4,7 +4,7 @@ import { createRuntimeEnv } from "oriro/plugin-sdk/plugin-test-runtime";
 import type { ResolvedAgentRoute } from "oriro/plugin-sdk/routing";
 import { resolveGroupSessionKey } from "oriro/plugin-sdk/session-store-runtime";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig, PluginRuntime } from "../runtime-api.js";
+import type { OriroConfig, PluginRuntime } from "../runtime-api.js";
 import { parseMergeForwardContent } from "./bot-content.js";
 import type { FeishuMessageEvent } from "./bot.js";
 import { handleFeishuMessage } from "./bot.js";
@@ -164,7 +164,7 @@ function buildDefaultResolveRoute(): ResolvedAgentRoute {
     matchedBy: "default",
   };
 }
-let currentRuntimeConfig = {} as ClawdbotConfig;
+let currentRuntimeConfig = {} as OriroConfig;
 
 function createFeishuBotRuntime(overrides: DeepPartial<PluginRuntime> = {}): PluginRuntime {
   return {
@@ -419,8 +419,8 @@ afterAll(() => {
 });
 
 async function dispatchMessage(params: {
-  cfg: ClawdbotConfig;
-  currentCfg?: ClawdbotConfig;
+  cfg: OriroConfig;
+  currentCfg?: OriroConfig;
   event: FeishuMessageEvent;
   channelRuntime?: PluginRuntime["channel"];
   botOpenId?: string;
@@ -438,7 +438,7 @@ async function dispatchMessage(params: {
               allowFrom: ["*"],
             },
           },
-        } as ClawdbotConfig)
+        } as OriroConfig)
       : params.cfg;
   currentRuntimeConfig = params.currentCfg ?? cfg;
   await handleFeishuMessage({
@@ -1104,13 +1104,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("routes /compact through the standard reply dispatch path (#90185)", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(true);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     await dispatchMessage({
       cfg,
@@ -1152,13 +1152,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("does not enqueue inbound preview text as system events", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1202,7 +1202,7 @@ describe("handleFeishuMessage command authorization", () => {
             dmPolicy: "open",
           },
         },
-      } as ClawdbotConfig,
+      } as OriroConfig,
       event: {
         sender: {
           sender_id: {
@@ -1244,7 +1244,7 @@ describe("handleFeishuMessage command authorization", () => {
             dmPolicy: "open",
           },
         },
-      } as ClawdbotConfig,
+      } as OriroConfig,
       event: {
         sender: {
           sender_id: {
@@ -1267,7 +1267,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("uses refreshed config for dynamic agent dispatch", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
@@ -1278,7 +1278,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
     const refreshedCfg = {
       ...cfg,
       agents: {
@@ -1290,7 +1290,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         ],
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
     mockMaybeCreateDynamicAgent.mockResolvedValueOnce({
       created: false,
       updatedCfg: refreshedCfg,
@@ -1338,7 +1338,7 @@ describe("handleFeishuMessage command authorization", () => {
           dynamicAgentCreation: { enabled: true },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
     const refreshedCfg = {
       channels: {
         feishu: {
@@ -1347,7 +1347,7 @@ describe("handleFeishuMessage command authorization", () => {
           dynamicAgentCreation: { enabled: true },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
     await dispatchMessage({
       cfg,
       currentCfg: refreshedCfg,
@@ -1377,10 +1377,10 @@ describe("handleFeishuMessage command authorization", () => {
     });
     const cfg = {
       channels: { feishu: { dmPolicy: "open", allowFrom: ["*"] } },
-    } as ClawdbotConfig;
+    } as OriroConfig;
     const currentCfg = {
       channels: { feishu: { dmPolicy: "allowlist", allowFrom: ["ou-admin"] } },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     await dispatchMessage({
       cfg,
@@ -1414,7 +1414,7 @@ describe("handleFeishuMessage command authorization", () => {
           dynamicAgentCreation: { enabled: true },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
     const currentCfg = {
       channels: {
         feishu: {
@@ -1423,7 +1423,7 @@ describe("handleFeishuMessage command authorization", () => {
           dynamicAgentCreation: { enabled: true },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     await dispatchMessage({
       cfg,
@@ -1455,11 +1455,11 @@ describe("handleFeishuMessage command authorization", () => {
           dynamicAgentCreation: { enabled: true },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
     const refreshedCfg = {
       ...cfg,
       commands: { useAccessGroups: true },
-    } as ClawdbotConfig;
+    } as OriroConfig;
     mockShouldComputeCommandAuthorized.mockImplementation((_body, candidateCfg) => {
       return candidateCfg === refreshedCfg;
     });
@@ -1488,7 +1488,7 @@ describe("handleFeishuMessage command authorization", () => {
   });
 
   it("blocks open DMs when a restrictive allowlist does not match", async () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       commands: { useAccessGroups: true },
       channels: {
         feishu: {
@@ -1496,7 +1496,7 @@ describe("handleFeishuMessage command authorization", () => {
           allowFrom: ["ou-admin"],
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1523,7 +1523,7 @@ describe("handleFeishuMessage command authorization", () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
     mockReadAllowFromStore.mockResolvedValue(["ou-attacker"]);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       commands: { useAccessGroups: true },
       channels: {
         feishu: {
@@ -1531,7 +1531,7 @@ describe("handleFeishuMessage command authorization", () => {
           allowFrom: [],
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1560,7 +1560,7 @@ describe("handleFeishuMessage command authorization", () => {
   });
 
   it("skips sender-name lookup when resolveSenderNames is false", async () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
@@ -1568,7 +1568,7 @@ describe("handleFeishuMessage command authorization", () => {
           resolveSenderNames: false,
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1598,14 +1598,14 @@ describe("handleFeishuMessage command authorization", () => {
       contentType: "text",
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           enabled: true,
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1639,13 +1639,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("uses message create_time as Timestamp instead of Date.now()", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1672,13 +1672,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("falls back to Date.now() when create_time is absent", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1707,13 +1707,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("falls back to Date.now() when create_time is malformed", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1741,13 +1741,13 @@ describe("handleFeishuMessage command authorization", () => {
   });
 
   it("replies pairing challenge to DM chat_id instead of user:sender id", async () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "pairing",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1777,14 +1777,14 @@ describe("handleFeishuMessage command authorization", () => {
     mockReadAllowFromStore.mockResolvedValue([]);
     mockUpsertPairingRequest.mockResolvedValue({ code: "ABCDEFGH", created: true });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "pairing",
           allowFrom: [],
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1828,7 +1828,7 @@ describe("handleFeishuMessage command authorization", () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(true);
     mockResolveCommandAuthorizedFromAuthorizers.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       commands: { useAccessGroups: true },
       channels: {
         feishu: {
@@ -1839,7 +1839,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1872,7 +1872,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("normalizes group mention-prefixed slash commands before command-auth probing", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(true);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -1882,7 +1882,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1909,7 +1909,7 @@ describe("handleFeishuMessage command authorization", () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(true);
     mockResolveCommandAuthorizedFromAuthorizers.mockReturnValue(true);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       commands: { useAccessGroups: true },
       channels: {
         feishu: {
@@ -1921,7 +1921,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1954,7 +1954,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("allows group sender when global groupSenderAllowFrom includes sender", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
@@ -1966,7 +1966,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -1998,7 +1998,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("keeps Feishu group policy bound to the chat while preserving speaker identity", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
@@ -2010,7 +2010,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2056,7 +2056,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("blocks group sender when global groupSenderAllowFrom excludes sender", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
@@ -2068,7 +2068,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2094,7 +2094,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("prefers per-group allowFrom over global groupSenderAllowFrom", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
@@ -2107,7 +2107,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2141,7 +2141,7 @@ describe("handleFeishuMessage command authorization", () => {
       contentType: "text",
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
@@ -2154,7 +2154,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2193,7 +2193,7 @@ describe("handleFeishuMessage command authorization", () => {
       contentType: "text",
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
@@ -2205,7 +2205,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2236,14 +2236,14 @@ describe("handleFeishuMessage command authorization", () => {
   it("dispatches group image message when groupPolicy is open (requireMention defaults to false)", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
           // requireMention is NOT set — should default to false for open policy
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2266,14 +2266,14 @@ describe("handleFeishuMessage command authorization", () => {
   it("drops group image message when groupPolicy is open but requireMention is explicitly true", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
           requireMention: true, // explicit override — user opts into mention-required even for open
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2297,7 +2297,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("drops group image message when groupPolicy is allowlist and requireMention is not set (defaults to true)", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "allowlist",
@@ -2309,7 +2309,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2338,7 +2338,7 @@ describe("handleFeishuMessage command authorization", () => {
     // then control mention gating for inbound text events.
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "allowlist",
@@ -2350,7 +2350,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2373,7 +2373,7 @@ describe("handleFeishuMessage command authorization", () => {
   });
 
   it("does not let explicit group config override disabled group policy", async () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "disabled",
@@ -2384,7 +2384,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2406,7 +2406,7 @@ describe("handleFeishuMessage command authorization", () => {
   });
 
   it("does not treat wildcard group defaults as allowlist admission", async () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "allowlist",
@@ -2417,7 +2417,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2439,7 +2439,7 @@ describe("handleFeishuMessage command authorization", () => {
   });
 
   it("drops message when groupConfig.enabled is false", async () => {
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -2449,7 +2449,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2485,13 +2485,13 @@ describe("handleFeishuMessage command authorization", () => {
     });
     mockTranscribeFirstAudio.mockResolvedValueOnce("voice transcript");
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2553,13 +2553,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("uses video file_key (not thumbnail image_key) for inbound video download", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2602,13 +2602,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("uses media message_type file_key (not thumbnail image_key) for inbound mobile video download", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2655,13 +2655,13 @@ describe("handleFeishuMessage command authorization", () => {
       contentType: "video/mp4",
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2696,13 +2696,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("downloads embedded media tags from post messages as files", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2751,13 +2751,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("includes message_id in BodyForAgent on its own line", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2821,13 +2821,13 @@ describe("handleFeishuMessage command authorization", () => {
       },
     } as unknown as PluginRuntime);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2898,13 +2898,13 @@ describe("handleFeishuMessage command authorization", () => {
       },
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -2944,7 +2944,7 @@ describe("handleFeishuMessage command authorization", () => {
       },
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           appId: "cli_test",
@@ -2956,7 +2956,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -3000,7 +3000,7 @@ describe("handleFeishuMessage command authorization", () => {
       },
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           appId: "cli_scope_bug",
@@ -3012,7 +3012,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -3040,7 +3040,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("routes group sessions by sender when groupSessionScope=group_sender", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3051,7 +3051,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-scope-user" } },
@@ -3077,7 +3077,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("routes topic sessions and parentPeer when groupSessionScope=group_topic_sender", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3088,7 +3088,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-user" } },
@@ -3118,7 +3118,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("keeps root_id as topic key when root_id and thread_id both exist", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3129,7 +3129,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-user" } },
@@ -3160,7 +3160,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("uses thread_id as the canonical topic key in Feishu topic groups", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3171,7 +3171,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const topicStarter: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-user" } },
@@ -3217,7 +3217,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("uses thread_id as topic key when root_id is missing", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3228,7 +3228,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-user" } },
@@ -3254,7 +3254,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("maps legacy topicSessionMode=enabled to group_topic routing", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           topicSessionMode: "enabled",
@@ -3265,7 +3265,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-legacy" } },
@@ -3291,7 +3291,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("maps legacy topicSessionMode=enabled to root_id when both root_id and thread_id exist", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           topicSessionMode: "enabled",
@@ -3302,7 +3302,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-legacy-thread-id" } },
@@ -3329,7 +3329,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("uses message_id as topic root when group_topic + replyInThread and no root_id", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3341,7 +3341,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-init" } },
@@ -3366,7 +3366,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("keeps topic session key stable after first turn creates a thread", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3378,7 +3378,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const firstTurn: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-init" } },
@@ -3421,7 +3421,7 @@ describe("handleFeishuMessage command authorization", () => {
       threadId: "omt_native_topic",
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3433,7 +3433,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const firstTurn: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-init" } },
@@ -3469,7 +3469,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("replies to the topic root when handling a message inside an existing topic", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3480,7 +3480,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-user" } },
@@ -3509,7 +3509,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("replies to triggering message in normal group even when root_id is present (#32980)", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3520,7 +3520,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-normal-user" } },
@@ -3548,7 +3548,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("replies to topic root in topic-mode group with root_id", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3559,7 +3559,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-user" } },
@@ -3588,7 +3588,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("replies to topic root in topic-sender group with root_id", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3599,7 +3599,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-sender-user" } },
@@ -3628,13 +3628,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("uses explicit synthetic typing targets without changing reply routing", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-synthetic" } },
@@ -3662,13 +3662,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("keeps P2P replies inside a direct-message thread when Feishu supplies thread_id", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-thread-dm" } },
@@ -3699,13 +3699,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("keeps root_id-only P2P replies as quote replies outside thread mode", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-quote-dm" } },
@@ -3735,7 +3735,7 @@ describe("handleFeishuMessage command authorization", () => {
   it("forces thread replies when inbound message contains thread_id", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3747,7 +3747,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-thread-reply" } },
@@ -3800,7 +3800,7 @@ describe("handleFeishuMessage command authorization", () => {
       },
     ]);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3811,7 +3811,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-user" } },
@@ -3851,7 +3851,7 @@ describe("handleFeishuMessage command authorization", () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
     mockReadSessionUpdatedAt.mockReturnValue(1710000000000);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3862,7 +3862,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-topic-user" } },
@@ -3920,7 +3920,7 @@ describe("handleFeishuMessage command authorization", () => {
       },
     ]);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groups: {
@@ -3931,7 +3931,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -4004,7 +4004,7 @@ describe("handleFeishuMessage command authorization", () => {
       },
     ]);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
@@ -4018,7 +4018,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: { sender_id: { open_id: "ou-allowed" } },
@@ -4047,13 +4047,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("does not dispatch twice for the same image message_id (concurrent dedupe)", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -4079,13 +4079,13 @@ describe("handleFeishuMessage command authorization", () => {
   it("dedupes Feishu media by message_id plus file_key", async () => {
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
     const createAudioEvent = (fileKey: string): FeishuMessageEvent => ({
       sender: {
         sender_id: {
@@ -4135,14 +4135,14 @@ describe("handleFeishuMessage command authorization", () => {
     // be empty". The handler should drop such events before queuing a reply.
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
           allowFrom: ["*"],
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -4179,14 +4179,14 @@ describe("handleFeishuMessage command authorization", () => {
       contentType: "text",
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           dmPolicy: "open",
           allowFrom: ["*"],
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -4225,7 +4225,7 @@ describe("handleFeishuMessage command authorization", () => {
       contentType: "text",
     });
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
@@ -4236,7 +4236,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -4274,7 +4274,7 @@ describe("handleFeishuMessage command authorization", () => {
     // called and nothing is dispatched.
     mockShouldComputeCommandAuthorized.mockReturnValue(false);
 
-    const cfg: ClawdbotConfig = {
+    const cfg: OriroConfig = {
       channels: {
         feishu: {
           groupPolicy: "open",
@@ -4285,7 +4285,7 @@ describe("handleFeishuMessage command authorization", () => {
           },
         },
       },
-    } as ClawdbotConfig;
+    } as OriroConfig;
 
     const event: FeishuMessageEvent = {
       sender: {
@@ -4351,7 +4351,7 @@ describe("createFeishuMessageReceiveHandler media dedupe", () => {
       }) satisfies FeishuMessageEvent;
     const last = createTextEvent("msg-text-last", "1710000001000", "second");
     const handler = createFeishuMessageReceiveHandler({
-      cfg: { channels: { feishu: { dmPolicy: "open" } } } as ClawdbotConfig,
+      cfg: { channels: { feishu: { dmPolicy: "open" } } } as OriroConfig,
       channelRuntime: core.channel,
       accountId: "receive-text-debounce",
       chatHistories: new Map(),
@@ -4413,7 +4413,7 @@ describe("createFeishuMessageReceiveHandler media dedupe", () => {
       },
     });
     const handler = createFeishuMessageReceiveHandler({
-      cfg: { channels: { feishu: { dmPolicy: "open" } } } as ClawdbotConfig,
+      cfg: { channels: { feishu: { dmPolicy: "open" } } } as OriroConfig,
       channelRuntime: core.channel,
       accountId: "receive-media-dedupe",
       chatHistories: new Map(),

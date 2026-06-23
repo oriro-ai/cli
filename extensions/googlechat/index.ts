@@ -4,7 +4,7 @@ import { defineBundledChannelEntry } from "oriro/plugin-sdk/channel-entry-contra
 export default defineBundledChannelEntry({
   id: "googlechat",
   name: "Google Chat",
-  description: "Oriro Google Chat channel plugin",
+  description: "ORIRO Google Chat channel plugin",
   importMetaUrl: import.meta.url,
   plugin: {
     specifier: "./channel-plugin-api.js",

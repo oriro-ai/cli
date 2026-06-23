@@ -2,7 +2,7 @@
 import { randomUUID } from "node:crypto";
 import { createPluginRuntimeMock } from "oriro/plugin-sdk/channel-test-helpers";
 import { expect, vi, type Mock } from "vitest";
-import type { ClawdbotConfig, PluginRuntime, RuntimeEnv } from "../../runtime-api.js";
+import type { OriroConfig, PluginRuntime, RuntimeEnv } from "../../runtime-api.js";
 import { getFeishuRuntime, setFeishuRuntime } from "../runtime.js";
 import type { ResolvedFeishuAccount } from "../types.js";
 
@@ -195,7 +195,7 @@ export function createFeishuLifecycleConfig(params: {
   channelConfig?: Record<string, unknown>;
   accountConfig?: Record<string, unknown>;
   extraConfig?: Record<string, unknown>;
-}): ClawdbotConfig {
+}): OriroConfig {
   const extraConfig = params.extraConfig ?? {};
   return {
     ...extraConfig,
@@ -227,7 +227,7 @@ export function createFeishuLifecycleConfig(params: {
         },
       },
     },
-  } as ClawdbotConfig;
+  } as OriroConfig;
 }
 
 export function createFeishuLifecycleFixture(params: {
@@ -423,7 +423,7 @@ export async function setupFeishuLifecycleHandler(params: {
   };
   onRegister: (registered: Record<string, (data: unknown) => Promise<void>>) => void;
   runtime: RuntimeEnv;
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   account: ResolvedFeishuAccount;
   handlerKey: string;
   missingHandlerMessage: string;

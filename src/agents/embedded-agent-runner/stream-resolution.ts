@@ -10,7 +10,7 @@ import { stripSystemPromptCacheBoundary } from "../system-prompt-cache-boundary.
 import type { EmbeddedRunAttemptParams } from "./run/types.js";
 
 let embeddedAgentBaseStreamFnCache = new WeakMap<object, StreamFn | undefined>();
-let oriroNativeCodexResponsesStreamFnForTest: StreamFn | undefined;
+let openOriroNativeCodexResponsesStreamFnForTest: StreamFn | undefined;
 
 type EmbeddedStreamOptions = Parameters<StreamFn>[2] & {
   authProfileId?: string;
@@ -66,7 +66,7 @@ function resolveOriroNativeCodexResponsesStreamFn(params: {
   if (!isDefaultOriroStreamFnForModel(params.model, params.currentStreamFn)) {
     return undefined;
   }
-  return oriroNativeCodexResponsesStreamFnForTest ?? params.currentStreamFn ?? streamSimple;
+  return openOriroNativeCodexResponsesStreamFnForTest ?? params.currentStreamFn ?? streamSimple;
 }
 
 export function describeEmbeddedAgentStreamStrategy(params: {
@@ -149,12 +149,12 @@ export function resolveEmbeddedAgentStreamFn(params: {
     return createAnthropicVertexStreamFnForModel(params.model);
   }
 
-  const oriroNativeCodexResponsesStreamFn = resolveOriroNativeCodexResponsesStreamFn({
+  const openOriroNativeCodexResponsesStreamFn = resolveOriroNativeCodexResponsesStreamFn({
     model: params.model,
     currentStreamFn: params.currentStreamFn,
   });
-  if (oriroNativeCodexResponsesStreamFn) {
-    return wrapEmbeddedAgentStreamFn(oriroNativeCodexResponsesStreamFn, {
+  if (openOriroNativeCodexResponsesStreamFn) {
+    return wrapEmbeddedAgentStreamFn(openOriroNativeCodexResponsesStreamFn, {
       runSignal: params.signal,
       resolvedApiKey: params.resolvedApiKey,
       authProfileId: params.authProfileId,
@@ -214,10 +214,10 @@ export function resolveEmbeddedAgentStreamFn(params: {
 
 export const testing = {
   setOriroNativeCodexResponsesStreamFnForTest(streamFn: StreamFn | undefined): void {
-    oriroNativeCodexResponsesStreamFnForTest = streamFn;
+    openOriroNativeCodexResponsesStreamFnForTest = streamFn;
   },
   resetOriroNativeCodexResponsesStreamFnForTest(): void {
-    oriroNativeCodexResponsesStreamFnForTest = undefined;
+    openOriroNativeCodexResponsesStreamFnForTest = undefined;
   },
 };
 

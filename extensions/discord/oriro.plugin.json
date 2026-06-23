@@ -1,7 +1,7 @@
 {
   "id": "discord",
   "name": "Discord",
-  "description": "Oriro Discord channel plugin for channels, DMs, commands, and app events.",
+  "description": "ORIRO Discord channel plugin for channels, DMs, commands, and app events.",
   "activation": {
     "onStartup": false
   },

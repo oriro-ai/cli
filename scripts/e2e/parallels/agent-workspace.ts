@@ -26,7 +26,7 @@ New-Item -ItemType Directory -Path $stateDir -Force | Out-Null
 @'
 # Identity
 
-- Name: Oriro
+- Name: ORIRO
 - Purpose: ${purpose}
 '@ | Set-Content -Path (Join-Path $workspace 'IDENTITY.md') -Encoding UTF8
 @'

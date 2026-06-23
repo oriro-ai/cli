@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: sci-statistics
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

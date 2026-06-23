@@ -202,6 +202,7 @@ export const fa: TranslationMap = {
     inherit: "ارث‌بری",
     defaultOption: "پیش‌فرض ({value})",
     offExplicit: "خاموش (صریح)",
+    auto: "auto",
     on: "روشن",
     off: "خاموش",
     full: "کامل",
@@ -1310,7 +1311,7 @@ export const fa: TranslationMap = {
         stepDevUi:
           "اگر از pnpm ui:dev استفاده می کنید، UI توسعه را بر اساس checkout فعلی دوباره بسازید یا راه اندازی کنید.",
         stepRestart:
-          "پس از به روزرسانی Oriro، Gateway را دوباره راه اندازی کنید تا پروتکل فعلی را سرو کند.",
+          "پس از به روزرسانی ORIRO، Gateway را دوباره راه اندازی کنید تا پروتکل فعلی را سرو کند.",
       },
       network: {
         title: "اتصال برقرار نشد",
@@ -1620,6 +1621,7 @@ export const fa: TranslationMap = {
       nextHeartbeat: "ضربان بعدی",
       wakeModeHelp: "اکنون بلافاصله فعال می‌کند. ضربان بعدی تا چرخه بعدی منتظر می‌ماند.",
       payloadKind: "چه چیزی باید اجرا شود؟",
+      command: "Command",
       systemEvent: "ارسال پیام به خط زمانی اصلی",
       agentTurn: "اجرای وظیفه دستیار (ایزوله)",
       systemEventHelp:

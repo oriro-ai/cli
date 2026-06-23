@@ -45,7 +45,7 @@ describe("Crestodian configured-model planner", () => {
           },
           references: {
             docsUrl: "https://docs.oriro.ai",
-            sourceUrl: "https://github.com/oriro-ai/cli",
+            sourceUrl: "https://github.com/oriro/oriro",
           },
         },
         deps: {

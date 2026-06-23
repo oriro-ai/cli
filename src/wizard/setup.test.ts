@@ -119,7 +119,7 @@ const resolveGatewayPort = vi.hoisted(() =>
 );
 const readConfigFileSnapshot = vi.hoisted(() =>
   vi.fn(async () => ({
-    path: "/tmp/.oriro-ai/cli.json",
+    path: "/tmp/.oriro/oriro.json",
     exists: false,
     raw: null as string | null,
     parsed: {},
@@ -372,7 +372,7 @@ describe("runSetupWizard", () => {
   it("skips provider entries without an id during preferred-provider lookup", async () => {
     setupChannels.mockClear();
     readConfigFileSnapshot.mockResolvedValueOnce({
-      path: "/tmp/.oriro-ai/cli.json",
+      path: "/tmp/.oriro/oriro.json",
       exists: true,
       raw: "{}",
       parsed: {},
@@ -435,7 +435,7 @@ describe("runSetupWizard", () => {
 
   it("exits when config is invalid", async () => {
     readConfigFileSnapshot.mockResolvedValueOnce({
-      path: "/tmp/.oriro-ai/cli.json",
+      path: "/tmp/.oriro/oriro.json",
       exists: true,
       raw: "{}",
       parsed: {},
@@ -566,7 +566,7 @@ describe("runSetupWizard", () => {
   it("allows size-drop writes for pending plugin install record migration", async () => {
     replaceConfigFile.mockClear();
     readConfigFileSnapshot.mockResolvedValueOnce({
-      path: "/tmp/.oriro-ai/cli.json",
+      path: "/tmp/.oriro/oriro.json",
       exists: true,
       raw: "{}",
       parsed: {},
@@ -1036,7 +1036,7 @@ describe("runSetupWizard", () => {
       },
     ]);
     readConfigFileSnapshot.mockResolvedValueOnce({
-      path: "/tmp/.oriro-ai/cli.json",
+      path: "/tmp/.oriro/oriro.json",
       exists: true,
       raw: "{}",
       parsed: {},
@@ -1091,7 +1091,7 @@ describe("runSetupWizard", () => {
     process.env.ORIRO_GATEWAY_PASSWORD = "gateway-ref-password"; // pragma: allowlist secret
     probeGatewayReachable.mockClear();
     readConfigFileSnapshot.mockResolvedValueOnce({
-      path: "/tmp/.oriro-ai/cli.json",
+      path: "/tmp/.oriro/oriro.json",
       exists: true,
       raw: "{}",
       parsed: {},

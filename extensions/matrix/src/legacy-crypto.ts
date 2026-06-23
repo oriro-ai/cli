@@ -108,7 +108,7 @@ function detectLegacyBotSdkCryptoStore(cryptoRootDir: string): {
         detected: false,
         warning:
           `Legacy Matrix encrypted state path exists but is not a directory: ${cryptoRootDir}. ` +
-          "Oriro skipped automatic crypto migration for that path.",
+          "ORIRO skipped automatic crypto migration for that path.",
       };
     }
   } catch (err) {
@@ -116,7 +116,7 @@ function detectLegacyBotSdkCryptoStore(cryptoRootDir: string): {
       detected: false,
       warning:
         `Failed reading legacy Matrix encrypted state path (${cryptoRootDir}): ${String(err)}. ` +
-        "Oriro skipped automatic crypto migration for that path.",
+        "ORIRO skipped automatic crypto migration for that path.",
     };
   }
 
@@ -138,7 +138,7 @@ function detectLegacyBotSdkCryptoStore(cryptoRootDir: string): {
       detected: false,
       warning:
         `Failed scanning legacy Matrix encrypted state path (${cryptoRootDir}): ${String(err)}. ` +
-        "Oriro skipped automatic crypto migration for that path.",
+        "ORIRO skipped automatic crypto migration for that path.",
     };
   }
 }
@@ -370,7 +370,7 @@ export async function autoPrepareLegacyMatrixCrypto(params: {
     if (!plan.deviceId) {
       warnings.push(
         `Legacy Matrix encrypted state detected at ${plan.legacyCryptoPath}, but no device ID was found for account "${plan.accountId}". ` +
-          `Oriro will continue, but old encrypted history cannot be recovered automatically.`,
+          `ORIRO will continue, but old encrypted history cannot be recovered automatically.`,
       );
       continue;
     }

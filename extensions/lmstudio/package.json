@@ -1,8 +1,8 @@
 {
   "name": "@oriro/lmstudio-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro LM Studio provider plugin",
+  "description": "ORIRO LM Studio provider plugin",
   "type": "module",
   "oriro": {
     "extensions": [

@@ -11,6 +11,7 @@ import {
   writeQaLabServerError,
   type QaLabServerStartParams,
 } from "./lab-server.js";
+import { resolveUiAssetVersion } from "./lab-server-ui.js";
 
 const qaChannelMock = vi.hoisted(() => ({
   resolveAccount: vi.fn(),
@@ -406,7 +407,7 @@ describe("qa-lab server", () => {
     expect(bootstrap.defaults.senderId).toBe("qa-operator");
     expect(bootstrap.controlUiUrl).toBe("https://gateway.example.test/?panel=chat");
     expect(bootstrap.controlUiEmbeddedUrl).toBe("https://gateway.example.test/?panel=chat");
-    expect(bootstrap.kickoffTask).toContain("Oriro Invaders");
+    expect(bootstrap.kickoffTask).toContain("Lobster Invaders");
     expect(bootstrap.scenarios.length).toBeGreaterThanOrEqual(10);
     expect(bootstrap.scenarios.map((scenario) => scenario.id)).toContain("dm-chat-baseline");
     expect(bootstrap.runner.status).toBe("idle");
@@ -557,6 +558,37 @@ describe("qa-lab server", () => {
     expect(getResponse.headers.get("x-content-type-options")).toBe("nosniff");
     expect(await getResponse.text()).toBe("streamed body\n");
 
+    const indexedArtifactUrl = new URL("/api/evidence/artifact", lab.baseUrl);
+    indexedArtifactUrl.searchParams.set(
+      "evidencePath",
+      ".artifacts/qa-e2e/server/qa-evidence.json",
+    );
+    indexedArtifactUrl.searchParams.set("entryIndex", "0");
+    indexedArtifactUrl.searchParams.set("artifactIndex", "0");
+    const indexedResponse = await fetchWithRetry(indexedArtifactUrl.toString());
+    expect(indexedResponse.status).toBe(200);
+    expect(await indexedResponse.text()).toBe("streamed body\n");
+
+    const hexIndexUrl = new URL(indexedArtifactUrl);
+    hexIndexUrl.searchParams.set("entryIndex", "0x0");
+    const hexIndexResponse = await fetchWithRetry(hexIndexUrl.toString());
+    expect(hexIndexResponse.status).toBe(400);
+
+    const exponentIndexUrl = new URL(indexedArtifactUrl);
+    exponentIndexUrl.searchParams.set("artifactIndex", "1e0");
+    const exponentIndexResponse = await fetchWithRetry(exponentIndexUrl.toString());
+    expect(exponentIndexResponse.status).toBe(400);
+
+    const leadingZeroIndexUrl = new URL(indexedArtifactUrl);
+    leadingZeroIndexUrl.searchParams.set("entryIndex", "00");
+    const leadingZeroIndexResponse = await fetchWithRetry(leadingZeroIndexUrl.toString());
+    expect(leadingZeroIndexResponse.status).toBe(400);
+
+    const whitespaceIndexUrl = new URL(indexedArtifactUrl);
+    whitespaceIndexUrl.searchParams.set("entryIndex", " 0 ");
+    const whitespaceIndexResponse = await fetchWithRetry(whitespaceIndexUrl.toString());
+    expect(whitespaceIndexResponse.status).toBe(400);
+
     await writeFile(path.join(evidenceDir, "undeclared.log"), "hidden\n", "utf8");
     const undeclaredUrl = new URL(artifactUrl);
     undeclaredUrl.searchParams.set("artifactPath", "undeclared.log");
@@ -669,7 +701,7 @@ describe("qa-lab server", () => {
       messages: Array<{ text: string }>;
     };
     expect(manualSnapshot.messages.map((message) => message.text).join("\n")).toContain(
-      "Oriro Invaders",
+      "Lobster Invaders",
     );
   });
 
@@ -787,6 +819,12 @@ describe("qa-lab server", () => {
     const rootResponse = await fetchWithRetry(`${lab.baseUrl}/`);
     expect(rootResponse.status).toBe(200);
     expect(await rootResponse.text()).toContain("repo-root-ui");
+
+    const versionResponse = await fetchWithRetry(`${lab.baseUrl}/api/ui-version`);
+    expect(versionResponse.status).toBe(200);
+    const versionPayload = (await versionResponse.json()) as { version?: string | null };
+    expect(versionPayload.version).toBe(resolveUiAssetVersion(null, repoRoot));
+    expect(versionPayload.version).toMatch(/^[0-9a-f]{12}$/);
 
     const runnerCatalog = await waitForRunnerCatalog(lab.baseUrl);
     expect(runnerCatalog.status).toBe("ready");

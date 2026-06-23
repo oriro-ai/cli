@@ -1,8 +1,8 @@
 {
   "name": "@oriro/microsoft-speech",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Microsoft speech plugin",
+  "description": "ORIRO Microsoft speech plugin",
   "type": "module",
   "dependencies": {
     "node-edge-tts": "1.2.10"

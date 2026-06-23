@@ -102,7 +102,7 @@ export async function setupWizardCommand(
   if (process.platform === "win32") {
     runtime.log(
       [
-        "Windows detected - Oriro runs great on WSL2!",
+        "Windows detected - ORIRO runs great on WSL2!",
         "Native Windows might be trickier.",
         "Quick setup: wsl --install (one command, one reboot)",
         "Guide: https://docs.oriro.ai/windows",

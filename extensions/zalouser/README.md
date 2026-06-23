@@ -59,7 +59,7 @@ channels:
 ### Send a message
 
 ```bash
-oriro message send --channel zalouser --target <threadId> --message "Hello from Oriro"
+oriro message send --channel zalouser --target <threadId> --message "Hello from ORIRO"
 ```
 
 ## Configuration

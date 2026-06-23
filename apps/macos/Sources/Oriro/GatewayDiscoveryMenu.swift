@@ -50,7 +50,7 @@ struct GatewayDiscoveryInlineList: View {
                                 Spacer(minLength: 0)
                                 SelectionStateIndicator(selected: selected)
                             }
-                            .oriroSelectableRowChrome(
+                            .openOriroSelectableRowChrome(
                                 selected: selected,
                                 hovered: self.hoveredGatewayID == gateway.id)
                             .contentShape(Rectangle())

@@ -72,7 +72,7 @@ pnpm android:screenshots
 To make screenshot capture own emulator startup, pass a named AVD:
 
 ```bash
-ANDROID_SCREENSHOT_AVD=Oriro_QA_API35 pnpm android:screenshots
+ANDROID_SCREENSHOT_AVD=ORIRO_QA_API35 pnpm android:screenshots
 ```
 
 The screenshot script uses one connected ADB device when available. If none is

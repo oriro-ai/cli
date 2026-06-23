@@ -38,7 +38,7 @@ export const REALTIME_VOICE_AGENT_CONSULT_TOOL: RealtimeVoiceTool = {
   type: "function",
   name: REALTIME_VOICE_AGENT_CONSULT_TOOL_NAME,
   description:
-    "Delegate the caller's request to the configured Oriro agent for normal tool-backed work, actions, context, memory, or reasoning before speaking.",
+    "Delegate the caller's request to the configured ORIRO agent for normal tool-backed work, actions, context, memory, or reasoning before speaking.",
   parameters: {
     type: "object",
     properties: {
@@ -66,7 +66,7 @@ export function buildRealtimeVoiceAgentConsultWorkingResponse(
   return {
     status: "working",
     tool: REALTIME_VOICE_AGENT_CONSULT_TOOL_NAME,
-    message: `Tell the ${audienceLabel} briefly that you are checking, then wait for the final Oriro result before answering with the actual result.`,
+    message: `Tell the ${audienceLabel} briefly that you are checking, then wait for the final ORIRO result before answering with the actual result.`,
   };
 }
 
@@ -152,7 +152,7 @@ export function buildRealtimeVoiceAgentConsultPolicyInstructions(config: {
   return [
     "Consult behavior:",
     "- Answer directly for greetings, acknowledgements, simple conversational glue, and brief latency tests.",
-    "- Call oriro_agent_consult before answering requests that need facts, memory, current information, tools, workspace state, or the user's Oriro-specific context.",
+    "- Call oriro_agent_consult before answering requests that need facts, memory, current information, tools, workspace state, or the user's ORIRO-specific context.",
     "- Keep spoken replies concise and natural.",
   ].join("\n");
 }
@@ -208,7 +208,7 @@ export function buildRealtimeVoiceAgentConsultPrompt(params: {
 
   return [
     `Live voice request from the ${questionSourceLabel} during ${params.surface}.`,
-    "Act as the configured Oriro agent on behalf of this user. Use available tools when the request asks you to do work.",
+    "Act as the configured ORIRO agent on behalf of this user. Use available tools when the request asks you to do work.",
     "When finished, return only the concise result the realtime voice agent should speak back.",
     "Do not include markdown, tool logs, or private reasoning. Include citations only when the spoken answer needs them.",
     parsed.responseStyle ? `Spoken style: ${parsed.responseStyle}` : undefined,

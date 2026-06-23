@@ -1,8 +1,8 @@
 {
   "name": "@oriro/elevenlabs-speech",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro ElevenLabs speech plugin",
+  "description": "ORIRO ElevenLabs speech plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

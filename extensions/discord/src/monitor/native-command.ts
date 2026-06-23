@@ -1,5 +1,6 @@
 // Discord plugin module implements native command behavior.
 import { ApplicationCommandOptionType } from "discord-api-types/v10";
+import { loadModelCatalog } from "oriro/plugin-sdk/agent-runtime";
 import { resolveNativeCommandSessionTargets } from "oriro/plugin-sdk/command-auth-native";
 import type { OriroConfig } from "oriro/plugin-sdk/config-contracts";
 import { buildPairingReply } from "oriro/plugin-sdk/conversation-runtime";
@@ -485,12 +486,18 @@ async function dispatchDiscordCommandInteraction(params: {
         threadBindings,
       })
     : null;
+  // Native /think choices need live-discovery metadata; empty keeps config fallback.
+  const menuModelCatalog =
+    command.key === "think" && menuNeedsModelContext
+      ? await loadModelCatalog({ config: cfg })
+      : undefined;
   const menu = resolveCommandArgMenu({
     command,
     args: commandArgs,
     cfg,
     provider: menuModelContext?.provider,
     model: menuModelContext?.model,
+    ...(menuModelCatalog?.length ? { catalog: menuModelCatalog } : {}),
   });
   if (menu) {
     const menuPayload = buildDiscordCommandArgMenu({

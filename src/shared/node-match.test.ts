@@ -33,14 +33,14 @@ describe("shared/node-match", () => {
     ).toBe("mac-studio");
   });
 
-  it("prefers a unique current Oriro client over a legacy clawdbot client", () => {
+  it("prefers a unique current Oriro client over a legacy oriro client", () => {
     expect(
       resolveNodeIdFromCandidates(
         [
           {
             nodeId: "legacy-mac",
             displayName: "Peter’s Mac Studio",
-            clientId: "clawdbot-macos",
+            clientId: "oriro-macos",
             connected: false,
           },
           {
@@ -98,7 +98,7 @@ describe("shared/node-match", () => {
           {
             nodeId: "legacy-mac",
             displayName: "Peter’s Mac Studio",
-            clientId: "clawdbot-macos",
+            clientId: "oriro-macos",
             connected: true,
           },
           {

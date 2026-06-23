@@ -1,7 +1,7 @@
 {
   "id": "zalo",
   "name": "Zalo",
-  "description": "Oriro Zalo channel plugin for bot and webhook chats.",
+  "description": "ORIRO Zalo channel plugin for bot and webhook chats.",
   "activation": {
     "onStartup": false
   },

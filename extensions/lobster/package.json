@@ -1,0 +1,37 @@
+{
+  "name": "@openclaw/lobster",
+  "version": "2026.6.9",
+  "description": "Lobster workflow tool plugin for typed pipelines and resumable approvals.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oriro/oriro"
+  },
+  "type": "module",
+  "dependencies": {
+    "@openclaw/lobster": "2026.5.22",
+    "typebox": "1.1.39"
+  },
+  "devDependencies": {
+    "@oriro/plugin-sdk": "workspace:*"
+  },
+  "oriro": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "install": {
+      "npmSpec": "@openclaw/lobster",
+      "defaultChoice": "npm",
+      "minHostVersion": ">=2026.4.25"
+    },
+    "compat": {
+      "pluginApi": ">=2026.6.9"
+    },
+    "build": {
+      "oriroVersion": "2026.6.9"
+    },
+    "release": {
+      "publishToOriroHub": true,
+      "publishToNpm": true
+    }
+  }
+}

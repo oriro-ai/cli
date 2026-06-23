@@ -1119,7 +1119,7 @@ export class EmbeddedTuiBackend implements TuiBackend {
           // The per-message timestamp prefix is applied at the single LLM
           // boundary (normalizeMessagesForLlmBoundary) from each message's own
           // timestamp, so the current turn and historical turns carry identical
-          // bytes on the wire. See: https://github.com/oriro-ai/cli/issues/3658
+          // bytes on the wire. See: https://github.com/oriro/oriro/issues/3658
           message: params.message,
           sessionKey: canonicalKey,
           ...(params.agentId ? { agentId: params.agentId } : {}),

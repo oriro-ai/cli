@@ -176,7 +176,7 @@ export function registerCodexSupervisorMcpTools(
 
   server.tool(
     "codex_sessions_list",
-    "List Codex sessions visible to the Oriro supervisor.",
+    "List Codex sessions visible to the ORIRO supervisor.",
     {
       include_stored: z.boolean().optional(),
       max_stored_sessions: z.number().int().min(1).max(1000).optional(),

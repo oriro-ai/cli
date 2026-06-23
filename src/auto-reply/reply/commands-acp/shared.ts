@@ -35,8 +35,6 @@ export const ACP_INSTALL_USAGE = "Usage: /acp install";
 export const ACP_DOCTOR_USAGE = "Usage: /acp doctor";
 export const ACP_SESSIONS_USAGE = "Usage: /acp sessions";
 export const ACP_STEER_OUTPUT_LIMIT = 800;
-export { SESSION_ID_RE } from "../../../sessions/session-id.js";
-
 export type AcpAction =
   | "spawn"
   | "cancel"
@@ -455,7 +453,7 @@ export function resolveAcpHelpText(): string {
     "/acp sessions",
     "",
     "Notes:",
-    "- /acp spawn harness-id is an ACP runtime harness alias (for example codex), not an Oriro agents.list id.",
+    "- /acp spawn harness-id is an ACP runtime harness alias (for example codex), not an ORIRO agents.list id.",
     "- Use --bind here to pin the current conversation to the ACP session without creating a child thread.",
     "- /focus and /unfocus also work with ACP session keys.",
     "- ACP dispatch of normal thread messages is controlled by acp.dispatch.enabled.",

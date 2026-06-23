@@ -1,8 +1,8 @@
 {
   "name": "@oriro/zai-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Z.AI provider plugin",
+  "description": "ORIRO Z.AI provider plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

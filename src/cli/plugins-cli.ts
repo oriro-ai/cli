@@ -66,7 +66,7 @@ const loadPluginsAuthoringCommands = createModuleLoader(
 export function registerPluginsCli(program: Command) {
   const plugins = program
     .command("plugins")
-    .description("Manage Oriro plugins and extensions")
+    .description("Manage ORIRO plugins and extensions")
     .addHelpText(
       "after",
       () =>

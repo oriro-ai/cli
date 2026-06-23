@@ -87,7 +87,7 @@ export const SmsChannelConfigSchema = buildChannelConfigSchema(SmsConfigSchema, 
     },
     textChunkLimit: {
       label: "SMS Text Chunk Limit",
-      help: "Maximum characters per outbound SMS chunk before Oriro splits long replies.",
+      help: "Maximum characters per outbound SMS chunk before ORIRO splits long replies.",
     },
   },
 });

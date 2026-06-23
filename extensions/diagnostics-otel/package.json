@@ -1,10 +1,10 @@
 {
   "name": "@oriro/diagnostics-otel",
-  "version": "2026.6.8",
-  "description": "Oriro diagnostics OpenTelemetry exporter for metrics, traces, and logs.",
+  "version": "2026.6.9",
+  "description": "ORIRO diagnostics OpenTelemetry exporter for metrics, traces, and logs.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -34,10 +34,10 @@
       "minHostVersion": ">=2026.4.25"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8"
+      "oriroVersion": "2026.6.9"
     },
     "release": {
       "publishToOriroHub": true,

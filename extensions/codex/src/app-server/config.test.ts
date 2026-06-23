@@ -1939,7 +1939,7 @@ allowed_sandbox_modes = ["read-only", "workspace-write"]
     expectRuntimePolicy(
       resolveRuntimeForTest({
         execPolicy: resolveOriroExecPolicyForCodexAppServer({ config }),
-        oriroSandboxActive: true,
+        openOriroSandboxActive: true,
         requirementsToml: 'allowed_sandbox_modes = ["read-only", "workspace-write"]\n',
       }),
       {

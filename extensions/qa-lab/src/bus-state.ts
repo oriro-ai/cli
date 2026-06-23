@@ -32,7 +32,7 @@ import type {
 } from "./runtime-api.js";
 
 const DEFAULT_BOT_ID = "oriro";
-const DEFAULT_BOT_NAME = "Oriro QA";
+const DEFAULT_BOT_NAME = "ORIRO QA";
 
 type QaBusEventSeed =
   | {

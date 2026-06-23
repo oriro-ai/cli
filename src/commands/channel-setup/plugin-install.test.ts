@@ -627,7 +627,7 @@ describe("ensureChannelSetupPluginInstalled", () => {
           blurb: "Test",
         },
         install: {
-          orirohubSpec: "orirohub:oriro-ai/clihub-chat@2026.5.2",
+          orirohubSpec: "orirohub:oriro/orirohub-chat@2026.5.2",
           defaultChoice: "orirohub",
         },
       },
@@ -641,7 +641,7 @@ describe("ensureChannelSetupPluginInstalled", () => {
     expect(options).toHaveLength(2);
     expectRecordFields(options[0], "orirohub option", {
       value: "orirohub",
-      label: "Download from OriroHub (orirohub:oriro-ai/clihub-chat@2026.5.2)",
+      label: "Download from OriroHub (orirohub:oriro/orirohub-chat@2026.5.2)",
     });
     expectRecordFields(options[1], "skip option", {
       value: "skip",

@@ -1,6 +1,6 @@
 // Feishu tests cover send plugin behavior.
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig } from "../runtime-api.js";
+import type { OriroConfig } from "../runtime-api.js";
 import { buildFeishuPostMessagePayload, buildMarkdownCard } from "./send.js";
 
 const {
@@ -171,7 +171,7 @@ describe("getMessageFeishu", () => {
     });
 
     const result = await sendMessageFeishu({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       to: "oc_send",
       text: "hello",
     });
@@ -231,7 +231,7 @@ describe("getMessageFeishu", () => {
     });
 
     const result = await sendMessageFeishu({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       to: "oc_send",
       text: 'body <at user_id="ou_body">Body User</at>',
       mentions: [{ openId: "ou_target", name: "Target User", key: "@_user_1" }],
@@ -316,7 +316,7 @@ describe("getMessageFeishu", () => {
     });
 
     const result = await getMessageFeishu({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       messageId: "om_1",
     });
 
@@ -373,7 +373,7 @@ describe("getMessageFeishu", () => {
     });
 
     const result = await getMessageFeishu({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       messageId: "om_i18n_card",
     });
 
@@ -417,7 +417,7 @@ describe("getMessageFeishu", () => {
     });
 
     const result = await getMessageFeishu({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       messageId: "om_post_card",
     });
 
@@ -458,7 +458,7 @@ describe("getMessageFeishu", () => {
     });
 
     const result = await getMessageFeishu({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       messageId: "om_post",
     });
 
@@ -494,7 +494,7 @@ describe("getMessageFeishu", () => {
     });
 
     const result = await getMessageFeishu({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       messageId: "om_file",
     });
 
@@ -526,7 +526,7 @@ describe("getMessageFeishu", () => {
     });
 
     const result = await getMessageFeishu({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       messageId: "om_single",
     });
 
@@ -589,7 +589,7 @@ describe("getMessageFeishu", () => {
     });
 
     const result = await listFeishuThreadMessages({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       threadId: "omt_1",
       rootMessageId: "om_root",
     });
@@ -645,7 +645,7 @@ describe("getMessageFeishu", () => {
     });
 
     const result = await listFeishuThreadMessages({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       threadId: "omt_1",
       rootMessageId: "om_root",
     });
@@ -689,7 +689,7 @@ describe("editMessageFeishu", () => {
     mockClientPatch.mockResolvedValueOnce({ code: 0 });
 
     const result = await editMessageFeishu({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       messageId: "om_edit",
       text: "updated body",
     });
@@ -718,7 +718,7 @@ describe("editMessageFeishu", () => {
     mockClientPatch.mockResolvedValueOnce({ code: 0 });
 
     const result = await editMessageFeishu({
-      cfg: {} as ClawdbotConfig,
+      cfg: {} as OriroConfig,
       messageId: "om_card",
       card: { schema: "2.0" },
     });
@@ -739,7 +739,7 @@ describe("resolveFeishuCardTemplate", () => {
   });
 
   it("drops unsupported free-form identity themes", () => {
-    expect(resolveFeishuCardTemplate("space oriro")).toBeUndefined();
+    expect(resolveFeishuCardTemplate("space lobster")).toBeUndefined();
   });
 });
 
@@ -777,7 +777,7 @@ describe("buildStructuredCard", () => {
     const card = buildStructuredCard("hello", {
       header: {
         title: "Agent",
-        template: "space oriro",
+        template: "space lobster",
       },
     });
 

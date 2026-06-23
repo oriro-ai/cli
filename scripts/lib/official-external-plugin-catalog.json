@@ -2,7 +2,7 @@
   "entries": [
     {
       "name": "@oriro/acpx",
-      "description": "Oriro ACP runtime backend",
+      "description": "ORIRO ACP runtime backend",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -19,7 +19,7 @@
     },
     {
       "name": "@oriro/brave-plugin",
-      "description": "Oriro Brave plugin",
+      "description": "ORIRO Brave plugin",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -52,7 +52,7 @@
     },
     {
       "name": "@oriro/copilot",
-      "description": "Oriro GitHub Copilot agent runtime plugin",
+      "description": "ORIRO GitHub Copilot agent runtime plugin",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -70,7 +70,7 @@
     },
     {
       "name": "@oriro/diagnostics-otel",
-      "description": "Oriro diagnostics OpenTelemetry exporter",
+      "description": "ORIRO diagnostics OpenTelemetry exporter",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -88,7 +88,7 @@
     },
     {
       "name": "@oriro/diagnostics-prometheus",
-      "description": "Oriro diagnostics Prometheus exporter",
+      "description": "ORIRO diagnostics Prometheus exporter",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -106,7 +106,7 @@
     },
     {
       "name": "@oriro/diffs",
-      "description": "Oriro diff viewer plugin",
+      "description": "ORIRO diff viewer plugin",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -123,7 +123,7 @@
     },
     {
       "name": "@oriro/diffs-language-pack",
-      "description": "Oriro diffs viewer syntax highlighting language pack",
+      "description": "ORIRO diffs viewer syntax highlighting language pack",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -141,7 +141,7 @@
     },
     {
       "name": "@oriro/exa-plugin",
-      "description": "Oriro Exa plugin.",
+      "description": "ORIRO Exa plugin.",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -183,7 +183,7 @@
     },
     {
       "name": "@oriro/firecrawl-plugin",
-      "description": "Oriro Firecrawl plugin.",
+      "description": "ORIRO Firecrawl plugin.",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -232,7 +232,7 @@
     },
     {
       "name": "@oriro/google-meet",
-      "description": "Oriro Google Meet participant plugin",
+      "description": "ORIRO Google Meet participant plugin",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -249,7 +249,7 @@
     },
     {
       "name": "@oriro/gradium-speech",
-      "description": "Oriro Gradium speech plugin.",
+      "description": "ORIRO Gradium speech plugin.",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -272,7 +272,7 @@
     },
     {
       "name": "@oriro/inworld-speech",
-      "description": "Oriro Inworld speech plugin.",
+      "description": "ORIRO Inworld speech plugin.",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -294,17 +294,17 @@
       }
     },
     {
-      "name": "@oriro-ai/cli",
-      "description": "Oriro workflow tool plugin (typed pipelines + resumable approvals)",
+      "name": "@openclaw/lobster",
+      "description": "Lobster workflow tool plugin (typed pipelines + resumable approvals)",
       "source": "official",
       "kind": "plugin",
       "oriro": {
         "plugin": {
-          "id": "oriro",
-          "label": "Oriro"
+          "id": "lobster",
+          "label": "Lobster"
         },
         "install": {
-          "npmSpec": "@oriro-ai/cli",
+          "npmSpec": "@openclaw/lobster",
           "defaultChoice": "npm",
           "minHostVersion": ">=2026.4.25"
         }
@@ -312,7 +312,7 @@
     },
     {
       "name": "@oriro/memory-lancedb",
-      "description": "Oriro LanceDB-backed long-term memory plugin with auto-recall/capture",
+      "description": "ORIRO LanceDB-backed long-term memory plugin with auto-recall/capture",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -329,7 +329,7 @@
     },
     {
       "name": "@oriro/llama-cpp-provider",
-      "description": "Oriro llama.cpp embedding provider plugin",
+      "description": "ORIRO llama.cpp embedding provider plugin",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -349,7 +349,7 @@
     },
     {
       "name": "@oriro/openshell-sandbox",
-      "description": "Oriro OpenShell sandbox backend",
+      "description": "ORIRO OpenShell sandbox backend",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -366,7 +366,7 @@
     },
     {
       "name": "@oriro/parallel-plugin",
-      "description": "Oriro Parallel web search plugin.",
+      "description": "ORIRO Parallel web search plugin.",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -423,7 +423,7 @@
     },
     {
       "name": "@oriro/perplexity-plugin",
-      "description": "Oriro Perplexity plugin.",
+      "description": "ORIRO Perplexity plugin.",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -466,7 +466,7 @@
     },
     {
       "name": "@oriro/pixverse-provider",
-      "description": "Oriro PixVerse video generation provider plugin",
+      "description": "ORIRO PixVerse video generation provider plugin",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -484,7 +484,7 @@
     },
     {
       "name": "@oriro/tokenjuice",
-      "description": "Oriro tokenjuice exec output compaction plugin",
+      "description": "ORIRO tokenjuice exec output compaction plugin",
       "source": "official",
       "kind": "plugin",
       "oriro": {
@@ -502,7 +502,7 @@
     },
     {
       "name": "@oriro/voice-call",
-      "description": "Oriro voice-call plugin",
+      "description": "ORIRO voice-call plugin",
       "source": "official",
       "kind": "plugin",
       "oriro": {

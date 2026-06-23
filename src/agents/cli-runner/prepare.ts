@@ -637,16 +637,16 @@ export async function prepareCliRunContext(
       `cli session reset: provider=${params.provider} reason=${reusableCliSession.invalidatedReason}`,
     );
   }
-  let oriroHistoryMessages: unknown[] | undefined;
+  let openOriroHistoryMessages: unknown[] | undefined;
   const loadOriroHistoryMessages = async () => {
-    oriroHistoryMessages ??= await loadCliSessionHistoryMessages({
+    openOriroHistoryMessages ??= await loadCliSessionHistoryMessages({
       sessionId: params.sessionId,
       sessionFile: params.sessionFile,
       sessionKey: params.sessionKey,
       agentId: params.agentId,
       config: params.config,
     });
-    return oriroHistoryMessages;
+    return openOriroHistoryMessages;
   };
   const heartbeatPrompt = isSideQuestion
     ? undefined
@@ -655,7 +655,7 @@ export async function prepareCliRunContext(
         agentId: sessionAgentId,
         defaultAgentId,
       });
-  const oriroReferences = isSideQuestion
+  const openOriroReferences = isSideQuestion
     ? { docsPath: null, sourcePath: null }
     : await prepareDeps.resolveOriroReferencePaths({
         workspaceDir,
@@ -699,8 +699,8 @@ export async function prepareCliRunContext(
         runtimeCapabilities,
         ownerNumbers: params.ownerNumbers,
         heartbeatPrompt,
-        docsPath: oriroReferences.docsPath ?? undefined,
-        sourcePath: oriroReferences.sourcePath ?? undefined,
+        docsPath: openOriroReferences.docsPath ?? undefined,
+        sourcePath: openOriroReferences.sourcePath ?? undefined,
         skillsPrompt: systemPromptSkillsPrompt,
         tools: promptTools,
         contextFiles,
@@ -800,7 +800,7 @@ export async function prepareCliRunContext(
     : reusableCliSession.invalidatedReason;
   const shouldPrepareOriroHistoryPrompt =
     !isSideQuestion && (!reusableCliSession.sessionId || allowRawTranscriptReseed);
-  const oriroHistoryPrompt = shouldPrepareOriroHistoryPrompt
+  const openOriroHistoryPrompt = shouldPrepareOriroHistoryPrompt
     ? buildCliSessionHistoryPrompt({
         messages: await loadCliSessionReseedMessages({
           sessionId: params.sessionId,
@@ -955,7 +955,7 @@ export async function prepareCliRunContext(
       systemPromptReport,
       claudeSkillsPluginArgs: claudeSkillsPlugin.args,
       bootstrapPromptWarningLines: bootstrapPromptWarning.lines,
-      ...(oriroHistoryPrompt ? { oriroHistoryPrompt } : {}),
+      ...(openOriroHistoryPrompt ? { openOriroHistoryPrompt } : {}),
       heartbeatPrompt,
       authEpoch,
       authEpochVersion: CLI_AUTH_EPOCH_VERSION,

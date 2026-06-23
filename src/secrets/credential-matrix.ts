@@ -17,7 +17,7 @@ export type SecretRefCredentialMatrixDocument = {
   version: 1;
   matrixId: "strictly-user-supplied-credentials";
   pathSyntax: 'Dot path with "*" for map keys and "[]" for arrays.';
-  scope: "Credentials that are strictly user-supplied and not minted/rotated by Oriro runtime.";
+  scope: "Credentials that are strictly user-supplied and not minted/rotated by ORIRO runtime.";
   excludedMutableOrRuntimeManaged: string[];
   entries: CredentialMatrixEntry[];
 };
@@ -68,7 +68,7 @@ export function buildSecretRefCredentialMatrix(): SecretRefCredentialMatrixDocum
     matrixId: "strictly-user-supplied-credentials",
     pathSyntax: 'Dot path with "*" for map keys and "[]" for arrays.',
     scope:
-      "Credentials that are strictly user-supplied and not minted/rotated by Oriro runtime.",
+      "Credentials that are strictly user-supplied and not minted/rotated by ORIRO runtime.",
     excludedMutableOrRuntimeManaged: getUnsupportedSecretRefSurfacePatterns(),
     entries,
   };

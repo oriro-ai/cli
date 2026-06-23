@@ -1,8 +1,8 @@
 {
   "name": "@oriro/azure-speech",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Azure Speech plugin",
+  "description": "ORIRO Azure Speech plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

@@ -13,7 +13,7 @@ import { CodexSupervisor } from "./src/supervisor.js";
 export default definePluginEntry({
   id: "codex-supervisor",
   name: "Codex Supervisor",
-  description: "Supervise Codex app-server sessions from Oriro.",
+  description: "Supervise Codex app-server sessions from ORIRO.",
   configSchema: buildJsonPluginConfigSchema(
     CodexSupervisorPluginConfigSchema as unknown as Parameters<
       typeof buildJsonPluginConfigSchema

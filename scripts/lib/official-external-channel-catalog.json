@@ -2,7 +2,7 @@
   "entries": [
     {
       "name": "@wecom/wecom-oriro-plugin",
-      "description": "Oriro WeCom channel plugin by the Tencent WeCom team.",
+      "description": "ORIRO WeCom channel plugin by the Tencent WeCom team.",
       "source": "external",
       "kind": "channel",
       "oriro": {
@@ -43,7 +43,7 @@
     },
     {
       "name": "oriro-plugin-yuanbao",
-      "description": "Oriro Yuanbao channel plugin by the Tencent Yuanbao team.",
+      "description": "ORIRO Yuanbao channel plugin by the Tencent Yuanbao team.",
       "source": "external",
       "kind": "channel",
       "oriro": {
@@ -84,7 +84,7 @@
     },
     {
       "name": "@tencent-weixin/oriro-weixin",
-      "description": "Oriro Weixin channel plugin by the Tencent Weixin team.",
+      "description": "ORIRO Weixin channel plugin by the Tencent Weixin team.",
       "source": "external",
       "kind": "channel",
       "oriro": {
@@ -123,7 +123,7 @@
     },
     {
       "name": "@zalo-platforms/oriro-zaloorirobot",
-      "description": "Oriro Zalo OriroBot channel plugin by the Zalo Platforms team.",
+      "description": "ORIRO Zalo OriroBot channel plugin by the Zalo Platforms team.",
       "source": "external",
       "kind": "channel",
       "oriro": {
@@ -162,7 +162,7 @@
     },
     {
       "name": "@oriro/discord",
-      "description": "Oriro Discord channel plugin",
+      "description": "ORIRO Discord channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -188,7 +188,7 @@
     },
     {
       "name": "@oriro/feishu",
-      "description": "Oriro Feishu/Lark channel plugin",
+      "description": "ORIRO Feishu/Lark channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -212,7 +212,7 @@
     },
     {
       "name": "@oriro/googlechat",
-      "description": "Oriro Google Chat channel plugin",
+      "description": "ORIRO Google Chat channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -262,7 +262,7 @@
     },
     {
       "name": "@oriro/line",
-      "description": "Oriro LINE channel plugin",
+      "description": "ORIRO LINE channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -287,7 +287,7 @@
     },
     {
       "name": "@oriro/matrix",
-      "description": "Oriro Matrix channel plugin",
+      "description": "ORIRO Matrix channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -341,7 +341,7 @@
     },
     {
       "name": "@oriro/msteams",
-      "description": "Oriro Microsoft Teams channel plugin",
+      "description": "ORIRO Microsoft Teams channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -364,7 +364,7 @@
     },
     {
       "name": "@oriro/nextcloud-talk",
-      "description": "Oriro Nextcloud Talk channel plugin",
+      "description": "ORIRO Nextcloud Talk channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -388,7 +388,7 @@
     },
     {
       "name": "@oriro/nostr",
-      "description": "Oriro Nostr channel plugin for NIP-04 encrypted DMs",
+      "description": "ORIRO Nostr channel plugin for NIP-04 encrypted DMs",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -411,7 +411,7 @@
     },
     {
       "name": "@oriro/qqbot",
-      "description": "Oriro QQ Bot channel plugin",
+      "description": "ORIRO QQ Bot channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -434,7 +434,7 @@
     },
     {
       "name": "@oriro/slack",
-      "description": "Oriro Slack channel plugin",
+      "description": "ORIRO Slack channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -469,7 +469,7 @@
     },
     {
       "name": "@oriro/synology-chat",
-      "description": "Synology Chat channel plugin for Oriro",
+      "description": "Synology Chat channel plugin for ORIRO",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -479,7 +479,7 @@
           "selectionLabel": "Synology Chat (Webhook)",
           "docsPath": "/channels/synology-chat",
           "docsLabel": "synology-chat",
-          "blurb": "Connect your Synology NAS Chat to Oriro with full agent capabilities.",
+          "blurb": "Connect your Synology NAS Chat to ORIRO with full agent capabilities.",
           "order": 90
         },
         "install": {
@@ -491,7 +491,7 @@
     },
     {
       "name": "@oriro/tlon",
-      "description": "Oriro Tlon/Urbit channel plugin",
+      "description": "ORIRO Tlon/Urbit channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -514,7 +514,7 @@
     },
     {
       "name": "@oriro/twitch",
-      "description": "Oriro Twitch channel plugin",
+      "description": "ORIRO Twitch channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -535,7 +535,7 @@
     },
     {
       "name": "@oriro/whatsapp",
-      "description": "Oriro WhatsApp channel plugin",
+      "description": "ORIRO WhatsApp channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -559,7 +559,7 @@
     },
     {
       "name": "@oriro/zalo",
-      "description": "Oriro Zalo channel plugin",
+      "description": "ORIRO Zalo channel plugin",
       "source": "official",
       "kind": "channel",
       "oriro": {
@@ -583,7 +583,7 @@
     },
     {
       "name": "@oriro/zalouser",
-      "description": "Oriro Zalo Personal Account plugin via native zca-js integration",
+      "description": "ORIRO Zalo Personal Account plugin via native zca-js integration",
       "source": "official",
       "kind": "channel",
       "oriro": {

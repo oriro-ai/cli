@@ -58,7 +58,7 @@ describe("Nix integration (U3, U5, U9)", () => {
       ).toBe(path.join(path.resolve(customHome), ".oriro"));
     });
 
-    it("CONFIG_PATH defaults to ORIRO_HOME/.oriro-ai/cli.json", () => {
+    it("CONFIG_PATH defaults to ORIRO_HOME/.oriro/oriro.json", () => {
       const customHome = path.join(path.sep, "custom", "home");
       expect(
         resolveConfigPathCandidate(
@@ -71,7 +71,7 @@ describe("Nix integration (U3, U5, U9)", () => {
       ).toBe(path.join(path.resolve(customHome), ".oriro", "oriro.json"));
     });
 
-    it("CONFIG_PATH defaults to ~/.oriro-ai/cli.json when env not set", () => {
+    it("CONFIG_PATH defaults to ~/.oriro/oriro.json when env not set", () => {
       expect(
         resolveConfigPathCandidate(
           envWith({ ORIRO_CONFIG_PATH: undefined, ORIRO_STATE_DIR: undefined }),

@@ -950,7 +950,7 @@ describe("gateway-status command", () => {
 
   it("does not infer ssh-auto targets from TXT-only discovery metadata", async () => {
     const { runtime } = createRuntimeCapture();
-    await withEnvAsync({ USER: "steipete" }, async () => {
+    await withEnvAsync({ USER: "oriro" }, async () => {
       readBestEffortConfig.mockResolvedValueOnce(makeRemoteGatewayConfig("", "", "ltok"));
       discoverGatewayBeacons.mockResolvedValueOnce([
         { instanceName: "bad", tailnetDns: "-V" },
@@ -966,7 +966,7 @@ describe("gateway-status command", () => {
 
   it("infers ssh-auto targets from resolved discovery hosts", async () => {
     const { runtime } = createRuntimeCapture();
-    await withEnvAsync({ USER: "steipete" }, async () => {
+    await withEnvAsync({ USER: "oriro" }, async () => {
       readBestEffortConfig.mockResolvedValueOnce(makeRemoteGatewayConfig("", "", "ltok"));
       discoverGatewayBeacons.mockResolvedValueOnce([
         { instanceName: "bad", tailnetDns: "-V" },
@@ -978,18 +978,18 @@ describe("gateway-status command", () => {
 
       expect(startSshPortForward).toHaveBeenCalledTimes(1);
       const call = requireSshForwardCall();
-      expect(call.target).toBe("steipete@goodhost:2222");
+      expect(call.target).toBe("oriro@goodhost:2222");
     });
   });
 
   it("infers SSH target from gateway.remote.url and ssh config", async () => {
     const { runtime } = createRuntimeCapture();
-    await withEnvAsync({ USER: "steipete" }, async () => {
+    await withEnvAsync({ USER: "oriro" }, async () => {
       readBestEffortConfig.mockResolvedValueOnce(
         makeRemoteGatewayConfig("ws://peters-mac-studio-1.sheep-coho.ts.net:18789"),
       );
       resolveSshConfig.mockResolvedValueOnce({
-        user: "steipete",
+        user: "oriro",
         host: "peters-mac-studio-1.sheep-coho.ts.net",
         port: 2222,
         identityFiles: ["/tmp/id_ed25519"],
@@ -1000,7 +1000,7 @@ describe("gateway-status command", () => {
 
       expect(startSshPortForward).toHaveBeenCalledTimes(1);
       const call = requireSshForwardCall();
-      expect(call.target).toBe("steipete@peters-mac-studio-1.sheep-coho.ts.net:2222");
+      expect(call.target).toBe("oriro@peters-mac-studio-1.sheep-coho.ts.net:2222");
       expect(call.identity).toBe("/tmp/id_ed25519");
     });
   });

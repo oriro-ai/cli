@@ -22,7 +22,7 @@ describe("local user identity helpers", () => {
   });
 
   it("keeps text avatars only when no image avatar survives normalization", () => {
-    expect(resolveLocalUserAvatarText({ avatar: "ORIRO" })).toBe("ORIRO");
+    expect(resolveLocalUserAvatarText({ avatar: "🦞" })).toBe("🦞");
     expect(resolveLocalUserAvatarText({ avatar: "/avatar/user" })).toBeNull();
     expect(normalizeLocalUserIdentity({ avatar: "line 1\nline 2" }).avatar).toBeNull();
   });

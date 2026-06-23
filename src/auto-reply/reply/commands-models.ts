@@ -109,7 +109,7 @@ function buildRuntimeChoice(params: {
     label,
     description:
       id === "oriro"
-        ? "Use the built-in Oriro runtime."
+        ? "Use the built-in ORIRO runtime."
         : params.cli
           ? `Run ${params.provider} models through ${label}.`
           : `Use the ${label} runtime selected by the effective harness policy.`,

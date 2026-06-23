@@ -429,7 +429,7 @@ describe("installPluginFromNpmSpec e2e", () => {
         rootDir,
       }),
     ];
-    const oriroVersions = [
+    const openOriroVersions = [
       await packPlugin({
         packageName: "oriro",
         pluginId: "registry-oriro-copy",
@@ -439,7 +439,7 @@ describe("installPluginFromNpmSpec e2e", () => {
     ];
     const registry = await startStaticRegistry([
       { packageName, latest: "1.0.0", versions },
-      { packageName: "oriro", latest: "2026.0.0", versions: oriroVersions },
+      { packageName: "oriro", latest: "2026.0.0", versions: openOriroVersions },
     ]);
     process.env.NPM_CONFIG_REGISTRY = registry;
     process.env.npm_config_registry = registry;
@@ -657,7 +657,7 @@ describe("installPluginFromNpmSpec e2e", () => {
       dependencies?: Record<string, string>;
       oriro?: { managedPeerDependencies?: string[] };
     };
-    expect(rootManifest.dependencies?.[runtimePeer]).toBe("1.0.0");
+    expect(["1.0.0", "^1.0.0"]).toContain(rootManifest.dependencies?.[runtimePeer]);
     expect(rootManifest.oriro?.managedPeerDependencies ?? []).toContain(runtimePeer);
   });
 

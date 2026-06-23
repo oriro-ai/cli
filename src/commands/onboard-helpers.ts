@@ -6,13 +6,9 @@ import { cancel, isCancel } from "@clack/prompts";
 import { resolveTimerTimeoutMs } from "@oriro/normalization-core/number-coercion";
 import { normalizeOptionalString } from "@oriro/normalization-core/string-coerce";
 import { uniqueStrings } from "@oriro/normalization-core/string-normalization";
-import { visibleWidth } from "../../packages/terminal-core/src/ansi.js";
-import {
-  decorativeEmoji,
-  supportsDecorativeEmoji,
-} from "../../packages/terminal-core/src/decorative-emoji.js";
-import { stylePromptTitle } from "../../packages/terminal-core/src/prompt-style.js";
 import { isRich } from "../../packages/terminal-core/src/theme.js";
+import { oriroBannerBlock } from "../cli/brand-banner.js";
+import { stylePromptTitle } from "../../packages/terminal-core/src/prompt-style.js";
 import {
   DEFAULT_AGENT_WORKSPACE_DIR,
   ensureAgentWorkspace,
@@ -160,51 +156,9 @@ export function validateGatewayPasswordInput(value: unknown): string | undefined
   return undefined;
 }
 
-// ORIRO brand gradient (matches the logo): teal → purple, left to right.
-const BRAND_GRADIENT_START = [34, 184, 166] as const; // teal
-const BRAND_GRADIENT_END = [155, 93, 229] as const; // purple
-
-/** Color a line with a horizontal teal→purple gradient (24-bit truecolor); spaces stay bare. */
-function brandGradientLine(line: string): string {
-  const chars = [...line];
-  const span = Math.max(1, chars.length - 1);
-  const [r1, g1, b1] = BRAND_GRADIENT_START;
-  const [r2, g2, b2] = BRAND_GRADIENT_END;
-  let out = "";
-  for (let i = 0; i < chars.length; i++) {
-    const ch = chars[i];
-    if (ch === " ") {
-      out += ch;
-      continue;
-    }
-    const t = i / span;
-    const r = Math.round(r1 + (r2 - r1) * t);
-    const g = Math.round(g1 + (g2 - g1) * t);
-    const b = Math.round(b1 + (b2 - b1) * t);
-    out += `\x1b[38;2;${r};${g};${b}m${ch}\x1b[0m`;
-  }
-  return out;
-}
-
-/** Prints the onboarding banner — ORIRO in the brand teal→purple gradient when color is supported. */
+/** Prints the onboarding banner — the ORIRO wordmark in multi-bright color. */
 export function printWizardHeader(runtime: RuntimeEnv) {
-  const bannerWidth = 54;
-  const icon = decorativeEmoji("ORIRO");
-  const title = supportsDecorativeEmoji() && icon ? `${icon} ORIRO ${icon}` : "ORIRO";
-  const pad = Math.max(0, bannerWidth - visibleWidth(title));
-  const titleLine = `${" ".repeat(Math.floor(pad / 2))}${title}${" ".repeat(Math.ceil(pad / 2))}`;
-  const art = [
-    "▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄",
-    " ██████  ██████  ██ ██████   ██████ ",
-    "██    ██ ██   ██ ██ ██   ██ ██    ██",
-    "██    ██ ██████  ██ ██████  ██    ██",
-    "██    ██ ██   ██ ██ ██   ██ ██    ██",
-    " ██████  ██   ██ ██ ██   ██  ██████ ",
-    "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀",
-  ];
-  const rendered = isRich() ? art.map(brandGradientLine) : art;
-  const header = [...rendered, titleLine, " "].join("\n");
-  runtime.log(header);
+  runtime.log(`\n${oriroBannerBlock(isRich())}\n`);
 }
 
 /** Records wizard provenance metadata on config writes. */

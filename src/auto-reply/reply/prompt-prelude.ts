@@ -11,7 +11,7 @@ import { appendUntrustedContext } from "./untrusted-context.js";
 
 const REPLY_MEDIA_HINT =
   "To send an image back, use the message tool with structured media fields such as media, mediaUrl, path, or filePath. Keep caption in the text body.";
-const ROOM_EVENT_PROMPT = "[Oriro room event]";
+const ROOM_EVENT_PROMPT = "[ORIRO room event]";
 const ROOM_EVENT_SOURCE_REPLY_DELIVERY_MODE = "message_tool_only";
 const RESUMABLE_ROOM_CONTEXT_OMITTED_PREFIXES = [
   "Conversation context (untrusted, chronological, selected for current message):",
@@ -148,7 +148,7 @@ function buildRoomEventContext(params: ReplyPromptEnvelopeBaseParams, roomContex
       ? `visible_reply_contract: ${ROOM_EVENT_SOURCE_REPLY_DELIVERY_MODE}`
       : undefined;
   return [
-    "[Oriro room event]",
+    "[ORIRO room event]",
     "inbound_event_kind: room_event",
     visibleReplyContract,
     roomContextBlock,
@@ -201,7 +201,7 @@ export function buildReplyPromptEnvelopeBase(
   const transcriptBody = params.isHeartbeat
     ? HEARTBEAT_TRANSCRIPT_PROMPT
     : params.isBareSessionReset
-      ? softResetTail || `[Oriro session ${params.startupAction}]`
+      ? softResetTail || `[ORIRO session ${params.startupAction}]`
       : isRoomEvent
         ? ""
         : params.hasUserBody

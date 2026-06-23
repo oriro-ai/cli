@@ -395,7 +395,7 @@ describe("runGlobalPackageUpdateSteps", () => {
       const prefix = path.join(base, "prefix");
       const globalRoot = path.join(prefix, "lib", "node_modules");
       const packageRoot = path.join(globalRoot, "oriro");
-      const sourceSpec = "Oriro@github:oriro-ai/cli#release/2026.5.12";
+      const sourceSpec = "Oriro@github:oriro/oriro#release/2026.5.12";
       await writePackageRoot(packageRoot, "1.0.0");
 
       let packDir: string | undefined;
@@ -486,23 +486,23 @@ describe("runGlobalPackageUpdateSteps", () => {
   it.each([
     {
       name: "full git url",
-      sourceSpec: "https://github.com/oriro-ai/cli.git#main",
+      sourceSpec: "https://github.com/oriro/oriro.git#main",
     },
     {
       name: "hosted GitHub URL without git suffix",
-      sourceSpec: "https://github.com/oriro-ai/cli#main",
+      sourceSpec: "https://github.com/oriro/oriro#main",
     },
     {
       name: "aliased hosted GitHub URL without git suffix",
-      sourceSpec: "oriro@https://github.com/oriro-ai/cli#main",
+      sourceSpec: "oriro@https://github.com/oriro/oriro#main",
     },
     {
       name: "GitHub shorthand",
-      sourceSpec: "oriro-ai/cli#main",
+      sourceSpec: "oriro/oriro#main",
     },
     {
       name: "SCP-style SSH",
-      sourceSpec: "git@github.com:oriro-ai/cli.git#main",
+      sourceSpec: "git@github.com:oriro/oriro.git#main",
     },
   ] as const)(
     "packs additional npm git source spec forms before install: $name",

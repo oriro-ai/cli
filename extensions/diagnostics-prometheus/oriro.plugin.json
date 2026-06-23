@@ -1,7 +1,7 @@
 {
   "id": "diagnostics-prometheus",
   "name": "Diagnostics Prometheus",
-  "description": "Oriro diagnostics Prometheus exporter for runtime metrics.",
+  "description": "ORIRO diagnostics Prometheus exporter for runtime metrics.",
   "activation": {
     "onStartup": true
   },

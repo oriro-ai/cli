@@ -160,7 +160,7 @@ function latestSecretResolveCall(): {
   };
 }
 
-const oriroToolsFactoryMocks = vi.hoisted(() => {
+const openOriroToolsFactoryMocks = vi.hoisted(() => {
   const tool = (name: string) => ({
     name,
     displaySummary: `${name} test stub`,
@@ -207,16 +207,16 @@ vi.mock("../../channels/plugins/message-tool-api.js", () => ({
 }));
 
 vi.mock("./agents-list-tool.js", () => ({
-  createAgentsListTool: () => oriroToolsFactoryMocks.tool("agents"),
+  createAgentsListTool: () => openOriroToolsFactoryMocks.tool("agents"),
 }));
 vi.mock("./cron-tool.js", () => ({
-  createCronTool: () => oriroToolsFactoryMocks.tool("cron"),
+  createCronTool: () => openOriroToolsFactoryMocks.tool("cron"),
 }));
 vi.mock("./gateway-tool.js", () => ({
-  createGatewayTool: () => oriroToolsFactoryMocks.tool("gateway"),
+  createGatewayTool: () => openOriroToolsFactoryMocks.tool("gateway"),
 }));
 vi.mock("./heartbeat-response-tool.js", () => ({
-  createHeartbeatResponseTool: () => oriroToolsFactoryMocks.tool("heartbeat_response"),
+  createHeartbeatResponseTool: () => openOriroToolsFactoryMocks.tool("heartbeat_response"),
 }));
 vi.mock("./image-generate-tool.js", () => ({
   createImageGenerateTool: () => null,
@@ -233,44 +233,44 @@ vi.mock("./music-generate-tool.js", () => ({
   createMusicGenerateTool: () => null,
 }));
 vi.mock("./nodes-tool.js", () => ({
-  createNodesTool: () => oriroToolsFactoryMocks.tool("nodes"),
+  createNodesTool: () => openOriroToolsFactoryMocks.tool("nodes"),
 }));
 vi.mock("./pdf-tool.js", () => ({
   createPdfTool: () => null,
 }));
 vi.mock("./session-status-tool.js", () => ({
-  createSessionStatusTool: () => oriroToolsFactoryMocks.tool("session_status"),
+  createSessionStatusTool: () => openOriroToolsFactoryMocks.tool("session_status"),
 }));
 vi.mock("./sessions-history-tool.js", () => ({
-  createSessionsHistoryTool: () => oriroToolsFactoryMocks.tool("sessions_history"),
+  createSessionsHistoryTool: () => openOriroToolsFactoryMocks.tool("sessions_history"),
 }));
 vi.mock("./sessions-list-tool.js", () => ({
-  createSessionsListTool: () => oriroToolsFactoryMocks.tool("sessions_list"),
+  createSessionsListTool: () => openOriroToolsFactoryMocks.tool("sessions_list"),
 }));
 vi.mock("./sessions-send-tool.js", () => ({
-  createSessionsSendTool: () => oriroToolsFactoryMocks.tool("sessions_send"),
+  createSessionsSendTool: () => openOriroToolsFactoryMocks.tool("sessions_send"),
 }));
 vi.mock("./sessions-spawn-tool.js", () => ({
-  createSessionsSpawnTool: () => oriroToolsFactoryMocks.tool("sessions_spawn"),
+  createSessionsSpawnTool: () => openOriroToolsFactoryMocks.tool("sessions_spawn"),
 }));
 vi.mock("./sessions-yield-tool.js", () => ({
-  createSessionsYieldTool: () => oriroToolsFactoryMocks.tool("sessions_yield"),
+  createSessionsYieldTool: () => openOriroToolsFactoryMocks.tool("sessions_yield"),
 }));
 vi.mock("./subagents-tool.js", () => ({
-  createSubagentsTool: () => oriroToolsFactoryMocks.tool("subagents"),
+  createSubagentsTool: () => openOriroToolsFactoryMocks.tool("subagents"),
 }));
 vi.mock("./tts-tool.js", () => ({
-  createTtsTool: () => oriroToolsFactoryMocks.tool("tts"),
+  createTtsTool: () => openOriroToolsFactoryMocks.tool("tts"),
 }));
 vi.mock("./update-plan-tool.js", () => ({
-  createUpdatePlanTool: () => oriroToolsFactoryMocks.tool("update_plan"),
+  createUpdatePlanTool: () => openOriroToolsFactoryMocks.tool("update_plan"),
 }));
 vi.mock("./video-generate-tool.js", () => ({
   createVideoGenerateTool: () => null,
 }));
 vi.mock("./web-tools.js", () => ({
-  createWebFetchTool: () => oriroToolsFactoryMocks.tool("web_fetch"),
-  createWebSearchTool: () => oriroToolsFactoryMocks.tool("web_search"),
+  createWebFetchTool: () => openOriroToolsFactoryMocks.tool("web_fetch"),
+  createWebSearchTool: () => openOriroToolsFactoryMocks.tool("web_search"),
 }));
 
 function mockSendResult(overrides: { channel?: string; to?: string } = {}) {

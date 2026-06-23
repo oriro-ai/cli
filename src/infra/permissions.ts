@@ -10,7 +10,7 @@ export {
   safeStat,
   type PermissionCheck,
   type PermissionCheckOptions,
-} from "@oriro/fs-safe/permissions";
+} from "@openclaw/fs-safe/permissions";
 export {
   createIcaclsResetCommand,
   formatIcaclsResetCommand,
@@ -22,4 +22,4 @@ export {
   type PermissionExec as ExecFn,
   type WindowsAclEntry,
   type WindowsAclSummary,
-} from "@oriro/fs-safe/advanced";
+} from "@openclaw/fs-safe/advanced";

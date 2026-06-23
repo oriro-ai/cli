@@ -27,7 +27,7 @@ function writeOpenWebUiWorkspace() {
     process.env.ORIRO_WORKSPACE_DIR || path.join(process.env.HOME, ".oriro", "workspace");
   write(
     path.join(workspace, "IDENTITY.md"),
-    "# Identity\n\n- Name: Oriro\n- Purpose: Open WebUI Docker compatibility smoke test assistant.\n",
+    "# Identity\n\n- Name: ORIRO\n- Purpose: Open WebUI Docker compatibility smoke test assistant.\n",
   );
   writeJson(path.join(workspace, ".oriro", "workspace-state.json"), {
     version: 1,

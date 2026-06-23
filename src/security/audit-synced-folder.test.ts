@@ -6,7 +6,7 @@ describe("security audit synced folder findings", () => {
   it("warns when state/config look like a synced folder", () => {
     const findings = collectSyncedFolderFindings({
       stateDir: "/Users/test/Dropbox/.oriro",
-      configPath: "/Users/test/Dropbox/.oriro-ai/cli.json",
+      configPath: "/Users/test/Dropbox/.oriro/oriro.json",
     });
 
     expect(

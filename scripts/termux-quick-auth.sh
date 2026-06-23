@@ -5,7 +5,7 @@
 # One-tap: shows status toast
 # If expired: directly opens auth URL
 
-SERVER="${ORIRO_SERVER:-l36}"
+SERVER="${ORIRO_SERVER:-oriro-host}"
 
 STATUS=$(ssh -o ConnectTimeout=5 "$SERVER" '$HOME/oriro/scripts/claude-auth-status.sh simple' 2>&1)
 
@@ -22,7 +22,7 @@ case "$STATUS" in
         termux-toast "Auth expired - opening console..."
         termux-open-url "https://console.anthropic.com/settings/api-keys"
         sleep 2
-        termux-notification -t "Oriro Re-Auth" -c "After getting key, run: ssh $SERVER '~/oriro/scripts/mobile-reauth.sh'" --id oriro-auth
+        termux-notification -t "ORIRO Re-Auth" -c "After getting key, run: ssh $SERVER '~/oriro/scripts/mobile-reauth.sh'" --id oriro-auth
         ;;
     *)
         termux-toast "Connection error"

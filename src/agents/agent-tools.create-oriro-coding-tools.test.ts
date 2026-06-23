@@ -23,7 +23,7 @@ import "./test-helpers/fast-oriro-tools.js";
 import { wrapToolWithBeforeToolCallHook } from "./agent-tools.before-tool-call.js";
 import { createOriroCodingTools } from "./agent-tools.js";
 import type { AuthProfileStore } from "./auth-profiles/types.js";
-import * as oriroPluginTools from "./oriro-plugin-tools.js";
+import * as openOriroPluginTools from "./oriro-plugin-tools.js";
 import { createOriroTools } from "./oriro-tools.js";
 import { expectReadWriteEditTools } from "./test-helpers/agent-tools-fs-helpers.js";
 import { createAgentToolsSandboxContext } from "./test-helpers/agent-tools-sandbox-context.js";
@@ -591,7 +591,7 @@ describe("createOriroCodingTools", () => {
     const createOriroToolsMock = vi.mocked(createOriroTools);
     createOriroToolsMock.mockClear();
     const resolvePluginToolsSpy = vi
-      .spyOn(oriroPluginTools, "resolveOriroPluginToolsForOptions")
+      .spyOn(openOriroPluginTools, "resolveOriroPluginToolsForOptions")
       .mockReturnValue([]);
 
     try {
@@ -624,7 +624,7 @@ describe("createOriroCodingTools", () => {
     const createOriroToolsMock = vi.mocked(createOriroTools);
     createOriroToolsMock.mockClear();
     const resolvePluginToolsSpy = vi
-      .spyOn(oriroPluginTools, "resolveOriroPluginToolsForOptions")
+      .spyOn(openOriroPluginTools, "resolveOriroPluginToolsForOptions")
       .mockReturnValue([]);
     const authProfileStore = {
       version: 1,
@@ -675,12 +675,12 @@ describe("createOriroCodingTools", () => {
     createOriroToolsMock.mockClear();
 
     createOriroCodingTools({
-      config: { tools: { alsoAllow: ["oriro"] } },
+      config: { tools: { alsoAllow: ["lobster"] } },
     });
 
     expect(createOriroToolsMock).toHaveBeenCalledTimes(1);
     expect(latestCreateOriroToolsOptions().pluginToolAllowlist).toStrictEqual([
-      "oriro",
+      "lobster",
       DEFAULT_PLUGIN_TOOLS_ALLOWLIST_ENTRY,
     ]);
   });

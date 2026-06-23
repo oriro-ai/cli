@@ -23,7 +23,7 @@ const UNGUARDED_RUNTIME_API_PLUGIN_IDS = [
   "google",
   "line",
   "lmstudio",
-  "oriro",
+  "lobster",
   "mattermost",
   "memory-core",
   "ollama",
@@ -353,6 +353,22 @@ describe("runtime api guardrails", () => {
         `${pluginId} runtime api should use generic sdk subpaths or local exports`,
       ).not.toContain(`'oriro/plugin-sdk/${pluginId}'`);
     }
+  });
+
+  it("keeps the composed hook-runner registry internal", () => {
+    const pluginRuntime = readFileSync(resolve(ROOT_DIR, "plugin-sdk/plugin-runtime.ts"), "utf8");
+    const hookRunnerGlobal = readFileSync(
+      resolve(ROOT_DIR, "plugins/hook-runner-global.ts"),
+      "utf8",
+    );
+    const hookRegistryTypes = readFileSync(
+      resolve(ROOT_DIR, "plugins/hook-registry.types.ts"),
+      "utf8",
+    );
+
+    expect(pluginRuntime).toContain('export * from "../plugins/hook-runner-global.js";');
+    expect(hookRunnerGlobal).not.toContain("getGlobalHookRunnerRegistry");
+    expect(hookRegistryTypes).not.toContain("trustedToolPolicies");
   });
 
   it("keeps Slack's narrow runtime-setter entrypoint pinned to a single export", () => {

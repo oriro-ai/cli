@@ -56,7 +56,7 @@ struct WideAreaGatewayDiscoveryTests {
                     return "0 0 18789 steipetacstudio.oriro.internal."
                 }
                 if recordType == "TXT" {
-                    return "\"displayName=Peter\\226\\128\\153s Mac Studio (Oriro)\" \"gatewayPort=18789\" \"tailnetDns=peters-mac-studio-1.sheep-coho.ts.net\" \"cliPath=/Users/steipete/oriro/src/entry.ts\""
+                    return "\"displayName=Peter\\226\\128\\153s Mac Studio (Oriro)\" \"gatewayPort=18789\" \"tailnetDns=peters-mac-studio-1.sheep-coho.ts.net\" \"cliPath=/Users/oriro/oriro/src/entry.ts\""
                 }
                 return ""
             })
@@ -72,7 +72,7 @@ struct WideAreaGatewayDiscoveryTests {
         #expect(beacon.port == 18789)
         #expect(beacon.gatewayPort == 18789)
         #expect(beacon.tailnetDns == "peters-mac-studio-1.sheep-coho.ts.net")
-        #expect(beacon.cliPath == "/Users/steipete/oriro/src/entry.ts")
+        #expect(beacon.cliPath == "/Users/oriro/oriro/src/entry.ts")
     }
 
     @Test func `attacker peer cannot become nameserver`() {

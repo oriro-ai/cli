@@ -1,12 +1,12 @@
 {
   "name": "@oriro/discord",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "@oriro/discord",
-      "version": "2026.6.8",
+      "version": "2026.6.9",
       "dependencies": {
         "@discordjs/voice": "0.19.2",
         "discord-api-types": "0.38.48",
@@ -16,7 +16,7 @@
         "ws": "8.21.0"
       },
       "peerDependencies": {
-        "oriro": ">=2026.6.8"
+        "oriro": ">=2026.6.9"
       },
       "peerDependenciesMeta": {
         "oriro": {

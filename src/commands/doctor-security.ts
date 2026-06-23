@@ -91,8 +91,8 @@ function execAskRank(value: ExecAsk): number {
 function collectExecPolicyConflictWarnings(cfg: OriroConfig): string[] {
   const warnings: string[] = [];
   const approvals = loadExecApprovals();
-  const defaultRequestedSecuritySource = "Oriro default (full)";
-  const defaultRequestedAskSource = "Oriro default (off)";
+  const defaultRequestedSecuritySource = "ORIRO default (full)";
+  const defaultRequestedAskSource = "ORIRO default (off)";
 
   const maybeWarn = (params: {
     scopeLabel: string;

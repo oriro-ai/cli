@@ -2,7 +2,7 @@
   "name": "@oriro/speech-core",
   "version": "2026.5.31",
   "private": true,
-  "description": "Oriro speech runtime package",
+  "description": "ORIRO speech runtime package",
   "type": "module",
   "main": "./dist/runtime-api.mjs",
   "types": "./dist/runtime-api.d.mts",
@@ -34,6 +34,6 @@
     }
   },
   "dependencies": {
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   }
 }

@@ -194,8 +194,10 @@ function filterSkillEntries(
   return filtered;
 }
 
-const DEFAULT_MAX_CANDIDATES_PER_ROOT = 300;
-const DEFAULT_MAX_SKILLS_LOADED_PER_SOURCE = 200;
+// ORIRO: raised from 300/200 so the full bundled ORIRO skill library (259 +
+// 57 base = 316, all under one bundled root) loads without silent truncation.
+const DEFAULT_MAX_CANDIDATES_PER_ROOT = 1000;
+const DEFAULT_MAX_SKILLS_LOADED_PER_SOURCE = 1000;
 const DEFAULT_MAX_SKILLS_IN_PROMPT = 150;
 const DEFAULT_MAX_SKILLS_PROMPT_CHARS = 18_000;
 const DEFAULT_MAX_SKILL_FILE_BYTES = 256_000;

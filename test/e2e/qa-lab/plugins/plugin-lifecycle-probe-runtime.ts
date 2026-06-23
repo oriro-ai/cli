@@ -1,10 +1,11 @@
 // Plugin Lifecycle Probe tests cover QA Lab plugin lifecycle evidence.
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { readPluginInstallRecords } from "../../../../scripts/e2e/lib/plugin-index-sqlite.mjs";
+import { resolveWindowsTaskkillPath } from "../../../../scripts/lib/windows-taskkill.mjs";
 import { createTempDirTracker } from "../../../helpers/temp-dir.js";
 
 const tempDirs = createTempDirTracker();
@@ -17,6 +18,7 @@ interface CommandOptions {
   env?: NodeJS.ProcessEnv;
   outputFile?: string;
   spawnImpl?: typeof spawn;
+  taskkillImpl?: typeof spawnSync;
   timeoutKillGraceMs?: number;
   timeoutMs?: number;
 }
@@ -225,7 +227,7 @@ function packageEntrypoint(prefix: string) {
       return candidate;
     }
   }
-  throw new Error(`Oriro package entrypoint not found under ${packageRoot}/dist/`);
+  throw new Error(`ORIRO package entrypoint not found under ${packageRoot}/dist/`);
 }
 
 async function runCommand(command: string, args: readonly string[], options: CommandOptions = {}) {
@@ -264,6 +266,27 @@ async function runCommand(command: string, args: readonly string[], options: Com
             return;
           } catch {
             // The process group may already be gone; fall back to the direct child.
+          }
+        }
+        if (!useProcessGroup && child.pid) {
+          const runTaskkill = options.taskkillImpl ?? spawnSync;
+          const taskkillPath = resolveWindowsTaskkillPath();
+          const args = ["/PID", String(child.pid), "/T"];
+          if (signal === "SIGKILL") {
+            args.push("/F");
+          }
+          const result = runTaskkill(taskkillPath, args, { stdio: "ignore", windowsHide: true });
+          if (!result.error && result.status === 0) {
+            return;
+          }
+          if (signal !== "SIGKILL") {
+            const forceResult = runTaskkill(taskkillPath, [...args, "/F"], {
+              stdio: "ignore",
+              windowsHide: true,
+            });
+            if (!forceResult.error && forceResult.status === 0) {
+              return;
+            }
           }
         }
         child.kill(signal);
@@ -351,7 +374,7 @@ async function installOriroPackage(prefix: string, env: MatrixEnv) {
   const packageTgz = env.ORIRO_CURRENT_PACKAGE_TGZ;
   assertProbe(packageTgz, "ORIRO_CURRENT_PACKAGE_TGZ is required");
   const installLog = "/tmp/oriro-plugin-lifecycle-install.log";
-  process.stdout.write("Installing mounted Oriro package...\n");
+  process.stdout.write("Installing mounted ORIRO package...\n");
   await runCommand(
     "npm",
     ["install", "-g", "--prefix", prefix, packageTgz, "--no-fund", "--no-audit"],
@@ -491,7 +514,7 @@ export async function runPluginLifecycleMatrix() {
       pluginId,
       "1.0.0",
       "lifecycle.v1",
-      "Lifecycle Oriro",
+      "Lifecycle ORIRO",
     );
     await packFixturePlugin(
       path.join(packRoot, "v2"),
@@ -499,7 +522,7 @@ export async function runPluginLifecycleMatrix() {
       pluginId,
       "2.0.0",
       "lifecycle.v2",
-      "Lifecycle Oriro",
+      "Lifecycle ORIRO",
     );
     registry = await startNpmFixtureRegistry(
       registryRoot,

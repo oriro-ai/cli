@@ -45,7 +45,7 @@ describe("website installer sync workflow", () => {
 
   it("syncs verified scripts to oriro.ai only after all installer checks pass", () => {
     expect(workflow).toContain("needs: [static, linux-docker, macos-installer, windows-installer]");
-    expect(workflow).toContain("repository: oriro-ai/cli.ai");
+    expect(workflow).toContain("repository: oriro/oriro.ai");
     expect(workflow).toContain("ORIRO_GH_TOKEN: ${{ secrets.ORIRO_GH_TOKEN }}");
     expect(workflow).toContain("ORIRO_GH_TOKEN is not configured");
     expect(workflow).toContain("token: ${{ env.ORIRO_GH_TOKEN }}");

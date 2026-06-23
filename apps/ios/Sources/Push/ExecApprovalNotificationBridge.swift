@@ -85,7 +85,7 @@ enum ExecApprovalNotificationBridge {
     }
 
     static func approvalID(from userInfo: [AnyHashable: Any]) -> String? {
-        let raw = self.oriroPayload(userInfo: userInfo)?["approvalId"] as? String
+        let raw = self.openOriroPayload(userInfo: userInfo)?["approvalId"] as? String
         let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return trimmed.isEmpty ? nil : trimmed
     }
@@ -95,12 +95,12 @@ enum ExecApprovalNotificationBridge {
     }
 
     static func payloadKind(userInfo: [AnyHashable: Any]) -> String {
-        let raw = self.oriroPayload(userInfo: userInfo)?["kind"] as? String
+        let raw = self.openOriroPayload(userInfo: userInfo)?["kind"] as? String
         let trimmed = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return trimmed.isEmpty ? "unknown" : trimmed
     }
 
-    private static func oriroPayload(userInfo: [AnyHashable: Any]) -> [String: Any]? {
+    private static func openOriroPayload(userInfo: [AnyHashable: Any]) -> [String: Any]? {
         if let payload = userInfo["oriro"] as? [String: Any] {
             return payload
         }

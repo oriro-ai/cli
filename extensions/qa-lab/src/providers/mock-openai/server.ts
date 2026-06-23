@@ -228,6 +228,26 @@ function readBody(req: IncomingMessage): Promise<string> {
   });
 }
 
+function parseJsonObjectBody(raw: string): Record<string, unknown> | null {
+  try {
+    const parsed = raw ? (JSON.parse(raw) as unknown) : {};
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeOpenAiMalformedJsonError(res: ServerResponse, label: string) {
+  writeJson(res, 400, {
+    error: {
+      type: "invalid_request_error",
+      message: `Malformed JSON body for ${label} request.`,
+    },
+  });
+}
+
 function transcriptionTextForAudioRequest(rawBody: string) {
   if (rawBody.length >= QA_GROUP_AUDIO_MIN_MULTIPART_BODY_CHARS) {
     return QA_GROUP_AUDIO_TRANSCRIPTION_TEXT;
@@ -1425,11 +1445,11 @@ function buildAssistantText(
   if (toolOutput && /worked, failed, blocked|worked\/failed\/blocked|follow-up/i.test(prompt)) {
     return `Worked:\n- Read seeded QA material.\n- Expanded the report structure.\nFailed:\n- None observed in mock mode.\nBlocked:\n- No live provider evidence in this lane.\nFollow-up:\n- Re-run with a real model for qualitative coverage.`;
   }
-  if (toolOutput && /oriro invaders/i.test(prompt)) {
+  if (toolOutput && /lobster invaders/i.test(prompt)) {
     if (toolOutput.includes("QA mission") || toolOutput.includes("Testing")) {
       return "";
     }
-    return `Protocol note: Oriro Invaders built at oriro-invaders.html.`;
+    return `Protocol note: Lobster Invaders built at lobster-invaders.html.`;
   }
   if (
     toolOutput &&
@@ -2375,7 +2395,7 @@ async function buildResponsesPayload(
         path: "dreaming-shadow-trial-report.md",
         content: [
           "Candidate: The user prefers release reports that include exact verification commands and remaining risk.",
-          "Trial prompt: Prepare a release readiness reply for a local Oriro QA change.",
+          "Trial prompt: Prepare a release readiness reply for a local ORIRO QA change.",
           "Baseline outcome: mentions tests passed but omits the exact command and remaining risk.",
           "Candidate outcome: includes the exact verification command and calls out the remaining review risk.",
           "Verdict: helpful",
@@ -2511,17 +2531,17 @@ async function buildResponsesPayload(
       return buildToolCallEventsWithArgs("read", { path: "FAILURE_RECOVERY_EVIDENCE.md" });
     }
   }
-  if (/oriro invaders/i.test(prompt)) {
+  if (/lobster invaders/i.test(prompt)) {
     if (!toolOutput) {
       return buildToolCallEventsWithArgs("read", { path: "QA_KICKOFF_TASK.md" });
     }
     if (toolOutput.includes("QA mission") || toolOutput.includes("Testing")) {
       return buildToolCallEventsWithArgs("write", {
-        path: "oriro-invaders.html",
+        path: "lobster-invaders.html",
         content: `<!doctype html>
 <html lang="en">
-  <head><meta charset="utf-8" /><title>Oriro Invaders</title></head>
-  <body><h1>Oriro Invaders</h1><p>Tiny playable stub.</p></body>
+  <head><meta charset="utf-8" /><title>Lobster Invaders</title></head>
+  <body><h1>Lobster Invaders</h1><p>Tiny playable stub.</p></body>
 </html>`,
       });
     }
@@ -2811,12 +2831,12 @@ async function buildResponsesPayload(
     if (
       !taskEvidenceText ||
       (!taskEvidenceText.includes("# Personal task ledger") &&
-        !taskEvidenceText.includes("Task: prepare a local Oriro PR readiness note."))
+        !taskEvidenceText.includes("Task: prepare a local ORIRO PR readiness note."))
     ) {
       return buildToolCallEventsWithArgs("read", { path: "PERSONAL_TASK_LEDGER.md" });
     }
     if (
-      taskEvidenceText.includes("Task: prepare a local Oriro PR readiness note.") &&
+      taskEvidenceText.includes("Task: prepare a local ORIRO PR readiness note.") &&
       taskEvidenceText.includes("Done: local evidence captured in personal-task-status.txt.")
     ) {
       return buildToolCallEventsWithArgs("write", {
@@ -3418,7 +3438,11 @@ export async function startQaMockOpenAiServer(params?: { host?: string; port?: n
       }
       if (req.method === "POST" && url.pathname === "/v1/images/generations") {
         const raw = await readBody(req);
-        const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+        const body = parseJsonObjectBody(raw);
+        if (!body) {
+          writeOpenAiMalformedJsonError(res, "OpenAI Images");
+          return;
+        }
         imageGenerationRequests.push(body);
         if (imageGenerationRequests.length > 20) {
           imageGenerationRequests.splice(0, imageGenerationRequests.length - 20);
@@ -3442,7 +3466,11 @@ export async function startQaMockOpenAiServer(params?: { host?: string; port?: n
       }
       if (req.method === "POST" && url.pathname === "/v1/embeddings") {
         const raw = await readBody(req);
-        const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+        const body = parseJsonObjectBody(raw);
+        if (!body) {
+          writeOpenAiMalformedJsonError(res, "OpenAI Embeddings");
+          return;
+        }
         const inputs = extractEmbeddingInputTexts(body.input);
         writeJson(res, 200, {
           object: "list",
@@ -3464,7 +3492,11 @@ export async function startQaMockOpenAiServer(params?: { host?: string; port?: n
       }
       if (req.method === "POST" && url.pathname === "/v1/responses") {
         const raw = await readBody(req);
-        const body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+        const body = parseJsonObjectBody(raw);
+        if (!body) {
+          writeOpenAiMalformedJsonError(res, "OpenAI Responses");
+          return;
+        }
         const input = Array.isArray(body.input) ? (body.input as ResponsesInputItem[]) : [];
         const events = await buildResponsesPayload(body, scenarioState);
         const resolvedModel = typeof body.model === "string" ? body.model : "";
@@ -3502,10 +3534,8 @@ export async function startQaMockOpenAiServer(params?: { host?: string; port?: n
       }
       if (req.method === "POST" && url.pathname === "/v1/messages") {
         const raw = await readBody(req);
-        let body: AnthropicMessagesRequest;
-        try {
-          body = raw ? (JSON.parse(raw) as AnthropicMessagesRequest) : {};
-        } catch {
+        const body = parseJsonObjectBody(raw) as AnthropicMessagesRequest | null;
+        if (!body) {
           writeJson(res, 400, {
             type: "error",
             error: {

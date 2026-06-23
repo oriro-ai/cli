@@ -1,8 +1,8 @@
 {
   "name": "@oriro/litellm-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro LiteLLM provider plugin",
+  "description": "ORIRO LiteLLM provider plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

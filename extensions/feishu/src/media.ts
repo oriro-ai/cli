@@ -14,7 +14,7 @@ import {
   withTempWorkspace,
   withTempDownloadPath,
 } from "oriro/plugin-sdk/temp-path";
-import type { ClawdbotConfig } from "../runtime-api.js";
+import type { OriroConfig } from "../runtime-api.js";
 import { resolveFeishuRuntimeAccount } from "./accounts.js";
 import { createFeishuClient } from "./client.js";
 import { requestFeishuApi } from "./comment-shared.js";
@@ -53,7 +53,7 @@ export type SaveMessageResourceResult = {
   fileName?: string;
 };
 
-function createConfiguredFeishuMediaClient(params: { cfg: ClawdbotConfig; accountId?: string }): {
+function createConfiguredFeishuMediaClient(params: { cfg: OriroConfig; accountId?: string }): {
   account: ReturnType<typeof resolveFeishuRuntimeAccount>;
   client: ReturnType<typeof createFeishuClient>;
 } {
@@ -351,7 +351,7 @@ async function saveMessageResourceWithType(params: {
 }
 
 export async function saveMessageResourceFeishu(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   messageId: string;
   fileKey: string;
   type: "image" | "file";
@@ -414,7 +414,7 @@ export type SendMediaResult = {
  * Supports: JPEG, PNG, WEBP, GIF, TIFF, BMP, ICO
  */
 export async function uploadImageFeishu(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   image: Buffer | string; // Buffer or file path
   imageType?: "message" | "avatar";
   accountId?: string;
@@ -467,7 +467,7 @@ export function sanitizeFileNameForUpload(fileName: string): string {
  * Max file size: 30MB
  */
 export async function uploadFileFeishu(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   file: Buffer | string; // Buffer or file path
   fileName: string;
   fileType: "opus" | "mp4" | "pdf" | "doc" | "xls" | "ppt" | "stream";
@@ -511,7 +511,7 @@ export async function uploadFileFeishu(params: {
  * Send an image message using an image_key
  */
 export async function sendImageFeishu(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   to: string;
   imageKey: string;
   replyToMessageId?: string;
@@ -565,7 +565,7 @@ export async function sendImageFeishu(params: {
  * Send a file message using a file_key
  */
 export async function sendFileFeishu(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   to: string;
   fileKey: string;
   /** Use "audio" for audio, "media" for video (mp4), "file" for documents */
@@ -824,7 +824,7 @@ async function prepareFeishuVoiceMedia(params: {
  * must be passed so loadWebMedia allows the path (post CVE-2026-26321).
  */
 export async function sendMediaFeishu(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   to: string;
   mediaUrl?: string;
   mediaBuffer?: Buffer;

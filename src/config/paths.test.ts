@@ -78,7 +78,7 @@ describe("gateway port resolution", () => {
     expect(
       resolveGatewayPort(
         { gateway: { port: 19002 } },
-        envWith({ CLAWDBOT_GATEWAY_PORT: "127.0.0.1:18789" }),
+        envWith({ ORIRO_GATEWAY_PORT: "127.0.0.1:18789" }),
       ),
     ).toBe(19002);
   });
@@ -223,9 +223,9 @@ describe("state + config path candidates", () => {
     const candidates = resolveDefaultConfigCandidates({} as NodeJS.ProcessEnv, () => home);
     const expected = [
       path.join(resolvedHome, ".oriro", "oriro.json"),
-      path.join(resolvedHome, ".oriro", "clawdbot.json"),
-      path.join(resolvedHome, ".clawdbot", "oriro.json"),
-      path.join(resolvedHome, ".clawdbot", "clawdbot.json"),
+      path.join(resolvedHome, ".oriro", "oriro.json"),
+      path.join(resolvedHome, ".oriro", "oriro.json"),
+      path.join(resolvedHome, ".oriro", "oriro.json"),
     ];
     expect(candidates).toEqual(expected);
   });
@@ -241,7 +241,7 @@ describe("state + config path candidates", () => {
 
   it("falls back to existing legacy state dir when ~/.oriro is missing", async () => {
     await withTempDir({ prefix: "oriro-state-legacy-" }, async (root) => {
-      const legacyDir = path.join(root, ".clawdbot");
+      const legacyDir = path.join(root, ".oriro");
       await fs.mkdir(legacyDir, { recursive: true });
       const resolved = resolveStateDir({} as NodeJS.ProcessEnv, () => root);
       expect(resolved).toBe(legacyDir);

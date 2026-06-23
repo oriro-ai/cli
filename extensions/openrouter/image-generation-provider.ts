@@ -300,7 +300,7 @@ export function buildOpenRouterImageGenerationProvider(): ImageGenerationProvide
           defaultHeaders: {
             Authorization: `Bearer ${auth.apiKey}`,
             "HTTP-Referer": "https://oriro.ai",
-            "X-OpenRouter-Title": "Oriro",
+            "X-OpenRouter-Title": "ORIRO",
           },
           provider: "openrouter",
           capability: "image",

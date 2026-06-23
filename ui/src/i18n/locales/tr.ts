@@ -203,6 +203,7 @@ export const tr: TranslationMap = {
     inherit: "devral",
     defaultOption: "Varsayılan ({value})",
     offExplicit: "kapalı (açıkça)",
+    auto: "auto",
     on: "açık",
     off: "kapalı",
     full: "tam",
@@ -1314,7 +1315,7 @@ export const tr: TranslationMap = {
         stepDevUi:
           "pnpm ui:dev kullanıyorsanız geliştirme UI’sini mevcut checkouta göre yeniden derleyin veya yeniden başlatın.",
         stepRestart:
-          "Oriro güncellemesinden sonra Gateway’i yeniden başlatın, böylece güncel protokolü sunsun.",
+          "ORIRO güncellemesinden sonra Gateway’i yeniden başlatın, böylece güncel protokolü sunsun.",
       },
       network: {
         title: "Bağlanılamadı",
@@ -1626,6 +1627,7 @@ export const tr: TranslationMap = {
       nextHeartbeat: "Sonraki heartbeat",
       wakeModeHelp: "Şimdi hemen tetikler. Sonraki heartbeat, bir sonraki döngüyü bekler.",
       payloadKind: "Ne çalıştırılsın?",
+      command: "Command",
       systemEvent: "Ana zaman çizelgesine mesaj gönder",
       agentTurn: "Asistan görevini çalıştır (yalıtılmış)",
       systemEventHelp:

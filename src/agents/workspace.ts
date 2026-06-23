@@ -219,7 +219,7 @@ export class WorkspaceVanishedError extends Error {
 
   constructor(params: { workspaceDir: string; attestationPath: string }) {
     super(
-      `Oriro workspace appears to have disappeared after a recent initialization: ${params.workspaceDir}. ` +
+      `ORIRO workspace appears to have disappeared after a recent initialization: ${params.workspaceDir}. ` +
         `Refusing to reseed BOOTSTRAP.md over a recently attested workspace. ` +
         `Restore the workspace or remove ${params.attestationPath} if this reset was intentional.`,
     );
@@ -465,10 +465,6 @@ function resolveWorkspaceStatePath(dir: string): string {
 
 function resolveLegacyWorkspaceStatePath(dir: string): string {
   return path.join(dir, LEGACY_WORKSPACE_STATE_DIRNAME, LEGACY_WORKSPACE_STATE_FILENAME);
-}
-
-export function resolveWorkspaceAttestationPath(dir: string): string {
-  return resolveWorkspaceAttestationPathInStateDir(dir, resolveStateDir());
 }
 
 function resolveWorkspaceAttestationPathInStateDir(dir: string, stateDir: string): string {

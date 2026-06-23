@@ -145,7 +145,7 @@ oriro release-upgrade ping >"$PLUGIN_CLI_BEFORE_LOG" 2>&1
 node scripts/e2e/lib/release-scenarios/assertions.mjs assert-file-contains "$PLUGIN_CLI_BEFORE_LOG" "release-upgrade-plugin:pong"
 node scripts/e2e/lib/release-user-journey/assertions.mjs configure-clickclack "http://127.0.0.1:$CLICKCLACK_PORT"
 
-oriro_e2e_install_package "$CANDIDATE_INSTALL_LOG" "candidate Oriro package"
+oriro_e2e_install_package "$CANDIDATE_INSTALL_LOG" "candidate ORIRO package"
 package_root="$(oriro_e2e_package_root)"
 entry="$(oriro_e2e_package_entrypoint "$package_root")"
 oriro_e2e_enable_oriro_cli_timeout

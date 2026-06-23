@@ -1,6 +1,6 @@
 {
   "id": "qa-lab",
-  "description": "Oriro QA lab plugin with private debugger UI and scenario runner.",
+  "description": "ORIRO QA lab plugin with private debugger UI and scenario runner.",
   "activation": {
     "onStartup": false
   },

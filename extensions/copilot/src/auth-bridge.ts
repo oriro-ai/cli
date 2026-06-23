@@ -25,7 +25,7 @@ import { join, resolve } from "node:path";
  *     non-reversible pool fingerprint so token rotation busts the
  *     client pool cleanly.
  *   - Computes a per-agent `copilotHome` default
- *     (`<oriroHome>/.oriro/agents/<agentId>/copilot`, or
+ *     (`<openOriroHome>/.oriro/agents/<agentId>/copilot`, or
  *     `<agentDir>/copilot` when an agent directory is supplied) that
  *     respects `ORIRO_HOME` for the home directory root.
  *   - Defaults to `useLoggedInUser` when no token signal is available.
@@ -241,10 +241,10 @@ function resolveCopilotHome(args: {
     return resolve(join(args.agentDir, "copilot"));
   }
 
-  const oriroHome = readString(args.env.ORIRO_HOME);
-  const rootHome = oriroHome ? resolve(oriroHome) : safeHomeDir(args.homeDir);
+  const openOriroHome = readString(args.env.ORIRO_HOME);
+  const rootHome = openOriroHome ? resolve(openOriroHome) : safeHomeDir(args.homeDir);
   // Per-agent isolation per proposal section 3.6:
-  //   <oriroHome>/.oriro/agents/<agentId>/copilot
+  //   <openOriroHome>/.oriro/agents/<agentId>/copilot
   return resolve(join(rootHome, ".oriro", "agents", args.agentId, "copilot"));
 }
 

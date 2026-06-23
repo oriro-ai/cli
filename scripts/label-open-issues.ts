@@ -223,7 +223,7 @@ function parseArgs(argv: string[]): ScriptOptions {
 
     if (arg === "--limit") {
       const next = argv[index + 1];
-      if (!next || next.startsWith("--") || !/^\d+$/u.test(next)) {
+      if (!next || next.startsWith("-") || !/^\d+$/u.test(next)) {
         throw new Error("Missing/invalid --limit value");
       }
       const parsed = Number(next);
@@ -237,7 +237,7 @@ function parseArgs(argv: string[]): ScriptOptions {
 
     if (arg === "--model") {
       const next = argv[index + 1];
-      if (!next || next.startsWith("--")) {
+      if (!next || next.startsWith("-")) {
         throw new Error("Missing --model value");
       }
       model = next;
@@ -768,7 +768,7 @@ async function classifyItem(
             {
               role: "system",
               content:
-                "You classify GitHub issues and pull requests for Oriro. Respond with JSON only, no extra text.",
+                "You classify GitHub issues and pull requests for ORIRO. Respond with JSON only, no extra text.",
             },
             {
               role: "user",
@@ -851,7 +851,7 @@ async function main() {
   }
   const openAITimeoutMs = resolveOpenAITimeoutMs();
 
-  logHeader("Oriro Issue Label Audit");
+  logHeader("ORIRO Issue Label Audit");
   logStep(`Mode: ${dryRun ? "dry-run" : "apply labels"}`);
   logStep(`Model: ${model}`);
   logStep(`OpenAI timeout: ${openAITimeoutMs}ms`);

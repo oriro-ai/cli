@@ -805,8 +805,8 @@ export async function maybeSendNodeWakeNudge(
       result = await sendApnsAlert({
         registration,
         nodeId,
-        title: "Oriro needs a quick reopen",
-        body: "Tap to reopen Oriro and restore the node connection.",
+        title: "ORIRO needs a quick reopen",
+        body: "Tap to reopen ORIRO and restore the node connection.",
         relayConfig: relay.relayConfig,
       });
     } else {
@@ -822,8 +822,8 @@ export async function maybeSendNodeWakeNudge(
       result = await sendApnsAlert({
         registration,
         nodeId,
-        title: "Oriro needs a quick reopen",
-        body: "Tap to reopen Oriro and restore the node connection.",
+        title: "ORIRO needs a quick reopen",
+        body: "Tap to reopen ORIRO and restore the node connection.",
         auth: auth.auth,
       });
     }

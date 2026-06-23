@@ -405,7 +405,7 @@ describe("monitorDiscordProvider", () => {
 
   it("fails closed before lifecycle when Discord bot identity has no usable id", async () => {
     const runtime = baseRuntime();
-    clientFetchUserMock.mockResolvedValueOnce({ username: "Oriro" } as never);
+    clientFetchUserMock.mockResolvedValueOnce({ username: "Molty" } as never);
 
     await expect(
       monitorDiscordProvider({
@@ -1201,7 +1201,7 @@ describe("monitorDiscordProvider", () => {
     );
     clientFetchUserMock.mockImplementationOnce(async () => {
       emitter.emit("debug", "Gateway websocket opened");
-      return { id: "bot-1", username: "Oriro" };
+      return { id: "bot-1", username: "Molty" };
     });
     isVerboseMock.mockReturnValue(true);
 

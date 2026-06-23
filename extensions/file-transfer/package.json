@@ -1,7 +1,7 @@
 {
   "name": "@oriro/file-transfer",
-  "version": "2026.6.8",
-  "description": "Oriro file transfer plugin (file_fetch, dir_list, dir_fetch, file_write)",
+  "version": "2026.6.9",
+  "description": "ORIRO file transfer plugin (file_fetch, dir_list, dir_fetch, file_write)",
   "type": "module",
   "dependencies": {
     "minimatch": "10.2.5",

@@ -609,7 +609,7 @@ describe("createVideoGenerateTool", () => {
       requesterSessionKey: "agent:main:discord:direct:123",
       ownerKey: "agent:main:discord:direct:123",
       scopeKind: "session",
-      task: "friendly oriro surfing",
+      task: "friendly lobster surfing",
       status: "running",
       deliveryStatus: "not_applicable",
       notifyPolicy: "silent",
@@ -625,14 +625,14 @@ describe("createVideoGenerateTool", () => {
         {
           buffer: Buffer.from("video-bytes"),
           mimeType: "video/mp4",
-          fileName: "oriro.mp4",
+          fileName: "lobster.mp4",
         },
       ],
       metadata: { taskId: "task-1" },
     });
     const saveSpy = vi.spyOn(mediaStore, "saveMediaBuffer").mockResolvedValueOnce({
-      path: "/tmp/generated-oriro.mp4",
-      id: "generated-oriro.mp4",
+      path: "/tmp/generated-lobster.mp4",
+      id: "generated-lobster.mp4",
       size: 11,
       contentType: "video/mp4",
     });
@@ -652,7 +652,7 @@ describe("createVideoGenerateTool", () => {
       throw new Error("expected video_generate tool");
     }
 
-    const result = await tool.execute("call-1", { prompt: "friendly oriro surfing" });
+    const result = await tool.execute("call-1", { prompt: "friendly lobster surfing" });
     const text = (result.content?.[0] as { text: string } | undefined)?.text ?? "";
 
     expect(saveSpy).toHaveBeenCalledWith(
@@ -660,27 +660,27 @@ describe("createVideoGenerateTool", () => {
       "video/mp4",
       "tool-video-generation",
       8 * 1024 * 1024,
-      "oriro.mp4",
+      "lobster.mp4",
     );
     expect(text).toContain("Generated 1 video with qwen/wan2.6-t2v.");
-    expect(text).toContain('path="/tmp/generated-oriro.mp4"');
+    expect(text).toContain('path="/tmp/generated-lobster.mp4"');
     expect(text).not.toContain("MEDIA:");
     const details = resultDetails(result);
     expect(details.provider).toBe("qwen");
     expect(details.model).toBe("wan2.6-t2v");
     expect(details.count).toBe(1);
     expect((details.media as { mediaUrls?: string[] }).mediaUrls).toEqual([
-      "/tmp/generated-oriro.mp4",
+      "/tmp/generated-lobster.mp4",
     ]);
     expect((details.media as { attachments?: unknown }).attachments).toEqual([
       {
         type: "video",
-        path: "/tmp/generated-oriro.mp4",
+        path: "/tmp/generated-lobster.mp4",
         mimeType: "video/mp4",
-        name: "generated-oriro.mp4",
+        name: "generated-lobster.mp4",
       },
     ]);
-    expect(details.paths).toEqual(["/tmp/generated-oriro.mp4"]);
+    expect(details.paths).toEqual(["/tmp/generated-lobster.mp4"]);
     expect(details.metadata).toEqual({ taskId: "task-1" });
     expect(taskExecutorMocks.createRunningTaskRun).not.toHaveBeenCalled();
     expect(taskExecutorMocks.completeTaskRunByRunId).not.toHaveBeenCalled();
@@ -706,7 +706,7 @@ describe("createVideoGenerateTool", () => {
     }
 
     const defaultResult = await tool.execute("call-timeout-default", {
-      prompt: "friendly oriro surfing",
+      prompt: "friendly lobster surfing",
     });
     vi.spyOn(mediaStore, "saveMediaBuffer").mockResolvedValueOnce({
       path: "/tmp/out-override.mp4",
@@ -715,7 +715,7 @@ describe("createVideoGenerateTool", () => {
       contentType: "video/mp4",
     });
     const overrideResult = await tool.execute("call-timeout-override", {
-      prompt: "friendly oriro surfing",
+      prompt: "friendly lobster surfing",
       timeoutMs: 12_345,
     });
 
@@ -735,13 +735,13 @@ describe("createVideoGenerateTool", () => {
         {
           buffer: Buffer.from("video-bytes"),
           mimeType: "video/mp4",
-          fileName: "oriro.mp4",
+          fileName: "lobster.mp4",
         },
       ],
     });
     const saveSpy = vi.spyOn(mediaStore, "saveMediaBuffer").mockResolvedValueOnce({
-      path: "/tmp/generated-oriro.mp4",
-      id: "generated-oriro.mp4",
+      path: "/tmp/generated-lobster.mp4",
+      id: "generated-lobster.mp4",
       size: 11,
       contentType: "video/mp4",
     });
@@ -759,14 +759,14 @@ describe("createVideoGenerateTool", () => {
       throw new Error("expected video_generate tool");
     }
 
-    await tool.execute("call-default-cap", { prompt: "friendly oriro surfing" });
+    await tool.execute("call-default-cap", { prompt: "friendly lobster surfing" });
 
     expect(saveSpy).toHaveBeenCalledWith(
       Buffer.from("video-bytes"),
       "video/mp4",
       "tool-video-generation",
       MAX_VIDEO_BYTES,
-      "oriro.mp4",
+      "lobster.mp4",
     );
   });
 
@@ -778,9 +778,9 @@ describe("createVideoGenerateTool", () => {
       ignoredOverrides: [],
       videos: [
         {
-          url: "https://example.com/generated-oriro.mp4",
+          url: "https://example.com/generated-lobster.mp4",
           mimeType: "video/mp4",
-          fileName: "oriro.mp4",
+          fileName: "lobster.mp4",
         },
       ],
       metadata: { taskId: "task-1" },
@@ -800,21 +800,21 @@ describe("createVideoGenerateTool", () => {
       throw new Error("expected video_generate tool");
     }
 
-    const result = await tool.execute("call-url", { prompt: "friendly oriro surfing" });
+    const result = await tool.execute("call-url", { prompt: "friendly lobster surfing" });
     const text = (result.content?.[0] as { text: string } | undefined)?.text ?? "";
 
     expect(saveSpy).not.toHaveBeenCalled();
     expect(text).toContain("Generated 1 video with vydra/veo3.");
-    expect(text).toContain('mediaUrl="https://example.com/generated-oriro.mp4"');
+    expect(text).toContain('mediaUrl="https://example.com/generated-lobster.mp4"');
     expect(text).not.toContain("MEDIA:");
     const details = resultDetails(result);
     expect(details.provider).toBe("vydra");
     expect(details.model).toBe("veo3");
     expect(details.count).toBe(1);
     expect((details.media as { mediaUrls?: string[] }).mediaUrls).toEqual([
-      "https://example.com/generated-oriro.mp4",
+      "https://example.com/generated-lobster.mp4",
     ]);
-    expect(details.paths).toEqual(["https://example.com/generated-oriro.mp4"]);
+    expect(details.paths).toEqual(["https://example.com/generated-lobster.mp4"]);
     expect(details.metadata).toEqual({ taskId: "task-1" });
   });
 
@@ -827,9 +827,9 @@ describe("createVideoGenerateTool", () => {
       videos: [
         {
           buffer: Buffer.from("large-video-bytes"),
-          url: "https://fal.run/files/generated-oriro.mp4",
+          url: "https://fal.run/files/generated-lobster.mp4",
           mimeType: "video/mp4",
-          fileName: "oriro.mp4",
+          fileName: "lobster.mp4",
         },
       ],
     });
@@ -851,21 +851,21 @@ describe("createVideoGenerateTool", () => {
     }
 
     const result = await tool.execute("call-url-fallback", {
-      prompt: "friendly oriro surfing",
+      prompt: "friendly lobster surfing",
     });
     const text = (result.content?.[0] as { text: string } | undefined)?.text ?? "";
 
     expect(text).toContain("Generated 1 video with fal/fal-ai/minimax/video-01-live.");
-    expect(text).toContain('mediaUrl="https://fal.run/files/generated-oriro.mp4"');
+    expect(text).toContain('mediaUrl="https://fal.run/files/generated-lobster.mp4"');
     expect(text).not.toContain("MEDIA:");
     const details = resultDetails(result);
     expect(details.provider).toBe("fal");
     expect(details.model).toBe("fal-ai/minimax/video-01-live");
     expect(details.count).toBe(1);
     expect((details.media as { mediaUrls?: string[] }).mediaUrls).toEqual([
-      "https://fal.run/files/generated-oriro.mp4",
+      "https://fal.run/files/generated-lobster.mp4",
     ]);
-    expect(details.paths).toEqual(["https://fal.run/files/generated-oriro.mp4"]);
+    expect(details.paths).toEqual(["https://fal.run/files/generated-lobster.mp4"]);
   });
 
   it("starts background generation and wakes the session with url-only MEDIA lines", async () => {
@@ -875,7 +875,7 @@ describe("createVideoGenerateTool", () => {
       requesterSessionKey: "agent:main:discord:direct:123",
       ownerKey: "agent:main:discord:direct:123",
       scopeKind: "session",
-      task: "friendly oriro surfing",
+      task: "friendly lobster surfing",
       status: "running",
       deliveryStatus: "not_applicable",
       notifyPolicy: "silent",
@@ -892,9 +892,9 @@ describe("createVideoGenerateTool", () => {
       ignoredOverrides: [],
       videos: [
         {
-          url: "https://example.com/generated-oriro.mp4",
+          url: "https://example.com/generated-lobster.mp4",
           mimeType: "video/mp4",
-          fileName: "oriro.mp4",
+          fileName: "lobster.mp4",
         },
       ],
       metadata: { taskId: "task-1" },
@@ -924,7 +924,7 @@ describe("createVideoGenerateTool", () => {
       throw new Error("expected video_generate tool");
     }
 
-    const result = await tool.execute("call-1", { prompt: "friendly oriro surfing" });
+    const result = await tool.execute("call-1", { prompt: "friendly lobster surfing" });
     const text = (result.content?.[0] as { text: string } | undefined)?.text ?? "";
 
     expect(text).toContain("Background task started for video generation (task-123).");
@@ -964,12 +964,12 @@ describe("createVideoGenerateTool", () => {
     expect(wake.attachments).toEqual([
       {
         type: "video",
-        url: "https://example.com/generated-oriro.mp4",
+        url: "https://example.com/generated-lobster.mp4",
         mimeType: "video/mp4",
-        name: "oriro.mp4",
+        name: "lobster.mp4",
       },
     ]);
-    expect(wake.result).toContain('mediaUrl="https://example.com/generated-oriro.mp4"');
+    expect(wake.result).toContain('mediaUrl="https://example.com/generated-lobster.mp4"');
     expect(wake.result).not.toContain("MEDIA:");
   });
 
@@ -990,7 +990,7 @@ describe("createVideoGenerateTool", () => {
       throw new Error("expected video_generate tool");
     }
 
-    await expect(tool.execute("call-2", { prompt: "broken oriro" })).rejects.toThrow(
+    await expect(tool.execute("call-2", { prompt: "broken lobster" })).rejects.toThrow(
       "queue boom",
     );
     expect(taskExecutorMocks.failTaskRunByRunId).not.toHaveBeenCalled();
@@ -1035,7 +1035,7 @@ describe("createVideoGenerateTool", () => {
     }
 
     await tool.execute("call-model-only-start", {
-      prompt: "friendly oriro surfing",
+      prompt: "friendly lobster surfing",
     });
     const createdTask = firstMockCallArg(taskExecutorMocks.createRunningTaskRun) as {
       runId: string;
@@ -1050,7 +1050,7 @@ describe("createVideoGenerateTool", () => {
         requesterSessionKey: "agent:main:discord:direct:123",
         ownerKey: "agent:main:discord:direct:123",
         scopeKind: "session",
-        task: "friendly oriro surfing",
+        task: "friendly lobster surfing",
         status: "succeeded",
         deliveryStatus: "not_applicable",
         notifyPolicy: "silent",
@@ -1061,7 +1061,7 @@ describe("createVideoGenerateTool", () => {
     ]);
 
     const result = await tool.execute("call-provider-qualified-repeat", {
-      prompt: "friendly oriro surfing",
+      prompt: "friendly lobster surfing",
       model: "google/veo-3.1-pro-generate-preview",
     });
     const text = (result.content?.[0] as { text?: string } | undefined)?.text ?? "";
@@ -1083,7 +1083,7 @@ describe("createVideoGenerateTool", () => {
         {
           buffer: Buffer.from("video-bytes"),
           mimeType: "video/mp4",
-          fileName: "oriro.mp4",
+          fileName: "lobster.mp4",
         },
       ],
       normalization: {
@@ -1100,8 +1100,8 @@ describe("createVideoGenerateTool", () => {
       },
     });
     vi.spyOn(mediaStore, "saveMediaBuffer").mockResolvedValueOnce({
-      path: "/tmp/generated-oriro.mp4",
-      id: "generated-oriro.mp4",
+      path: "/tmp/generated-lobster.mp4",
+      id: "generated-lobster.mp4",
       size: 11,
       contentType: "video/mp4",
     });
@@ -1120,7 +1120,7 @@ describe("createVideoGenerateTool", () => {
     }
 
     const result = await tool.execute("call-1", {
-      prompt: "friendly oriro surfing",
+      prompt: "friendly lobster surfing",
       durationSeconds: 5,
     });
     const text = (result.content?.[0] as { text: string } | undefined)?.text ?? "";
@@ -1153,7 +1153,7 @@ describe("createVideoGenerateTool", () => {
         {
           buffer: Buffer.from("video-bytes"),
           mimeType: "video/mp4",
-          fileName: "oriro.mp4",
+          fileName: "lobster.mp4",
         },
       ],
     });
@@ -1173,7 +1173,7 @@ describe("createVideoGenerateTool", () => {
 
     await expect(
       tool.execute("call-1", {
-        prompt: "friendly oriro surfing",
+        prompt: "friendly lobster surfing",
         durationSeconds: 5.5,
       }),
     ).rejects.toThrow("durationSeconds must be a positive integer");
@@ -1190,7 +1190,7 @@ describe("createVideoGenerateTool", () => {
         {
           buffer: Buffer.from("video-bytes"),
           mimeType: "video/mp4",
-          fileName: "oriro.mp4",
+          fileName: "lobster.mp4",
         },
       ],
       normalization: {
@@ -1205,8 +1205,8 @@ describe("createVideoGenerateTool", () => {
       },
     });
     vi.spyOn(mediaStore, "saveMediaBuffer").mockResolvedValueOnce({
-      path: "/tmp/generated-oriro.mp4",
-      id: "generated-oriro.mp4",
+      path: "/tmp/generated-lobster.mp4",
+      id: "generated-lobster.mp4",
       size: 11,
       contentType: "video/mp4",
     });
@@ -1225,7 +1225,7 @@ describe("createVideoGenerateTool", () => {
     }
 
     const result = await tool.execute("call-1", {
-      prompt: "friendly oriro surfing",
+      prompt: "friendly lobster surfing",
       size: "1280x720",
     });
 
@@ -1328,7 +1328,7 @@ describe("createVideoGenerateTool", () => {
 
     await expect(
       tool.execute("call-1", {
-        prompt: "oriro timelapse",
+        prompt: "lobster timelapse",
         image: "data:image/png;base64,cG5n",
       }),
     ).rejects.toThrow("video-plugin does not support image-to-video reference inputs.");
@@ -1364,13 +1364,13 @@ describe("createVideoGenerateTool", () => {
         {
           buffer: Buffer.from("video-bytes"),
           mimeType: "video/mp4",
-          fileName: "oriro.mp4",
+          fileName: "lobster.mp4",
         },
       ],
     });
     vi.spyOn(mediaStore, "saveMediaBuffer").mockResolvedValueOnce({
-      path: "/tmp/generated-oriro.mp4",
-      id: "generated-oriro.mp4",
+      path: "/tmp/generated-lobster.mp4",
+      id: "generated-lobster.mp4",
       size: 11,
       contentType: "video/mp4",
     });
@@ -1389,7 +1389,7 @@ describe("createVideoGenerateTool", () => {
     }
 
     const result = await tool.execute("call-openai-generate", {
-      prompt: "A oriro on a neon bridge",
+      prompt: "A lobster on a neon bridge",
       size: "1280x720",
       resolution: "720P",
       audio: false,
@@ -1425,7 +1425,7 @@ describe("createVideoGenerateTool", () => {
     // Record with numeric-string keys and silently forwarded.
     await expect(
       tool.execute("call-1", {
-        prompt: "oriro",
+        prompt: "lobster",
         providerOptions: ["seed", 42] as unknown as Record<string, unknown>,
       }),
     ).rejects.toThrow(
@@ -1434,7 +1434,7 @@ describe("createVideoGenerateTool", () => {
     // String providerOptions should also be rejected.
     await expect(
       tool.execute("call-2", {
-        prompt: "oriro",
+        prompt: "lobster",
         providerOptions: "seed=42" as unknown as Record<string, unknown>,
       }),
     ).rejects.toThrow(
@@ -1451,7 +1451,7 @@ describe("createVideoGenerateTool", () => {
     const tool = createVideoPluginTool();
 
     await tool.execute("call-1", {
-      prompt: "oriro",
+      prompt: "lobster",
       providerOptions: { seed: 42, draft: true },
     });
 
@@ -1472,7 +1472,7 @@ describe("createVideoGenerateTool", () => {
 
     await expect(
       tool.execute("call-1", {
-        prompt: "oriro",
+        prompt: "lobster",
         image: "data:image/png;base64,cG5n",
         // Only one image is provided, so passing two roles is an off-by-one bug.
         imageRoles: ["first_frame", "last_frame"],
@@ -1488,7 +1488,7 @@ describe("createVideoGenerateTool", () => {
 
     await expect(
       tool.execute("call-1", {
-        prompt: "oriro",
+        prompt: "lobster",
         imageRoles: "first_frame" as unknown as string[],
       }),
     ).rejects.toThrow(
@@ -1505,7 +1505,7 @@ describe("createVideoGenerateTool", () => {
     const tool = createVideoPluginTool();
 
     await tool.execute("call-1", {
-      prompt: "oriro",
+      prompt: "lobster",
       images: ["data:image/png;base64,Zmlyc3Q=", "data:image/png;base64,bGFzdA=="],
       imageRoles: ["first_frame", "last_frame"],
     });
@@ -1532,7 +1532,7 @@ describe("createVideoGenerateTool", () => {
     const tool = createVideoPluginTool();
 
     await tool.execute("call-1", {
-      prompt: "oriro",
+      prompt: "lobster",
       image: "https://example.test/reference.png",
     });
 
@@ -1568,7 +1568,7 @@ describe("createVideoGenerateTool", () => {
     }
 
     await tool.execute("call-1", {
-      prompt: "oriro",
+      prompt: "lobster",
       image: "/tmp/reference.png",
     });
 
@@ -1587,7 +1587,7 @@ describe("createVideoGenerateTool", () => {
 
     await expect(
       tool.execute("call-1", {
-        prompt: "oriro",
+        prompt: "lobster",
         audioRef: "data:audio/mpeg;base64,bXAz",
       }),
     ).rejects.toThrow("audio data: URLs are not supported for video_generate.");
@@ -1600,7 +1600,7 @@ describe("createVideoGenerateTool", () => {
     const tool = createVideoPluginTool();
 
     await tool.execute("call-1", {
-      prompt: "oriro",
+      prompt: "lobster",
       aspectRatio: "adaptive",
     });
 
@@ -1615,7 +1615,7 @@ describe("createVideoGenerateTool", () => {
     const tool = createVideoPluginTool();
 
     await tool.execute("call-1", {
-      prompt: "oriro",
+      prompt: "lobster",
       aspectRatio: "17:9",
       resolution: "draft-large",
     });

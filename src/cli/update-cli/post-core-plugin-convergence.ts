@@ -64,12 +64,12 @@ async function repairManagedNpmOriroPeerLinks(params: {
     return {
       changes:
         repaired > 0
-          ? [`Repaired Oriro host peer link(s) for ${repaired} managed npm plugin package(s).`]
+          ? [`Repaired ORIRO host peer link(s) for ${repaired} managed npm plugin package(s).`]
           : [],
       warnings: [],
     };
   } catch (err) {
-    const message = `Failed to repair managed npm Oriro host peer links: ${err instanceof Error ? err.message : String(err)}`;
+    const message = `Failed to repair managed npm ORIRO host peer links: ${err instanceof Error ? err.message : String(err)}`;
     return {
       changes: [],
       warnings: [

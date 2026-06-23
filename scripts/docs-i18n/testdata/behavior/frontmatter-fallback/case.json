@@ -7,7 +7,7 @@
   "rules": [
     {
       "method": "masked",
-      "match_all": ["Deploying Oriro on Fly.io"],
+      "match_all": ["Deploying ORIRO on Fly.io"],
       "response_file": "masked-tagged-wrapper.txt"
     }
   ]

@@ -138,7 +138,7 @@ describe("manifest model catalog planner", () => {
     expect(plan.rows[0]?.baseUrl).toBe("https://example.openai.azure.com/openai/v1");
   });
 
-  // Regression for https://github.com/oriro-ai/cli/issues/73876.
+  // Regression for https://github.com/oriro/oriro/issues/73876.
   // The user-facing complaint is that copying a model id from OpenRouter
   // (which uses "moonshotai/kimi-k2.6" as the org slug) and dropping the
   // "openrouter/" prefix to hit the direct API failed with "Unknown

@@ -2,7 +2,7 @@
 import "./lifecycle.test-support.js";
 import { createRuntimeEnv } from "oriro/plugin-sdk/plugin-test-runtime";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig } from "../runtime-api.js";
+import type { OriroConfig } from "../runtime-api.js";
 import {
   getFeishuLifecycleTestMocks,
   resetFeishuLifecycleTestMocks,
@@ -53,7 +53,7 @@ const { cfg: lifecycleConfig, account: lifecycleAccount } = createFeishuLifecycl
     session: { mainKey: "main", scope: "per-sender" },
   },
 }) as {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   account: ResolvedFeishuAccount;
 };
 

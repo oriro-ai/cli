@@ -1,7 +1,7 @@
 {
   "id": "amazon-bedrock-mantle",
   "name": "Amazon Bedrock Mantle",
-  "description": "Oriro Amazon Bedrock Mantle provider plugin for OpenAI-compatible model routing.",
+  "description": "ORIRO Amazon Bedrock Mantle provider plugin for OpenAI-compatible model routing.",
   "activation": {
     "onStartup": false
   },
@@ -29,7 +29,7 @@
     },
     "discovery.enabled": {
       "label": "Enable Discovery",
-      "help": "When false, Oriro keeps the Amazon Bedrock Mantle plugin available but skips implicit startup discovery. Leave unset for default auto-detect behavior."
+      "help": "When false, ORIRO keeps the Amazon Bedrock Mantle plugin available but skips implicit startup discovery. Leave unset for default auto-detect behavior."
     }
   },
   "providers": ["amazon-bedrock-mantle"]

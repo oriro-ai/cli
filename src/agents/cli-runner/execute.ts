@@ -309,7 +309,6 @@ const CLI_ENV_AUTH_LOG_KEYS = [
   "CLAUDE_CODE_OAUTH_TOKEN",
   "CLAUDE_CODE_PROVIDER_MANAGED_BY_HOST",
   "OPENAI_API_KEY",
-  "OPENAI_STEIPETE_API_KEY",
   "OPENROUTER_API_KEY",
 ] as const;
 
@@ -461,7 +460,7 @@ export async function executePreparedCliRun(
 
   const basePrompt = cliSessionIdToUse
     ? params.prompt
-    : (context.oriroHistoryPrompt ?? params.prompt);
+    : (context.openOriroHistoryPrompt ?? params.prompt);
   let prompt = applyPluginTextReplacements(
     appendBootstrapPromptWarning(basePrompt, context.bootstrapPromptWarningLines, {
       preserveExactPrompt: context.heartbeatPrompt,
@@ -664,7 +663,7 @@ export async function executePreparedCliRun(
             resolvedSessionId,
             reusableSessionId: context.reusableCliSession.sessionId,
             invalidatedReason: context.reusableCliSession.invalidatedReason,
-            hasHistoryPrompt: Boolean(context.oriroHistoryPrompt),
+            hasHistoryPrompt: Boolean(context.openOriroHistoryPrompt),
           }),
         );
         const logOutputText =
@@ -677,6 +676,7 @@ export async function executePreparedCliRun(
           : buildCliMcpCaptureKey(context);
         const mcpCaptureAttempt = await prepareCliBundleMcpCaptureAttempt({
           mode: context.backendResolved.bundleMcpMode,
+          backend,
           env: context.preparedBackend.env,
           captureKey: initialGatewayCaptureKey,
         });
@@ -1223,7 +1223,7 @@ export async function executePreparedCliRun(
                 retryableNoOutputTimeout &&
                 Boolean(cliSessionIdToUse) &&
                 Boolean(resolvedSessionId) &&
-                Boolean(context.oriroHistoryPrompt) &&
+                Boolean(context.openOriroHistoryPrompt) &&
                 Boolean(params.sessionKey) &&
                 params.timeoutMs - (Date.now() - context.started) > 0;
               if (params.sessionKey && emitLiveEvents && !deferWatchdogNoticeForFreshRetry) {

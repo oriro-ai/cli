@@ -1,7 +1,7 @@
 // Feishu tests cover monitor.startup plugin behavior.
 import { createNonExitingRuntimeEnv } from "oriro/plugin-sdk/plugin-test-runtime";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig } from "../runtime-api.js";
+import type { OriroConfig } from "../runtime-api.js";
 import { monitorFeishuProvider, stopFeishuMonitor } from "./monitor.js";
 import { resolveStartupProbeTimeoutMs } from "./monitor.startup.js";
 
@@ -24,7 +24,7 @@ beforeAll(async () => {
   await import("./monitor.account.js");
 });
 
-function buildMultiAccountWebsocketConfig(accountIds: string[]): ClawdbotConfig {
+function buildMultiAccountWebsocketConfig(accountIds: string[]): OriroConfig {
   return {
     channels: {
       feishu: {
@@ -42,7 +42,7 @@ function buildMultiAccountWebsocketConfig(accountIds: string[]): ClawdbotConfig 
         ),
       },
     },
-  } as ClawdbotConfig;
+  } as OriroConfig;
 }
 
 async function waitForStartedAccount(started: string[], accountId: string) {

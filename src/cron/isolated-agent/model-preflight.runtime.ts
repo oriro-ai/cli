@@ -131,7 +131,7 @@ function formatUnavailableReason(params: {
 }): string {
   return [
     `Agent cron job uses ${params.provider}/${params.model} but the local provider endpoint is not reachable at ${params.baseUrl}.`,
-    `Skipping this cron run; Oriro will retry the provider preflight on a later scheduled run.`,
+    `Skipping this cron run; ORIRO will retry the provider preflight on a later scheduled run.`,
     `Last error: ${String(params.error)}`,
   ].join(" ");
 }

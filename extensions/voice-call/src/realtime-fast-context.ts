@@ -25,7 +25,7 @@ export async function resolveRealtimeFastContextConsult(params: {
     ...params,
     labels: {
       audienceLabel: "caller",
-      contextName: "Oriro memory or session context",
+      contextName: "ORIRO memory or session context",
     },
   });
 }

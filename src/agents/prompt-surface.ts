@@ -15,14 +15,14 @@ export function buildOriroToolFallbackText(params: {
 }): string {
   if (isOriroMainPromptSurface(params.surface)) {
     return [
-      "Oriro lists the standard tools above. This runtime enables:",
+      "ORIRO lists the standard tools above. This runtime enables:",
       "- grep: search file contents for patterns",
       "- find: find files by glob pattern",
       "- ls: list directory contents",
       "- apply_patch: apply multi-file patches",
       `- ${params.execToolName}: run shell commands (supports background via yieldMs/background)`,
       `- ${params.processToolName}: manage background exec sessions`,
-      "- browser: control Oriro's dedicated browser",
+      "- browser: control ORIRO's dedicated browser",
       "- canvas: present/eval/snapshot the Canvas",
       "- nodes: list/describe/notify/camera/screen on paired nodes",
       "- cron: manage cron jobs and wake events (use for reminders; when scheduling a reminder, write the systemEvent text as something that will read like a reminder when it fires, and mention that it is a reminder depending on the time gap between setting and firing; include recent context in reminder text if appropriate)",
@@ -36,7 +36,7 @@ export function buildOriroToolFallbackText(params: {
     ].join("\n");
   }
 
-  return "No Oriro tool list is injected for this runtime prompt surface. Use only tools exposed directly by the active backend.";
+  return "No ORIRO tool list is injected for this runtime prompt surface. Use only tools exposed directly by the active backend.";
 }
 
 /** Returns whether the main Oriro prompt should include workflow hints around the tool list. */

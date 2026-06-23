@@ -1,8 +1,8 @@
 {
   "name": "@oriro/openai-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro OpenAI provider plugins",
+  "description": "ORIRO OpenAI provider plugins",
   "type": "module",
   "dependencies": {
     "ws": "8.21.0"

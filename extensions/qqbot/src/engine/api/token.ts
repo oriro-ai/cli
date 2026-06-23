@@ -32,7 +32,7 @@ const QQBOT_TOKEN_RESPONSE_LIMIT_BYTES = 8 * 1024;
  * (`QQBOT_MEDIA_SSRF_POLICY` in `../utils/file-utils.ts`) so the relaxation
  * stays narrowly host-scoped instead of weakening the global default.
  *
- * See https://github.com/oriro-ai/cli/issues/88984.
+ * See https://github.com/oriro/oriro/issues/88984.
  */
 const QQBOT_TOKEN_SSRF_POLICY: SsrFPolicy = {
   hostnameAllowlist: ["bots.qq.com"],

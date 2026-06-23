@@ -7,19 +7,19 @@ import { definePluginEntry } from "oriro/plugin-sdk/plugin-entry";
 function formatBonjourInstanceName(displayName: string) {
   const trimmed = displayName.trim();
   if (!trimmed) {
-    return "Oriro";
+    return "ORIRO";
   }
   if (/oriro/i.test(trimmed)) {
     return trimmed;
   }
-  return `${trimmed} (Oriro)`;
+  return `${trimmed} (ORIRO)`;
 }
 
 /** Plugin entry for Bonjour/mDNS gateway discovery. */
 export default definePluginEntry({
   id: "bonjour",
   name: "Bonjour Gateway Discovery",
-  description: "Advertise the local Oriro gateway over Bonjour/mDNS.",
+  description: "Advertise the local ORIRO gateway over Bonjour/mDNS.",
   register(api) {
     api.registerGatewayDiscoveryService({
       id: "bonjour",

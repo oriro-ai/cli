@@ -3690,7 +3690,7 @@ describe("updateNpmInstalledPlugins", () => {
       targetDir: "/tmp/claude-bundle",
       version: "1.2.0",
       extensions: ["index.ts"],
-      marketplaceSource: "vincentkoc/claude-marketplace",
+      marketplaceSource: "oriro/claude-marketplace",
       marketplacePlugin: "claude-bundle",
     });
 
@@ -3698,7 +3698,7 @@ describe("updateNpmInstalledPlugins", () => {
       config: createMarketplaceInstallConfig({
         pluginId: "claude-bundle",
         installPath: "/tmp/claude-bundle",
-        marketplaceSource: "vincentkoc/claude-marketplace",
+        marketplaceSource: "oriro/claude-marketplace",
         marketplacePlugin: "claude-bundle",
       }),
       pluginIds: ["claude-bundle"],
@@ -3706,7 +3706,7 @@ describe("updateNpmInstalledPlugins", () => {
       dryRun: true,
     });
 
-    expect(marketplaceInstallCall()?.marketplace).toBe("vincentkoc/claude-marketplace");
+    expect(marketplaceInstallCall()?.marketplace).toBe("oriro/claude-marketplace");
     expect(marketplaceInstallCall()?.plugin).toBe("claude-bundle");
     expect(marketplaceInstallCall()?.expectedPluginId).toBe("claude-bundle");
     expect(marketplaceInstallCall()?.dryRun).toBe(true);
@@ -3730,7 +3730,7 @@ describe("updateNpmInstalledPlugins", () => {
       version: "1.3.0",
       extensions: ["index.ts"],
       marketplaceName: "Vincent's Claude Plugins",
-      marketplaceSource: "vincentkoc/claude-marketplace",
+      marketplaceSource: "oriro/claude-marketplace",
       marketplacePlugin: "claude-bundle",
     });
 
@@ -3739,7 +3739,7 @@ describe("updateNpmInstalledPlugins", () => {
         pluginId: "claude-bundle",
         installPath: "/tmp/claude-bundle",
         marketplaceName: "Vincent's Claude Plugins",
-        marketplaceSource: "vincentkoc/claude-marketplace",
+        marketplaceSource: "oriro/claude-marketplace",
         marketplacePlugin: "claude-bundle",
       }),
       pluginIds: ["claude-bundle"],
@@ -3751,7 +3751,7 @@ describe("updateNpmInstalledPlugins", () => {
       installPath: "/tmp/claude-bundle",
       version: "1.3.0",
       marketplaceName: "Vincent's Claude Plugins",
-      marketplaceSource: "vincentkoc/claude-marketplace",
+      marketplaceSource: "oriro/claude-marketplace",
       marketplacePlugin: "claude-bundle",
     });
   });

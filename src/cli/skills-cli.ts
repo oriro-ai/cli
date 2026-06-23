@@ -1,4 +1,9 @@
 // Skills CLI for workspace status, install/update, OriroHub verification, and workshop proposals.
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { stdin as input, stdout as output } from "node:process";
+import { createInterface } from "node:readline/promises";
 import { normalizeOptionalString } from "@oriro/normalization-core/string-coerce";
 import type { Command } from "commander";
 import {
@@ -19,7 +24,6 @@ import {
   type OriroHubSkillVerificationResponse,
 } from "../infra/orirohub.js";
 import { defaultRuntime } from "../runtime.js";
-import { updateSkillConfigEntry } from "../skills/config/mutations.js";
 import {
   installSkillFromOriroHub,
   readVerifiedOriroHubSkillSourceUrl,
@@ -52,13 +56,7 @@ import type {
 import { CONFIG_DIR } from "../utils.js";
 import { resolveOptionFromCommand } from "./cli-utils.js";
 import { parseStrictPositiveIntOption } from "./program/helpers.js";
-import {
-  availableCategories,
-  formatSkillInfo,
-  formatSkillsCheck,
-  formatSkillsList,
-  skillsInCategory,
-} from "./skills-cli.format.js";
+import { formatSkillInfo, formatSkillsCheck, formatSkillsList } from "./skills-cli.format.js";
 
 export type {
   SkillInfoOptions,
@@ -158,49 +156,6 @@ async function runSkillsAction(
 
 function resolveActiveWorkspaceDir(options?: ResolveSkillsWorkspaceOptions): string {
   return resolveSkillsWorkspace(options).workspaceDir;
-}
-
-/**
- * Enable or disable every skill in a category by flipping the persisted per-skill
- * `skills.entries.<key>.enabled` config (the same flag the onboarding picker writes).
- * Skills are enabled by default, so disabling stores `enabled:false` and enabling
- * restores `enabled:true`. Category matching is case/separator-insensitive.
- */
-async function runSkillsCategoryToggle(
-  category: string,
-  enabled: boolean,
-  options: { json?: boolean; agentId?: string },
-): Promise<void> {
-  try {
-    const report = await loadSkillsStatusReport({ agentId: options.agentId });
-    const matches = skillsInCategory(report.skills, category);
-    if (matches.length === 0) {
-      const categories = availableCategories(report.skills);
-      defaultRuntime.error(
-        `No skills found in category "${category}". Available categories: ${categories.join(", ")}`,
-      );
-      defaultRuntime.exit(1);
-      return;
-    }
-    const changed: string[] = [];
-    for (const skill of matches) {
-      await updateSkillConfigEntry({ skillKey: skill.skillKey, enabled });
-      changed.push(skill.name);
-    }
-    const verb = enabled ? "Enabled" : "Disabled";
-    if (options.json) {
-      defaultRuntime.writeJson({ category, enabled, count: changed.length, skills: changed });
-      return;
-    }
-    defaultRuntime.writeStdout(
-      `${verb} ${changed.length} skill${changed.length === 1 ? "" : "s"} in "${category}":\n` +
-        changed.map((name) => `  • ${name}`).join("\n") +
-        "\n",
-    );
-  } catch (err) {
-    defaultRuntime.error(String(err));
-    defaultRuntime.exit(1);
-  }
 }
 
 function resolveSkillsWorkspaceForCommand(
@@ -325,6 +280,16 @@ async function readSkillProposalInput(options: {
 /**
  * Register the skills CLI commands
  */
+/** Normalize a user-supplied skill name into a safe lowercase-kebab slug. */
+function slugifySkillName(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export function registerSkillsCli(program: Command) {
   const skills = program
     .command("skills")
@@ -452,6 +417,126 @@ export function registerSkillsCli(program: Command) {
             return;
           }
           defaultRuntime.log(`Installed ${result.slug}@${result.version} -> ${result.targetDir}`);
+        } catch (err) {
+          defaultRuntime.error(String(err));
+          defaultRuntime.exit(1);
+        }
+      },
+    );
+
+  skills
+    .command("new")
+    .description("Scaffold a brand-new workspace skill (SKILL.md) and install it in one step")
+    .argument("<name>", "Skill name (becomes the slug; e.g. 'release-notes')")
+    .option(
+      "--description <text>",
+      "One-line description of what the skill does and when to use it",
+    )
+    .option(
+      "--body <text>",
+      "Initial skill body (the instructions the AI reads when the skill fires)",
+    )
+    .option("--command-only", "Make the skill /name-only (not auto-used by the AI)", false)
+    .option("--force", "Overwrite an existing workspace skill of the same name", false)
+    .option("--global", "Create in the shared managed skills directory", false)
+    .option("--agent <id>", "Target agent workspace (defaults to cwd-inferred, then default agent)")
+    .addHelpText(
+      "after",
+      '\nExamples:\n  oriro skills new release-notes --description "Draft release notes from a git diff"\n  oriro skills new my-helper   (interactive — prompts for the description)\n',
+    )
+    .action(
+      async (
+        rawName: string,
+        opts: {
+          description?: string;
+          body?: string;
+          commandOnly?: boolean;
+          force?: boolean;
+          global?: boolean;
+          agent?: string;
+        },
+        command: Command,
+      ) => {
+        try {
+          const slug = slugifySkillName(rawName);
+          if (!slug) {
+            defaultRuntime.error(
+              `Invalid skill name "${rawName}". Use letters, numbers and dashes (e.g. release-notes).`,
+            );
+            defaultRuntime.exit(1);
+            return;
+          }
+          const workspaceDir = resolveOriroHubTargetWorkspaceDir(command, opts);
+          if (!workspaceDir) {
+            return;
+          }
+          // Description: flag, else interactive prompt, else fail (non-interactive needs --description).
+          let description = normalizeOptionalString(opts.description);
+          if (!description) {
+            if (input.isTTY) {
+              const rl = createInterface({ input, output });
+              try {
+                description = normalizeOptionalString(
+                  await rl.question(
+                    `\n  ${theme.accent("›")} Describe ${slug} (what it does + when to use it): `,
+                  ),
+                );
+              } finally {
+                rl.close();
+              }
+            }
+          }
+          if (!description) {
+            defaultRuntime.error(
+              'A description is required. Pass --description "..." (or run interactively).',
+            );
+            defaultRuntime.exit(1);
+            return;
+          }
+          const body =
+            normalizeOptionalString(opts.body) ??
+            `# ${slug}\n\nDescribe step by step what the AI should do when this skill is active.\n`;
+          // Scaffold SKILL.md in a temp dir, then reuse the validated local-path installer.
+          const stageDir = mkdtempSync(join(tmpdir(), "oriro-skill-"));
+          const skillDir = join(stageDir, slug);
+          mkdirSync(skillDir, { recursive: true });
+          const frontmatter = [
+            "---",
+            `name: ${slug}`,
+            `description: ${JSON.stringify(description)}`,
+            ...(opts.commandOnly ? ["disable-model-invocation: true"] : []),
+            "---",
+            "",
+          ].join("\n");
+          writeFileSync(join(skillDir, "SKILL.md"), `${frontmatter}${body}`, "utf8");
+          try {
+            const result = await installSkillFromSource({
+              workspaceDir,
+              spec: skillDir,
+              slug,
+              force: Boolean(opts.force),
+              logger: {
+                info: (message) => defaultRuntime.log(message),
+                warn: (message) => defaultRuntime.log(theme.warn(message)),
+              },
+            });
+            if (!result.ok) {
+              defaultRuntime.error(result.error);
+              defaultRuntime.exit(1);
+              return;
+            }
+            defaultRuntime.log(`Created ${result.slug} -> ${result.targetDir}`);
+            defaultRuntime.log(
+              opts.commandOnly
+                ? `Use it with ${theme.accent(`/${slug.replace(/-/g, "_")}`)} (command-only).`
+                : `The AI can now use it automatically, or force it with ${theme.accent(`/${slug.replace(/-/g, "_")}`)}.`,
+            );
+            defaultRuntime.log(
+              theme.muted(`Edit the instructions at ${join(result.targetDir, "SKILL.md")}`),
+            );
+          } finally {
+            rmSync(stageDir, { recursive: true, force: true });
+          }
         } catch (err) {
           defaultRuntime.error(String(err));
           defaultRuntime.exit(1);
@@ -909,50 +994,13 @@ export function registerSkillsCli(program: Command) {
     .option("--json", "Output as JSON", false)
     .option("--eligible", "Show only eligible (ready to use) skills", false)
     .option("-v, --verbose", "Show more details including missing requirements", false)
-    .option("--by-category", "Group skills under their category headings", false)
     .option("--agent <id>", "Target agent workspace (defaults to cwd-inferred, then default agent)")
     .action(
       async (
-        opts: {
-          json?: boolean;
-          eligible?: boolean;
-          verbose?: boolean;
-          byCategory?: boolean;
-          agent?: string;
-        },
+        opts: { json?: boolean; eligible?: boolean; verbose?: boolean; agent?: string },
         command: Command,
       ) => {
         await runSkillsAction((report) => formatSkillsList(report, opts), {
-          agentId: resolveAgentOption(command, opts),
-        });
-      },
-    );
-
-  skills
-    .command("enable")
-    .description("Enable every skill in a category (e.g. `oriro skills enable health`)")
-    .argument("<category>", "Skill category (see `oriro skills list --by-category`)")
-    .option("--json", "Output as JSON", false)
-    .option("--agent <id>", "Target agent workspace (defaults to cwd-inferred, then default agent)")
-    .action(
-      async (category: string, opts: { json?: boolean; agent?: string }, command: Command) => {
-        await runSkillsCategoryToggle(category, true, {
-          json: opts.json,
-          agentId: resolveAgentOption(command, opts),
-        });
-      },
-    );
-
-  skills
-    .command("disable")
-    .description("Disable every skill in a category (e.g. `oriro skills disable finance`)")
-    .argument("<category>", "Skill category (see `oriro skills list --by-category`)")
-    .option("--json", "Output as JSON", false)
-    .option("--agent <id>", "Target agent workspace (defaults to cwd-inferred, then default agent)")
-    .action(
-      async (category: string, opts: { json?: boolean; agent?: string }, command: Command) => {
-        await runSkillsCategoryToggle(category, false, {
-          json: opts.json,
           agentId: resolveAgentOption(command, opts),
         });
       },

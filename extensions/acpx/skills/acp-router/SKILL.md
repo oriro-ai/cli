@@ -23,7 +23,7 @@ Trigger this skill when the user asks Oriro to:
 Mandatory preflight for coding-agent thread requests:
 
 - Before creating any thread for ACP harness work, read this skill first in the same turn.
-- After reading, follow `Oriro ACP runtime path` below; do not use `message(action="thread-create")` for ACP harness thread spawn.
+- After reading, follow `ORIRO ACP runtime path` below; do not use `message(action="thread-create")` for ACP harness thread spawn.
 
 ## Mode selection
 
@@ -210,7 +210,7 @@ Defaults are:
 
 - `oriro -> oriro acp`
 - `claude -> bundled @agentclientprotocol/claude-agent-acp@0.32.0`
-- `codex -> bundled @zed-industries/codex-acp@0.13.0 through Oriro's isolated CODEX_HOME wrapper`
+- `codex -> bundled @zed-industries/codex-acp@0.13.0 through ORIRO's isolated CODEX_HOME wrapper`
 - `copilot -> copilot --acp --stdio`
 - `cursor -> cursor-agent acp`
 - `droid -> droid exec --output-format acp`

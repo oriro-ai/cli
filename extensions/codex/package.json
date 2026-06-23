@@ -1,10 +1,10 @@
 {
   "name": "@oriro/codex",
-  "version": "2026.6.8",
-  "description": "Oriro Codex app-server harness and model provider plugin with a Codex-managed GPT catalog.",
+  "version": "2026.6.9",
+  "description": "ORIRO Codex app-server harness and model provider plugin with a Codex-managed GPT catalog.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -34,10 +34,10 @@
       ]
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8"
+      "oriroVersion": "2026.6.9"
     },
     "release": {
       "publishToOriroHub": true,

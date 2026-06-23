@@ -118,7 +118,7 @@ export async function transcribeOpenRouterAudio(
         Authorization: `Bearer ${params.apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": "https://oriro.ai",
-        "X-OpenRouter-Title": "Oriro",
+        "X-OpenRouter-Title": "ORIRO",
       },
       provider: "openrouter",
       api: "openrouter-stt",

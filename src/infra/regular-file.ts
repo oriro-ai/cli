@@ -13,4 +13,4 @@ export {
   statRegularFileSync,
   type AppendRegularFileOptions,
   type RegularFileStatResult,
-} from "@oriro/fs-safe/advanced";
+} from "@openclaw/fs-safe/advanced";

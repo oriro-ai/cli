@@ -789,14 +789,14 @@ async function handleSideDynamicToolCallWithTimeout(params: {
   timeoutMs: number;
 }): Promise<CodexDynamicToolCallResponse> {
   if (params.signal.aborted) {
-    return failedSideDynamicToolResponse("Oriro dynamic tool call aborted before execution.");
+    return failedSideDynamicToolResponse("ORIRO dynamic tool call aborted before execution.");
   }
 
   const controller = new AbortController();
   let timeout: ReturnType<typeof setTimeout> | undefined;
   let resolveAbort: ((response: CodexDynamicToolCallResponse) => void) | undefined;
   const abortFromRun = () => {
-    const message = "Oriro dynamic tool call aborted.";
+    const message = "ORIRO dynamic tool call aborted.";
     controller.abort(params.signal.reason ?? new Error(message));
     resolveAbort?.(failedSideDynamicToolResponse(message));
   };
@@ -806,9 +806,9 @@ async function handleSideDynamicToolCallWithTimeout(params: {
   const timeoutPromise = new Promise<CodexDynamicToolCallResponse>((resolve) => {
     const timeoutMs = clampSideDynamicToolTimeoutMs(params.timeoutMs);
     timeout = setTimeout(() => {
-      controller.abort(new Error(`Oriro dynamic tool call timed out after ${timeoutMs}ms.`));
+      controller.abort(new Error(`ORIRO dynamic tool call timed out after ${timeoutMs}ms.`));
       resolve(
-        failedSideDynamicToolResponse(`Oriro dynamic tool call timed out after ${timeoutMs}ms.`),
+        failedSideDynamicToolResponse(`ORIRO dynamic tool call timed out after ${timeoutMs}ms.`),
       );
     }, timeoutMs);
     timeout.unref?.();
@@ -833,7 +833,7 @@ async function handleSideDynamicToolCallWithTimeout(params: {
     params.signal.removeEventListener("abort", abortFromRun);
     resolveAbort = undefined;
     if (!controller.signal.aborted) {
-      controller.abort(new Error("Oriro dynamic tool call finished."));
+      controller.abort(new Error("ORIRO dynamic tool call finished."));
     }
   }
 }

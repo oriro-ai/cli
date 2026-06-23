@@ -57,7 +57,6 @@ import {
   resolveSpawnedWorkspaceInheritance,
 } from "./spawned-context.js";
 import {
-  decodeStrictBase64,
   materializeSubagentAttachments,
   type SubagentAttachmentReceiptFile,
 } from "./subagent-attachments.js";
@@ -126,8 +125,6 @@ export type {
   SpawnSubagentMode,
   SpawnSubagentSandboxMode,
 } from "./subagent-spawn.types.js";
-
-export { decodeStrictBase64 };
 
 function resolveConfiguredAgentIds(cfg: OriroConfig): string[] {
   return listAgentIds(cfg);
@@ -543,7 +540,7 @@ async function prepareSubagentSessionContext(params: {
       });
       if (!fork) {
         throw new Error(
-          'context="fork" requested but Oriro could not fork the requester transcript.',
+          'context="fork" requested but ORIRO could not fork the requester transcript.',
         );
       }
       pruneLegacyStoreKeys({
@@ -573,7 +570,7 @@ async function prepareSubagentSessionContext(params: {
         }
         return {
           status: "error",
-          error: 'context="fork" requested but Oriro could not prepare forked context.',
+          error: 'context="fork" requested but ORIRO could not prepare forked context.',
         };
       }
       return {

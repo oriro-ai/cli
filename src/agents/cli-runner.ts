@@ -1153,7 +1153,7 @@ export async function runPreparedCliAgent(
         if (
           shouldRetryFreshCliSessionAfterFailover({
             error: err,
-            hasHistoryPrompt: Boolean(context.oriroHistoryPrompt),
+            hasHistoryPrompt: Boolean(context.openOriroHistoryPrompt),
           }) &&
           retryableSessionId &&
           params.sessionKey

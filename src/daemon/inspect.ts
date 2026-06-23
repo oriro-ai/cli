@@ -18,7 +18,7 @@ export type ExtraGatewayService = {
   label: string;
   detail: string;
   scope: "user" | "system";
-  marker?: "oriro" | "clawdbot";
+  marker?: "oriro" | "oriro";
   legacy?: boolean;
 };
 
@@ -26,7 +26,7 @@ export type FindExtraGatewayServicesOptions = {
   deep?: boolean;
 };
 
-const EXTRA_MARKERS = ["oriro", "clawdbot"] as const;
+const EXTRA_MARKERS = ["oriro", "oriro"] as const;
 const SYSTEMD_REFERENCE_ONLY_KEYS = new Set([
   "after",
   "before",
@@ -230,7 +230,7 @@ function isIgnoredSystemdName(name: string): boolean {
 
 function isLegacyLabel(label: string): boolean {
   const lower = normalizeLowercaseStringOrEmpty(label);
-  return lower.includes("clawdbot");
+  return lower.includes("oriro");
 }
 
 async function readDirEntries(dir: string): Promise<string[]> {
@@ -299,8 +299,8 @@ async function scanLaunchdDir(params: {
     const marker =
       hasGatewayServiceMarker(contents) || executionMarker === "oriro"
         ? "oriro"
-        : executionMarker === "clawdbot" || legacyLabel
-          ? "clawdbot"
+        : executionMarker === "oriro" || legacyLabel
+          ? "oriro"
           : null;
     if (!marker) {
       continue;

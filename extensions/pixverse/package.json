@@ -1,18 +1,18 @@
 {
   "name": "@oriro/pixverse-provider",
-  "version": "2026.6.8",
-  "description": "Oriro PixVerse video generation provider plugin.",
+  "version": "2026.6.9",
+  "description": "ORIRO PixVerse video generation provider plugin.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*",
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.6.8"
+    "oriro": "workspace:*"
   },
   "peerDependenciesMeta": {
     "oriro": {
@@ -30,10 +30,10 @@
       "minHostVersion": ">=2026.5.26"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8",
+      "oriroVersion": "2026.6.9",
       "bundledDist": false
     },
     "release": {

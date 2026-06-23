@@ -5,7 +5,7 @@ import path from "node:path";
 import { verifyChannelMessageAdapterCapabilityProofs } from "oriro/plugin-sdk/channel-outbound";
 import type { MessagePresentation } from "oriro/plugin-sdk/interactive-runtime";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig } from "../runtime-api.js";
+import type { OriroConfig } from "../runtime-api.js";
 
 const sendMediaFeishuMock = vi.hoisted(() => vi.fn());
 const sendMessageFeishuMock = vi.hoisted(() => vi.fn());
@@ -127,8 +127,8 @@ function requireFeishuMediaSender(
 }
 
 const sendText = requireFeishuSendText();
-const emptyConfig: ClawdbotConfig = {};
-const cardRenderConfig: ClawdbotConfig = {
+const emptyConfig: OriroConfig = {};
+const cardRenderConfig: OriroConfig = {
   channels: {
     feishu: {
       renderMode: "card",

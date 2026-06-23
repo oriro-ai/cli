@@ -266,7 +266,7 @@ export async function agentsAddCommand(
 
   const prompter = createClackPrompter();
   try {
-    await prompter.intro("Add Oriro agent");
+    await prompter.intro("Add ORIRO agent");
     const name =
       nameInput ??
       (await prompter.text({

@@ -33,9 +33,6 @@ import type { OriroConfig } from "../config/types.oriro.js";
 import { formatErrorMessage } from "../infra/errors.js";
 import { serveOriroChannelMcp } from "../mcp/channel-server.js";
 import { defaultRuntime } from "../runtime.js";
-import { createInterface } from "node:readline/promises";
-import { stdin as procStdin, stdout as procStdout } from "node:process";
-import { vetMcpServer, readGuardianConfig, writeGuardianConfig } from "../guardian/index.js";
 import { formatCliCommand } from "./command-format.js";
 import { resolveGatewayAuthOptions } from "./gateway-secret-options.js";
 import { applyParentDefaultHelpAction } from "./program/parent-default-help.js";
@@ -567,16 +564,16 @@ async function probeMcpServersOrFail(params: {
 }
 
 const ORIRO_MCP_REGISTRY_SCOPE_NOTE =
-  "Note: this command only shows Oriro-managed mcp.servers entries and does not include mcporter servers from config/mcporter.json.";
+  "Note: this command only shows ORIRO-managed mcp.servers entries and does not include mcporter servers from config/mcporter.json.";
 
 export function registerMcpCli(program: Command) {
   const mcp = program
     .command("mcp")
-    .description("Manage Oriro mcp.servers config and channel bridge");
+    .description("Manage ORIRO mcp.servers config and channel bridge");
 
   mcp
     .command("serve")
-    .description("Expose Oriro channels over MCP stdio")
+    .description("Expose ORIRO channels over MCP stdio")
     .option("--url <url>", "Gateway WebSocket URL (defaults to gateway.remote.url when configured)")
     .option("--token <token>", "Gateway token (if required)")
     .option("--token-file <path>", "Read gateway token from file")
@@ -618,7 +615,7 @@ export function registerMcpCli(program: Command) {
 
   mcp
     .command("list")
-    .description("List Oriro-managed MCP servers from mcp.servers")
+    .description("List ORIRO-managed MCP servers from mcp.servers")
     .option("--json", "Print JSON")
     .action(async (opts: { json?: boolean }) => {
       const loaded = await listConfiguredMcpServers();
@@ -632,12 +629,12 @@ export function registerMcpCli(program: Command) {
       const names = Object.keys(loaded.mcpServers).toSorted();
       if (names.length === 0) {
         defaultRuntime.log(
-          `No Oriro-managed MCP servers configured in ${loaded.path}. Add one with ${formatCliCommand('oriro mcp set <name> \'{"command":"uvx","args":["context7-mcp"]}\'')}.`,
+          `No ORIRO-managed MCP servers configured in ${loaded.path}. Add one with ${formatCliCommand('oriro mcp set <name> \'{"command":"uvx","args":["context7-mcp"]}\'')}.`,
         );
         defaultRuntime.log(ORIRO_MCP_REGISTRY_SCOPE_NOTE);
         return;
       }
-      defaultRuntime.log(`Oriro-managed MCP servers (${loaded.path}):`);
+      defaultRuntime.log(`ORIRO-managed MCP servers (${loaded.path}):`);
       for (const name of names) {
         defaultRuntime.log(`- ${name}`);
       }
@@ -647,7 +644,7 @@ export function registerMcpCli(program: Command) {
 
   mcp
     .command("show")
-    .description("Show one Oriro-managed MCP server or the full mcp.servers config")
+    .description("Show one ORIRO-managed MCP server or the full mcp.servers config")
     .argument("[name]", "MCP server name")
     .option("--json", "Print JSON")
     .action(async (name: string | undefined, opts: { json?: boolean }) => {
@@ -666,9 +663,9 @@ export function registerMcpCli(program: Command) {
         return;
       }
       if (name) {
-        defaultRuntime.log(`Oriro-managed MCP server "${name}" (${loaded.path}):`);
+        defaultRuntime.log(`ORIRO-managed MCP server "${name}" (${loaded.path}):`);
       } else {
-        defaultRuntime.log(`Oriro-managed MCP servers (${loaded.path}):`);
+        defaultRuntime.log(`ORIRO-managed MCP servers (${loaded.path}):`);
       }
       printJson(value ?? {});
     });
@@ -993,83 +990,8 @@ export function registerMcpCli(program: Command) {
     );
 
   mcp
-    .command("setup")
-    .description("Add an MCP server by answering a few questions — no JSON, Guardian-vetted")
-    .argument("[name]", "MCP server name (you'll be asked if omitted)")
-    .action(async (nameArg: string | undefined) => {
-      const C = { teal: "\x1b[38;2;34;184;166m", purple: "\x1b[38;2;155;93;229m", dim: "\x1b[2m", bold: "\x1b[1m", reset: "\x1b[0m" };
-      const rl = createInterface({ input: procStdin, output: procStdout });
-      const ask = async (q: string, def = ""): Promise<string> =>
-        (await rl.question(`  ${C.teal}›${C.reset} ${q}${def ? ` ${C.dim}(${def})${C.reset}` : ""} `)).trim() || def;
-      try {
-        procStdout.write(`\n  ${C.teal}◯${C.reset} ${C.bold}Add an MCP server${C.reset} ${C.dim}— I'll ask, you answer. No JSON.${C.reset}\n\n`);
-        const name = (nameArg || (await ask("Name for this server (e.g. github, filesystem):"))).trim();
-        if (!name) { fail("A server name is required."); return; }
-
-        const kind = (await ask("Is it a local command or a web URL? [c/w]:", "c")).toLowerCase();
-        const server: Record<string, unknown> = {};
-        if (kind.startsWith("w")) {
-          server.url = await ask("Server URL (https://…):");
-          if (!server.url) { fail("A URL is required for a web MCP server."); return; }
-          const transport = await ask("Transport — streamable-http or sse [enter to auto]:", "");
-          if (transport) server.transport = transport;
-          if ((await ask("Does it need OAuth login? [y/N]:", "n")).toLowerCase().startsWith("y")) server.auth = "oauth";
-        } else {
-          server.command = await ask("Command to run (e.g. npx, uvx, python):");
-          if (!server.command) { fail("A command is required for a local MCP server."); return; }
-          const argsLine = await ask("Arguments (space-separated, e.g. -y @modelcontextprotocol/server-filesystem .):", "");
-          if (argsLine) server.args = argsLine.split(/\s+/).filter(Boolean);
-          const envLine = await ask("Env vars (k=v, comma-separated) [enter for none]:", "");
-          if (envLine) {
-            const env: Record<string, string> = {};
-            for (const pair of envLine.split(",")) {
-              const i = pair.indexOf("=");
-              if (i > 0) env[pair.slice(0, i).trim()] = pair.slice(i + 1).trim();
-            }
-            if (Object.keys(env).length) server.env = env;
-          }
-        }
-
-        // ── Guardian companion: vet the server before it's ever saved or run. ──
-        const verdict = vetMcpServer(name, server);
-        if (verdict.decision === "block") {
-          procStdout.write(`\n  ${C.bold}🛡 ORIRO Guardian blocked this server.${C.reset}\n  ${C.dim}${verdict.reason} [${verdict.rule}]${C.reset}\n  Not saved.\n\n`);
-          return;
-        }
-        if (verdict.decision === "ask") {
-          procStdout.write(`\n  🛡 ${C.bold}Guardian:${C.reset} ${verdict.reason} ${C.dim}[${verdict.rule}]${C.reset}\n`);
-          const ok = (await ask(`  Trust and add "${name}"? [y/N]:`, "n")).toLowerCase().startsWith("y");
-          if (!ok) { procStdout.write("  Cancelled — nothing saved.\n\n"); return; }
-          // Remember the choice so Guardian doesn't re-flag this server every call.
-          const cfg = readGuardianConfig();
-          if (!cfg.trustedServers.includes(name)) {
-            cfg.trustedServers.push(name);
-            writeGuardianConfig(cfg);
-          }
-        }
-
-        const loaded = await listConfiguredMcpServers();
-        if (!loaded.ok) { fail(loaded.error); return; }
-        const shouldProbe = server.auth !== "oauth";
-        if (shouldProbe) {
-          procStdout.write(`  ${C.dim}Probing ${name}…${C.reset}\n`);
-          await probeMcpServersOrFail({ config: loaded.config, path: loaded.path, servers: { [name]: server } });
-        }
-        const result = await setConfiguredMcpServer({ name, server });
-        if (!result.ok) { fail(result.error); return; }
-        procStdout.write(`\n  ${C.teal}◯${C.reset} Saved MCP server ${C.bold}${name}${C.reset} to ${result.path}.\n`);
-        if (server.auth === "oauth") {
-          procStdout.write(`  Run ${formatCliCommand(`oriro mcp login ${name}`)} to authorize it.\n`);
-        }
-        procStdout.write("\n");
-      } finally {
-        rl.close();
-      }
-    });
-
-  mcp
     .command("set")
-    .description("Set one Oriro-managed MCP server from a JSON object")
+    .description("Set one ORIRO-managed MCP server from a JSON object")
     .argument("<name>", "MCP server name")
     .argument("<value>", 'JSON object, for example {"command":"uvx","args":["context7-mcp"]}')
     .action(async (name: string, rawValue: string) => {
@@ -1395,7 +1317,7 @@ export function registerMcpCli(program: Command) {
 
   mcp
     .command("unset")
-    .description("Remove one Oriro-managed MCP server")
+    .description("Remove one ORIRO-managed MCP server")
     .argument("<name>", "MCP server name")
     .action(async (name: string) => {
       const loaded = await listConfiguredMcpServers();

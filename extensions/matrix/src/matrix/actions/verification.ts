@@ -204,7 +204,7 @@ async function cancelMatrixSelfVerificationOnFailure(params: {
   }
   await params.crypto
     .cancelVerification(params.request.id, {
-      reason: "Oriro self-verification did not complete",
+      reason: "ORIRO self-verification did not complete",
       code: "m.user",
     })
     .catch(() => undefined);

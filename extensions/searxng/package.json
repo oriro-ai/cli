@@ -1,8 +1,8 @@
 {
   "name": "@oriro/searxng-plugin",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro SearXNG plugin",
+  "description": "ORIRO SearXNG plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

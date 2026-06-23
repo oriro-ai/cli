@@ -19,103 +19,7 @@ export type SkillsListOptions = {
   json?: boolean;
   eligible?: boolean;
   verbose?: boolean;
-  /** Group the listing under category headings (category = the bundled skill's folder). */
-  byCategory?: boolean;
 };
-
-/**
- * Category for a skill = the folder it sits in under the bundled `skills/` tree
- * (`<bundledDir>/<category>/<skill>/SKILL.md`). Path-separator agnostic so it works
- * on Windows + POSIX. Non-bundled (workspace/installed) skills group under "installed".
- */
-export function categoryOf(skill: SkillStatusEntry): string {
-  if (!skill.bundled) {
-    return "installed";
-  }
-  const parts = (skill.filePath || "").split(/[\\/]+/).filter(Boolean);
-  const idx = parts.lastIndexOf("skills");
-  if (idx >= 0 && parts.length >= idx + 3) {
-    return parts[idx + 1] ?? "uncategorized";
-  }
-  // Fallback: grandparent folder of SKILL.md (…/<category>/<skill>/SKILL.md).
-  return parts.length >= 3 ? (parts[parts.length - 3] ?? "uncategorized") : "uncategorized";
-}
-
-/** "mental-health" -> "Mental Health" for category headings. */
-function categoryHeading(category: string): string {
-  return category
-    .split(/[-_]+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
-
-/**
- * Normalize a category token for case/separator-insensitive matching so
- * `enable Mental Health`, `enable mental-health`, and `enable mental_health`
- * all resolve to the same bundled folder.
- */
-export function normalizeCategoryKey(input: string): string {
-  return input
-    .trim()
-    .toLowerCase()
-    .replace(/[\s_]+/g, "-");
-}
-
-/** All distinct categories present in the skill set, sorted for display. */
-export function availableCategories(skills: readonly SkillStatusEntry[]): string[] {
-  const set = new Set<string>();
-  for (const skill of skills) {
-    set.add(categoryOf(skill));
-  }
-  return [...set].sort((a, b) => a.localeCompare(b));
-}
-
-/** Skills whose category matches the requested token (case/separator-insensitive). */
-export function skillsInCategory(
-  skills: readonly SkillStatusEntry[],
-  category: string,
-): SkillStatusEntry[] {
-  const want = normalizeCategoryKey(category);
-  return skills.filter((skill) => normalizeCategoryKey(categoryOf(skill)) === want);
-}
-
-/** Render the skills grouped under category headings (one table per category). */
-function renderSkillsByCategory(skills: SkillStatusEntry[]): string {
-  const groups = new Map<string, SkillStatusEntry[]>();
-  for (const skill of skills) {
-    const category = categoryOf(skill);
-    const bucket = groups.get(category);
-    if (bucket) {
-      bucket.push(skill);
-    } else {
-      groups.set(category, [skill]);
-    }
-  }
-  const tableWidth = getTerminalTableWidth();
-  const lines: string[] = [];
-  for (const category of [...groups.keys()].sort((a, b) => a.localeCompare(b))) {
-    const items = (groups.get(category) ?? []).sort((a, b) => a.name.localeCompare(b.name));
-    lines.push("");
-    lines.push(`${theme.heading(categoryHeading(category))} ${theme.muted(`(${items.length})`)}`);
-    lines.push(
-      renderTable({
-        width: tableWidth,
-        columns: [
-          { key: "Status", header: "Status", minWidth: 10 },
-          { key: "Skill", header: "Skill", minWidth: 22 },
-          { key: "Description", header: "Description", minWidth: 24, flex: true },
-        ],
-        rows: items.map((skill) => ({
-          Status: formatSkillStatus(skill),
-          Skill: formatSkillName(skill),
-          Description: theme.muted(skill.description),
-        })),
-      }).trimEnd(),
-    );
-  }
-  return lines.join("\n");
-}
 
 /** Options for rendering one skill detail view. */
 export type SkillInfoOptions = {
@@ -249,12 +153,6 @@ export function formatSkillsList(report: SkillStatusReport, opts: SkillsListOpti
   }
 
   const ready = skills.filter(isReadyForAgent);
-
-  if (opts.byCategory) {
-    const header = `${theme.heading("Skills")} ${theme.muted(`(${ready.length}/${skills.length} ready)`)}`;
-    return appendOriroHubHint(`${header}\n${renderSkillsByCategory(skills)}`, opts.json);
-  }
-
   const tableWidth = getTerminalTableWidth();
   const rows = skills.map((skill) => {
     const missing = formatSkillMissingSummary(skill);
@@ -429,7 +327,7 @@ export function formatSkillInfo(
       `  Save via CLI: ${formatCliCommand(`oriro config set skills.entries.${safeSkillKey}.apiKey YOUR_KEY`)}`,
     );
     lines.push(
-      `  Stored in: ${theme.muted("$ORIRO_CONFIG_PATH")} ${theme.muted("(default: ~/.oriro-ai/cli.json)")}`,
+      `  Stored in: ${theme.muted("$ORIRO_CONFIG_PATH")} ${theme.muted("(default: ~/.oriro/oriro.json)")}`,
     );
   }
 

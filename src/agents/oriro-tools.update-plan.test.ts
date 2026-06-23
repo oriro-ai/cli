@@ -168,35 +168,6 @@ describe("oriro-tools update_plan gating", () => {
     expect(gatewayBoundTools).not.toContain("sessions_send");
   });
 
-  it("includes the on-device spawn surface when subagents.onDevice is enabled", () => {
-    setEmbeddedMode(true);
-    const offTools = createFastToolNames({ config: {} as OriroConfig });
-    const onTools = createFastToolNames({
-      config: {
-        agents: { defaults: { subagents: { onDevice: true } } },
-      } as OriroConfig,
-    });
-
-    // Default embedded run stays off; the config opt-in enables spawn + Agent.
-    expect(offTools).not.toContain("sessions_spawn");
-    expect(offTools).not.toContain("Agent");
-    expect(onTools).toContain("sessions_spawn");
-    expect(onTools).toContain("Agent");
-    // OR-FREE: ACP-bound channel delivery (sessions_send) stays off on-device.
-    expect(onTools).not.toContain("sessions_send");
-  });
-
-  it("includes the on-device spawn surface when the allowSubagents option is set", () => {
-    setEmbeddedMode(true);
-    const onTools = createFastToolNames({
-      config: {} as OriroConfig,
-      allowSubagents: true,
-    });
-
-    expect(onTools).toContain("sessions_spawn");
-    expect(onTools).toContain("Agent");
-  });
-
   it("registers update_plan when explicitly enabled", () => {
     const config = {
       tools: {

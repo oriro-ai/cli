@@ -580,6 +580,15 @@ EOF
 }
 
 run_pnpm() {
+  if [[ ${#PNPM_CMD[@]} -eq 2 && "${PNPM_CMD[1]}" == "pnpm" ]] && [[ "${1:-}" == "-C" && -n "${2:-}" ]]; then
+    local repo_dir="$2"
+    shift 2
+    if ! (cd "$repo_dir" && "${PNPM_CMD[@]}" --version >/dev/null 2>&1); then
+      ensure_pnpm
+    fi
+    (cd "$repo_dir" && "${PNPM_CMD[@]}" "$@")
+    return
+  fi
   if ! pnpm_cmd_is_ready; then
     ensure_pnpm
   fi
@@ -739,6 +748,10 @@ activate_repo_pnpm_version() {
   if [[ -n "$corepack_cmd" ]]; then
     log "Activating repo pnpm ${version}"
     "$corepack_cmd" prepare "pnpm@${version}" --activate >/dev/null 2>&1 || true
+    if [[ "$(cd "$repo_dir" && "$corepack_cmd" pnpm --version 2>/dev/null || true)" == "$version" ]]; then
+      set_pnpm_cmd "$corepack_cmd" pnpm
+      return 0
+    fi
     detect_pnpm_cmd || true
   fi
 }
@@ -953,7 +966,7 @@ npm_config_has_raw_key() {
 install_oriro() {
   local requested="${ORIRO_VERSION:-latest}"
   if is_oriro_source_package_install_spec "$requested"; then
-    fail "npm installs do not support Oriro GitHub source targets like '${requested}'. Use --install-method git --version main, latest, beta, an exact version, or a built .tgz package."
+    fail "npm installs do not support ORIRO GitHub source targets like '${requested}'. Use --install-method git --version main, latest, beta, an exact version, or a built .tgz package."
   fi
   local freshness_flag="--min-release-age=0"
   local min_release_age=""
@@ -974,7 +987,7 @@ install_oriro() {
     "$freshness_flag"
   )
   emit_json "{\"event\":\"step\",\"name\":\"oriro\",\"status\":\"start\",\"version\":\"${requested}\"}"
-  log "Installing Oriro (${requested})..."
+  log "Installing ORIRO (${requested})..."
   if [[ "$SET_NPM_PREFIX" -eq 1 ]]; then
     fix_npm_prefix_if_needed
   fi
@@ -1047,9 +1060,9 @@ install_oriro_from_git() {
 
   emit_json "{\"event\":\"step\",\"name\":\"oriro\",\"status\":\"start\",\"method\":\"git\",\"repo\":\"${repo_url//\"/\\\"}\"}"
   if [[ -d "$repo_dir/.git" ]]; then
-    log "Installing Oriro from git checkout: ${repo_dir}"
+    log "Installing ORIRO from git checkout: ${repo_dir}"
   else
-    log "Installing Oriro from GitHub (${repo_url})..."
+    log "Installing ORIRO from GitHub (${repo_url})..."
   fi
 
   ensure_git
@@ -1194,10 +1207,10 @@ main() {
   installed_version="$(resolve_oriro_version)"
   if [[ -n "$installed_version" ]]; then
     emit_json "{\"event\":\"done\",\"ok\":true,\"version\":\"${installed_version//\"/\\\"}\"}"
-    log "Oriro installed (${installed_version})."
+    log "ORIRO installed (${installed_version})."
   else
     emit_json "{\"event\":\"done\",\"ok\":true}"
-    log "Oriro installed."
+    log "ORIRO installed."
   fi
 
   if [[ "$RUN_ONBOARD" -eq 1 ]]; then

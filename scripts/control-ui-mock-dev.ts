@@ -383,7 +383,7 @@ function createChatPickerScenario(): ControlUiMockGatewayScenario {
       sessionKey: "agent:alpha",
     },
   }));
-  const oriroSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+  const lobsterSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
   <rect width="640" height="360" fill="#10151d"/>
   <circle cx="320" cy="185" r="76" fill="#e23f3f"/>
   <ellipse cx="250" cy="178" rx="54" ry="38" fill="#f05a52"/>
@@ -395,12 +395,12 @@ function createChatPickerScenario(): ControlUiMockGatewayScenario {
   <path d="M232 246c-45 28-91 35-142 23M408 246c45 28 91 35 142 23" fill="none" stroke="#e14b47" stroke-width="16" stroke-linecap="round"/>
   <text x="320" y="326" text-anchor="middle" font-family="ui-sans-serif, system-ui" font-size="24" fill="#f6f7f9">oriro session artifact</text>
 </svg>`;
-  const oriroArtifact = {
-    id: "artifact-oriro-oriro",
+  const lobsterArtifact = {
+    id: "artifact-oriro-lobster",
     type: "image",
-    title: "oriro-oriro-preview.svg",
+    title: "oriro-lobster-preview.svg",
     mimeType: "image/svg+xml",
-    sizeBytes: Buffer.byteLength(oriroSvg, "utf8"),
+    sizeBytes: Buffer.byteLength(lobsterSvg, "utf8"),
     source: "session-transcript",
     download: { mode: "bytes" },
   };
@@ -429,7 +429,7 @@ function createChatPickerScenario(): ControlUiMockGatewayScenario {
   });
   return {
     assistantAgentId: "oriro-mock",
-    assistantName: "Oriro mock",
+    assistantName: "ORIRO mock",
     defaultAgentId: "oriro-mock",
     historyMessages: buildScrollableChatHistory(baseTime),
     methodResponses: {
@@ -508,17 +508,17 @@ function createChatPickerScenario(): ControlUiMockGatewayScenario {
         cases: [
           {
             match: { sessionKey: "agent:alpha" },
-            response: { artifacts: [oriroArtifact] },
+            response: { artifacts: [lobsterArtifact] },
           },
         ],
       },
       "artifacts.download": {
         cases: [
           {
-            match: { sessionKey: "agent:alpha", artifactId: oriroArtifact.id },
+            match: { sessionKey: "agent:alpha", artifactId: lobsterArtifact.id },
             response: {
-              artifact: oriroArtifact,
-              data: Buffer.from(oriroSvg, "utf8").toString("base64"),
+              artifact: lobsterArtifact,
+              data: Buffer.from(lobsterSvg, "utf8").toString("base64"),
               encoding: "base64",
             },
           },

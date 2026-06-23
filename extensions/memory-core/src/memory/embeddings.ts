@@ -43,7 +43,7 @@ function createMissingLlamaCppProviderError(): Error {
       "Unknown memory embedding provider: local.",
       "Local GGUF embeddings are provided by the official llama.cpp provider plugin.",
       "Install it with: oriro plugins install @oriro/llama-cpp-provider",
-      "Then restart Oriro and retry: oriro memory status --deep",
+      "Then restart ORIRO and retry: oriro memory status --deep",
     ].join("\n"),
   );
 }

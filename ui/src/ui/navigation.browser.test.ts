@@ -168,7 +168,7 @@ describe("control UI routing", () => {
 
     expect(app.tab).toBe("dreams");
     expectElement(app, ".dreams__tab", HTMLElement);
-    expectElement(app, ".dreams__oriro", HTMLElement);
+    expectElement(app, ".dreams__lobster", HTMLElement);
   });
 
   it("requires confirmation before sending dreaming restart patch", async () => {

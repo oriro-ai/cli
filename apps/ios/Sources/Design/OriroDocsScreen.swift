@@ -94,7 +94,7 @@ struct OriroDocsScreen: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 8)
-                Text("v\(DeviceInfoHelper.oriroVersionString())")
+                Text("v\(DeviceInfoHelper.openOriroVersionString())")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(.primary)
                     .textSelection(.enabled)

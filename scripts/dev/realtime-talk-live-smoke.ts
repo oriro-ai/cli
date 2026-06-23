@@ -277,7 +277,7 @@ async function smokeOpenAIBackendBridge(apiKey: string): Promise<SmokeResult> {
       model: OPENAI_REALTIME_MODEL,
       voice: OPENAI_REALTIME_VOICE,
     },
-    instructions: "Oriro backend realtime live smoke. Do not speak yet.",
+    instructions: "ORIRO backend realtime live smoke. Do not speak yet.",
     onAudio: () => {},
     onClearAudio: () => {},
     onEvent: (event) => {
@@ -464,7 +464,7 @@ async function createGoogleLiveToken(apiKey: string): Promise<string> {
               prebuiltVoiceConfig: { voiceName: GOOGLE_REALTIME_VOICE },
             },
           },
-          systemInstruction: "Oriro browser Talk live smoke.",
+          systemInstruction: "ORIRO browser Talk live smoke.",
           inputAudioTranscription: {},
           outputAudioTranscription: {},
         },

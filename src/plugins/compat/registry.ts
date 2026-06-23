@@ -766,7 +766,7 @@ export const PLUGIN_COMPAT_RECORDS = [
     tests: ["src/plugin-sdk/command-auth.test.ts"],
   },
   {
-    code: "clawdbot-config-type-alias",
+    code: "oriro-config-type-alias",
     status: "deprecated",
     owner: "sdk",
     introduced: "2026-04-24",
@@ -775,7 +775,7 @@ export const PLUGIN_COMPAT_RECORDS = [
     removeAfter: "2026-07-26",
     replacement: "`OriroConfig`",
     docsPath: "/plugins/sdk-migration",
-    surfaces: ["oriro/plugin-sdk `ClawdbotConfig` type export"],
+    surfaces: ["oriro/plugin-sdk `OriroConfig` type export"],
     diagnostics: ["plugin SDK compatibility warning"],
     tests: ["src/plugins/contracts/plugin-sdk-index.test.ts"],
   },

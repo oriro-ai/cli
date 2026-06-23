@@ -16,7 +16,7 @@ import { dispatchDiscordComponentEvent } from "./agent-components.dispatch.js";
 import { dispatchPluginDiscordInteractiveEvent } from "./agent-components.plugin-interactive.js";
 
 export class DiscordComponentModal extends Modal {
-  override title = "Oriro form";
+  override title = "ORIRO form";
   override customId = "__oriro_discord_component_modal_wildcard__";
   override components = [];
   override customIdParser = parseDiscordModalCustomIdForInteraction;

@@ -16,6 +16,7 @@ import {
   resolveGatewayRestartLogPath,
   shellEscapeRestartLogValue,
 } from "../../daemon/restart-logs.js";
+import { getWindowsCmdExePath } from "../../infra/windows-install-roots.js";
 
 /**
  * Shell-escape a string for embedding in single-quoted shell arguments.
@@ -158,7 +159,7 @@ if [ "$status" -eq 0 ]; then
 else
   printf '[%s] oriro restart failed source=update status=%s\\n' "$(date -u +%FT%TZ)" "$status" >&2
 fi
-# Self-cleanup (log is retained under the Oriro state logs directory).
+# Self-cleanup (log is retained under the ORIRO state logs directory).
 script_dir=$(dirname "$0")
 rm -f "$0"
 rmdir "$script_dir" 2>/dev/null || true
@@ -404,7 +405,7 @@ exit $status
  */
 export async function runRestartScript(scriptPath: string): Promise<void> {
   const isWindows = process.platform === "win32";
-  const file = isWindows ? "cmd.exe" : "/bin/sh";
+  const file = isWindows ? getWindowsCmdExePath() : "/bin/sh";
   const args = isWindows ? ["/d", "/s", "/c", quoteCmdScriptArg(scriptPath)] : [scriptPath];
 
   try {

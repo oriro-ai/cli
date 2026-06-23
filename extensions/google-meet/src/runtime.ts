@@ -166,7 +166,7 @@ function evaluateSpeechReadiness(session: GoogleMeetSession): {
       reason: health.manualActionReason ?? "browser-unverified",
       message:
         health.manualActionMessage ??
-        "Resolve the Google Meet browser prompt before asking Oriro to speak.",
+        "Resolve the Google Meet browser prompt before asking ORIRO to speak.",
     };
   }
   if (health?.inCall === true) {
@@ -174,7 +174,7 @@ function evaluateSpeechReadiness(session: GoogleMeetSession): {
       return {
         ready: false,
         reason: "meet-microphone-muted",
-        message: "Turn on the Oriro Google Meet microphone before asking Oriro to speak.",
+        message: "Turn on the ORIRO Google Meet microphone before asking ORIRO to speak.",
       };
     }
     if (session.chrome.audioBridge) {

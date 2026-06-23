@@ -123,7 +123,7 @@ function parseFlagValue(flag: string, argv: string[]): string | undefined {
     return undefined;
   }
   const value = argv[index + 1];
-  if (!value || value.startsWith("--")) {
+  if (!value || value.startsWith("-")) {
     throw new CliUsageError(`${flag} requires a value`);
   }
   return value;
@@ -141,7 +141,7 @@ function validateArgs(argv: string[]): void {
     }
     if (VALUE_FLAGS.has(arg)) {
       const value = argv[index + 1];
-      if (!value || value.startsWith("--")) {
+      if (!value || value.startsWith("-")) {
         throw new CliUsageError(`${arg} requires a value`);
       }
       index += 1;
@@ -195,7 +195,7 @@ function applyScale(config: ProfileConfig): ProfileConfig {
 }
 
 function printUsage(): void {
-  console.log(`Oriro SQLite state benchmark
+  console.log(`ORIRO SQLite state benchmark
 
 Usage:
   node --import tsx scripts/bench-sqlite-state.ts [options]

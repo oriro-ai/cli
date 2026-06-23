@@ -1,7 +1,7 @@
 // Feishu API module exposes the plugin public contract.
 export {
   createReplyPrefixContext,
-  type ClawdbotConfig,
+  type OriroConfig,
   type OutboundIdentity,
   type ReplyPayload,
   type RuntimeEnv,

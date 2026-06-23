@@ -60,7 +60,7 @@ describe("noteSessionLockHealth", () => {
     await noteSessionLockHealth({
       shouldRepair: false,
       staleMs: 60_000,
-      readOwnerProcessArgs: () => ["node", "/opt/oriro-ai/cli.mjs", "doctor"],
+      readOwnerProcessArgs: () => ["node", "/opt/oriro/oriro.mjs", "doctor"],
     });
 
     expect(note).toHaveBeenCalledTimes(1);
@@ -93,7 +93,7 @@ describe("noteSessionLockHealth", () => {
     await noteSessionLockHealth({
       shouldRepair: true,
       staleMs: 30_000,
-      readOwnerProcessArgs: () => ["node", "/opt/oriro-ai/cli.mjs", "doctor"],
+      readOwnerProcessArgs: () => ["node", "/opt/oriro/oriro.mjs", "doctor"],
     });
 
     expect(note).toHaveBeenCalledTimes(1);
@@ -119,7 +119,7 @@ describe("noteSessionLockHealth", () => {
     await noteSessionLockHealth({
       shouldRepair: true,
       config: { session: { writeLock: { staleMs: 30_000 } } },
-      readOwnerProcessArgs: () => ["node", "/opt/oriro-ai/cli.mjs", "doctor"],
+      readOwnerProcessArgs: () => ["node", "/opt/oriro/oriro.mjs", "doctor"],
     });
 
     expect(note).toHaveBeenCalledTimes(1);

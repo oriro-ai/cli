@@ -2,7 +2,7 @@
 // Synchronizes GitHub label colors to the Oriro taxonomy policy.
 import { execFileSync } from "node:child_process";
 
-const REPO = "oriro-ai/cli";
+const REPO = "oriro/oriro";
 const APPLY = process.argv.includes("--apply");
 
 const COLORS = {
@@ -47,7 +47,7 @@ const EXACT_COLORS = new Map(
     P2: COLORS.saturatedAmber,
     P3: COLORS.mutedGreen,
     "rating: 🦀 challenger crab": "1F883D",
-    "rating: ORIRO diamond oriro": "0969DA",
+    "rating: 🦞 diamond lobster": "0969DA",
     "rating: 🐚 platinum hermit": "0F766E",
     "rating: 🦐 gold shrimp": "B7791F",
     "rating: 🦪 silver shellfish": "7A828E",

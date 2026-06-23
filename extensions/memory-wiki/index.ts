@@ -24,7 +24,7 @@ import {
 export default definePluginEntry({
   id: "memory-wiki",
   name: "Memory Wiki",
-  description: "Persistent wiki compiler and Obsidian-friendly knowledge vault for Oriro.",
+  description: "Persistent wiki compiler and Obsidian-friendly knowledge vault for ORIRO.",
   configSchema: memoryWikiConfigSchema,
   register(api) {
     const config = resolveMemoryWikiConfig(api.pluginConfig);

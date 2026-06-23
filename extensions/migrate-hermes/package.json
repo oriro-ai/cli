@@ -1,18 +1,18 @@
 {
   "name": "@oriro/migrate-hermes",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Hermes to Oriro migration provider",
+  "description": "Hermes to ORIRO migration provider",
   "type": "module",
   "dependencies": {
     "yaml": "2.9.0"
   },
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*",
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.6.8"
+    "oriro": "workspace:*"
   },
   "peerDependenciesMeta": {
     "oriro": {

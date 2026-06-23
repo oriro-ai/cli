@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 export const FORBIDDEN_CHANGELOG_THANKS_HANDLES = [
   "codex",
   "oriro",
-  "steipete",
+  "oriro",
   "orirosweeper",
   "oriro-orirosweeper",
   "orirosweeper[bot]",

@@ -16,7 +16,7 @@ services:
       # imported from .env caused first-reply `mkdir '/Users'` EACCES failures
       # in Linux Docker (#77436).
       ORIRO_STATE_DIR: /home/node/.oriro
-      ORIRO_CONFIG_PATH: /home/node/.oriro-ai/cli.json
+      ORIRO_CONFIG_PATH: /home/node/.oriro/oriro.json
       ORIRO_CONFIG_DIR: /home/node/.oriro
       ORIRO_WORKSPACE_DIR: /home/node/.oriro/workspace
       ORIRO_GATEWAY_TOKEN: ${ORIRO_GATEWAY_TOKEN:-}
@@ -107,7 +107,7 @@ services:
       # Pin container-side state, workspace, and config paths so host values written to
       # `.env` cannot leak into runtime code via the env_file import (#77436).
       ORIRO_STATE_DIR: /home/node/.oriro
-      ORIRO_CONFIG_PATH: /home/node/.oriro-ai/cli.json
+      ORIRO_CONFIG_PATH: /home/node/.oriro/oriro.json
       ORIRO_CONFIG_DIR: /home/node/.oriro
       ORIRO_WORKSPACE_DIR: /home/node/.oriro/workspace
       ORIRO_GATEWAY_TOKEN: ${ORIRO_GATEWAY_TOKEN:-}

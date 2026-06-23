@@ -363,9 +363,9 @@ export async function buildAuthItems(params: {
         id: "manual:legacy-hermes-auth-json",
         source: params.source.authPath ?? "auth.json",
         message:
-          "Hermes auth.json contains legacy OAuth credentials. Oriro no longer imports those into live auth during Hermes migration.",
+          "Hermes auth.json contains legacy OAuth credentials. ORIRO no longer imports those into live auth during Hermes migration.",
         recommendation:
-          "Run oriro models auth login --provider openai after migration, or run oriro doctor --fix for existing Oriro legacy auth state.",
+          "Run oriro models auth login --provider openai after migration, or run oriro doctor --fix for existing ORIRO legacy auth state.",
       }),
     );
   }

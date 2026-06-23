@@ -81,7 +81,7 @@ export async function assertBlackHole2chAvailable(params: {
     throw new Error(
       [
         "BlackHole 2ch audio device not found.",
-        "Install BlackHole 2ch and route Chrome input/output through the Oriro audio bridge.",
+        "Install BlackHole 2ch and route Chrome input/output through the ORIRO audio bridge.",
         hint,
       ]
         .filter(Boolean)
@@ -139,7 +139,7 @@ export async function launchChromeMeet(params: {
     if (params.config.chrome.audioBridgeCommand) {
       if (params.mode === "agent") {
         throw new Error(
-          "Chrome agent mode requires chrome.audioInputCommand and chrome.audioOutputCommand so Oriro can run STT and regular TTS directly.",
+          "Chrome agent mode requires chrome.audioInputCommand and chrome.audioOutputCommand so ORIRO can run STT and regular TTS directly.",
         );
       }
       const bridge = await params.runtime.system.runCommandWithTimeout(
@@ -588,20 +588,20 @@ function meetStatusScript(params: {
   let manualActionMessage;
   if (!inCall && (host === "accounts.google.com" || /use your google account|to continue to google meet|choose an account|sign in to (join|continue)/i.test(pageText))) {
     manualActionReason = "google-login-required";
-    manualActionMessage = "Sign in to Google in the Oriro browser profile, then retry the Meet join.";
+    manualActionMessage = "Sign in to Google in the ORIRO browser profile, then retry the Meet join.";
   } else if (!inCall && /asking to be let in|you.?ll join when someone lets you in|waiting to be let in|ask to join/i.test(pageText)) {
     manualActionReason = "meet-admission-required";
-    manualActionMessage = "Admit the Oriro browser participant in Google Meet, then retry speech.";
+    manualActionMessage = "Admit the ORIRO browser participant in Google Meet, then retry speech.";
   } else if (permissionNeeded) {
     manualActionReason = "meet-permission-required";
     manualActionMessage = allowMicrophone
-      ? "Allow microphone/camera/speaker permissions for Meet in the Oriro browser profile, then retry."
-      : "Join without microphone/camera permissions in the Oriro browser profile, then retry.";
+      ? "Allow microphone/camera/speaker permissions for Meet in the ORIRO browser profile, then retry."
+      : "Join without microphone/camera permissions in the ORIRO browser profile, then retry.";
   } else if (!inCall && (allowMicrophone ? !microphoneChoice : !noMicrophoneChoice) && /do you want people to hear you in the meeting/i.test(pageText)) {
     manualActionReason = "meet-audio-choice-required";
     manualActionMessage = allowMicrophone
-      ? "Meet is showing the microphone choice. Click Use microphone in the Oriro browser profile, then retry."
-      : "Meet is showing the microphone choice. Choose the no-microphone option in the Oriro browser profile, then retry.";
+      ? "Meet is showing the microphone choice. Click Use microphone in the ORIRO browser profile, then retry."
+      : "Meet is showing the microphone choice. Choose the no-microphone option in the ORIRO browser profile, then retry.";
   }
   return JSON.stringify({
     clickedJoin: Boolean(join),
@@ -755,7 +755,7 @@ async function openMeetWithBrowserRequest(params: {
         manualActionRequired: true,
         manualActionReason: "browser-control-unavailable",
         manualActionMessage:
-          "Open the Oriro browser profile, finish Google Meet login, admission, or permission prompts, then retry.",
+          "Open the ORIRO browser profile, finish Google Meet login, admission, or permission prompts, then retry.",
         notes: [
           ...permissionNotes,
           `Browser control could not inspect or auto-join Meet: ${

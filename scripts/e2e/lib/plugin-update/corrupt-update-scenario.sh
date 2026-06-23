@@ -19,7 +19,7 @@ export ORIRO_NO_PROMPT=1
 
 baseline="${ORIRO_UPDATE_CORRUPT_PLUGIN_BASELINE:-oriro@latest}"
 update_timeout_seconds="$(oriro_e2e_read_positive_int_env ORIRO_UPDATE_CORRUPT_PLUGIN_TIMEOUT_SECONDS 900)"
-echo "Installing baseline Oriro package: $baseline"
+echo "Installing baseline ORIRO package: $baseline"
 if ! oriro_e2e_maybe_timeout "${ORIRO_E2E_NPM_INSTALL_TIMEOUT:-600s}" npm install -g --prefix /tmp/npm-prefix --omit=optional "$baseline" >/tmp/oriro-update-corrupt-baseline-install.log 2>&1; then
   oriro_e2e_print_log /tmp/oriro-update-corrupt-baseline-install.log >&2
   exit 1
@@ -56,7 +56,7 @@ if [ -f "$plugin_dir/package.json" ]; then
   exit 1
 fi
 
-echo "Updating Oriro with corrupt plugin present..."
+echo "Updating ORIRO with corrupt plugin present..."
 set +e
 oriro_e2e_maybe_timeout "${update_timeout_seconds}s" \
   node "$entry" update \
@@ -91,7 +91,7 @@ if [ "$update_status" -ne 0 ]; then
   post_core_status=$?
   set -e
   if [ "$post_core_status" -ne 0 ]; then
-    echo "updated Oriro entry failed or timed out after ${update_timeout_seconds}s during post-core plugin verification" >&2
+    echo "updated ORIRO entry failed or timed out after ${update_timeout_seconds}s during post-core plugin verification" >&2
     oriro_e2e_print_log /tmp/oriro-update-corrupt-plugin-post-core.err >&2
     oriro_e2e_print_log /tmp/oriro-update-corrupt-plugin-post-core.stdout >&2
     oriro_e2e_print_log /tmp/oriro-update-corrupt-plugin-post-core.json >&2

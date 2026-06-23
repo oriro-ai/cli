@@ -1,10 +1,10 @@
 {
   "name": "@oriro/mattermost",
-  "version": "2026.6.8",
-  "description": "Oriro Mattermost channel plugin",
+  "version": "2026.6.9",
+  "description": "ORIRO Mattermost channel plugin",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -13,10 +13,10 @@
   },
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*",
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.6.8"
+    "oriro": "workspace:*"
   },
   "peerDependenciesMeta": {
     "oriro": {

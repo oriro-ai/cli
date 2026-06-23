@@ -7,18 +7,18 @@ describe("formatDiscordStartupStatusMessage", () => {
     expect(
       formatDiscordStartupStatusMessage({
         gatewayReady: true,
-        botIdentity: "bot-1 (Oriro)",
+        botIdentity: "bot-1 (Molty)",
       }),
-    ).toBe("logged in to discord as bot-1 (Oriro)");
+    ).toBe("logged in to discord as bot-1 (Molty)");
   });
 
   it("reports client initialization while gateway readiness is still pending", () => {
     expect(
       formatDiscordStartupStatusMessage({
         gatewayReady: false,
-        botIdentity: "bot-1 (Oriro)",
+        botIdentity: "bot-1 (Molty)",
       }),
-    ).toBe("discord client initialized as bot-1 (Oriro); awaiting gateway readiness");
+    ).toBe("discord client initialized as bot-1 (Molty); awaiting gateway readiness");
   });
 
   it("handles missing identity without awkward punctuation", () => {

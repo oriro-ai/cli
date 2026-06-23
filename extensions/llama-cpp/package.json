@@ -1,10 +1,10 @@
 {
   "name": "@oriro/llama-cpp-provider",
-  "version": "2026.6.8",
-  "description": "Oriro llama.cpp embedding provider plugin",
+  "version": "2026.6.9",
+  "description": "ORIRO llama.cpp embedding provider plugin",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -23,10 +23,10 @@
       "minHostVersion": ">=2026.6.2"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8"
+      "oriroVersion": "2026.6.9"
     },
     "release": {
       "bundleRuntimeDependencies": false,

@@ -14,7 +14,7 @@ final class PeekabooBridgeHostCoordinator {
     private var host: PeekabooBridgeHost?
     private var services: OriroPeekabooBridgeServices?
 
-    private static let legacySocketDirectoryNames = ["clawdbot", "orirodis", "moltbot"]
+    private static let legacySocketDirectoryNames = ["oriro", "orirodis", "moltbot"]
 
     private static var oriroSocketPath: String {
         let fileManager = FileManager.default

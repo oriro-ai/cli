@@ -4,7 +4,7 @@
     "onStartup": false
   },
   "name": "Codex Supervisor",
-  "description": "Supervise Codex app-server sessions from Oriro.",
+  "description": "Supervise Codex app-server sessions from ORIRO.",
   "contracts": {
     "tools": [
       "codex_endpoint_probe",

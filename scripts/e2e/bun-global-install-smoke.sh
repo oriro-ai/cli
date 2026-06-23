@@ -158,11 +158,11 @@ resolve_package_tgz() {
   PACK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/oriro-bun-pack.XXXXXX")"
   pack_json_file="$PACK_DIR/pack.json"
 
-  echo "==> Pack Oriro tarball"
+  echo "==> Pack ORIRO tarball"
   npm pack --ignore-scripts --json --pack-destination "$PACK_DIR" >"$pack_json_file"
   PACKAGE_TGZ="$(resolve_pack_tarball_path "$pack_json_file" "$PACK_DIR")"
   if [ -z "$PACKAGE_TGZ" ] || [ ! -f "$PACKAGE_TGZ" ]; then
-    echo "missing packed Oriro tarball" >&2
+    echo "missing packed ORIRO tarball" >&2
     exit 1
   fi
 }
@@ -194,7 +194,7 @@ main() {
   echo "==> Bun version"
   "$bun_path" --version
 
-  echo "==> Bun global install packed Oriro"
+  echo "==> Bun global install packed ORIRO"
   "$bun_path" install -g "$PACKAGE_TGZ" --no-progress
 
   oriro_bin="$BUN_INSTALL/bin/oriro"
@@ -206,10 +206,10 @@ main() {
     exit 1
   fi
 
-  echo "==> Oriro version through Bun global install"
+  echo "==> ORIRO version through Bun global install"
   run_with_timeout "$COMMAND_TIMEOUT_MS" "$oriro_bin" --version
 
-  echo "==> Oriro image providers through Bun global install"
+  echo "==> ORIRO image providers through Bun global install"
   local providers_json
   providers_json="$(run_with_timeout "$COMMAND_TIMEOUT_MS" "$oriro_bin" infer image providers --json)"
   ORIRO_IMAGE_PROVIDERS_JSON="$providers_json" node scripts/e2e/lib/bun-global-install/assertions.mjs assert-image-providers

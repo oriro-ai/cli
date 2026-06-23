@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: gpt-5-4-prompting
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

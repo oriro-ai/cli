@@ -427,9 +427,9 @@ function hasCodexHarnessMetadata(params: HandleCommandsParams): boolean {
 
 function isCodexDiagnosticsUnavailableText(text: string | undefined): boolean {
   return (
-    text?.startsWith("No Codex thread is attached to this Oriro session yet.") === true ||
+    text?.startsWith("No Codex thread is attached to this ORIRO session yet.") === true ||
     text?.startsWith(
-      "Cannot send Codex diagnostics because this command did not include an Oriro session file.",
+      "Cannot send Codex diagnostics because this command did not include an ORIRO session file.",
     ) === true
   );
 }

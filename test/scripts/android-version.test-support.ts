@@ -37,10 +37,10 @@ export function writeAndroidFixture(params: {
     "utf8",
   );
   const releaseNotes =
-    "Oriro is now available on Android.\n\nConnect to your Oriro Gateway.\n";
+    "ORIRO is now available on Android.\n\nConnect to your ORIRO Gateway.\n";
   fs.writeFileSync(
     path.join(rootDir, "apps", "android", "CHANGELOG.md"),
-    params.changelog ?? `# Oriro Android Changelog\n\n## Unreleased\n\n${releaseNotes}`,
+    params.changelog ?? `# ORIRO Android Changelog\n\n## Unreleased\n\n${releaseNotes}`,
     "utf8",
   );
   fs.writeFileSync(

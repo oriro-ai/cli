@@ -148,7 +148,7 @@ if [ -d "$package_root/dist/extensions/$CHANNEL" ]; then
   CHANNEL_PACKAGE_MODE="bundled"
 else
   CHANNEL_PACKAGE_MODE="external"
-  echo "$CHANNEL is not packaged with core Oriro; expecting channel selection to install it on demand."
+  echo "$CHANNEL is not packaged with core ORIRO; expecting channel selection to install it on demand."
 fi
 
 mock_pid="$(oriro_e2e_start_mock_openai "$MOCK_PORT" /tmp/oriro-mock-openai.log)"

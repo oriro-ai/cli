@@ -81,7 +81,7 @@ function resolveLabels(
 ): RealtimeVoiceFastContextLabels {
   return {
     audienceLabel: labels?.audienceLabel?.trim() || "person",
-    contextName: labels?.contextName?.trim() || "Oriro memory context",
+    contextName: labels?.contextName?.trim() || "ORIRO memory context",
   };
 }
 

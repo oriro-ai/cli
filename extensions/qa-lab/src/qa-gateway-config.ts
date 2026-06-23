@@ -143,7 +143,7 @@ export function buildQaGatewayConfig(params: {
           enabled: true,
           config: {
             pluginToolsMcpBridge: true,
-            oriroToolsMcpBridge: true,
+            openOriroToolsMcpBridge: true,
           },
         },
         "memory-core": {

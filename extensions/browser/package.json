@@ -1,8 +1,8 @@
 {
   "name": "@oriro/browser-plugin",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro browser tool plugin",
+  "description": "ORIRO browser tool plugin",
   "type": "module",
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",

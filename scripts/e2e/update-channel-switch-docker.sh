@@ -68,7 +68,7 @@ node scripts/e2e/lib/update-channel-switch/assertions.mjs prepare-git-fixture "$
 node scripts/e2e/lib/update-channel-switch/assertions.mjs write-control-ui "$git_root"
 
 git config --global user.email "docker-e2e@oriro.local"
-git config --global user.name "Oriro Docker E2E"
+git config --global user.name "ORIRO Docker E2E"
 git config --global gc.auto 0
 git -C "$git_root" init -q
 git -C "$git_root" config gc.auto 0

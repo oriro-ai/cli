@@ -230,7 +230,7 @@ export async function promptGatewayConfig(
         }),
         id: envVarName,
       };
-      note(`Validated ${envVarName}. Oriro will store a token SecretRef.`, "Gateway token");
+      note(`Validated ${envVarName}. ORIRO will store a token SecretRef.`, "Gateway token");
     } else {
       const tokenInput = guardCancel(
         await password({
@@ -257,7 +257,7 @@ export async function promptGatewayConfig(
   if (authMode === "trusted-proxy") {
     note(
       [
-        "Trusted proxy mode: Oriro trusts user identity from a reverse proxy.",
+        "Trusted proxy mode: ORIRO trusts user identity from a reverse proxy.",
         "The proxy must authenticate users and pass identity via headers.",
         "Only requests from specified proxy IPs will be trusted.",
         "",

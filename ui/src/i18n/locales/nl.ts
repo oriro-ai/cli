@@ -203,6 +203,7 @@ export const nl: TranslationMap = {
     inherit: "overnemen",
     defaultOption: "Standaard ({value})",
     offExplicit: "uit (expliciet)",
+    auto: "auto",
     on: "aan",
     off: "uit",
     full: "volledig",
@@ -1315,7 +1316,7 @@ export const nl: TranslationMap = {
         stepDevUi:
           "Als je pnpm ui:dev gebruikt, bouw of herstart de dev-UI tegen de huidige checkout.",
         stepRestart:
-          "Herstart de Gateway na het bijwerken van Oriro zodat het huidige protocol wordt geserveerd.",
+          "Herstart de Gateway na het bijwerken van ORIRO zodat het huidige protocol wordt geserveerd.",
       },
       network: {
         title: "Kan niet verbinden",
@@ -1625,6 +1626,7 @@ export const nl: TranslationMap = {
       nextHeartbeat: "Volgende heartbeat",
       wakeModeHelp: "Nu triggert onmiddellijk. Volgende heartbeat wacht op de volgende cyclus.",
       payloadKind: "Wat moet er worden uitgevoerd?",
+      command: "Command",
       systemEvent: "Bericht plaatsen op main-tijdlijn",
       agentTurn: "Assistenttaak uitvoeren (geïsoleerd)",
       systemEventHelp:

@@ -4,7 +4,7 @@
     "onStartup": true
   },
   "name": "Webhooks",
-  "description": "Authenticated inbound webhooks that bind external automation to Oriro TaskFlows.",
+  "description": "Authenticated inbound webhooks that bind external automation to ORIRO TaskFlows.",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,

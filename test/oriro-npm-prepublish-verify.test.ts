@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  oriroNpmPrepublishVerifyUsage,
+  openOriroNpmPrepublishVerifyUsage,
   parseOriroNpmPrepublishVerifyArgs,
 } from "../scripts/oriro-npm-prepublish-verify.ts";
 
@@ -23,7 +23,7 @@ describe("parseOriroNpmPrepublishVerifyArgs", () => {
 
   it("rejects missing, option-like, and extra arguments before installing", () => {
     expect(() => parseOriroNpmPrepublishVerifyArgs([])).toThrow(
-      oriroNpmPrepublishVerifyUsage(),
+      openOriroNpmPrepublishVerifyUsage(),
     );
     expect(() => parseOriroNpmPrepublishVerifyArgs(["--tag"])).toThrow(
       "Unknown oriro npm prepublish verifier option: --tag",

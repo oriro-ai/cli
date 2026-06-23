@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: supabase-postgres-best-practices
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

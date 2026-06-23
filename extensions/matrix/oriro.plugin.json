@@ -1,7 +1,7 @@
 {
   "id": "matrix",
   "name": "Matrix",
-  "description": "Oriro Matrix channel plugin for rooms and direct messages.",
+  "description": "ORIRO Matrix channel plugin for rooms and direct messages.",
   "commandAliases": [{ "name": "matrix" }],
   "activation": {
     "onStartup": false,

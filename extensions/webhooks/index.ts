@@ -47,7 +47,7 @@ export default definePluginEntry({
   id: "webhooks",
   name: "Webhooks",
   description:
-    "Authenticated inbound webhooks that bind external automation to Oriro TaskFlows.",
+    "Authenticated inbound webhooks that bind external automation to ORIRO TaskFlows.",
   register(api: OriroPluginApi) {
     registerWebhookRoutes(api);
   },

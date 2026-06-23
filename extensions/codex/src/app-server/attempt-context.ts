@@ -523,15 +523,15 @@ export function buildCodexOriroPromptContext(params: {
   }
   const sections = [
     params.workspacePromptContext?.trim()
-      ? ["## Oriro Workspace Context", "", params.workspacePromptContext.trim()].join("\n")
+      ? ["## ORIRO Workspace Context", "", params.workspacePromptContext.trim()].join("\n")
       : undefined,
   ].filter(isNonEmptyString);
   if (sections.length === 0) {
     return undefined;
   }
   return [
-    "Oriro runtime context for this turn:",
-    "Treat this Oriro-provided context as supporting project/user reference for the current request.",
+    "ORIRO runtime context for this turn:",
+    "Treat this ORIRO-provided context as supporting project/user reference for the current request.",
     "",
     ...sections,
   ].join("\n");
@@ -554,7 +554,7 @@ export function renderCodexSkillsCollaborationInstructions(params: {
     return undefined;
   }
   return params.skillsPrompt?.trim()
-    ? ["## Oriro Skills", "", params.skillsPrompt.trim()].join("\n")
+    ? ["## ORIRO Skills", "", params.skillsPrompt.trim()].join("\n")
     : undefined;
 }
 
@@ -572,18 +572,63 @@ export function prependCodexOriroPromptContext(
     return prompt;
   }
   const promptSection = promptWithoutDeliveryHint.startsWith(
-    "Oriro assembled context for this turn:",
+    "ORIRO assembled context for this turn:",
   )
     ? promptWithoutDeliveryHint
     : ["Current user request:", promptWithoutDeliveryHint].join("\n");
   const deliverySection = deliveryHint
     ? [
-        "Oriro delivery metadata:",
+        "ORIRO delivery metadata:",
         "This delivery metadata is runtime routing guidance, not the user's request.",
         deliveryHint,
       ].join("\n")
     : undefined;
   return [context?.trim(), deliverySection, promptSection].filter(Boolean).join("\n\n");
+}
+
+/**
+ * Maps the surviving user-request portion of an input range after delivery
+ * metadata has been relocated before the request.
+ */
+export function resolveCodexDeliveryHintPreservedInputRange(params: {
+  prompt: string;
+  promptInputRange: { start: number; end: number } | undefined;
+  decoratedPrompt: string;
+}): { start: number; end: number } | undefined {
+  const { prompt, promptInputRange, decoratedPrompt } = params;
+  const { deliveryHint, prompt: promptWithoutDeliveryHint } = splitLeadingCodexDeliveryHint(prompt);
+  if (
+    !deliveryHint ||
+    !promptInputRange ||
+    promptInputRange.start < 0 ||
+    promptInputRange.end < promptInputRange.start ||
+    promptInputRange.end > prompt.length ||
+    !decoratedPrompt.endsWith(promptWithoutDeliveryHint)
+  ) {
+    return undefined;
+  }
+  const promptWithoutDeliveryHintStart = prompt.length - promptWithoutDeliveryHint.length;
+  const inputStart = Math.max(promptInputRange.start, promptWithoutDeliveryHintStart);
+  const inputEnd = Math.max(
+    inputStart,
+    Math.min(
+      promptInputRange.end,
+      promptWithoutDeliveryHint.length + promptWithoutDeliveryHintStart,
+    ),
+  );
+  const decoratedPromptSuffixStart = decoratedPrompt.length - promptWithoutDeliveryHint.length;
+  const requestHeader = "Current user request:\n";
+  const requestHeaderStart = decoratedPromptSuffixStart - requestHeader.length;
+  // Delivery metadata moves outside the request, so retain the remaining input
+  // span rather than treating the original, now non-contiguous range as valid.
+  return {
+    start:
+      inputStart === promptWithoutDeliveryHintStart &&
+      decoratedPrompt.slice(requestHeaderStart, decoratedPromptSuffixStart) === requestHeader
+        ? requestHeaderStart
+        : decoratedPromptSuffixStart + inputStart - promptWithoutDeliveryHintStart,
+    end: decoratedPromptSuffixStart + inputEnd - promptWithoutDeliveryHintStart,
+  };
 }
 
 function splitLeadingCodexDeliveryHint(prompt: string): {
@@ -612,7 +657,7 @@ function renderCodexWorkspaceBootstrapPromptContext(
     return undefined;
   }
   const lines = [
-    "Oriro loaded these user-editable workspace files for the current turn. Codex loads AGENTS.md natively. TOOLS.md is provided as inherited Codex developer instructions. SOUL.md, IDENTITY.md, and USER.md are provided as turn-scoped collaboration instructions so native Codex subagents do not inherit them. HEARTBEAT.md is handled by heartbeat collaboration-mode guidance. Those files are not repeated here.",
+    "ORIRO loaded these user-editable workspace files for the current turn. Codex loads AGENTS.md natively. TOOLS.md is provided as inherited Codex developer instructions. SOUL.md, IDENTITY.md, and USER.md are provided as turn-scoped collaboration instructions so native Codex subagents do not inherit them. HEARTBEAT.md is handled by heartbeat collaboration-mode guidance. Those files are not repeated here.",
     "",
     "# Project Context",
     "",
@@ -689,9 +734,9 @@ function renderCodexWorkspaceThreadDeveloperInstructions(
 ): string | undefined {
   return renderCodexWorkspaceDeveloperInstructions({
     files,
-    header: "## Oriro Workspace Instructions",
+    header: "## ORIRO Workspace Instructions",
     preamble:
-      "Oriro loaded these workspace instruction files from the active agent workspace. Internalize and follow them accordingly.",
+      "ORIRO loaded these workspace instruction files from the active agent workspace. Internalize and follow them accordingly.",
   });
 }
 
@@ -700,9 +745,9 @@ function renderCodexWorkspaceCollaborationDeveloperInstructions(
 ): string | undefined {
   return renderCodexWorkspaceDeveloperInstructions({
     files,
-    header: "## Oriro Agent Soul",
+    header: "## ORIRO Agent Soul",
     preamble:
-      "Oriro loaded these workspace instruction files from the active agent workspace. They are the canonical definitions of who you are, how you think and work, and the human you work alongside. Internalize and follow them accordingly.",
+      "ORIRO loaded these workspace instruction files from the active agent workspace. They are the canonical definitions of who you are, how you think and work, and the human you work alongside. Internalize and follow them accordingly.",
     wrapperTag: "AGENT_SOUL",
   });
 }
@@ -750,7 +795,7 @@ function renderCodexWorkspaceHeartbeatReference(files: EmbeddedContextFile[]): s
     return undefined;
   }
   const lines = [
-    "## Oriro Heartbeat Workspace",
+    "## ORIRO Heartbeat Workspace",
     "",
     "HEARTBEAT.md exists in the active agent workspace. Read it before proceeding with this heartbeat, then decide what action is appropriate.",
     "",
@@ -794,9 +839,9 @@ export function renderCodexWorkspaceMemoryReference(params: {
     ? params.toolNames
     : Array.from(CODEX_MEMORY_TOOL_NAMES);
   const lines = [
-    "## Oriro Workspace Memory",
+    "## ORIRO Workspace Memory",
     "",
-    `MEMORY.md exists in the active agent workspace as a memory file, not an instruction file. Oriro does not paste its contents into native Codex turns; use ${toolNames.join(" or ")} when durable memory is relevant and the tools are available.`,
+    `MEMORY.md exists in the active agent workspace as a memory file, not an instruction file. ORIRO does not paste its contents into native Codex turns; use ${toolNames.join(" or ")} when durable memory is relevant and the tools are available.`,
     "",
   ];
   for (const file of params.files) {

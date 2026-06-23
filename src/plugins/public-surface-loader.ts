@@ -134,7 +134,7 @@ export function loadBundledPluginPublicArtifactModuleSync<T extends object>(para
     absolutePath: location.modulePath,
     rootPath: location.boundaryRoot,
     boundaryLabel:
-      location.boundaryRoot === ORIRO_PACKAGE_ROOT ? "Oriro package root" : "plugin root",
+      location.boundaryRoot === ORIRO_PACKAGE_ROOT ? "ORIRO package root" : "plugin root",
     rejectHardlinks: false,
   });
   if (!opened.ok) {

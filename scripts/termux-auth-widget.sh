@@ -6,10 +6,10 @@
 # It's designed for quick one-tap checking from phone home screen.
 
 # Server hostname (via Tailscale or SSH config)
-SERVER="${ORIRO_SERVER:-l36}"
+SERVER="${ORIRO_SERVER:-oriro-host}"
 
 # Check auth status
-termux-toast "Checking Oriro auth..."
+termux-toast "Checking ORIRO auth..."
 
 STATUS=$(ssh "$SERVER" '$HOME/oriro/scripts/claude-auth-status.sh simple' 2>&1)
 EXIT_CODE=$?
@@ -69,7 +69,7 @@ case "$STATUS" in
                 termux-toast "Run: ssh $SERVER '$HOME/oriro/scripts/mobile-reauth.sh'"
                 ;;
             *)
-                termux-toast "Warning: Oriro won't work until re-auth"
+                termux-toast "Warning: ORIRO won't work until re-auth"
                 ;;
         esac
         ;;

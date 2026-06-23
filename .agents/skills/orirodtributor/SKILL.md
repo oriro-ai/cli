@@ -1,6 +1,6 @@
 ---
 name: orirodtributor
-description: "Use for Oriro orirotributors PR/issue triage: Discrawl discovery, live-open rechecks, deep review, topic grouping, and compact @handle/LOC/type/blast/verification summaries."
+description: "Use for ORIRO orirotributors PR/issue triage: Discrawl discovery, live-open rechecks, deep review, topic grouping, and compact @handle/LOC/type/blast/verification summaries."
 ---
 
 # Orirodtributor
@@ -42,7 +42,7 @@ left join members mm on mm.guild_id=m.guild_id and mm.user_id=m.author_id
 where m.channel_id='1458141495701012561'
   and m.created_at >= '<ISO cutoff>'
 order by m.created_at desc;" |
-perl -nE 'while(m{github\.com/oriro-ai/cli/(pull|issues)/(\d+)}g){say "$1\t$2\t$_"}'
+perl -nE 'while(m{github\.com/oriro/oriro/(pull|issues)/(\d+)}g){say "$1\t$2\t$_"}'
 ```
 
 Map a PR/issue back to the Discord handle:
@@ -54,7 +54,7 @@ select m.created_at,
 from messages m
 left join members mm on mm.guild_id=m.guild_id and mm.user_id=m.author_id
 where m.channel_id='1458141495701012561'
-  and m.content like '%github.com/oriro-ai/cli/<pull-or-issues>/<number>%'
+  and m.content like '%github.com/oriro/oriro/<pull-or-issues>/<number>%'
 order by m.created_at desc
 limit 1;"
 ```
@@ -67,7 +67,7 @@ Always recheck live state before listing, closing, or saying "open".
 
 ```bash
 GITHUB_TOKEN= GITHUB_TOKEN_NODIFF= GH_TOKEN= \
-gh api repos/oriro-ai/cli/pulls/<number> \
+gh api repos/oriro/oriro/pulls/<number> \
   --jq '. | {number,title,state,merged,mergeable,draft,author:.user.login,url:.html_url,updatedAt:.updated_at,additions,deletions,changedFiles:.changed_files}'
 ```
 
@@ -75,7 +75,7 @@ For issues:
 
 ```bash
 GITHUB_TOKEN= GITHUB_TOKEN_NODIFF= GH_TOKEN= \
-gh api repos/oriro-ai/cli/issues/<number> \
+gh api repos/oriro/oriro/issues/<number> \
   --jq '. | {number,title,state,author:.user.login,url:.html_url,updatedAt:.updated_at,pull_request}'
 ```
 
@@ -142,8 +142,8 @@ No Markdown tables. Compact bullets. Use color/risk markers:
 Required line shape:
 
 ```markdown
-- **PR #81244** `@whatsskill.` `+118/-1` `bug` 🟢 https://github.com/oriro-ai/cli/pull/81244 - Prevents chat action buttons from overlapping short assistant replies. Verifiable: yes. Blast: web chat rendering, low.
-- **Issue #81245** `@alice` `LOC n/a` `bug` 🟡 https://github.com/oriro-ai/cli/issues/81245 - Reports duplicate Telegram replies when reconnecting after gateway restart. Verifiable: partial. Blast: Telegram channel runtime, medium.
+- **PR #81244** `@whatsskill.` `+118/-1` `bug` 🟢 https://github.com/oriro/oriro/pull/81244 - Prevents chat action buttons from overlapping short assistant replies. Verifiable: yes. Blast: web chat rendering, low.
+- **Issue #81245** `@alice` `LOC n/a` `bug` 🟡 https://github.com/oriro/oriro/issues/81245 - Reports duplicate Telegram replies when reconnecting after gateway restart. Verifiable: partial. Blast: Telegram channel runtime, medium.
 ```
 
 Rules:

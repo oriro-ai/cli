@@ -931,7 +931,7 @@ export abstract class MemoryManagerSyncOps {
       this.memoryWatchPressureWarning,
       count,
       unit,
-      "Large memory folders or extraPaths can make Oriro run out of file watchers or open files.",
+      "Large memory folders or extraPaths can make ORIRO run out of file watchers or open files.",
       "Remove large extraPaths, or set memorySearch.sync.watch to false and refresh memory manually or with sync.intervalMinutes.",
       (message) => log.warn(message),
     );

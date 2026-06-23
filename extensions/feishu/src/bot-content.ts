@@ -1,6 +1,6 @@
 // Feishu plugin module implements bot content behavior.
 import { parseStrictNonNegativeInteger } from "oriro/plugin-sdk/number-runtime";
-import type { ClawdbotConfig } from "../runtime-api.js";
+import type { OriroConfig } from "../runtime-api.js";
 import { buildFeishuConversationId } from "./conversation-id.js";
 import { normalizeFeishuExternalKey } from "./external-keys.js";
 import { saveMessageResourceFeishu } from "./media.js";
@@ -373,7 +373,7 @@ function inferPlaceholder(messageType: string): string {
 }
 
 export async function resolveFeishuMediaList(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   messageId: string;
   messageType: string;
   content: string;

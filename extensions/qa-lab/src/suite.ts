@@ -838,7 +838,7 @@ async function writeQaSuiteArtifacts(params: {
   const summaryPath = path.join(params.outputDir, "qa-suite-summary.json");
   const evidencePath = path.join(params.outputDir, QA_EVIDENCE_FILENAME);
   const report = renderQaMarkdownReport({
-    title: "Oriro QA Scenario Suite",
+    title: "ORIRO QA Scenario Suite",
     startedAt: params.startedAt,
     finishedAt: params.finishedAt,
     checks: [],

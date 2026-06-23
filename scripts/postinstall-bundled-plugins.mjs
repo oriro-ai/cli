@@ -140,8 +140,8 @@ function resolvePostinstallOriroHomeDir(env, getHomedir = homedir) {
   return override ? pathResolve(resolvePostinstallTildePath(override, osHome)) : osHome;
 }
 
-function resolvePostinstallUserPath(input, oriroHome) {
-  return pathResolve(resolvePostinstallTildePath(input, oriroHome));
+function resolvePostinstallUserPath(input, openOriroHome) {
+  return pathResolve(resolvePostinstallTildePath(input, openOriroHome));
 }
 
 function readInstalledDistInventory(params = {}) {
@@ -411,7 +411,7 @@ const pathDelimiter = process.platform === "win32" ? ";" : ":";
 export function collectLegacyPluginRuntimeDepsStateRoots(params = {}) {
   const env = params.env ?? process.env;
   const getHomedir = params.homedir ?? homedir;
-  const oriroHome = resolvePostinstallOriroHomeDir(env, getHomedir);
+  const openOriroHome = resolvePostinstallOriroHomeDir(env, getHomedir);
   const stateRoots = [];
   const addStateRoot = (root) => {
     if (root) {
@@ -421,17 +421,17 @@ export function collectLegacyPluginRuntimeDepsStateRoots(params = {}) {
 
   const stateOverride = env?.ORIRO_STATE_DIR?.trim();
   if (stateOverride) {
-    addStateRoot(resolvePostinstallUserPath(stateOverride, oriroHome));
+    addStateRoot(resolvePostinstallUserPath(stateOverride, openOriroHome));
   }
   const configPath = env?.ORIRO_CONFIG_PATH?.trim();
   if (configPath) {
-    addStateRoot(dirname(resolvePostinstallUserPath(configPath, oriroHome)));
+    addStateRoot(dirname(resolvePostinstallUserPath(configPath, openOriroHome)));
   }
-  addStateRoot(join(oriroHome, ".oriro"));
-  addStateRoot(join(oriroHome, ".clawdbot"));
+  addStateRoot(join(openOriroHome, ".oriro"));
+  addStateRoot(join(openOriroHome, ".oriro"));
 
   for (const entry of splitPostinstallPathList(env?.STATE_DIRECTORY)) {
-    addStateRoot(resolvePostinstallUserPath(entry, oriroHome));
+    addStateRoot(resolvePostinstallUserPath(entry, openOriroHome));
   }
 
   return [...new Set(stateRoots.map((root) => pathResolve(root)))].toSorted((left, right) =>
@@ -941,14 +941,14 @@ export function pruneOriroCompileCache(params = {}) {
           if (isCompileCachePrunePermissionDenied(error)) {
             continue;
           }
-          log.warn?.(`[postinstall] could not prune Oriro compile cache: ${String(error)}`);
+          log.warn?.(`[postinstall] could not prune ORIRO compile cache: ${String(error)}`);
         }
       }
     } catch (error) {
       if (isCompileCachePrunePermissionDenied(error)) {
         continue;
       }
-      log.warn?.(`[postinstall] could not prune Oriro compile cache: ${String(error)}`);
+      log.warn?.(`[postinstall] could not prune ORIRO compile cache: ${String(error)}`);
     }
   }
 }

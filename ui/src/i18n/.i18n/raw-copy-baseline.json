@@ -41,7 +41,7 @@
       "kind": "html-text",
       "name": "text",
       "path": "ui/src/ui/app-render.ts",
-      "text": "Oriro"
+      "text": "ORIRO"
     },
     {
       "count": 1,
@@ -328,6 +328,13 @@
       "kind": "object-property",
       "name": "label",
       "path": "ui/src/ui/chat/session-controls.ts",
+      "text": "Auto"
+    },
+    {
+      "count": 1,
+      "kind": "object-property",
+      "name": "label",
+      "path": "ui/src/ui/chat/session-controls.ts",
       "text": "Default"
     },
     {
@@ -461,7 +468,7 @@
       "kind": "html-text",
       "name": "text",
       "path": "ui/src/ui/components/dashboard-header.ts",
-      "text": "Oriro"
+      "text": "ORIRO"
     },
     {
       "count": 1,
@@ -2540,7 +2547,7 @@
       "kind": "html-attribute",
       "name": "placeholder",
       "path": "ui/src/ui/views/config-quick.ts",
-      "text": "JD or ORIRO"
+      "text": "JD or 🦞"
     },
     {
       "count": 1,
@@ -2589,7 +2596,7 @@
       "kind": "html-text",
       "name": "text",
       "path": "ui/src/ui/views/config-quick.ts",
-      "text": "Choose how much workspace context Oriro injects into each run. These profiles do not change your model, tools, channels, or theme."
+      "text": "Choose how much workspace context ORIRO injects into each run. These profiles do not change your model, tools, channels, or theme."
     },
     {
       "count": 1,
@@ -2813,7 +2820,7 @@
       "kind": "object-property",
       "name": "label",
       "path": "ui/src/ui/views/config-quick.ts",
-      "text": "Oriro"
+      "text": "ORIRO"
     },
     {
       "count": 1,
@@ -3310,7 +3317,7 @@
       "kind": "object-property",
       "name": "label",
       "path": "ui/src/ui/views/config.ts",
-      "text": "Oriro"
+      "text": "ORIRO"
     },
     {
       "count": 1,
@@ -3982,7 +3989,7 @@
       "kind": "html-text",
       "name": "text",
       "path": "ui/src/ui/views/login-gate.ts",
-      "text": "Oriro"
+      "text": "ORIRO"
     },
     {
       "count": 1,

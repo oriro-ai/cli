@@ -1,7 +1,7 @@
 {
   "id": "codex",
   "name": "Codex",
-  "description": "Oriro Codex app-server harness and model provider plugin with a Codex-managed GPT catalog.",
+  "description": "ORIRO Codex app-server harness and model provider plugin with a Codex-managed GPT catalog.",
   "providers": ["codex"],
   "contracts": {
     "mediaUnderstandingProviders": ["codex"],
@@ -265,12 +265,12 @@
   "uiHints": {
     "codexDynamicToolsLoading": {
       "label": "Dynamic Tools Loading",
-      "help": "Use searchable to defer Oriro dynamic tools behind Codex tool search, or direct to expose them in the initial context.",
+      "help": "Use searchable to defer ORIRO dynamic tools behind Codex tool search, or direct to expose them in the initial context.",
       "advanced": true
     },
     "codexDynamicToolsExclude": {
       "label": "Dynamic Tool Excludes",
-      "help": "Additional Oriro dynamic tool names to omit from Codex app-server turns.",
+      "help": "Additional ORIRO dynamic tool names to omit from Codex app-server turns.",
       "advanced": true
     },
     "discovery": {
@@ -279,7 +279,7 @@
     },
     "discovery.enabled": {
       "label": "Enable Discovery",
-      "help": "When false, Oriro keeps the Codex harness available but uses the bundled fallback model list."
+      "help": "When false, ORIRO keeps the Codex harness available but uses the bundled fallback model list."
     },
     "discovery.timeoutMs": {
       "label": "Discovery Timeout",
@@ -368,7 +368,7 @@
     },
     "appServer.command": {
       "label": "Command",
-      "help": "Executable used for stdio transport. Leave unset to use Oriro's managed Codex binary.",
+      "help": "Executable used for stdio transport. Leave unset to use ORIRO's managed Codex binary.",
       "advanced": true
     },
     "appServer.args": {
@@ -400,12 +400,12 @@
     },
     "appServer.remoteWorkspaceRoot": {
       "label": "Remote Workspace Root",
-      "help": "Remote Codex app-server workspace root used to project Oriro cwd suffixes before starting Codex threads.",
+      "help": "Remote Codex app-server workspace root used to project ORIRO cwd suffixes before starting Codex threads.",
       "advanced": true
     },
     "appServer.codeModeOnly": {
       "label": "Code Mode Only",
-      "help": "Expose Codex's code-mode-only tool surface. Oriro dynamic tools remain available through Codex nested tool calls.",
+      "help": "Expose Codex's code-mode-only tool surface. ORIRO dynamic tools remain available through Codex nested tool calls.",
       "advanced": true
     },
     "appServer.requestTimeoutMs": {
@@ -415,7 +415,7 @@
     },
     "appServer.turnCompletionIdleTimeoutMs": {
       "label": "Turn Completion Idle Timeout",
-      "help": "Maximum quiet time after Codex accepts a turn or after a turn-scoped app-server request before Oriro interrupts the turn while waiting for turn/completed.",
+      "help": "Maximum quiet time after Codex accepts a turn or after a turn-scoped app-server request before ORIRO interrupts the turn while waiting for turn/completed.",
       "advanced": true
     },
     "appServer.postToolRawAssistantCompletionIdleTimeoutMs": {
@@ -450,7 +450,7 @@
     },
     "appServer.networkProxy.enabled": {
       "label": "Network Proxy Enabled",
-      "help": "When enabled, Oriro defines a Codex permissions profile and selects it with default_permissions instead of sandbox fields.",
+      "help": "When enabled, ORIRO defines a Codex permissions profile and selects it with default_permissions instead of sandbox fields.",
       "advanced": true
     },
     "appServer.networkProxy.profileName": {
@@ -530,7 +530,7 @@
     },
     "appServer.experimental.sandboxExecServer": {
       "label": "Sandbox Exec Server",
-      "help": "Route native Codex execution through an Oriro sandbox-backed exec-server when Oriro sandboxing is active.",
+      "help": "Route native Codex execution through an ORIRO sandbox-backed exec-server when ORIRO sandboxing is active.",
       "advanced": true
     }
   }

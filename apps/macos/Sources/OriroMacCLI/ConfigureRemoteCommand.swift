@@ -128,7 +128,7 @@ private func configureSSHRemote(_ opts: ConfigureRemoteOptions) throws -> Config
             userInfo: [NSLocalizedDescriptionKey: "SSH target must look like user@host[:port]"])
     }
 
-    let configURL = oriroConfigURL()
+    let configURL = openOriroConfigURL()
     var root = try loadConfigRoot(from: configURL)
     var gateway = root["gateway"] as? [String: Any] ?? [:]
     var remote = gateway["remote"] as? [String: Any] ?? [:]
@@ -174,7 +174,7 @@ private func configureDirectRemote(
             ])
     }
 
-    let configURL = oriroConfigURL()
+    let configURL = openOriroConfigURL()
     var root = try loadConfigRoot(from: configURL)
     var gateway = root["gateway"] as? [String: Any] ?? [:]
     var remote = gateway["remote"] as? [String: Any] ?? [:]
@@ -205,7 +205,7 @@ private func configureDirectRemote(
         onboardingSkipped: true)
 }
 
-private func oriroConfigURL() -> URL {
+private func openOriroConfigURL() -> URL {
     if let raw = ProcessInfo.processInfo.environment["ORIRO_CONFIG_PATH"],
        !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     {

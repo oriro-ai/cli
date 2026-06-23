@@ -1113,9 +1113,11 @@ export function buildThreadStartParams(
     approvalPolicy: options.appServer.approvalPolicy,
     approvalsReviewer: options.appServer.approvalsReviewer,
     ...codexThreadSandboxOrPermissions(options.appServer),
-    ...(options.appServer.serviceTier ? { serviceTier: options.appServer.serviceTier } : {}),
+    ...(options.appServer.serviceTier !== undefined
+      ? { serviceTier: options.appServer.serviceTier }
+      : {}),
     personality: CODEX_NATIVE_PERSONALITY_NONE,
-    serviceName: "Oriro",
+    serviceName: "ORIRO",
     config: buildCodexRuntimeThreadConfigForRun(params, options.config, {
       nativeCodeModeEnabled: options.nativeCodeModeEnabled,
       nativeProviderWebSearchSupport: options.nativeProviderWebSearchSupport,
@@ -1193,7 +1195,9 @@ export function buildThreadResumeParams(
     approvalPolicy: options.appServer.approvalPolicy,
     approvalsReviewer: options.appServer.approvalsReviewer,
     ...codexThreadSandboxOrPermissions(options.appServer),
-    ...(options.appServer.serviceTier ? { serviceTier: options.appServer.serviceTier } : {}),
+    ...(options.appServer.serviceTier !== undefined
+      ? { serviceTier: options.appServer.serviceTier }
+      : {}),
     personality: CODEX_NATIVE_PERSONALITY_NONE,
     config: buildCodexRuntimeThreadConfigForRun(params, options.config, {
       nativeCodeModeEnabled: options.nativeCodeModeEnabled,
@@ -1428,7 +1432,9 @@ export function buildTurnStartParams(
         }),
     model: modelSelection.model,
     personality: CODEX_NATIVE_PERSONALITY_NONE,
-    ...(options.appServer.serviceTier ? { serviceTier: options.appServer.serviceTier } : {}),
+    ...(options.appServer.serviceTier !== undefined
+      ? { serviceTier: options.appServer.serviceTier }
+      : {}),
     effort: resolveReasoningEffort(params.thinkLevel, modelSelection.model),
     ...(options.environmentSelection ? { environments: options.environmentSelection } : {}),
     collaborationMode: buildTurnCollaborationMode(params, {
@@ -1537,7 +1543,7 @@ function buildDefaultCollaborationInstructions(): string {
 
 function buildCronCollaborationInstructions(): string {
   return [
-    "This is an Oriro cron automation turn. Apply these instructions only to this scheduled job; ordinary chat turns should stay in Codex Default mode.",
+    "This is an ORIRO cron automation turn. Apply these instructions only to this scheduled job; ordinary chat turns should stay in Codex Default mode.",
     "Execute the cron payload directly. If it asks you to run an exact command, run that command before doing any investigation, planning, memory review, or workspace bootstrap.",
     "Use context already provided by the runtime, but do not spend time loading or re-reading workspace bootstrap, memory, or project-doc files before executing the cron payload. Inspect those files only if the payload asks for them or the command fails and they are needed to diagnose it.",
     "Keep output concise and automation-oriented. Prefer the final command result or a short failure summary over status narration.",
@@ -1546,8 +1552,8 @@ function buildCronCollaborationInstructions(): string {
 
 function buildHeartbeatCollaborationInstructions(): string {
   return [
-    "This is an Oriro heartbeat turn. Apply these instructions only to this heartbeat wake; ordinary chat turns should stay in Codex Default mode.",
-    "When you are ready to end the heartbeat, prefer the structured `heartbeat_respond` tool so Oriro can record the wake outcome and notification decision. If `heartbeat_respond` is not already available and `tool_search` is available, search for `heartbeat_respond`, load it, then call it. Use `notify=false` when nothing should visibly interrupt the user.",
+    "This is an ORIRO heartbeat turn. Apply these instructions only to this heartbeat wake; ordinary chat turns should stay in Codex Default mode.",
+    "When you are ready to end the heartbeat, prefer the structured `heartbeat_respond` tool so ORIRO can record the wake outcome and notification decision. If `heartbeat_respond` is not already available and `tool_search` is available, search for `heartbeat_respond`, load it, then call it. Use `notify=false` when nothing should visibly interrupt the user.",
     CODEX_GPT5_HEARTBEAT_PROMPT_OVERLAY,
   ].join("\n\n");
 }
@@ -1667,10 +1673,10 @@ export function buildDeveloperInstructions(
     includeLegacyGlobalGuidance: false,
   }).join("\n");
   const sections = [
-    "You are a personal agent running inside Oriro. Oriro has dynamic tools for Oriro-owned messaging, cron, sessions, media, gateway, and nodes.",
+    "You are a personal agent running inside ORIRO. ORIRO has dynamic tools for ORIRO-owned messaging, cron, sessions, media, gateway, and nodes.",
     buildDeferredDynamicToolManifest(options.dynamicTools),
     buildSkillWorkshopInstruction(options.dynamicTools),
-    "Use Codex native `spawn_agent` for Codex subagents. Use Oriro `sessions_spawn` only for Oriro or ACP delegation.",
+    "Use Codex native `spawn_agent` for Codex subagents. Use ORIRO `sessions_spawn` only for ORIRO or ACP delegation.",
     buildVisibleReplyInstruction(params, options.dynamicTools),
     nativeCommandGuidance,
     params.extraSystemPrompt,
@@ -1692,7 +1698,7 @@ function buildDeferredDynamicToolManifest(
   if (deferredToolNames.length === 0) {
     return undefined;
   }
-  return `Deferred searchable Oriro dynamic tools available: ${deferredToolNames.join(", ")}. Use \`tool_search\` to load exact callable specs before use.`;
+  return `Deferred searchable ORIRO dynamic tools available: ${deferredToolNames.join(", ")}. Use \`tool_search\` to load exact callable specs before use.`;
 }
 
 function buildSkillWorkshopInstruction(
@@ -1718,9 +1724,9 @@ function buildVisibleReplyInstruction(
     return "Visible source replies are not automatically delivered for this run. Use `message(action=send)` for user-visible source-channel output. Do not repeat that visible content in your final answer.";
   }
   if (messageToolAvailable) {
-    return "For the current source conversation, reply normally in your final assistant message; Oriro will deliver it through the active source conversation. Use `message` only for explicit out-of-band sends, media/file sends, or sends to a different target.";
+    return "For the current source conversation, reply normally in your final assistant message; ORIRO will deliver it through the active source conversation. Use `message` only for explicit out-of-band sends, media/file sends, or sends to a different target.";
   }
-  return "For the current source conversation, reply normally in your final assistant message; Oriro will deliver it through the active source conversation.";
+  return "For the current source conversation, reply normally in your final assistant message; ORIRO will deliver it through the active source conversation.";
 }
 
 function buildUserInput(

@@ -101,11 +101,11 @@ function Complete-Install {
         exit $script:InstallExitCode
     }
 
-    throw "Oriro installation failed with exit code $($script:InstallExitCode)."
+    throw "ORIRO installation failed with exit code $($script:InstallExitCode)."
 }
 
 Write-Host ""
-Write-Host "  Oriro Installer" -ForegroundColor Cyan
+Write-Host "  ORIRO Installer" -ForegroundColor Cyan
 Write-Host ""
 
 # Check if running in PowerShell
@@ -188,7 +188,7 @@ function Get-OriroDepsRoot {
     if ([string]::IsNullOrWhiteSpace($localAppData)) {
         $localAppData = Join-Path ([Environment]::GetFolderPath("UserProfile")) "AppData\Local"
     }
-    return (Join-Path $localAppData "Oriro\deps")
+    return (Join-Path $localAppData "ORIRO\deps")
 }
 
 function Get-PortableNodeRoot {
@@ -395,7 +395,7 @@ function Install-Node {
 # Check for existing Oriro installation
 function Check-ExistingOriro {
     if (Get-OriroCommandPath) {
-        Write-Host "[*] Existing Oriro installation detected" -ForegroundColor Yellow
+        Write-Host "[*] Existing ORIRO installation detected" -ForegroundColor Yellow
         return $true
     }
     return $false
@@ -616,7 +616,7 @@ function Ensure-Git {
     }
 
     Write-Host ""
-    Write-Host "Error: Git is required to install Oriro." -ForegroundColor Red
+    Write-Host "Error: Git is required to install ORIRO." -ForegroundColor Red
     Write-Host "Auto-bootstrap of user-local Git did not succeed." -ForegroundColor Yellow
     Write-Host "Install Git for Windows manually, then re-run this installer:" -ForegroundColor Yellow
     Write-Host "  https://git-scm.com/download/win" -ForegroundColor Cyan
@@ -1150,7 +1150,7 @@ function Install-Oriro {
         $Tag = "latest"
     }
     if (Test-OriroSourcePackageInstallSpec -RequestedTag $Tag) {
-        Write-Host "Error: npm installs do not support Oriro GitHub source targets like '$Tag'." -ForegroundColor Red
+        Write-Host "Error: npm installs do not support ORIRO GitHub source targets like '$Tag'." -ForegroundColor Red
         Write-Host "Use -InstallMethod git -Tag main for the moving main checkout, or use latest, beta, an exact version, or a built .tgz package." -ForegroundColor Yellow
         return $false
     }
@@ -1164,7 +1164,7 @@ function Install-Oriro {
         $packageName = "oriro"
     }
     $installSpec = Resolve-NpmOriroInstallSpec -PackageName $packageName -RequestedTag $Tag
-    Write-Host "[*] Installing Oriro ($installSpec)..." -ForegroundColor Yellow
+    Write-Host "[*] Installing ORIRO ($installSpec)..." -ForegroundColor Yellow
     $freshnessArgs = @("--min-release-age=0")
     $minReleaseAge = (Invoke-NpmCommand -Arguments @("config", "get", "min-release-age", "--global") 2>$null)
     $minReleaseAgeStatus = $LASTEXITCODE
@@ -1217,7 +1217,7 @@ function Install-Oriro {
         $env:NPM_CONFIG_BEFORE = $prevBefore
         $env:NPM_CONFIG_MIN_RELEASE_AGE = $prevMinReleaseAge
     }
-    Write-Host "[OK] Oriro installed" -ForegroundColor Green
+    Write-Host "[OK] ORIRO installed" -ForegroundColor Green
     return $true
 }
 
@@ -1232,7 +1232,7 @@ function Install-OriroFromGit {
     }
 
     $repoUrl = "https://github.com/oriro/oriro.git"
-    Write-Host "[*] Installing Oriro from GitHub ($repoUrl)..." -ForegroundColor Yellow
+    Write-Host "[*] Installing ORIRO from GitHub ($repoUrl)..." -ForegroundColor Yellow
 
     if (-not (Test-Path $RepoDir)) {
         git clone $repoUrl $RepoDir
@@ -1325,7 +1325,7 @@ function Install-OriroFromGit {
 
     $entryPath = Join-Path $RepoDir "dist\\entry.js"
     if (-not (Test-Path $entryPath)) {
-        Write-Host "[!] Oriro build did not produce $entryPath" -ForegroundColor Red
+        Write-Host "[!] ORIRO build did not produce $entryPath" -ForegroundColor Red
         return $false
     }
 
@@ -1341,7 +1341,7 @@ function Install-OriroFromGit {
         Write-Host "[!] Added $binDir to user PATH (restart terminal if command not found)" -ForegroundColor Yellow
     }
 
-    Write-Host "[OK] Oriro wrapper installed to $cmdPath" -ForegroundColor Green
+    Write-Host "[OK] ORIRO wrapper installed to $cmdPath" -ForegroundColor Green
     Write-Host "[i] This checkout uses pnpm. For deps, run: pnpm install (avoid npm install in the repo)." -ForegroundColor Gray
     return $true
 }
@@ -1491,7 +1491,7 @@ function Main {
     }
 
     if (-not (Ensure-OriroOnPath)) {
-        Write-Host "Install completed, but Oriro is not on PATH yet." -ForegroundColor Yellow
+        Write-Host "Install completed, but ORIRO is not on PATH yet." -ForegroundColor Yellow
         Write-Host "Open a new terminal, then run: oriro doctor" -ForegroundColor Cyan
         return
     }
@@ -1522,22 +1522,22 @@ function Main {
 
     Write-Host ""
     if ($installedVersion) {
-        Write-Host "Oriro installed successfully ($installedVersion)!" -ForegroundColor Green
+        Write-Host "ORIRO installed successfully ($installedVersion)!" -ForegroundColor Green
     } else {
-        Write-Host "Oriro installed successfully!" -ForegroundColor Green
+        Write-Host "ORIRO installed successfully!" -ForegroundColor Green
     }
     Write-Host ""
     if ($isUpgrade) {
         $updateMessages = @(
             "Leveled up! New skills unlocked. You're welcome.",
-            "Fresh code, same oriro. Miss me?",
+            "Fresh code, same lobster. Miss me?",
             "Back and better. Did you even notice I was gone?",
             "Update complete. I learned some new tricks while I was out.",
             "Upgraded! Now with 23% more sass.",
             "I've evolved. Try to keep up.",
             "New version, who dis? Oh right, still me but shinier.",
             "Patched, polished, and ready to pinch. Let's go.",
-            "The oriro has molted. Harder shell, sharper oriros.",
+            "The lobster has molted. Harder shell, sharper oriros.",
             "Update done! Check the changelog or just trust me, it's good.",
             "Reborn from the boiling waters of npm. Stronger now.",
             "I went away and came back smarter. You should try it sometime.",
@@ -1562,7 +1562,7 @@ function Main {
             "Cozy. I've already read your calendar. We need to talk.",
             "Finally unpacked. Now point me at your problems.",
             "cracks oriros Alright, what are we building?",
-            "The oriro has landed. Your terminal will never be the same.",
+            "The lobster has landed. Your terminal will never be the same.",
             "All done! I promise to only judge your code a little bit."
         )
         Write-Host (Get-Random -InputObject $completionMessages) -ForegroundColor Gray

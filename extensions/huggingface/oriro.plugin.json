@@ -56,7 +56,7 @@
     },
     "discovery.enabled": {
       "label": "Enable Discovery",
-      "help": "When false, Oriro keeps the Hugging Face plugin available but skips implicit startup discovery from ambient Hugging Face credentials."
+      "help": "When false, ORIRO keeps the Hugging Face plugin available but skips implicit startup discovery from ambient Hugging Face credentials."
     }
   }
 }

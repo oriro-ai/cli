@@ -1,5 +1,5 @@
 // Feishu plugin module implements pins behavior.
-import type { ClawdbotConfig } from "../runtime-api.js";
+import type { OriroConfig } from "../runtime-api.js";
 import { resolveFeishuRuntimeAccount } from "./accounts.js";
 import { createFeishuClient } from "./client.js";
 
@@ -34,7 +34,7 @@ function normalizePin(pin: {
 }
 
 export async function createPinFeishu(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   messageId: string;
   accountId?: string;
 }): Promise<FeishuPin | null> {
@@ -54,7 +54,7 @@ export async function createPinFeishu(params: {
 }
 
 export async function removePinFeishu(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   messageId: string;
   accountId?: string;
 }): Promise<void> {
@@ -73,7 +73,7 @@ export async function removePinFeishu(params: {
 }
 
 export async function listPinsFeishu(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   chatId: string;
   startTime?: string;
   endTime?: string;

@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: oriro-ui-2026
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

@@ -62,9 +62,9 @@ describe("slack allowlist log formatting", () => {
         input: "U090HHQ029J",
         resolved: true,
         id: "U090HHQ029J",
-        name: "steipete",
+        name: "oriro",
       }),
-    ).toBe("U090HHQ029J→steipete (id:U090HHQ029J)");
+    ).toBe("U090HHQ029J→oriro (id:U090HHQ029J)");
   });
 });
 

@@ -59,7 +59,7 @@ export async function maybeOfferUpdateBeforeDoctor(params: {
   const git = await detectOriroGitCheckout(params.root);
   if (git === "git") {
     const shouldUpdate = await params.confirm({
-      message: "Update Oriro from git before running doctor?",
+      message: "Update ORIRO from git before running doctor?",
       initialValue: true,
     });
     if (!shouldUpdate) {

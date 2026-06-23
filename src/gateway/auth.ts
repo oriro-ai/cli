@@ -32,7 +32,8 @@ export {
   type ResolvedGatewayAuthModeSource,
 } from "./auth-resolve.js";
 
-const LEGACY_ORIRO_ENV_NOTE = " Legacy environment variables are ignored; use ORIRO_* names.";
+const LEGACY_ORIRO_ENV_NOTE =
+  " Legacy ORIRO_* and MOLTBOT_* environment variables are ignored; use ORIRO_* names.";
 
 /** Normalized outcome for gateway shared-secret, Tailscale, device, and proxy auth. */
 export type GatewayAuthResult = {

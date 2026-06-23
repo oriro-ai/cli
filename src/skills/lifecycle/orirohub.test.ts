@@ -65,12 +65,17 @@ const {
   updateSkillsFromOriroHub,
 } = await import("./orirohub.js");
 
+// The code builds OS-native install paths (path.join → "C:\…\skills\x" on Windows,
+// "/…/skills/x" on POSIX). Compare paths semantically — normalize separators and drop a
+// leading drive letter — so these assertions hold on every platform, not just POSIX.
+const normPath = (p: string | undefined) => (p ?? "").replace(/\\/g, "/").replace(/^[A-Za-z]:/, "");
+
 function expectInstallPackageSourceDir(sourceDir: string) {
   const call = installPackageDirMock.mock.calls.at(0);
   if (!call) {
     throw new Error("expected installPackageDir call");
   }
-  expect(call[0]?.sourceDir).toBe(sourceDir);
+  expect(normPath(call[0]?.sourceDir)).toBe(normPath(sourceDir));
 }
 
 function installPolicyInput() {
@@ -102,7 +107,7 @@ function expectInstalledSkill(
     expect(result.version).toBe(expected.version);
   }
   if (expected.targetDir) {
-    expect(result.targetDir).toBe(expected.targetDir);
+    expect(normPath(result.targetDir)).toBe(normPath(expected.targetDir));
   }
 }
 

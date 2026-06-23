@@ -15,7 +15,7 @@ ERROR='\033[38;2;230;57;70m'        # coral-mid     #e63946
 MUTED='\033[38;2;90;100;128m'       # text-muted    #5a6480
 NC='\033[0m' # No Color
 
-DEFAULT_TAGLINE="All your chats, one Oriro."
+DEFAULT_TAGLINE="All your chats, one ORIRO."
 NODE_DEFAULT_MAJOR=24
 NODE_MIN_MAJOR=22
 NODE_MIN_MINOR=19
@@ -265,7 +265,7 @@ print_gum_status() {
 print_installer_banner() {
     if [[ -n "$GUM" ]]; then
         local title tagline hint card
-        title="$("$GUM" style --foreground "#ff4d4d" --bold "ORIRO Oriro Installer")"
+        title="$("$GUM" style --foreground "#ff4d4d" --bold "🦞 Oriro Installer")"
         tagline="$("$GUM" style --foreground "#8892b0" "$TAGLINE")"
         hint="$("$GUM" style --foreground "#5a6480" "modern installer mode")"
         card="$(printf '%s\n%s\n%s' "$title" "$tagline" "$hint")"
@@ -275,7 +275,7 @@ print_installer_banner() {
     fi
 
     echo -e "${ACCENT}${BOLD}"
-    echo "  ORIRO Oriro Installer"
+    echo "  🦞 ORIRO Installer"
     echo -e "${NC}${INFO}  ${TAGLINE}${NC}"
     echo ""
 }
@@ -885,11 +885,11 @@ run_npm_global_install() {
         local log_quoted=""
         printf -v cmd_quoted '%q ' "${cmd[@]}"
         printf -v log_quoted '%q' "$log"
-        run_with_spinner "Installing Oriro package" bash -c "${cmd_quoted}>${log_quoted} 2>&1"
+        run_with_spinner "Installing ORIRO package" bash -c "${cmd_quoted}>${log_quoted} 2>&1"
         return $?
     fi
 
-    ui_info "Installing Oriro package"
+    ui_info "Installing ORIRO package"
     "${cmd[@]}" >"$log" 2>&1
 }
 
@@ -982,7 +982,7 @@ install_oriro_npm() {
             attempted_build_tool_fix=true
             ui_info "Retrying npm install after build tools setup"
             if run_npm_global_install "$spec" "$log"; then
-                ui_success "Oriro npm package installed"
+                ui_success "ORIRO npm package installed"
                 return 0
             fi
         fi
@@ -1002,7 +1002,7 @@ install_oriro_npm() {
             ui_warn "npm left stale directory; cleaning and retrying"
             cleanup_npm_oriro_paths
             if run_npm_global_install "$spec" "$log"; then
-                ui_success "Oriro npm package installed"
+                ui_success "ORIRO npm package installed"
                 return 0
             fi
             return 1
@@ -1012,7 +1012,7 @@ install_oriro_npm() {
             conflict="$(extract_oriro_conflict_path "$log" || true)"
             if [[ -n "$conflict" ]] && cleanup_oriro_bin_conflict "$conflict"; then
                 if run_npm_global_install "$spec" "$log"; then
-                    ui_success "Oriro npm package installed"
+                    ui_success "ORIRO npm package installed"
                     return 0
                 fi
                 return 1
@@ -1025,7 +1025,7 @@ install_oriro_npm() {
         fi
         return 1
     fi
-    ui_success "Oriro npm package installed"
+    ui_success "ORIRO npm package installed"
     return 0
 }
 
@@ -1067,13 +1067,13 @@ TAGLINES+=("Your config is valid, your assumptions are not.")
 TAGLINES+=("I don't just autocomplete—I auto-commit (emotionally), then ask you to review (logically).")
 TAGLINES+=("Less clicking, more shipping, fewer \"where did that file go\" moments.")
 TAGLINES+=("Oriros out, commit in—let's ship something mildly responsible.")
-TAGLINES+=("I'll butter your workflow like a oriro roll: messy, delicious, effective.")
+TAGLINES+=("I'll butter your workflow like a lobster roll: messy, delicious, effective.")
 TAGLINES+=("Shell yeah—I'm here to pinch the toil and leave you the glory.")
 TAGLINES+=("If it's repetitive, I'll automate it; if it's hard, I'll bring jokes and a rollback plan.")
 TAGLINES+=("Because texting yourself reminders is so 2024.")
 TAGLINES+=("WhatsApp, but make it ✨engineering✨.")
 TAGLINES+=("Turning \"I'll reply later\" into \"my bot replied instantly\".")
-TAGLINES+=("The only crab in your contacts you actually want to hear from. ORIRO")
+TAGLINES+=("The only crab in your contacts you actually want to hear from. 🦞")
 TAGLINES+=("Chat automation for people who peaked at IRC.")
 TAGLINES+=("Because Siri wasn't answering at 3AM.")
 TAGLINES+=("IPC, but it's your phone.")
@@ -1984,7 +1984,7 @@ fix_npm_permissions() {
     ui_info "Configuring npm for user-local installs"
     mkdir -p "$HOME/.npm-global"
     npm config set prefix "$HOME/.npm-global"
-    ui_warn "Avoid sudo npm i -g for future Oriro updates; use npm i -g oriro@latest so npm keeps using this user prefix instead of a different global prefix."
+    ui_warn "Avoid sudo npm i -g for future ORIRO updates; use npm i -g oriro@latest so npm keeps using this user prefix instead of a different global prefix."
 
     persist_shell_path_prepend "$HOME/.npm-global/bin" "\$HOME/.npm-global/bin" || true
 
@@ -2014,7 +2014,7 @@ ensure_oriro_bin_link() {
 # Check for existing Oriro installation
 check_existing_oriro() {
     if [[ -n "$(type -P oriro 2>/dev/null || true)" ]]; then
-        ui_info "Existing Oriro installation detected, upgrading"
+        ui_info "Existing ORIRO installation detected, upgrading"
         return 0
     fi
     return 1
@@ -2128,6 +2128,15 @@ EOF
 }
 
 run_pnpm() {
+    if [[ "${PNPM_CMD[*]}" == "corepack pnpm" && "${1:-}" == "-C" && -n "${2:-}" ]]; then
+        local repo_dir="$2"
+        shift 2
+        if ! (cd "$repo_dir" && "${PNPM_CMD[@]}" --version >/dev/null 2>&1); then
+            ensure_pnpm
+        fi
+        (cd "$repo_dir" && "${PNPM_CMD[@]}" "$@")
+        return
+    fi
     if ! pnpm_cmd_is_ready; then
         ensure_pnpm
     fi
@@ -2260,6 +2269,10 @@ activate_repo_pnpm_version() {
         ui_info "Activating repo pnpm ${version}"
         corepack prepare "pnpm@${version}" --activate >/dev/null 2>&1 || true
         refresh_shell_command_cache
+        if [[ "$(cd "$repo_dir" && corepack pnpm --version 2>/dev/null || true)" == "$version" ]]; then
+            set_pnpm_cmd corepack pnpm
+            return 0
+        fi
         detect_pnpm_cmd || true
     fi
 }
@@ -2414,8 +2427,8 @@ warn_duplicate_oriro_global_installs() {
         return 0
     fi
 
-    ui_warn "Multiple Oriro global installs detected"
-    echo "  Different Node/npm environments can run different Oriro versions."
+    ui_warn "Multiple ORIRO global installs detected"
+    echo "  Different Node/npm environments can run different ORIRO versions."
 
     local active_node active_npm active_oriro
     active_node="$(command -v node 2>/dev/null || true)"
@@ -2623,9 +2636,9 @@ install_oriro_from_git() {
     local repo_url="https://github.com/oriro/oriro.git"
 
     if [[ -d "$repo_dir/.git" ]]; then
-        ui_info "Installing Oriro from git checkout: ${repo_dir}"
+        ui_info "Installing ORIRO from git checkout: ${repo_dir}"
     else
-        ui_info "Installing Oriro from GitHub (${repo_url})"
+        ui_info "Installing ORIRO from GitHub (${repo_url})"
     fi
 
     if ! check_git; then
@@ -2637,7 +2650,7 @@ install_oriro_from_git() {
 
     if [[ ! -d "$repo_dir" ]]; then
         mkdir -p "$(dirname "$repo_dir")"
-        run_quiet_step "Cloning Oriro" git clone "$repo_url" "$repo_dir"
+        run_quiet_step "Cloning ORIRO" git clone "$repo_url" "$repo_dir"
     fi
 
     local git_ref
@@ -2659,7 +2672,7 @@ install_oriro_from_git() {
     if ! run_quiet_step "Building UI" run_pnpm -C "$repo_dir" ui:build; then
         ui_warn "UI build failed; continuing (CLI may still work)"
     fi
-    run_quiet_step "Building Oriro" run_pnpm -C "$repo_dir" build
+    run_quiet_step "Building ORIRO" run_pnpm -C "$repo_dir" build
 
     ensure_user_local_bin_on_path
 
@@ -2766,7 +2779,7 @@ install_oriro() {
     fi
 
     if is_oriro_source_package_install_spec "${ORIRO_VERSION}"; then
-        ui_error "npm installs do not support Oriro GitHub source targets like '${ORIRO_VERSION}'."
+        ui_error "npm installs do not support ORIRO GitHub source targets like '${ORIRO_VERSION}'."
         ui_info "Use --install-method git --version main for the moving main checkout, or use latest, beta, an exact version, or a built .tgz package."
         return 1
     fi
@@ -2776,9 +2789,9 @@ install_oriro() {
         resolved_version="$(npm view "${package_name}@${ORIRO_VERSION}" version 2>/dev/null || true)"
     fi
     if [[ -n "$resolved_version" ]]; then
-        ui_info "Installing Oriro v${resolved_version}"
+        ui_info "Installing ORIRO v${resolved_version}"
     else
-        ui_info "Installing Oriro (${ORIRO_VERSION})"
+        ui_info "Installing ORIRO (${ORIRO_VERSION})"
     fi
     local install_spec=""
     install_spec="$(resolve_package_install_spec "${package_name}" "${ORIRO_VERSION}")"
@@ -2799,7 +2812,7 @@ install_oriro() {
 
     ensure_oriro_bin_link || true
 
-    ui_success "Oriro installed"
+    ui_success "ORIRO installed"
 }
 
 # Run doctor for migrations (safe, non-interactive)
@@ -2852,12 +2865,12 @@ run_bootstrap_onboarding_if_needed() {
     effective_home="$(resolve_oriro_effective_home)"
     local config_path="${ORIRO_CONFIG_PATH:-$effective_home/.oriro/oriro.json}"
     local legacy_config_path="${HOME}/.oriro/oriro.json"
-    local legacy_clawdbot_path="${HOME}/.clawdbot/clawdbot.json"
-    if [[ -f "${config_path}" || -f "$effective_home/.clawdbot/clawdbot.json" ]]; then
+    local legacy_oriro_path="${HOME}/.oriro/oriro.json"
+    if [[ -f "${config_path}" || -f "$effective_home/.oriro/oriro.json" ]]; then
         return
     fi
     if [[ -z "${ORIRO_CONFIG_PATH:-}" && "${effective_home}" != "${HOME}" ]]; then
-        if [[ -f "$legacy_config_path" || -f "$legacy_clawdbot_path" ]]; then
+        if [[ -f "$legacy_config_path" || -f "$legacy_oriro_path" ]]; then
             return
         fi
     fi
@@ -3027,7 +3040,7 @@ verify_installation() {
         return 1
     fi
 
-    run_quiet_step "Checking Oriro version" "$oriro" --version || return 1
+    run_quiet_step "Checking ORIRO version" "$oriro" --version || return 1
 
     if is_gateway_daemon_loaded "$oriro"; then
         run_quiet_step "Checking gateway service" "$oriro" gateway status --deep || {
@@ -3066,7 +3079,7 @@ main() {
 
     if [[ -z "$INSTALL_METHOD" && -n "$detected_checkout" ]]; then
         if ! is_promptable; then
-            ui_info "Found Oriro checkout but no TTY; defaulting to npm install"
+            ui_info "Found ORIRO checkout but no TTY; defaulting to npm install"
             INSTALL_METHOD="npm"
         else
             local selected_method=""
@@ -3123,7 +3136,7 @@ main() {
         exit 1
     fi
 
-    ui_stage "Installing Oriro"
+    ui_stage "Installing ORIRO"
 
     local final_git_dir=""
     if [[ "$INSTALL_METHOD" == "git" ]]; then
@@ -3197,21 +3210,21 @@ main() {
 
     echo ""
     if [[ -n "$installed_version" ]]; then
-        ui_celebrate "ORIRO Oriro installed successfully (${installed_version})!"
+        ui_celebrate "🦞 ORIRO installed successfully (${installed_version})!"
     else
-        ui_celebrate "ORIRO Oriro installed successfully!"
+        ui_celebrate "🦞 ORIRO installed successfully!"
     fi
     if [[ "$is_upgrade" == "true" ]]; then
         local update_messages=(
             "Leveled up! New skills unlocked. You're welcome."
-            "Fresh code, same oriro. Miss me?"
+            "Fresh code, same lobster. Miss me?"
             "Back and better. Did you even notice I was gone?"
             "Update complete. I learned some new tricks while I was out."
             "Upgraded! Now with 23% more sass."
-            "I've evolved. Try to keep up. ORIRO"
+            "I've evolved. Try to keep up. 🦞"
             "New version, who dis? Oh right, still me but shinier."
             "Patched, polished, and ready to pinch. Let's go."
-            "The oriro has molted. Harder shell, sharper oriros."
+            "The lobster has molted. Harder shell, sharper oriros."
             "Update done! Check the changelog or just trust me, it's good."
             "Reborn from the boiling waters of npm. Stronger now."
             "I went away and came back smarter. You should try it sometime."
@@ -3237,7 +3250,7 @@ main() {
             "Cozy. I've already read your calendar. We need to talk."
             "Finally unpacked. Now point me at your problems."
             "cracks oriros Alright, what are we building?"
-            "The oriro has landed. Your terminal will never be the same."
+            "The lobster has landed. Your terminal will never be the same."
             "All done! I promise to only judge your code a little bit."
         )
         local completion_message
@@ -3295,7 +3308,7 @@ main() {
             local effective_home
             effective_home="$(resolve_oriro_effective_home)"
             local config_path="${ORIRO_CONFIG_PATH:-$effective_home/.oriro/oriro.json}"
-            if [[ -f "${config_path}" || -f "$effective_home/.clawdbot/clawdbot.json" ]]; then
+            if [[ -f "${config_path}" || -f "$effective_home/.oriro/oriro.json" ]]; then
                 ui_info "Config already present; running doctor"
                 run_doctor
                 should_open_dashboard=true

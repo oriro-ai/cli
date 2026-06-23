@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: google-ai-latest
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai
@@ -427,7 +428,7 @@ Files to update in <project>-intel:
   <project>-intel-src/main.py → grep for "gemini" model strings
   <project>-intel-src/config.py → GEMINI_MODEL constant
 
-Files to update in GOONYX:
+Files to update in the app router:
   Update routes that reference old Gemini model strings
 ```
 
@@ -478,8 +479,8 @@ OLD_FLASH      = "gemini-2.0-flash"         # ← REMOVE
 OLD_25_FLASH   = "gemini-2.5-flash"         # ← UPDATE to 3.1-flash
 
 # <project>-intel summarizer update:
-TRIRO_SUMMARIZER   = "gemini-3.1-flash"
-TRIRO_SCORER       = "claude-haiku-4-5-20251001"  # unchanged
+APP_SUMMARIZER   = "gemini-3.1-flash"
+APP_SCORER       = "claude-haiku-4-5-20251001"  # unchanged
 ```
 
 ---
@@ -499,7 +500,7 @@ Update procedure:
   1. Check ai.google.dev/gemini-api/docs/pricing
   2. Update D1 google_ai_capabilities table via migration
   3. Update <project>-intel model strings
-  4. Update GOONYX routes
+  4. Update the app router routes
   5. Test all Flash Prompts with new model strings
 ```
 
@@ -610,9 +611,9 @@ IMMEDIATE UPDATES NEEDED (post I/O):
    learn_primary:  gemini-3.1-flash → gemini-3.5-flash
 
 2. <project>-intel:
-   TRIRO_SUMMARIZER: gemini-3.1-flash → gemini-3.5-flash
+   APP_SUMMARIZER: gemini-3.1-flash → gemini-3.5-flash
 
-3. GOONYX routes:
+3. the app router routes:
    Update any Gemini model string references
 
 JUNE 2026 (when Gemini 3.5 Pro releases):

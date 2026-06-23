@@ -44,7 +44,7 @@ function runStatus(command, args, options = {}) {
 
 function readOptionValue(argv, index, optionName) {
   const value = argv[index + 1];
-  if (value === undefined || value === "" || value.startsWith("--")) {
+  if (value === undefined || value === "" || value.startsWith("-")) {
     throw new Error(`${optionName} requires a value`);
   }
   return value;
@@ -243,7 +243,7 @@ function main() {
       throw new Error("Could not determine Full Release Validation run id.");
     }
 
-    console.log(`Parent run: https://github.com/oriro-ai/cli/actions/runs/${parentRunId}`);
+    console.log(`Parent run: https://github.com/oriro/oriro/actions/runs/${parentRunId}`);
     const watch = runStatus(
       "gh",
       ["run", "watch", parentRunId, "--exit-status", "--interval", "30"],
@@ -253,7 +253,7 @@ function main() {
     );
     if (watch.status !== 0) {
       throw new Error(
-        `Full Release Validation failed: https://github.com/oriro-ai/cli/actions/runs/${parentRunId}`,
+        `Full Release Validation failed: https://github.com/oriro/oriro/actions/runs/${parentRunId}`,
       );
     }
     verifyChildHeads(parentRunId, sha);

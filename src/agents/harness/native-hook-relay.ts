@@ -396,7 +396,7 @@ const nativeHookRelayProviderAdapters: Record<
               ? { behavior: "allow" }
               : {
                   behavior: "deny",
-                  message: message?.trim() || "Denied by Oriro",
+                  message: message?.trim() || "Denied by ORIRO",
                 },
         },
       })}\n`,
@@ -724,7 +724,7 @@ async function resolveNativeHookRelayPreToolUseApproval(
       handled: true,
       outcome: "denied",
       reason:
-        "Oriro tool policy rewrote Codex app-server approval params; refusing original request.",
+        "ORIRO tool policy rewrote Codex app-server approval params; refusing original request.",
     };
   }
   return {
@@ -1429,7 +1429,7 @@ async function runNativeHookRelayPreToolUse(params: {
     // Codex app-server may continue with the original params when updatedInput
     // is unsupported, so rewrites must fail closed here.
     return params.adapter.renderPreToolUseBlockResponse(
-      "Oriro tool policy rewrote Codex app-server approval params; refusing original request.",
+      "ORIRO tool policy rewrote Codex app-server approval params; refusing original request.",
     );
   }
   return params.adapter.renderNoopResponse(params.invocation.event);
@@ -2164,7 +2164,7 @@ function resolveOriroCliExecutable(): string {
       return resolved;
     }
   }
-  throw new Error("Cannot resolve Oriro CLI executable path for native hook relay");
+  throw new Error("Cannot resolve ORIRO CLI executable path for native hook relay");
 }
 
 function normalizeAllowedEvents(

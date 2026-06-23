@@ -203,6 +203,7 @@ export const fr: TranslationMap = {
     inherit: "hériter",
     defaultOption: "Par défaut ({value})",
     offExplicit: "désactivé (explicite)",
+    auto: "auto",
     on: "activé",
     off: "désactivé",
     full: "complet",
@@ -1323,7 +1324,7 @@ export const fr: TranslationMap = {
         stepDevUi:
           "Si vous utilisez pnpm ui:dev, reconstruisez ou redémarrez l’UI de développement avec le checkout actuel.",
         stepRestart:
-          "Redémarrez le Gateway après la mise à jour d’Oriro afin qu’il serve le protocole actuel.",
+          "Redémarrez le Gateway après la mise à jour d’ORIRO afin qu’il serve le protocole actuel.",
       },
       network: {
         title: "Connexion impossible",
@@ -1637,6 +1638,7 @@ export const fr: TranslationMap = {
       wakeModeHelp:
         "Maintenant déclenche immédiatement. Prochain heartbeat attend le cycle suivant.",
       payloadKind: "Que faut-il exécuter ?",
+      command: "Command",
       systemEvent: "Publier un message dans la chronologie principale",
       agentTurn: "Exécuter une tâche d’assistant (isolée)",
       systemEventHelp:

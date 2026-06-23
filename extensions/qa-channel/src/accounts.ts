@@ -39,7 +39,7 @@ export function resolveQaChannelAccount(params: {
   const enabled = baseEnabled && merged.enabled !== false;
   const baseUrl = merged.baseUrl?.trim() ?? "";
   const botUserId = merged.botUserId?.trim() || "oriro";
-  const botDisplayName = merged.botDisplayName?.trim() || "Oriro QA";
+  const botDisplayName = merged.botDisplayName?.trim() || "ORIRO QA";
   return {
     accountId,
     enabled,

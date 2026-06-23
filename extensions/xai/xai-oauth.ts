@@ -570,7 +570,7 @@ export async function loginXaiOAuth(ctx: ProviderAuthContext): Promise<ProviderA
       },
       notes: [
         "xAI OAuth uses your xAI account entitlement; xAI API keys still work.",
-        "xAI may label the consent app as Grok Build because Oriro uses xAI's shared OAuth client.",
+        "xAI may label the consent app as Grok Build because ORIRO uses xAI's shared OAuth client.",
       ],
     });
   } catch (err) {
@@ -648,7 +648,7 @@ export async function loginXaiDeviceCode(ctx: ProviderAuthContext): Promise<Prov
       },
       notes: [
         "xAI device code login uses your xAI account entitlement without requiring a localhost callback.",
-        "xAI may label the consent app as Grok Build because Oriro uses xAI's shared OAuth client.",
+        "xAI may label the consent app as Grok Build because ORIRO uses xAI's shared OAuth client.",
       ],
     });
   } catch (err) {

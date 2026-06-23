@@ -1756,7 +1756,7 @@ describe("runCronIsolatedAgentTurn delivery instruction", () => {
   });
 
   it("does not instruct the agent to summarize when delivery is requested", async () => {
-    // Regression for https://github.com/oriro-ai/cli/issues/58535:
+    // Regression for https://github.com/oriro/oriro/issues/58535:
     // "summary" caused LLMs to condense structured output and drop fields
     // non-deterministically on every run.
     mockRunCronFallbackPassthrough();

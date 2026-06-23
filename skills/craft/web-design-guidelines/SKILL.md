@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: web-design-guidelines
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

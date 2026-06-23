@@ -2061,7 +2061,7 @@ describe("createImageGenerateTool", () => {
 
     const tool = createToolWithPrimaryImageModel("openai/gpt-image-1");
     const result = await tool.execute("call-openai-generate", {
-      prompt: "A oriro at the movies",
+      prompt: "A lobster at the movies",
       aspectRatio: "1:1",
     });
     const text = resultText(result);
@@ -2110,7 +2110,7 @@ describe("createImageGenerateTool", () => {
 
     const tool = createToolWithPrimaryImageModel("minimax/image-01");
     const result = await tool.execute("call-minimax-generate", {
-      prompt: "A oriro at the movies",
+      prompt: "A lobster at the movies",
       size: "1280x720",
     });
 
@@ -2181,7 +2181,7 @@ describe("createImageGenerateTool", () => {
 
     const tool = createToolWithPrimaryImageModel("openai/gpt-image-1");
     const result = await tool.execute("call-openai-generate", {
-      prompt: "A oriro at the movies",
+      prompt: "A lobster at the movies",
     });
     const text = resultText(result);
     const parsed = splitMediaFromOutput(text);

@@ -108,7 +108,7 @@ export async function updateStatusCommand(opts: UpdateStatusOptions): Promise<vo
     },
   ];
 
-  defaultRuntime.log(theme.heading("Oriro update status"));
+  defaultRuntime.log(theme.heading("ORIRO update status"));
   defaultRuntime.log("");
   defaultRuntime.log(
     renderTable({

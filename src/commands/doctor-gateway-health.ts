@@ -50,11 +50,11 @@ function noteCliGatewayVersionSkew(status: StatusSummary | undefined): void {
   }
   note(
     [
-      `This command is Oriro ${VERSION}; the running Gateway is Oriro ${gatewayVersion}.`,
+      `This command is ORIRO ${VERSION}; the running Gateway is ORIRO ${gatewayVersion}.`,
       "Check `oriro --version`, `which oriro`, and `oriro gateway status --deep`.",
-      "If this mismatch is unexpected, update PATH so `oriro` points to the version you want, or reinstall the Gateway service from that same Oriro install.",
+      "If this mismatch is unexpected, update PATH so `oriro` points to the version you want, or reinstall the Gateway service from that same ORIRO install.",
     ].join("\n"),
-    "Oriro version mismatch",
+    "ORIRO version mismatch",
   );
 }
 

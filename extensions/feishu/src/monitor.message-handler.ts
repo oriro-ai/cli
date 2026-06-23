@@ -1,6 +1,6 @@
 // Feishu plugin module implements monitor.message handler behavior.
 import { isRecord, readStringValue as readString } from "oriro/plugin-sdk/string-coerce-runtime";
-import type { ClawdbotConfig, HistoryEntry, PluginRuntime, RuntimeEnv } from "../runtime-api.js";
+import type { OriroConfig, HistoryEntry, PluginRuntime, RuntimeEnv } from "../runtime-api.js";
 import { resolveFeishuMessageDedupeKey } from "./dedupe-key.js";
 import type { FeishuMessageEvent } from "./event-types.js";
 import { isMentionForwardRequest } from "./mention.js";
@@ -12,14 +12,14 @@ import { createSequentialQueue } from "./sequential-queue.js";
 import type { FeishuChatType } from "./types.js";
 
 type FeishuMessageReceiveHandlerContext = {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   channelRuntime: PluginRuntime["channel"];
   accountId: string;
   runtime?: RuntimeEnv;
   chatHistories: Map<string, HistoryEntry[]>;
   fireAndForget?: boolean;
   handleMessage: (params: {
-    cfg: ClawdbotConfig;
+    cfg: OriroConfig;
     event: FeishuMessageEvent;
     botOpenId?: string;
     botName?: string;

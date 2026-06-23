@@ -4201,7 +4201,7 @@ describe("runCodexAppServerAttempt turn watches", () => {
   });
 
   it("releases completion when a projector callback throws during turn/completed", async () => {
-    // Regression for oriro-ai/cli#67996: a throw inside the projector's
+    // Regression for oriro/oriro#67996: a throw inside the projector's
     // turn/completed handler must not strand resolveCompletion, otherwise the
     // gateway session lane stays locked and every follow-up message queues
     // behind a run that will never resolve.

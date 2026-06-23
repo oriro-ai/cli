@@ -373,6 +373,7 @@ export function createMcpLoopbackServerConfig(port: number) {
       oriro: {
         type: "http",
         url: `http://127.0.0.1:${port}/mcp`,
+        alwaysLoad: true,
         headers: {
           Authorization: "Bearer ${ORIRO_MCP_TOKEN}",
           "x-session-key": "${ORIRO_MCP_SESSION_KEY}",

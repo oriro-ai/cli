@@ -15,11 +15,11 @@ describe("enqueueIMessageReactionSystemEvent", () => {
 
     const queued = enqueueIMessageReactionSystemEvent({
       decision: {
-        text: "iMessage reaction added: 👎 by +15555550123 on msg oriro-reply-guid",
-        contextKey: "imessage:reaction:added:3:oriro-reply-guid:+15555550123:👎",
+        text: "iMessage reaction added: 👎 by +15555550123 on msg lobster-reply-guid",
+        contextKey: "imessage:reaction:added:3:lobster-reply-guid:+15555550123:👎",
         route: { sessionKey: "agent:main:main" },
         reaction: {
-          targetGuid: "oriro-reply-guid",
+          targetGuid: "lobster-reply-guid",
           action: "added",
           emoji: "👎",
         },
@@ -30,17 +30,17 @@ describe("enqueueIMessageReactionSystemEvent", () => {
 
     expect(queued).toBe(true);
     expect(enqueueSystemEvent).toHaveBeenCalledWith(
-      "iMessage reaction added: 👎 by +15555550123 on msg oriro-reply-guid",
+      "iMessage reaction added: 👎 by +15555550123 on msg lobster-reply-guid",
       {
         sessionKey: "agent:main:main",
-        contextKey: "imessage:reaction:added:3:oriro-reply-guid:+15555550123:👎",
+        contextKey: "imessage:reaction:added:3:lobster-reply-guid:+15555550123:👎",
       },
     );
     expect(runtime.log).toHaveBeenCalledWith(
-      "imessage: reaction system event queued session=agent:main:main target=oriro-reply-guid action=added emoji=👎",
+      "imessage: reaction system event queued session=agent:main:main target=lobster-reply-guid action=added emoji=👎",
     );
     expect(logVerbose).toHaveBeenCalledWith(
-      "imessage: reaction event enqueued: iMessage reaction added: 👎 by +15555550123 on msg oriro-reply-guid",
+      "imessage: reaction event enqueued: iMessage reaction added: 👎 by +15555550123 on msg lobster-reply-guid",
     );
   });
 });

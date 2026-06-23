@@ -278,7 +278,7 @@ describe("qa cli runtime", () => {
         title: "Telegram status command reply",
         defaultEnabled: true,
         rationale: "status rationale",
-        regressionRefs: ["oriro-ai/cli#74698"],
+        regressionRefs: ["oriro/oriro#74698"],
       },
     ]);
     startQaLabServer.mockResolvedValue({
@@ -690,7 +690,7 @@ describe("qa cli runtime", () => {
     expect(runTelegramQaLive).not.toHaveBeenCalled();
     expectWriteContains(
       stdoutWrite,
-      "telegram-status-command\tdefault\tTelegram status command reply\tstatus rationale refs=oriro-ai/cli#74698",
+      "telegram-status-command\tdefault\tTelegram status command reply\tstatus rationale refs=oriro/oriro#74698",
     );
   });
 

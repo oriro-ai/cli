@@ -11,7 +11,7 @@ export function compareOriroVersions(leftVersion, rightVersion) {
   const left = parseVersion(leftVersion);
   const right = parseVersion(rightVersion);
   if (!left || !right) {
-    throw new Error(`cannot compare Oriro versions: ${leftVersion} ${rightVersion}`);
+    throw new Error(`cannot compare ORIRO versions: ${leftVersion} ${rightVersion}`);
   }
   for (const key of ["year", "month", "patch"]) {
     const delta = left[key] - right[key];
@@ -42,7 +42,7 @@ function normalizePublishedVersions(publishedVersions) {
 export function resolveDefaultReleaseUpgradeBaseline(candidateVersion, publishedVersions) {
   const candidate = parseVersion(candidateVersion);
   if (!candidate) {
-    throw new Error(`invalid candidate Oriro version: ${candidateVersion}`);
+    throw new Error(`invalid candidate ORIRO version: ${candidateVersion}`);
   }
 
   const versions = normalizePublishedVersions(publishedVersions);
@@ -58,10 +58,10 @@ export function resolveDefaultReleaseUpgradeBaseline(candidateVersion, published
     return `oriro@${same}`;
   }
 
-  throw new Error(`no published Oriro baseline is <= candidate ${candidate.version}`);
+  throw new Error(`no published ORIRO baseline is <= candidate ${candidate.version}`);
 }
 
-function parseArgs(argv) {
+export function parseArgs(argv) {
   const args = new Map();
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -70,7 +70,7 @@ function parseArgs(argv) {
     }
     const key = arg.slice(2);
     const value = argv[index + 1];
-    if (value === undefined || value.startsWith("--")) {
+    if (value === undefined || value.startsWith("-")) {
       throw new Error(`missing value for --${key}`);
     }
     args.set(key, value);

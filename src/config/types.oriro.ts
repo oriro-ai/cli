@@ -241,10 +241,10 @@ export type OriroConfigInput = Omit<OriroConfig, "models"> & {
   models?: ModelsConfigInput;
 };
 
-declare const oriroConfigStateBrand: unique symbol;
+declare const openOriroConfigStateBrand: unique symbol;
 
 type BrandedConfigState<TState extends string> = OriroConfig & {
-  readonly [oriroConfigStateBrand]?: TState;
+  readonly [openOriroConfigStateBrand]?: TState;
 };
 
 /** Authored config before include/env resolution and runtime defaults. */

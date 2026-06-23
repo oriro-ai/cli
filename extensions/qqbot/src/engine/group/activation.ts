@@ -66,7 +66,7 @@ function resolveSessionStorePath(
 
   const stateDir =
     process.env.ORIRO_STATE_DIR?.trim() ||
-    process.env.CLAWDBOT_STATE_DIR?.trim() ||
+    process.env.ORIRO_STATE_DIR?.trim() ||
     path.join(process.env.HOME || process.env.USERPROFILE || "", ".oriro");
   return path.join(stateDir, "agents", resolvedAgentId, "sessions", "sessions.json");
 }

@@ -380,7 +380,7 @@ export async function runPluginsInitCommand(id: string, opts: PluginsInitOptions
   };
   const idLiteral = jsStringLiteral(id);
   const nameLiteral = jsStringLiteral(name);
-  const descriptionLiteral = jsStringLiteral(`Add ${name} tools to Oriro.`);
+  const descriptionLiteral = jsStringLiteral(`Add ${name} tools to ORIRO.`);
   const indexSource = `import { Type } from "typebox";
 import { defineToolPlugin } from "oriro/plugin-sdk/tool-plugin";
 
@@ -412,7 +412,7 @@ describe(${idLiteral}, () => {
 `;
   const readmeSource = `# ${name}
 
-Simple Oriro tool plugin.
+Simple ORIRO tool plugin.
 
 ## Build
 
@@ -444,7 +444,7 @@ npm test
   writeJsonFile(path.join(rootDir, PLUGIN_MANIFEST_FILENAME), {
     id,
     name,
-    description: `Add ${name} tools to Oriro.`,
+    description: `Add ${name} tools to ORIRO.`,
     version: packageManifest.version,
     configSchema: {
       type: "object",

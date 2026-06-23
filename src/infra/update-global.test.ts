@@ -140,9 +140,9 @@ describe("update global helpers", () => {
     expect(
       resolveGlobalInstallSpec({
         packageName: "oriro",
-        tag: "github:oriro-ai/cli#feature/my-branch",
+        tag: "github:oriro/oriro#feature/my-branch",
       }),
-    ).toBe("github:oriro-ai/cli#feature/my-branch");
+    ).toBe("github:oriro/oriro#feature/my-branch");
     expect(
       resolveGlobalInstallSpec({
         packageName: "oriro",
@@ -243,7 +243,7 @@ describe("update global helpers", () => {
     expect(isMainPackageTarget(" MAIN ")).toBe(true);
     expect(isMainPackageTarget("beta")).toBe(false);
 
-    expect(isExplicitPackageInstallSpec("github:oriro-ai/cli#main")).toBe(true);
+    expect(isExplicitPackageInstallSpec("github:oriro/oriro#main")).toBe(true);
     expect(isExplicitPackageInstallSpec("https://example.com/oriro-main.tgz")).toBe(true);
     expect(isExplicitPackageInstallSpec("file:/tmp/oriro-main.tgz")).toBe(true);
     expect(isExplicitPackageInstallSpec("/tmp/oriro-main.tgz")).toBe(true);
@@ -253,7 +253,7 @@ describe("update global helpers", () => {
     expect(canResolveRegistryVersionForPackageTarget("latest")).toBe(true);
     expect(canResolveRegistryVersionForPackageTarget("2026.3.22")).toBe(true);
     expect(canResolveRegistryVersionForPackageTarget("main")).toBe(false);
-    expect(canResolveRegistryVersionForPackageTarget("github:oriro-ai/cli#main")).toBe(false);
+    expect(canResolveRegistryVersionForPackageTarget("github:oriro/oriro#main")).toBe(false);
     expect(canResolveRegistryVersionForPackageTarget("/tmp/oriro-main.tgz")).toBe(false);
   });
 
@@ -778,21 +778,21 @@ describe("update global helpers", () => {
       "-g",
       "oriro@latest",
     ]);
-    expect(globalInstallArgs("pnpm", "github:oriro-ai/cli#release/2026.5.12")).toEqual([
+    expect(globalInstallArgs("pnpm", "github:oriro/oriro#release/2026.5.12")).toEqual([
       "pnpm",
       "add",
       "-g",
       "--allow-build=oriro",
-      "github:oriro-ai/cli#release/2026.5.12",
+      "github:oriro/oriro#release/2026.5.12",
     ]);
     expect(
-      globalInstallArgs("pnpm", "oriro@git+https://github.com/oriro-ai/cli.git"),
+      globalInstallArgs("pnpm", "oriro@git+https://github.com/oriro/oriro.git"),
     ).toEqual([
       "pnpm",
       "add",
       "-g",
       "--allow-build=oriro",
-      "oriro@git+https://github.com/oriro-ai/cli.git",
+      "oriro@git+https://github.com/oriro/oriro.git",
     ]);
     expect(globalInstallArgs("bun", "oriro@latest")).toEqual([
       "bun",
@@ -827,7 +827,7 @@ describe("update global helpers", () => {
     expect(
       globalInstallArgs(
         "pnpm",
-        "github:oriro-ai/cli#release/2026.5.12",
+        "github:oriro/oriro#release/2026.5.12",
         null,
         "/opt/pnpm-global",
       ),
@@ -838,7 +838,7 @@ describe("update global helpers", () => {
       "--global-dir",
       "/opt/pnpm-global",
       "--allow-build=oriro",
-      "github:oriro-ai/cli#release/2026.5.12",
+      "github:oriro/oriro#release/2026.5.12",
     ]);
   });
 

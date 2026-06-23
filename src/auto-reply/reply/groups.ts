@@ -278,7 +278,7 @@ export function buildGroupChatContext(params: {
   }
   if (canUseSilentReply) {
     lines.push(
-      `If no response is needed, reply with exactly "${params.silentToken}" (and nothing else) so Oriro stays silent.`,
+      `If no response is needed, reply with exactly "${params.silentToken}" (and nothing else) so ORIRO stays silent.`,
     );
     lines.push("Be extremely selective: reply only when directly addressed or clearly helpful.");
     lines.push(

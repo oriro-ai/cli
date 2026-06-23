@@ -94,7 +94,7 @@ describe("buildTasksReply", () => {
       childSessionKey: "agent:main:main",
       runId: "tool:video_generate:tasks-visible",
       label: "Video generation",
-      task: "friendly oriro surfing",
+      task: "friendly lobster surfing",
       progressSummary: "Queued video generation",
       deliveryStatus: "not_applicable",
       notifyPolicy: "silent",

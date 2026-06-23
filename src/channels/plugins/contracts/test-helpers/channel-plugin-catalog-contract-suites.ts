@@ -128,9 +128,7 @@ export function describeChannelPluginCatalogEntriesContract() {
       {
         name: "includes external catalog entries",
         setup: () => {
-          const dir = fs.mkdtempSync(
-            path.join(resolvePreferredOriroTmpDir(), "oriro-catalog-"),
-          );
+          const dir = fs.mkdtempSync(path.join(resolvePreferredOriroTmpDir(), "oriro-catalog-"));
           const catalogPath = path.join(dir, "catalog.json");
           writeCatalogFile(
             catalogPath,
@@ -202,7 +200,6 @@ export function describeChannelPluginCatalogEntriesContract() {
             env: {
               ...process.env,
               ORIRO_STATE_DIR: stateDir,
-              CLAWDBOT_STATE_DIR: undefined,
               ORIRO_BUNDLED_PLUGINS_DIR: "/nonexistent/bundled/plugins",
             },
             expected: {
@@ -226,12 +223,12 @@ export function describeChannelPluginCatalogEntriesContract() {
               $schema: "./manifest.schema.json",
               schemaVersion: 1,
               description:
-                "Extension manifest. Declares plugin packages that Oriro can discover during onboarding and install on demand via `oriro plugins install`.",
+                "Extension manifest. Declares plugin packages that ORIRO can discover during onboarding and install on demand via `oriro plugins install`.",
               entries: [
                 {
                   name: "@wecom/wecom-oriro-plugin",
                   description:
-                    "Oriro WeCom (企业微信) channel plugin — community maintained, published on npm.",
+                    "ORIRO WeCom (企业微信) channel plugin — community maintained, published on npm.",
                   source: "external",
                   kind: "channel",
                   oriro: {
@@ -340,7 +337,7 @@ export function describeChannelPluginCatalogEntriesContract() {
               $schema: "./manifest.schema.json",
               schemaVersion: 1,
               description:
-                "Extension manifest. Declares plugin packages that Oriro can discover during onboarding and install on demand via `oriro plugins install`.",
+                "Extension manifest. Declares plugin packages that ORIRO can discover during onboarding and install on demand via `oriro plugins install`.",
               entries: [
                 {
                   source: "external",
@@ -358,7 +355,7 @@ export function describeChannelPluginCatalogEntriesContract() {
                       order: 47,
                     },
                     install: {
-                      orirohubSpec: "orirohub:oriro-ai/clihub-chat@2026.5.2",
+                      orirohubSpec: "orirohub:oriro/orirohub-chat@2026.5.2",
                       defaultChoice: "orirohub",
                       minHostVersion: ">=2026.5.1",
                     },
@@ -381,15 +378,15 @@ export function describeChannelPluginCatalogEntriesContract() {
                 blurb: "OriroHub-backed chat channel.",
               },
               install: {
-                orirohubSpec: "orirohub:oriro-ai/clihub-chat@2026.5.2",
+                orirohubSpec: "orirohub:oriro/orirohub-chat@2026.5.2",
                 defaultChoice: "orirohub",
                 minHostVersion: ">=2026.5.1",
               },
               installSource: {
                 defaultChoice: "orirohub",
                 orirohub: {
-                  spec: "orirohub:oriro-ai/clihub-chat@2026.5.2",
-                  packageName: "oriro-ai/clihub-chat",
+                  spec: "orirohub:oriro/orirohub-chat@2026.5.2",
+                  packageName: "oriro/orirohub-chat",
                   version: "2026.5.2",
                   exactVersion: true,
                 },
@@ -412,12 +409,12 @@ export function describeChannelPluginCatalogEntriesContract() {
               $schema: "./manifest.schema.json",
               schemaVersion: 1,
               description:
-                "Extension manifest. Declares plugin packages that Oriro can discover during onboarding and install on demand via `oriro plugins install`.",
+                "Extension manifest. Declares plugin packages that ORIRO can discover during onboarding and install on demand via `oriro plugins install`.",
               entries: [
                 {
                   name: "oriro-plugin-yuanbao",
                   description:
-                    "Oriro Yuanbao (元宝) channel plugin — community maintained, published on npm.",
+                    "ORIRO Yuanbao (元宝) channel plugin — community maintained, published on npm.",
                   source: "external",
                   kind: "channel",
                   oriro: {

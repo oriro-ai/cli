@@ -205,7 +205,7 @@ function buildForcedConsultSpeechPrompt(result: string): string {
       ? trimmed
       : `${trimmed.slice(0, FORCED_CONSULT_RESULT_MAX_CHARS - 16).trimEnd()} [truncated]`;
   return [
-    "Internal Oriro consult result is ready.",
+    "Internal ORIRO consult result is ready.",
     "Do not call tools for this internal result.",
     "Speak the following answer to the caller now, briefly and naturally:",
     bounded,
@@ -1295,7 +1295,7 @@ export class RealtimeCallHandler {
         if (forcedConsult.completedAt || forcedMatch.kind === "already_delivered") {
           submitFinalToolResult({
             status: "already_delivered",
-            message: "Oriro already delivered this consult result internally. Do not repeat it.",
+            message: "ORIRO already delivered this consult result internally. Do not repeat it.",
           });
           return;
         }

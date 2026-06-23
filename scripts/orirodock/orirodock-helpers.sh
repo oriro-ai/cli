@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # OriroDock - Docker helpers for Oriro
-# Inspired by Simon Willison's "Running Oriro in Docker"
+# Inspired by Simon Willison's "Running ORIRO in Docker"
 # https://til.simonwillison.net/llms/oriro-docker
 #
 # Installation:
@@ -132,7 +132,7 @@ _orirodock_ensure_dir() {
 
   if [[ -n "$found_path" ]]; then
     echo ""
-    echo "ORIRO Found Oriro at: $found_path"
+    echo "🦞 Found ORIRO at: $found_path"
     echo -n "   Use this location? [Y/n] "
     read -r response
     if [[ "$response" =~ ^[Nn] ]]; then
@@ -144,7 +144,7 @@ _orirodock_ensure_dir() {
     ORIRODOCK_DIR="$found_path"
   else
     echo ""
-    echo "❌ Oriro not found in common locations."
+    echo "❌ ORIRO not found in common locations."
     echo ""
     echo "Clone it first:"
     echo ""
@@ -299,7 +299,7 @@ orirodock-cli() {
 orirodock-update() {
   _orirodock_ensure_dir || return 1
 
-  echo "🔄 Updating Oriro..."
+  echo "🔄 Updating ORIRO..."
 
   echo ""
   echo "📥 Pulling latest source..."
@@ -394,7 +394,7 @@ orirodock-fix-token() {
 orirodock-dashboard() {
   _orirodock_ensure_dir || return 1
 
-  echo "ORIRO Getting dashboard URL..."
+  echo "🦞 Getting dashboard URL..."
   local output exit_status url
   output=$(_orirodock_compose run --rm --no-deps oriro-cli dashboard --no-open 2>&1)
   exit_status=$?
@@ -472,7 +472,7 @@ orirodock-approve() {
 
 # Show all available orirodock helper commands
 orirodock-help() {
-  echo -e "\n${_CLR_BOLD}${_CLR_CYAN}ORIRO OriroDock - Docker Helpers for Oriro${_CLR_RESET}\n"
+  echo -e "\n${_CLR_BOLD}${_CLR_CYAN}🦞 OriroDock - Docker Helpers for ORIRO${_CLR_RESET}\n"
 
   echo -e "${_CLR_BOLD}${_CLR_MAGENTA}⚡ Basic Operations${_CLR_RESET}"
   echo -e "  $(_cmd orirodock-start)       ${_CLR_DIM}Start the gateway${_CLR_RESET}"

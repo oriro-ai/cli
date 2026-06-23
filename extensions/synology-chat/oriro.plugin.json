@@ -1,7 +1,7 @@
 {
   "id": "synology-chat",
   "name": "Synology Chat",
-  "description": "Synology Chat channel plugin for Oriro channels and direct messages.",
+  "description": "Synology Chat channel plugin for ORIRO channels and direct messages.",
   "activation": {
     "onStartup": false
   },

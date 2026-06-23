@@ -69,7 +69,7 @@ describe("secret scanning maintainer script", () => {
       redacted: true,
     });
     expect(fs.readFileSync(ghLog, "utf8")).toContain(
-      `api repos/oriro-ai/cli/issues/123 -X PATCH -F body=@${redactedBody}`,
+      `api repos/oriro/oriro/issues/123 -X PATCH -F body=@${redactedBody}`,
     );
   });
 

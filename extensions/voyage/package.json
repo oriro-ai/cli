@@ -1,8 +1,8 @@
 {
   "name": "@oriro/voyage-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Voyage embedding provider plugin",
+  "description": "ORIRO Voyage embedding provider plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

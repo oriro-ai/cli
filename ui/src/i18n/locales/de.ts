@@ -204,6 +204,7 @@ export const de: TranslationMap = {
     inherit: "Übernehmen",
     defaultOption: "Standard ({value})",
     offExplicit: "Aus (explizit)",
+    auto: "auto",
     on: "Ein",
     off: "aus",
     full: "Vollständig",
@@ -443,7 +444,7 @@ export const de: TranslationMap = {
       "Vorschläge prüfen, verfeinern und anwenden, bevor sie zu aktiven Skills werden.",
     nodes: "Gekoppelte Geräte, Fähigkeiten und Befehlsfreigabe.",
     chat: "Direkte Gateway-Chat-Sitzung für schnelle Eingriffe.",
-    config: "~/.oriro-ai/cli.json sicher bearbeiten.",
+    config: "~/.oriro/oriro.json sicher bearbeiten.",
     communications: "Kanäle, Nachrichten und Audioeinstellungen.",
     appearance: "Design-, UI- und Einrichtungsassistent-Einstellungen.",
     automation: "Befehle, Hooks, Cron und Plugins.",
@@ -1319,7 +1320,7 @@ export const de: TranslationMap = {
         stepDevUi:
           "Wenn du pnpm ui:dev verwendest, baue oder starte die Dev-UI gegen den aktuellen Checkout neu.",
         stepRestart:
-          "Starte das Gateway nach dem Aktualisieren von Oriro neu, damit es das aktuelle Protokoll bereitstellt.",
+          "Starte das Gateway nach dem Aktualisieren von ORIRO neu, damit es das aktuelle Protokoll bereitstellt.",
       },
       network: {
         title: "Verbindung nicht möglich",
@@ -1636,6 +1637,7 @@ export const de: TranslationMap = {
       wakeModeHelp:
         "Jetzt wird sofort ausgelöst. Nächster Heartbeat wartet auf den nächsten Zyklus.",
       payloadKind: "Was soll ausgeführt werden?",
+      command: "Command",
       systemEvent: "Nachricht in der Main-Zeitachse posten",
       agentTurn: "Assistentenaufgabe ausführen (isoliert)",
       systemEventHelp:

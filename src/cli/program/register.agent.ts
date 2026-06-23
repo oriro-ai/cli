@@ -214,7 +214,7 @@ export function registerAgentsCommands(program: Command): void {
         `
 ${theme.heading("Examples:")}
 ${formatHelpExamples([
-  ['oriro agents set-identity --agent main --name "Oriro" --emoji "ORIRO"', "Set name + emoji."],
+  ['oriro agents set-identity --agent main --name "Oriro" --emoji "🦞"', "Set name + emoji."],
   ["oriro agents set-identity --agent main --avatar avatars/oriro.png", "Set avatar path."],
   [
     "oriro agents set-identity --workspace ~/.oriro/workspace --from-identity",

@@ -7,4 +7,4 @@ export {
   writeSiblingTempFile,
   type WriteSiblingTempFileOptions,
   type WriteSiblingTempFileResult,
-} from "@oriro/fs-safe/advanced";
+} from "@openclaw/fs-safe/advanced";

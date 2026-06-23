@@ -1,10 +1,10 @@
 {
   "name": "@oriro/memory-lancedb",
-  "version": "2026.6.8",
-  "description": "Oriro LanceDB-backed long-term memory plugin with auto-recall, auto-capture, and vector search.",
+  "version": "2026.6.9",
+  "description": "ORIRO LanceDB-backed long-term memory plugin with auto-recall, auto-capture, and vector search.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -26,10 +26,10 @@
       "minHostVersion": ">=2026.5.31"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8"
+      "oriroVersion": "2026.6.9"
     },
     "release": {
       "bundleRuntimeDependencies": false,

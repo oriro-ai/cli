@@ -181,7 +181,7 @@ struct RootTabsPhoneControlHub: View {
         ProCard(radius: OriroProMetric.cardRadius) {
             HStack {
                 Spacer()
-                Text("v\(DeviceInfoHelper.oriroVersionString())")
+                Text("v\(DeviceInfoHelper.openOriroVersionString())")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)

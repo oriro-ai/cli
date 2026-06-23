@@ -811,8 +811,8 @@ describe("configured plugin install release step", () => {
 
   it("includes allow-only official plugin ids in the repair set", async () => {
     mocks.getOfficialExternalPluginCatalogEntry.mockImplementation((pluginId: string) => {
-      if (pluginId === "oriro") {
-        return { name: "@oriro-ai/cli" };
+      if (pluginId === "lobster") {
+        return { name: "@openclaw/lobster" };
       }
       return undefined;
     });
@@ -822,20 +822,20 @@ describe("configured plugin install release step", () => {
     const result = collectReleaseConfiguredPluginIds({
       cfg: {
         plugins: {
-          allow: ["oriro", "unofficial-custom"],
+          allow: ["lobster", "unofficial-custom"],
         },
       },
       env: {},
     });
 
-    expect(result.pluginIds).toEqual(["oriro"]);
+    expect(result.pluginIds).toEqual(["lobster"]);
     expect(result.channelIds).toStrictEqual([]);
   });
 
   it("skips allow-only plugin ids that already have material plugin entries", async () => {
     mocks.getOfficialExternalPluginCatalogEntry.mockImplementation((pluginId: string) => {
-      if (pluginId === "oriro") {
-        return { name: "@oriro-ai/cli" };
+      if (pluginId === "lobster") {
+        return { name: "@openclaw/lobster" };
       }
       return undefined;
     });
@@ -845,16 +845,16 @@ describe("configured plugin install release step", () => {
     const result = collectReleaseConfiguredPluginIds({
       cfg: {
         plugins: {
-          allow: ["oriro"],
+          allow: ["lobster"],
           entries: {
-            oriro: { enabled: true },
+            lobster: { enabled: true },
           },
         },
       },
       env: {},
     });
 
-    expect(result.pluginIds).toEqual(["oriro"]);
-    expect(mocks.getOfficialExternalPluginCatalogEntry).not.toHaveBeenCalledWith("oriro");
+    expect(result.pluginIds).toEqual(["lobster"]);
+    expect(mocks.getOfficialExternalPluginCatalogEntry).not.toHaveBeenCalledWith("lobster");
   });
 });

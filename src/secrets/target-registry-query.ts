@@ -21,15 +21,15 @@ let compiledSecretTargetRegistryState: {
   authProfilesTargetsById: Map<string, CompiledTargetRegistryEntry[]>;
   compiledSecretTargetRegistry: CompiledTargetRegistryEntry[];
   knownTargetIds: Set<string>;
-  oriroCompiledSecretTargets: CompiledTargetRegistryEntry[];
-  oriroTargetsById: Map<string, CompiledTargetRegistryEntry[]>;
+  openOriroCompiledSecretTargets: CompiledTargetRegistryEntry[];
+  openOriroTargetsById: Map<string, CompiledTargetRegistryEntry[]>;
   targetsByType: Map<string, CompiledTargetRegistryEntry[]>;
 } | null = null;
 
 let compiledCoreOriroTargetState: {
   knownTargetIds: Set<string>;
-  oriroCompiledSecretTargets: CompiledTargetRegistryEntry[];
-  oriroTargetsById: Map<string, CompiledTargetRegistryEntry[]>;
+  openOriroCompiledSecretTargets: CompiledTargetRegistryEntry[];
+  openOriroTargetsById: Map<string, CompiledTargetRegistryEntry[]>;
   targetsByType: Map<string, CompiledTargetRegistryEntry[]>;
 } | null = null;
 
@@ -77,7 +77,7 @@ function getCompiledSecretTargetRegistryState() {
     return compiledSecretTargetRegistryState;
   }
   const compiledSecretTargetRegistry = getSecretTargetRegistry().map(compileTargetRegistryEntry);
-  const oriroCompiledSecretTargets = compiledSecretTargetRegistry.filter(
+  const openOriroCompiledSecretTargets = compiledSecretTargetRegistry.filter(
     (entry) => entry.configFile === "oriro.json",
   );
   const authProfilesCompiledSecretTargets = compiledSecretTargetRegistry.filter(
@@ -88,8 +88,8 @@ function getCompiledSecretTargetRegistryState() {
     authProfilesTargetsById: buildConfigTargetIdIndex(authProfilesCompiledSecretTargets),
     compiledSecretTargetRegistry,
     knownTargetIds: new Set(compiledSecretTargetRegistry.map((entry) => entry.id)),
-    oriroCompiledSecretTargets,
-    oriroTargetsById: buildConfigTargetIdIndex(oriroCompiledSecretTargets),
+    openOriroCompiledSecretTargets,
+    openOriroTargetsById: buildConfigTargetIdIndex(openOriroCompiledSecretTargets),
     targetsByType: buildTargetTypeIndex(compiledSecretTargetRegistry),
   };
   return compiledSecretTargetRegistryState;
@@ -99,14 +99,14 @@ function getCompiledCoreOriroTargetState() {
   if (compiledCoreOriroTargetState) {
     return compiledCoreOriroTargetState;
   }
-  const oriroCompiledSecretTargets = getCoreSecretTargetRegistry()
+  const openOriroCompiledSecretTargets = getCoreSecretTargetRegistry()
     .filter((entry) => entry.configFile === "oriro.json")
     .map(compileTargetRegistryEntry);
   compiledCoreOriroTargetState = {
-    knownTargetIds: new Set(oriroCompiledSecretTargets.map((entry) => entry.id)),
-    oriroCompiledSecretTargets,
-    oriroTargetsById: buildConfigTargetIdIndex(oriroCompiledSecretTargets),
-    targetsByType: buildTargetTypeIndex(oriroCompiledSecretTargets),
+    knownTargetIds: new Set(openOriroCompiledSecretTargets.map((entry) => entry.id)),
+    openOriroCompiledSecretTargets,
+    openOriroTargetsById: buildConfigTargetIdIndex(openOriroCompiledSecretTargets),
+    targetsByType: buildTargetTypeIndex(openOriroCompiledSecretTargets),
   };
   return compiledCoreOriroTargetState;
 }
@@ -328,7 +328,7 @@ function resolvePlanTargetAgainstEntries(
  * Resolves an oriro.json config path to the matching plan-capable secrets target.
  */
 export function resolveConfigSecretTargetByPath(pathSegments: string[]): ResolvedPlanTarget | null {
-  for (const entry of getCompiledCoreOriroTargetState().oriroCompiledSecretTargets) {
+  for (const entry of getCompiledCoreOriroTargetState().openOriroCompiledSecretTargets) {
     if (!entry.includeInPlan) {
       continue;
     }
@@ -363,7 +363,7 @@ export function resolveConfigSecretTargetByPath(pathSegments: string[]): Resolve
     return resolved;
   }
 
-  for (const entry of getCompiledSecretTargetRegistryState().oriroCompiledSecretTargets) {
+  for (const entry of getCompiledSecretTargetRegistryState().openOriroCompiledSecretTargets) {
     if (!entry.includeInPlan) {
       continue;
     }
@@ -406,8 +406,8 @@ export function discoverConfigSecretTargetsByIds(
       : getCompiledSecretTargetRegistryState();
   const discoveryEntries = resolveDiscoveryEntries({
     allowedTargetIds,
-    defaultEntries: registryState.oriroCompiledSecretTargets,
-    entriesById: registryState.oriroTargetsById,
+    defaultEntries: registryState.openOriroCompiledSecretTargets,
+    entriesById: registryState.openOriroTargetsById,
   });
   return discoverSecretTargetsFromEntries(config, discoveryEntries);
 }

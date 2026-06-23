@@ -1,6 +1,6 @@
 // Channel setup prompt tests cover prompt choices and validation.
 import { describe, expect, it, vi } from "vitest";
-import type { ChannelSetupDmPolicy } from "../commands/channel-setup/types.js";
+import type { ChannelSetupDmPolicy } from "../channels/plugins/setup-wizard-types.js";
 import type { OriroConfig } from "../config/types.oriro.js";
 import { withEnvAsync } from "../test-utils/env.js";
 import type { WizardPrompter } from "../wizard/prompts.js";

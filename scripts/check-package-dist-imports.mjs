@@ -76,7 +76,7 @@ const errors = collectPackageDistImportErrors({
 });
 
 if (errors.length > 0) {
-  fail(`Oriro package dist import closure failed:\n${errors.join("\n")}`);
+  fail(`ORIRO package dist import closure failed:\n${errors.join("\n")}`);
 }
 
-console.log("Oriro package dist import closure passed.");
+console.log("ORIRO package dist import closure passed.");

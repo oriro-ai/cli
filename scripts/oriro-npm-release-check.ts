@@ -17,7 +17,7 @@ import {
   parseReleaseVersion as parseReleaseVersionBase,
 } from "./lib/npm-publish-plan.mjs";
 import { WORKSPACE_TEMPLATE_PACK_PATHS } from "./lib/workspace-bootstrap-smoke.mjs";
-import { buildCmdExeCommandLine } from "./windows-cmd-helpers.mjs";
+import { buildCmdExeCommandLine, resolveWindowsCmdExePath } from "./windows-cmd-helpers.mjs";
 
 type PackageJson = {
   name?: string;
@@ -62,9 +62,9 @@ export type NpmDistTagMirrorAuth = {
   hasAuth: boolean;
   source: "node-auth-token" | "npm-token" | "none";
 };
-const EXPECTED_REPOSITORY_URL = "https://github.com/oriro-ai/cli";
+const EXPECTED_REPOSITORY_URL = "https://github.com/oriro/oriro";
 const OPTIONAL_LOCAL_EMBEDDING_RUNTIME_PACKAGE = "node-llama-cpp";
-const FS_SAFE_PACKAGE = "@oriro/fs-safe";
+const FS_SAFE_PACKAGE = "@openclaw/fs-safe";
 const REQUIRED_PACKED_PATHS = [
   "npm-shrinkwrap.json",
   PACKAGE_DIST_INVENTORY_RELATIVE_PATH,
@@ -508,7 +508,7 @@ export function resolveNpmCommandInvocation(
     const name = portableBasename(npmExecPath).toLowerCase();
     if (platform === "win32" && (name.endsWith(".cmd") || name.endsWith(".bat"))) {
       return {
-        command: params.comSpec ?? process.env.ComSpec ?? "cmd.exe",
+        command: params.comSpec ?? resolveWindowsCmdExePath(),
         args: ["/d", "/s", "/c", buildCmdExeCommandLine(npmExecPath, npmArgs)],
         windowsVerbatimArguments: true,
       };
@@ -518,7 +518,7 @@ export function resolveNpmCommandInvocation(
     }
     if (platform === "win32" && name === "npm") {
       return {
-        command: params.comSpec ?? process.env.ComSpec ?? "cmd.exe",
+        command: params.comSpec ?? resolveWindowsCmdExePath(),
         args: ["/d", "/s", "/c", buildCmdExeCommandLine(`${npmExecPath}.cmd`, npmArgs)],
         windowsVerbatimArguments: true,
       };
@@ -531,7 +531,7 @@ export function resolveNpmCommandInvocation(
 
   if (platform === "win32") {
     return {
-      command: params.comSpec ?? process.env.ComSpec ?? "cmd.exe",
+      command: params.comSpec ?? resolveWindowsCmdExePath(),
       args: ["/d", "/s", "/c", buildCmdExeCommandLine("npm.cmd", npmArgs)],
       windowsVerbatimArguments: true,
     };

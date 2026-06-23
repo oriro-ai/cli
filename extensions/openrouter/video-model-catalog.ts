@@ -221,7 +221,7 @@ async function fetchOpenRouterVideoModels(params: {
       const headers = new Headers({
         Authorization: `Bearer ${params.apiKey}`,
         "HTTP-Referer": "https://oriro.ai",
-        "X-OpenRouter-Title": "Oriro",
+        "X-OpenRouter-Title": "ORIRO",
       });
       const { response, release } = await fetchOpenRouterVideoGet({
         url: "videos/models",

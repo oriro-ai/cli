@@ -289,7 +289,7 @@ export const smsPlugin: ChannelPlugin<ResolvedSmsAccount, SmsProbe> = createChat
   pairing: {
     text: {
       idLabel: "phoneNumber",
-      message: "Oriro: your SMS access has been approved.",
+      message: "ORIRO: your SMS access has been approved.",
       normalizeAllowEntry: normalizeSmsAllowFrom,
       notify: async ({ cfg, id, message, accountId }) => {
         const account = resolveSmsAccount(cfg, accountId);

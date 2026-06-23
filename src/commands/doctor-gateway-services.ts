@@ -552,7 +552,7 @@ export async function maybeRepairGatewayServiceConfig(
     })
   ) {
     note(
-      "Update-mode doctor detected gateway service drift but left the live systemd unit unchanged. Review the service file and run `oriro gateway install --force` when you want Oriro to replace operator-owned systemd directives.",
+      "Update-mode doctor detected gateway service drift but left the live systemd unit unchanged. Review the service file and run `oriro gateway install --force` when you want ORIRO to replace operator-owned systemd directives.",
       "Gateway service config",
     );
     return;
@@ -712,7 +712,7 @@ export async function maybeScanExtraGatewayServices(
         note(failed.map((line) => `- ${line}`).join("\n"), "Legacy gateway cleanup skipped");
       }
       if (removed.length > 0) {
-        runtime.log("Legacy gateway services removed. Installing Oriro gateway next.");
+        runtime.log("Legacy gateway services removed. Installing ORIRO gateway next.");
       }
     }
   }

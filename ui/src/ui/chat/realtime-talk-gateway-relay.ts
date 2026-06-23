@@ -266,7 +266,7 @@ export class GatewayRelayRealtimeTalkTransport implements RealtimeTalkTransport 
             status: "working",
             tool: REALTIME_VOICE_AGENT_CONSULT_TOOL_NAME,
             message:
-              "Tell the person briefly that you are checking, then wait for the final Oriro result before answering with the actual result.",
+              "Tell the person briefly that you are checking, then wait for the final ORIRO result before answering with the actual result.",
           },
           { willContinue: true },
         );

@@ -1,7 +1,7 @@
 {
   "id": "zalouser",
   "name": "Zalo Personal",
-  "description": "Oriro Zalo Personal Account plugin via native zca-js integration.",
+  "description": "ORIRO Zalo Personal Account plugin via native zca-js integration.",
   "activation": {
     "onStartup": false
   },

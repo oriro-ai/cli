@@ -1,10 +1,10 @@
 {
   "name": "@oriro/diffs-language-pack",
-  "version": "2026.6.8",
-  "description": "Oriro diffs viewer syntax highlighting language pack",
+  "version": "2026.6.9",
+  "description": "ORIRO diffs viewer syntax highlighting language pack",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "devDependencies": {
@@ -22,13 +22,13 @@
       "minHostVersion": ">=2026.5.27"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "assetScripts": {
       "build": "node ../../scripts/build-diffs-viewer-runtime.mjs full"
     },
     "build": {
-      "oriroVersion": "2026.6.8",
+      "oriroVersion": "2026.6.9",
       "staticAssets": [
         {
           "source": "./assets/viewer-runtime.js",

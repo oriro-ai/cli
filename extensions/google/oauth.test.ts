@@ -360,7 +360,7 @@ describe("extractGeminiCliCredentials", () => {
     oauth2Content: string;
     unrelatedOauth2Content: string;
   }) {
-    const nvmRoot = join(rootDir, "fake", "Users", "oriro", "AppData", "Local", "nvm");
+    const nvmRoot = join(rootDir, "fake", "Users", "lobster", "AppData", "Local", "nvm");
     const versionDir = join(nvmRoot, "v24.1.0");
     const geminiPath = join(versionDir, process.platform === "win32" ? "gemini.cmd" : "gemini");
     const resolvedPath = geminiPath;
@@ -689,7 +689,7 @@ describe("loginGeminiCliOAuth", () => {
   }
 
   function userInfoResponse(): Response {
-    return responseJson({ email: "oriro@oriro.ai" });
+    return responseJson({ email: "lobster@oriro.ai" });
   }
 
   type RecordedFetchRequest = {
@@ -978,13 +978,13 @@ describe("loginGeminiCliOAuth", () => {
     const { refreshTokensForGeminiCli } = await import("./oauth.token.js");
     const result = await refreshTokensForGeminiCli({
       refresh: "refresh-token",
-      email: "oriro@oriro.ai",
+      email: "lobster@oriro.ai",
     });
 
     expect(result).toMatchObject({
       access: "access-token",
       refresh: "refresh-token",
-      email: "oriro@oriro.ai",
+      email: "lobster@oriro.ai",
       projectId: undefined,
     });
     expect(requests.map(({ url }) => url)).toEqual([TOKEN_URL, USERINFO_URL]);
@@ -1013,7 +1013,7 @@ describe("loginGeminiCliOAuth", () => {
     const { refreshTokensForGeminiCli } = await import("./oauth.token.js");
     const result = await refreshTokensForGeminiCli({
       refresh: "refresh-token",
-      email: "oriro@oriro.ai",
+      email: "lobster@oriro.ai",
     });
 
     expect(Number.isFinite(result.expires)).toBe(true);
@@ -1044,7 +1044,7 @@ describe("loginGeminiCliOAuth", () => {
       const { refreshTokensForGeminiCli } = await import("./oauth.token.js");
       const result = await refreshTokensForGeminiCli({
         refresh: "refresh-token",
-        email: "oriro@oriro.ai",
+        email: "lobster@oriro.ai",
       });
 
       expect(result.expires).toBe(0);
@@ -1076,7 +1076,7 @@ describe("loginGeminiCliOAuth", () => {
     const { refreshTokensForGeminiCli } = await import("./oauth.token.js");
     const result = await refreshTokensForGeminiCli({
       refresh: "refresh-token",
-      email: "oriro@oriro.ai",
+      email: "lobster@oriro.ai",
     });
 
     expect(Number.isSafeInteger(result.expires)).toBe(true);

@@ -195,13 +195,13 @@ This is the deterministic model-bound layer stack Oriro can snapshot for the Cod
     "This is a reconstructed prompt-layer snapshot, not a byte-for-byte raw OpenAI request captured from Codex core.",
     "Codex-owned workspace AGENTS.md, environment context, memories, app/plugin instructions, built-in Default collaboration-mode instructions, and provider tool serialization are still runtime-owned gaps until Codex exposes a rendered-prompt inspection API."
   ],
-  "oriroRuntime": {
+  "openOriroRuntime": {
     "collaborationModeDeveloperInstructionsFrom": "extensions/codex app-server turn/start collaborationMode.settings.developer_instructions",
     "configInstructionsFrom": "extensions/codex app-server thread/start config.instructions",
     "developerInstructionsFrom": "extensions/codex app-server thread/start developerInstructions",
     "dynamicToolsFrom": "codex-dynamic-tools.discord-group.json",
     "userInputFrom": "extensions/codex app-server turn/start input",
-    "workspaceBootstrapContextFrom": "extensions/codex app-server turn/start input Oriro runtime context"
+    "workspaceBootstrapContextFrom": "extensions/codex app-server turn/start input ORIRO runtime context"
   }
 }
 ```
@@ -230,7 +230,7 @@ This is the deterministic model-bound layer stack Oriro can snapshot for the Cod
     "chars": 50816,
     "roughTokens": 12704
   },
-  "oriroDeveloperInstructions": {
+  "openOriroDeveloperInstructions": {
     "chars": 2988,
     "roughTokens": 747
   },
@@ -550,7 +550,7 @@ Chat history since last reply (untrusted, for context):
   },
   {
     "sender": "Pash",
-    "body": "@Oriro please verify the Codex happy path too."
+    "body": "@ORIRO please verify the Codex happy path too."
   }
 ]
 ```

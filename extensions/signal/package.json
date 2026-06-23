@@ -1,8 +1,8 @@
 {
   "name": "@oriro/signal",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Signal channel plugin",
+  "description": "ORIRO Signal channel plugin",
   "type": "module",
   "dependencies": {
     "ws": "8.21.0"

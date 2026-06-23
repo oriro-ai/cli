@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: become-an-ai-engineer-26
 description: >
   Complete AI Engineering skill for 2026. Use this skill whenever someone wants

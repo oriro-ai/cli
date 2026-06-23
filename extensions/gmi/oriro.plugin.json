@@ -1,7 +1,7 @@
 {
   "id": "gmi",
   "name": "GMI Cloud",
-  "description": "Oriro GMI Cloud provider plugin.",
+  "description": "ORIRO GMI Cloud provider plugin.",
   "activation": {
     "onStartup": false
   },

@@ -29,7 +29,7 @@ Cover:
 
 ```bash
 export ORIRO_PARALLELS_DISCORD_TOKEN="$(
-  ssh peters-mac-studio-1 'jq -r ".channels.discord.token" ~/.oriro-ai/cli.json' | tr -d '\n'
+  ssh peters-mac-studio-1 'jq -r ".channels.discord.token" ~/.oriro/oriro.json' | tr -d '\n'
 )"
 
 pnpm test:parallels:macos \

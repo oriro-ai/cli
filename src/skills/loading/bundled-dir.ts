@@ -4,27 +4,35 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveOriroPackageRootSync } from "../../infra/oriro-root.js";
 
-function looksLikeSkillsDir(dir: string): boolean {
+// True if `dir` (or any descendant within `depth` levels) holds a SKILL.md. The
+// loader recurses unbounded, so the resolver gate must also see nested layouts —
+// ORIRO ships skills as skills/<category>/<skill>/SKILL.md, two levels deep.
+function containsSkillManifest(dir: string, depth: number): boolean {
+  let entries: fs.Dirent[];
   try {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.name.startsWith(".")) {
-        continue;
-      }
-      const fullPath = path.join(dir, entry.name);
-      if (entry.isFile() && entry.name.endsWith(".md")) {
-        return true;
-      }
-      if (entry.isDirectory()) {
-        if (fs.existsSync(path.join(fullPath, "SKILL.md"))) {
-          return true;
-        }
-      }
-    }
+    entries = fs.readdirSync(dir, { withFileTypes: true });
   } catch {
     return false;
   }
+  for (const entry of entries) {
+    if (entry.name.startsWith(".") || entry.name === "node_modules") {
+      continue;
+    }
+    if (entry.isFile() && (entry.name === "SKILL.md" || entry.name.endsWith(".md"))) {
+      return true;
+    }
+    if (entry.isDirectory() && depth > 0) {
+      if (containsSkillManifest(path.join(dir, entry.name), depth - 1)) {
+        return true;
+      }
+    }
+  }
   return false;
+}
+
+function looksLikeSkillsDir(dir: string): boolean {
+  // Direct .md, flat skills/<skill>/SKILL.md, or nested category layouts.
+  return containsSkillManifest(dir, 3);
 }
 
 export type BundledSkillsResolveOptions = {

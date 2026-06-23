@@ -66,7 +66,7 @@ export function registerGroupAllwaysCommand(registry: SlashCommandRegistry): voi
         return [
           `❌ 当前版本不支持该指令`,
           ``,
-          `ORIRO框架版本：${fwVer}`,
+          `🦞框架版本：${fwVer}`,
           `🤖QQBot 插件版本：v${ver}`,
           ``,
           `可通过以下命令手动设置：`,

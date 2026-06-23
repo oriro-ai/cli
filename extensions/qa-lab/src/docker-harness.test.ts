@@ -93,7 +93,7 @@ describe("qa docker harness", () => {
     expect(compose).toContain(
       "cp -R /opt/oriro-scaffold/seed-workspace/. /tmp/oriro/workspace/ && rm -rf /tmp/oriro/workspace/repo && ln -s /opt/oriro-repo /tmp/oriro/workspace/repo",
     );
-    expect(compose).toContain("ORIRO_CONFIG_PATH: /tmp/oriro-ai/cli.json");
+    expect(compose).toContain("ORIRO_CONFIG_PATH: /tmp/oriro/oriro.json");
     expect(compose).toContain("ORIRO_STATE_DIR: /tmp/oriro/state");
     expect(compose).toContain('ORIRO_NO_RESPAWN: "1"');
 
@@ -112,7 +112,7 @@ describe("qa docker harness", () => {
     };
     expect(configText).toContain('"allowInsecureAuth": true');
     expect(configText).toContain('"pluginToolsMcpBridge": true');
-    expect(configText).toContain('"oriroToolsMcpBridge": true');
+    expect(configText).toContain('"openOriroToolsMcpBridge": true');
     expect(configText).toContain("/app/dist/control-ui");
     expect(configText).toContain("C-3PO QA");
     expect(configText).toContain('"/tmp/oriro/workspace"');
@@ -123,7 +123,7 @@ describe("qa docker harness", () => {
       path.join(outputDir, "state", "seed-workspace", "QA_KICKOFF_TASK.md"),
       "utf8",
     );
-    expect(kickoff).toContain("Oriro Invaders");
+    expect(kickoff).toContain("Lobster Invaders");
 
     const scenarios = await readFile(
       path.join(outputDir, "state", "seed-workspace", "QA_SCENARIOS.yaml"),

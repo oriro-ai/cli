@@ -279,7 +279,7 @@ fi
 echo ""
 echo "=== Service Status ==="
 if systemctl --user is-active oriro >/dev/null 2>&1; then
-    echo -e "Oriro service: ${GREEN}running${NC}"
+    echo -e "ORIRO service: ${GREEN}running${NC}"
 else
-    echo -e "Oriro service: ${RED}NOT running${NC}"
+    echo -e "ORIRO service: ${RED}NOT running${NC}"
 fi

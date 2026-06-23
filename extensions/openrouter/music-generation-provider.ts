@@ -277,7 +277,7 @@ export function buildOpenRouterMusicGenerationProvider(): MusicGenerationProvide
             Authorization: `Bearer ${auth.apiKey}`,
             "Content-Type": "application/json",
             "HTTP-Referer": "https://oriro.ai",
-            "X-OpenRouter-Title": "Oriro",
+            "X-OpenRouter-Title": "ORIRO",
           },
           provider: "openrouter",
           capability: "audio",

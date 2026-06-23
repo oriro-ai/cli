@@ -98,13 +98,13 @@ function formatRequestedSource(params: {
   defaultValue: ExecSecurity | ExecAsk;
 }): string {
   return params.sourcePath === "__default__"
-    ? `Oriro default (${params.defaultValue})`
+    ? `ORIRO default (${params.defaultValue})`
     : `${params.sourcePath}.${params.field}`;
 }
 
 function formatModeSource(params: { sourcePath: string; configPath: string }): string {
   if (params.sourcePath === "__default__") {
-    return "derived from Oriro defaults";
+    return "derived from ORIRO defaults";
   }
   return `${params.sourcePath === "scope" ? params.configPath : params.sourcePath}.mode`;
 }
@@ -268,7 +268,7 @@ function formatHostFieldSource(params: {
     return `${params.hostPath} ${params.sourceSuffix}`;
   }
   if (params.field === "askFallback") {
-    return `Oriro default (${DEFAULT_EXEC_APPROVAL_ASK_FALLBACK})`;
+    return `ORIRO default (${DEFAULT_EXEC_APPROVAL_ASK_FALLBACK})`;
   }
   return "inherits requested tool policy";
 }
@@ -370,7 +370,7 @@ export function resolveExecPolicyScopeSnapshot(params: {
       requested: requestedHost.value,
       requestedSource:
         requestedHost.sourcePath === "__default__"
-          ? "Oriro default (auto)"
+          ? "ORIRO default (auto)"
           : `${requestedHost.sourcePath === "scope" ? params.configPath : requestedHost.sourcePath}.host`,
     },
     mode: {

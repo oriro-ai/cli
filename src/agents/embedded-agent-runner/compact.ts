@@ -1082,7 +1082,7 @@ async function compactEmbeddedAgentSessionDirectOnce(
     const nativeCommandGuidanceLines = listRegisteredPluginAgentPromptGuidance({
       surface: promptSurface,
     });
-    const oriroReferences = await resolveOriroReferencePaths({
+    const openOriroReferences = await resolveOriroReferencePaths({
       workspaceDir: effectiveWorkspace,
       argv1: process.argv[1],
       cwd: effectiveCwd,
@@ -1119,8 +1119,8 @@ async function compactEmbeddedAgentSessionDirectOnce(
           defaultAgentId,
         }),
         skillsPrompt,
-        docsPath: oriroReferences.docsPath ?? undefined,
-        sourcePath: oriroReferences.sourcePath ?? undefined,
+        docsPath: openOriroReferences.docsPath ?? undefined,
+        sourcePath: openOriroReferences.sourcePath ?? undefined,
         promptMode,
         promptSurface,
         sourceReplyDeliveryMode: params.sourceReplyDeliveryMode,

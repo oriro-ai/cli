@@ -191,9 +191,9 @@ stop_launch_agent() {
 
 # 1) Stop launchd supervision, then kill all running instances.
 stop_launch_agent
-log "==> Killing existing Oriro instances"
+log "==> Killing existing ORIRO instances"
 if ! kill_all_oriro; then
-  fail "Oriro instances did not exit after cleanup attempts"
+  fail "ORIRO instances did not exit after cleanup attempts"
 fi
 
 # Bundle Gateway-hosted plugin assets.
@@ -201,7 +201,7 @@ run_step "bundle plugin assets" bash -lc "cd '${ROOT_DIR}' && pnpm plugins:asset
 
 # 2) Rebuild into the same path the packager consumes (.build).
 run_step "clean build cache" bash -lc "cd '${ROOT_DIR}/apps/macos' && rm -rf .build .build-swift .swiftpm 2>/dev/null || true"
-run_step "swift build" bash -lc "cd '${ROOT_DIR}/apps/macos' && swift build -q --product Oriro"
+run_step "swift build" bash -lc "cd '${ROOT_DIR}/apps/macos' && swift build -q --product ORIRO"
 
 if [ "$AUTO_DETECT_SIGNING" -eq 1 ]; then
   if check_signing_keys; then
@@ -248,7 +248,7 @@ choose_app_bundle() {
     return 0
   fi
 
-  fail "App bundle not found. Set ORIRO_APP_BUNDLE to your installed Oriro.app"
+  fail "App bundle not found. Set ORIRO_APP_BUNDLE to your installed ORIRO.app"
 }
 
 choose_app_bundle
@@ -303,7 +303,7 @@ run_step "launch app" env -i \
 # 5) Verify the app is alive.
 sleep 1.5
 if [[ -n "$(process_pids_matching "${APP_BUNDLE}/${APP_EXECUTABLE_RELATIVE_PATH}")" ]]; then
-  log "OK: Oriro is running."
+  log "OK: ORIRO is running."
 else
   fail "App exited immediately. Check ${LOG_PATH} or Console.app (User Reports)."
 fi

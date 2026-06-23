@@ -200,6 +200,7 @@ export const ar: TranslationMap = {
     inherit: "وراثة",
     defaultOption: "الافتراضي ({value})",
     offExplicit: "إيقاف (صريح)",
+    auto: "auto",
     on: "تشغيل",
     off: "متوقف",
     full: "كامل",
@@ -1293,7 +1294,7 @@ export const ar: TranslationMap = {
           "أعد فتح لوحة المعلومات المقدمة باستخدام oriro dashboard حتى يأتي UI وGateway من التثبيت نفسه.",
         stepDevUi:
           "إذا كنت تستخدم pnpm ui:dev، فأعد بناء أو تشغيل واجهة التطوير مقابل checkout الحالي.",
-        stepRestart: "أعد تشغيل Gateway بعد تحديث Oriro حتى يقدم البروتوكول الحالي.",
+        stepRestart: "أعد تشغيل Gateway بعد تحديث ORIRO حتى يقدم البروتوكول الحالي.",
       },
       network: {
         title: "تعذر الاتصال",
@@ -1601,6 +1602,7 @@ export const ar: TranslationMap = {
       nextHeartbeat: "النبضة التالية",
       wakeModeHelp: "الآن يشغّل فورًا. النبضة التالية تنتظر الدورة التالية.",
       payloadKind: "ما الذي يجب تشغيله؟",
+      command: "Command",
       systemEvent: "نشر رسالة إلى المخطط الزمني الرئيسي",
       agentTurn: "تشغيل مهمة المساعد (معزولة)",
       systemEventHelp: "يرسل نصك إلى المخطط الزمني الرئيسي لـ Gateway (مفيد للتذكيرات/المشغلات).",

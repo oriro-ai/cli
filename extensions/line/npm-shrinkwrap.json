@@ -1,18 +1,18 @@
 {
   "name": "@oriro/line",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "@oriro/line",
-      "version": "2026.6.8",
+      "version": "2026.6.9",
       "dependencies": {
         "@line/bot-sdk": "11.0.1",
         "zod": "4.4.3"
       },
       "peerDependencies": {
-        "oriro": ">=2026.6.8"
+        "oriro": ">=2026.6.9"
       },
       "peerDependenciesMeta": {
         "oriro": {

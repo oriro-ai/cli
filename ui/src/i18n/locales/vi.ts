@@ -201,6 +201,7 @@ export const vi: TranslationMap = {
     inherit: "kế thừa",
     defaultOption: "Mặc định ({value})",
     offExplicit: "tắt (rõ ràng)",
+    auto: "auto",
     on: "bật",
     off: "tắt",
     full: "đầy đủ",
@@ -1302,7 +1303,7 @@ export const vi: TranslationMap = {
         stepDevUi:
           "Nếu dùng pnpm ui:dev, hãy build lại hoặc khởi động lại UI dev theo checkout hiện tại.",
         stepRestart:
-          "Khởi động lại Gateway sau khi cập nhật Oriro để nó phục vụ giao thức hiện tại.",
+          "Khởi động lại Gateway sau khi cập nhật ORIRO để nó phục vụ giao thức hiện tại.",
       },
       network: {
         title: "Không thể kết nối",
@@ -1610,6 +1611,7 @@ export const vi: TranslationMap = {
       nextHeartbeat: "Nhịp tiếp theo",
       wakeModeHelp: "Ngay sẽ kích hoạt lập tức. Nhịp tiếp theo đợi đến chu kỳ tiếp theo.",
       payloadKind: "Cần chạy gì?",
+      command: "Command",
       systemEvent: "Đăng tin nhắn lên dòng thời gian chính",
       agentTurn: "Chạy tác vụ trợ lý (tách biệt)",
       systemEventHelp:

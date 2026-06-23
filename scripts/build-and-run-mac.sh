@@ -6,7 +6,7 @@ APP_DIR="$ROOT_DIR/apps/macos"
 
 usage() {
   printf 'Usage: %s\n' "$(basename "$0")"
-  printf 'Build, stop, and relaunch the local debug Oriro macOS app.\n'
+  printf 'Build, stop, and relaunch the local debug ORIRO macOS app.\n'
 }
 
 for arg in "$@"; do
@@ -23,7 +23,7 @@ done
 cd "$APP_DIR"
 
 BUILD_PATH=".build-local"
-PRODUCT="Oriro"
+PRODUCT="ORIRO"
 BIN="$BUILD_PATH/debug/$PRODUCT"
 BIN_ABS="$(pwd)/$BIN"
 APP_CWD="$(pwd -P)"

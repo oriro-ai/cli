@@ -188,7 +188,7 @@ export type CodexAppServerRuntimeOptions = {
   approvalPolicySource?: CodexAppServerApprovalPolicySource;
   sandbox: CodexAppServerSandboxMode;
   approvalsReviewer: CodexAppServerApprovalsReviewer;
-  serviceTier?: CodexServiceTier;
+  serviceTier?: CodexServiceTier | null;
   networkProxy?: ResolvedCodexAppServerNetworkProxyConfig;
 };
 
@@ -517,7 +517,7 @@ export function resolveCodexAppServerRuntimeOptions(
     readRequirementsFile?: (path: string) => string | undefined;
     platform?: NodeJS.Platform;
     hostName?: string;
-    oriroSandboxActive?: boolean;
+    openOriroSandboxActive?: boolean;
   } = {},
 ): CodexAppServerRuntimeOptions {
   const env = params.env ?? process.env;
@@ -613,7 +613,7 @@ export function resolveCodexAppServerRuntimeOptions(
             ? selectForcedDangerFullAccessSandbox({
                 configuredSandbox,
                 defaultPolicy,
-                oriroSandboxActive: Boolean(params.oriroSandboxActive),
+                openOriroSandboxActive: Boolean(params.openOriroSandboxActive),
               })
             : selectForcedPromptingSandbox({
                 configuredSandbox,
@@ -1730,13 +1730,13 @@ function selectForcedPromptingSandbox(params: {
 function selectForcedDangerFullAccessSandbox(params: {
   configuredSandbox?: CodexAppServerSandboxMode;
   defaultPolicy: CodexAppServerDefaultPolicy | undefined;
-  oriroSandboxActive: boolean;
+  openOriroSandboxActive: boolean;
 }): CodexAppServerSandboxMode {
   if (params.configuredSandbox === "read-only") {
     return "read-only";
   }
   if (params.defaultPolicy?.dangerFullAccessAllowed === false) {
-    if (params.oriroSandboxActive) {
+    if (params.openOriroSandboxActive) {
       return params.defaultPolicy.sandbox ?? "workspace-write";
     }
     throw new Error(

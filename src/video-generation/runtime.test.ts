@@ -983,7 +983,7 @@ describe("video-generation runtime", () => {
           },
         },
       } as OriroConfig,
-      prompt: "animate a oriro",
+      prompt: "animate a lobster",
       size: "1280x720",
       aspectRatio: "16:9",
       resolution: "720P",
@@ -1035,7 +1035,7 @@ describe("video-generation runtime", () => {
           },
         },
       } as OriroConfig,
-      prompt: "animate a oriro",
+      prompt: "animate a lobster",
       resolution: "720P",
     });
 
@@ -1076,7 +1076,7 @@ describe("video-generation runtime", () => {
           },
         },
       } as OriroConfig,
-      prompt: "animate a oriro",
+      prompt: "animate a lobster",
       resolution: "4K",
     });
 
@@ -1130,7 +1130,7 @@ describe("video-generation runtime", () => {
           },
         },
       } as OriroConfig,
-      prompt: "animate a oriro",
+      prompt: "animate a lobster",
       size: "1280x720",
       inputImages: [{ buffer: Buffer.from("png"), mimeType: "image/png" }],
     });

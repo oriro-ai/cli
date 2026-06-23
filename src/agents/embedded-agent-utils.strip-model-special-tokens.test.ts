@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { stripModelSpecialTokens } from "./embedded-agent-utils.js";
 
 /**
- * @see https://github.com/oriro-ai/cli/issues/40020
+ * @see https://github.com/oriro/oriro/issues/40020
  */
 describe("stripModelSpecialTokens", () => {
   it("strips tokens and inserts space between adjacent words", () => {

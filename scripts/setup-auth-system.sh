@@ -9,7 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "=== Oriro Auth System Setup ==="
+echo "=== ORIRO Auth System Setup ==="
 echo ""
 
 # Step 1: Check current auth status
@@ -56,7 +56,7 @@ read -r NTFY_TOPIC
 
 # Phone notification
 echo ""
-echo "  Oriro message: Send warning via Oriro itself"
+echo "  ORIRO message: Send warning via ORIRO itself"
 echo "Enter your phone number for alerts (or leave blank to skip):"
 read -r PHONE_NUMBER
 

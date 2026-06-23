@@ -63,9 +63,9 @@ describe("decorative emoji terminal helpers", () => {
       isTty: true,
     };
 
-    expect(decorativeEmoji("ORIRO", badTerminal)).toBe("");
-    expect(decorativePrefix("ORIRO", "Oriro", badTerminal)).toBe("Oriro");
-    expect(decorativePrefix("ORIRO", "Oriro", goodTerminal)).toBe("ORIRO Oriro");
+    expect(decorativeEmoji("🦞", badTerminal)).toBe("");
+    expect(decorativePrefix("🦞", "Oriro", badTerminal)).toBe("Oriro");
+    expect(decorativePrefix("🦞", "Oriro", goodTerminal)).toBe("🦞 Oriro");
   });
 
   it("strips decorative emoji from curated terminal text only when unsupported", () => {
@@ -79,11 +79,11 @@ describe("decorative emoji terminal helpers", () => {
       isTty: true,
     };
 
-    expect(stripDecorativeEmojiForTerminal("The oriro in your shell. ORIRO", badTerminal)).toBe(
-      "The oriro in your shell.",
+    expect(stripDecorativeEmojiForTerminal("The lobster in your shell. 🦞", badTerminal)).toBe(
+      "The lobster in your shell.",
     );
-    expect(stripDecorativeEmojiForTerminal("The oriro in your shell. ORIRO", goodTerminal)).toBe(
-      "The oriro in your shell. ORIRO",
+    expect(stripDecorativeEmojiForTerminal("The lobster in your shell. 🦞", goodTerminal)).toBe(
+      "The lobster in your shell. 🦞",
     );
   });
 });

@@ -613,7 +613,7 @@ describe("message action media helpers", () => {
     // bogus caption param on the reply payload.
     const args: Record<string, unknown> = {
       mediaUrl: "https://example.com/cute.png",
-      message: "ORIRO",
+      message: "🦞",
     };
 
     await hydrateAttachmentParamsForAction({

@@ -204,6 +204,7 @@ export const ja_JP: TranslationMap = {
     inherit: "継承",
     defaultOption: "デフォルト（{value}）",
     offExplicit: "オフ（明示）",
+    auto: "auto",
     on: "オン",
     off: "オフ",
     full: "フル",
@@ -1313,7 +1314,7 @@ export const ja_JP: TranslationMap = {
           "oriro dashboard で提供元の dashboard を開き直し、UI と Gateway が同じインストールから来るようにします。",
         stepDevUi:
           "pnpm ui:dev を使用している場合は、現在の checkout に対して開発 UI を再ビルドまたは再起動します。",
-        stepRestart: "Oriro 更新後に Gateway を再起動し、現在のプロトコルを提供させます。",
+        stepRestart: "ORIRO 更新後に Gateway を再起動し、現在のプロトコルを提供させます。",
       },
       network: {
         title: "接続できません",
@@ -1627,6 +1628,7 @@ export const ja_JP: TranslationMap = {
       nextHeartbeat: "次の heartbeat",
       wakeModeHelp: "Now は即時にトリガーされます。Next heartbeat は次のサイクルまで待機します。",
       payloadKind: "何を実行しますか？",
+      command: "Command",
       systemEvent: "メインタイムラインにメッセージを投稿",
       agentTurn: "アシスタントタスクを実行（分離）",
       systemEventHelp:

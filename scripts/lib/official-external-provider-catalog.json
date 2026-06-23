@@ -2,7 +2,7 @@
   "entries": [
     {
       "name": "@oriro/amazon-bedrock-provider",
-      "description": "Oriro Amazon Bedrock provider plugin",
+      "description": "ORIRO Amazon Bedrock provider plugin",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -27,7 +27,7 @@
     },
     {
       "name": "@oriro/amazon-bedrock-mantle-provider",
-      "description": "Oriro Amazon Bedrock Mantle provider plugin",
+      "description": "ORIRO Amazon Bedrock Mantle provider plugin",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -52,7 +52,7 @@
     },
     {
       "name": "@oriro/anthropic-vertex-provider",
-      "description": "Oriro Anthropic Vertex provider plugin",
+      "description": "ORIRO Anthropic Vertex provider plugin",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -77,7 +77,7 @@
     },
     {
       "name": "@oriro/arcee-provider",
-      "description": "Oriro Arcee provider plugin.",
+      "description": "ORIRO Arcee provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -143,7 +143,7 @@
     },
     {
       "name": "@oriro/cerebras-provider",
-      "description": "Oriro Cerebras provider plugin.",
+      "description": "ORIRO Cerebras provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -192,7 +192,7 @@
     },
     {
       "name": "@oriro/chutes-provider",
-      "description": "Oriro Chutes.ai provider plugin.",
+      "description": "ORIRO Chutes.ai provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -255,7 +255,7 @@
     },
     {
       "name": "@oriro/cohere-provider",
-      "description": "Oriro Cohere provider plugin",
+      "description": "ORIRO Cohere provider plugin",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -301,7 +301,7 @@
     },
     {
       "name": "@oriro/cloudflare-ai-gateway-provider",
-      "description": "Oriro Cloudflare AI Gateway provider plugin.",
+      "description": "ORIRO Cloudflare AI Gateway provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -351,7 +351,7 @@
     },
     {
       "name": "@oriro/codex",
-      "description": "Oriro Codex harness and model provider plugin",
+      "description": "ORIRO Codex harness and model provider plugin",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -389,7 +389,7 @@
     },
     {
       "name": "@oriro/deepinfra-provider",
-      "description": "Oriro DeepInfra provider plugin.",
+      "description": "ORIRO DeepInfra provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -456,7 +456,7 @@
     },
     {
       "name": "@oriro/deepseek-provider",
-      "description": "Oriro DeepSeek provider plugin.",
+      "description": "ORIRO DeepSeek provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -505,7 +505,7 @@
     },
     {
       "name": "@oriro/gmi-provider",
-      "description": "Oriro GMI Cloud provider plugin",
+      "description": "ORIRO GMI Cloud provider plugin",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -548,7 +548,7 @@
     },
     {
       "name": "@oriro/groq-provider",
-      "description": "Oriro Groq media-understanding provider.",
+      "description": "ORIRO Groq media-understanding provider.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -602,7 +602,7 @@
     },
     {
       "name": "@oriro/kilocode-provider",
-      "description": "Oriro Kilo Gateway provider plugin.",
+      "description": "ORIRO Kilo Gateway provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -652,7 +652,7 @@
     },
     {
       "name": "@oriro/kimi-provider",
-      "description": "Oriro Kimi provider plugin.",
+      "description": "ORIRO Kimi provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -705,7 +705,7 @@
     },
     {
       "name": "@oriro/pixverse-provider",
-      "description": "Oriro PixVerse video provider plugin",
+      "description": "ORIRO PixVerse video provider plugin",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -746,7 +746,7 @@
     },
     {
       "name": "@oriro/qianfan-provider",
-      "description": "Oriro Qianfan provider plugin.",
+      "description": "ORIRO Qianfan provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -795,7 +795,7 @@
     },
     {
       "name": "@oriro/qwen-provider",
-      "description": "Oriro Qwen Cloud provider plugin.",
+      "description": "ORIRO Qwen Cloud provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -954,7 +954,7 @@
     },
     {
       "name": "@oriro/stepfun-provider",
-      "description": "Oriro StepFun provider plugin.",
+      "description": "ORIRO StepFun provider plugin.",
       "source": "official",
       "kind": "provider",
       "oriro": {
@@ -1057,9 +1057,10 @@
           }
         ],
         "install": {
+          "orirohubSpec": "orirohub:@oriro/stepfun-provider",
           "npmSpec": "@oriro/stepfun-provider",
           "defaultChoice": "npm",
-          "minHostVersion": ">=2026.6.8"
+          "minHostVersion": ">=2026.6.9"
         }
       }
     }

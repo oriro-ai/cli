@@ -10,20 +10,20 @@
       "required": true,
       "productImpact": "P2",
       "qaImpact": "P0",
-      "issue": "https://github.com/oriro-ai/cli/issues/80319",
+      "issue": "https://github.com/oriro/oriro/issues/80319",
       "ownerAction": "Fix product or harness before claiming the tool-defaults gate is trusted.",
       "labels": ["qa-lab", "runtime-parity", "codex"]
     },
     {
       "id": "oriro-dynamic-tools-direct",
-      "title": "Oriro dynamic integration tools direct runtime parity",
+      "title": "ORIRO dynamic integration tools direct runtime parity",
       "kind": "qa-suite-summary",
       "artifact": "oriro-dynamic-tools-direct/qa-suite-summary.json",
       "required": true,
       "productImpact": "P1",
       "qaImpact": "P0",
-      "issue": "https://github.com/oriro-ai/cli/issues/80319",
-      "ownerAction": "Investigate any hard failure as an Oriro dynamic integration or QA loading regression.",
+      "issue": "https://github.com/oriro/oriro/issues/80319",
+      "ownerAction": "Investigate any hard failure as an ORIRO dynamic integration or QA loading regression.",
       "labels": ["qa-lab", "runtime-parity", "oriro-dynamic-tools"]
     },
     {
@@ -36,7 +36,7 @@
       "skipBackfillLane": "oriro-dynamic-tools-searchable-live",
       "productImpact": "P4",
       "qaImpact": "P2",
-      "issue": "https://github.com/oriro-ai/cli/issues/80319",
+      "issue": "https://github.com/oriro/oriro/issues/80319",
       "ownerAction": "Keep as report-only until searchable/deferred tool modeling has no mock-only ambiguity.",
       "labels": ["qa-lab", "runtime-parity", "searchable-tools"]
     },
@@ -126,7 +126,7 @@
     },
     {
       "id": "oriro-dynamic-tools-searchable-live",
-      "title": "Live Oriro dynamic tools searchable proof",
+      "title": "Live ORIRO dynamic tools searchable proof",
       "kind": "qa-suite-summary",
       "artifact": "oriro-dynamic-tools-searchable-live/qa-suite-summary.json",
       "required": true,
@@ -134,7 +134,7 @@
       "missingReason": "Live/OAuth runner or OpenAI credentials were unavailable for this proof bundle.",
       "productImpact": "P1",
       "qaImpact": "P1",
-      "ownerAction": "Run with live-frontier OAuth before claiming production-shaped searchable Oriro dynamic tool coverage.",
+      "ownerAction": "Run with live-frontier OAuth before claiming production-shaped searchable ORIRO dynamic tool coverage.",
       "labels": ["qa-lab", "runtime-parity", "searchable-tools", "live-proof"]
     },
     {

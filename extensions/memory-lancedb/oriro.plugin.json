@@ -1,7 +1,7 @@
 {
   "id": "memory-lancedb",
   "name": "Memory LanceDB",
-  "description": "Oriro LanceDB-backed long-term memory plugin with auto-recall, auto-capture, and vector search.",
+  "description": "ORIRO LanceDB-backed long-term memory plugin with auto-recall, auto-capture, and vector search.",
   "commandAliases": [{ "name": "ltm" }],
   "activation": {
     "onStartup": false,

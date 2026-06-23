@@ -9,7 +9,7 @@ import { emitYaml } from "../../yaml/emit.js";
 import { parseYaml } from "../../yaml/parse.js";
 import { resolveYamlOcPath } from "../../yaml/resolve.js";
 
-const ORIRO = `name: inbox-triage
+const LOBSTER = `name: inbox-triage
 description: A simple example workflow
 
 steps:
@@ -23,12 +23,12 @@ steps:
 
 describe("parseYaml — round-trip", () => {
   it("preserves bytes verbatim on round-trip", () => {
-    const { ast } = parseYaml(ORIRO);
-    expect(emitYaml(ast)).toBe(ORIRO);
+    const { ast } = parseYaml(LOBSTER);
+    expect(emitYaml(ast)).toBe(LOBSTER);
   });
 
   it("exposes kind: yaml discriminator", () => {
-    const { ast } = parseYaml(ORIRO);
+    const { ast } = parseYaml(LOBSTER);
     expect(ast.kind).toBe("yaml");
   });
 
@@ -46,8 +46,8 @@ describe("parseYaml — round-trip", () => {
 
 describe("resolveYamlOcPath — direct", () => {
   it("resolves top-level scalar", () => {
-    const { ast } = parseYaml(ORIRO);
-    const m = resolveYamlOcPath(ast, parseOcPath("oc://workflow.oriro/name"));
+    const { ast } = parseYaml(LOBSTER);
+    const m = resolveYamlOcPath(ast, parseOcPath("oc://workflow.lobster/name"));
     expect(m?.kind).toBe("pair");
     if (m?.kind === "pair") {
       expect(m.value).toBe("inbox-triage");
@@ -55,8 +55,8 @@ describe("resolveYamlOcPath — direct", () => {
   });
 
   it("resolves into a sequence by index", () => {
-    const { ast } = parseYaml(ORIRO);
-    const m = resolveYamlOcPath(ast, parseOcPath("oc://workflow.oriro/steps.0.id"));
+    const { ast } = parseYaml(LOBSTER);
+    const m = resolveYamlOcPath(ast, parseOcPath("oc://workflow.lobster/steps.0.id"));
     expect(m?.kind).toBe("pair");
     if (m?.kind === "pair") {
       expect(m.value).toBe("fetch");
@@ -64,26 +64,26 @@ describe("resolveYamlOcPath — direct", () => {
   });
 
   it("does not resolve noncanonical sequence indexes", () => {
-    const { ast } = parseYaml(ORIRO);
-    expect(resolveYamlOcPath(ast, parseOcPath("oc://workflow.oriro/steps.01.id"))).toBeNull();
+    const { ast } = parseYaml(LOBSTER);
+    expect(resolveYamlOcPath(ast, parseOcPath("oc://workflow.lobster/steps.01.id"))).toBeNull();
   });
 
   it("returns root when no segments", () => {
-    const { ast } = parseYaml(ORIRO);
-    const m = resolveYamlOcPath(ast, parseOcPath("oc://workflow.oriro"));
+    const { ast } = parseYaml(LOBSTER);
+    const m = resolveYamlOcPath(ast, parseOcPath("oc://workflow.lobster"));
     expect(m?.kind).toBe("root");
   });
 
   it("returns null for unresolved paths", () => {
-    const { ast } = parseYaml(ORIRO);
-    expect(resolveYamlOcPath(ast, parseOcPath("oc://workflow.oriro/missing"))).toBeNull();
+    const { ast } = parseYaml(LOBSTER);
+    expect(resolveYamlOcPath(ast, parseOcPath("oc://workflow.lobster/missing"))).toBeNull();
   });
 });
 
 describe("setYamlOcPath — direct", () => {
   it("replaces a scalar value", () => {
-    const { ast } = parseYaml(ORIRO);
-    const r = setYamlOcPath(ast, parseOcPath("oc://workflow.oriro/name"), "new-name");
+    const { ast } = parseYaml(LOBSTER);
+    const r = setYamlOcPath(ast, parseOcPath("oc://workflow.lobster/name"), "new-name");
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.ast.raw).toContain("name: new-name");
@@ -91,8 +91,8 @@ describe("setYamlOcPath — direct", () => {
   });
 
   it("replaces a nested scalar", () => {
-    const { ast } = parseYaml(ORIRO);
-    const r = setYamlOcPath(ast, parseOcPath("oc://workflow.oriro/steps.0.id"), "fetch-renamed");
+    const { ast } = parseYaml(LOBSTER);
+    const r = setYamlOcPath(ast, parseOcPath("oc://workflow.lobster/steps.0.id"), "fetch-renamed");
     expect(r.ok).toBe(true);
     if (r.ok) {
       expect(r.ast.raw).toContain("id: fetch-renamed");
@@ -100,8 +100,8 @@ describe("setYamlOcPath — direct", () => {
   });
 
   it("reports unresolved for noncanonical sequence indexes", () => {
-    const { ast } = parseYaml(ORIRO);
-    const r = setYamlOcPath(ast, parseOcPath("oc://workflow.oriro/steps.01.id"), "nope");
+    const { ast } = parseYaml(LOBSTER);
+    const r = setYamlOcPath(ast, parseOcPath("oc://workflow.lobster/steps.01.id"), "nope");
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.reason).toBe("unresolved");
@@ -109,8 +109,8 @@ describe("setYamlOcPath — direct", () => {
   });
 
   it("returns unresolved for missing path", () => {
-    const { ast } = parseYaml(ORIRO);
-    const r = setYamlOcPath(ast, parseOcPath("oc://workflow.oriro/missing"), "x");
+    const { ast } = parseYaml(LOBSTER);
+    const r = setYamlOcPath(ast, parseOcPath("oc://workflow.lobster/missing"), "x");
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.reason).toBe("unresolved");
@@ -143,10 +143,10 @@ describe("setYamlOcPath — direct", () => {
 
 describe("setYamlOcPath — positional tokens", () => {
   it("edits the first seq element via $first", () => {
-    const { ast } = parseYaml(ORIRO);
+    const { ast } = parseYaml(LOBSTER);
     const r = setYamlOcPath(
       ast,
-      parseOcPath("oc://workflow.oriro/steps/$first/id"),
+      parseOcPath("oc://workflow.lobster/steps/$first/id"),
       "fetch-renamed",
     );
     expect(r.ok).toBe(true);
@@ -156,10 +156,10 @@ describe("setYamlOcPath — positional tokens", () => {
   });
 
   it("edits the last seq element via $last", () => {
-    const { ast } = parseYaml(ORIRO);
+    const { ast } = parseYaml(LOBSTER);
     const r = setYamlOcPath(
       ast,
-      parseOcPath("oc://workflow.oriro/steps/$last/id"),
+      parseOcPath("oc://workflow.lobster/steps/$last/id"),
       "classify-renamed",
     );
     expect(r.ok).toBe(true);
@@ -197,29 +197,29 @@ describe("setYamlOcPath — positional tokens", () => {
 });
 
 describe("inferKind — yaml extensions", () => {
-  it("maps .yaml / .yml / .oriro to yaml", () => {
+  it("maps .yaml / .yml / .lobster to yaml", () => {
     expect(inferKind("workflow.yaml")).toBe("yaml");
     expect(inferKind("config.yml")).toBe("yaml");
-    expect(inferKind("inbox-triage.oriro")).toBe("yaml");
+    expect(inferKind("inbox-triage.lobster")).toBe("yaml");
   });
 });
 
 describe("universal verbs — yaml dispatch", () => {
   it("resolveOcPath returns kind-agnostic match for yaml leaf", () => {
-    const { ast } = parseYaml(ORIRO);
-    const m = resolveOcPath(ast, parseOcPath("oc://workflow.oriro/name"));
+    const { ast } = parseYaml(LOBSTER);
+    const m = resolveOcPath(ast, parseOcPath("oc://workflow.lobster/name"));
     expect(m).toMatchObject({ kind: "leaf", valueText: "inbox-triage", leafType: "string" });
   });
 
   it("resolveOcPath returns node:yaml-map for top-level seq item", () => {
-    const { ast } = parseYaml(ORIRO);
-    const m = resolveOcPath(ast, parseOcPath("oc://workflow.oriro/steps.0"));
+    const { ast } = parseYaml(LOBSTER);
+    const m = resolveOcPath(ast, parseOcPath("oc://workflow.lobster/steps.0"));
     expect(m).toMatchObject({ kind: "node", descriptor: "yaml-map" });
   });
 
   it("resolveOcPath returns node:yaml-seq for sequence root", () => {
-    const { ast } = parseYaml(ORIRO);
-    const m = resolveOcPath(ast, parseOcPath("oc://workflow.oriro/steps"));
+    const { ast } = parseYaml(LOBSTER);
+    const m = resolveOcPath(ast, parseOcPath("oc://workflow.lobster/steps"));
     expect(m).toMatchObject({ kind: "node", descriptor: "yaml-seq" });
   });
 
@@ -242,8 +242,8 @@ describe("universal verbs — yaml dispatch", () => {
   });
 
   it("setOcPath replaces a yaml scalar via universal verb", () => {
-    const { ast } = parseYaml(ORIRO);
-    const r = setOcPath(ast, parseOcPath("oc://workflow.oriro/name"), "updated");
+    const { ast } = parseYaml(LOBSTER);
+    const r = setOcPath(ast, parseOcPath("oc://workflow.lobster/name"), "updated");
     expect(r.ok).toBe(true);
     if (r.ok && r.ast.kind === "yaml") {
       expect(r.ast.raw).toContain("name: updated");

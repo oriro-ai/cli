@@ -89,7 +89,7 @@ export function resolveCodexNativeExecutionPolicy(params: {
     effectiveExecHost,
     node,
     blockReason:
-      "Oriro exec host=node is active for this session. Codex app-server native execution cannot route shell, filesystem, MCP, or app-backed work through the selected Oriro node.",
+      "ORIRO exec host=node is active for this session. Codex app-server native execution cannot route shell, filesystem, MCP, or app-backed work through the selected ORIRO node.",
   };
 }
 
@@ -99,10 +99,10 @@ export function formatCodexNativeNodeExecBlock(params: {
   reason?: string;
 }): string {
   return [
-    `Codex-native ${params.surface} is unavailable because Oriro exec host=node is active for this session.`,
+    `Codex-native ${params.surface} is unavailable because ORIRO exec host=node is active for this session.`,
     params.reason ??
-      "Codex app-server native execution cannot route execution through the selected Oriro node.",
-    "Use a normal Codex harness turn so Oriro exec/process tools run on the node, or switch exec host to gateway for native Codex app-server execution.",
+      "Codex app-server native execution cannot route execution through the selected ORIRO node.",
+    "Use a normal Codex harness turn so ORIRO exec/process tools run on the node, or switch exec host to gateway for native Codex app-server execution.",
   ].join(" ");
 }
 

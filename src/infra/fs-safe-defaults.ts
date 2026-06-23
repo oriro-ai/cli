@@ -1,5 +1,5 @@
 // Applies Oriro's default fs-safe runtime configuration.
-import { configureFsSafePython } from "@oriro/fs-safe/config";
+import { configureFsSafePython } from "@openclaw/fs-safe/config";
 
 // Oriro does not rely on Python helpers for normal filesystem safety. Tests
 // and operators can still opt in with fs-safe's documented env override.

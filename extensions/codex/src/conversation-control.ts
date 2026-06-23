@@ -192,7 +192,7 @@ export async function setCodexConversationModel(params: {
       modelProvider: response.modelProvider ?? modelSelection.modelProvider,
       approvalPolicy: binding.approvalPolicy,
       sandbox: binding.sandbox,
-      serviceTier: binding.serviceTier ?? runtime.serviceTier,
+      serviceTier: binding.serviceTier ?? runtime.serviceTier ?? undefined,
     },
     lookup,
   );
@@ -292,7 +292,7 @@ export function formatPermissionsMode(binding: {
 async function requireThreadBinding(sessionFile: string, lookup: CodexAppServerBindingLookup = {}) {
   const binding = await readCodexAppServerBinding(sessionFile, lookup);
   if (!binding?.threadId) {
-    throw new Error("No Codex thread is attached to this Oriro session yet.");
+    throw new Error("No Codex thread is attached to this ORIRO session yet.");
   }
   return binding;
 }

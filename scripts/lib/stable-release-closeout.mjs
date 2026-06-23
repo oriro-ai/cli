@@ -142,9 +142,9 @@ export function verifyStableMainCloseout(params) {
 
   const macAssetVersion = version;
   const expectedMacAssets = [
-    `Oriro-${macAssetVersion}.zip`,
-    `Oriro-${macAssetVersion}.dmg`,
-    `Oriro-${macAssetVersion}.dSYM.zip`,
+    `ORIRO-${macAssetVersion}.zip`,
+    `ORIRO-${macAssetVersion}.dmg`,
+    `ORIRO-${macAssetVersion}.dSYM.zip`,
   ];
   const assetNames = new Set(readReleaseAssets(params.release).map((asset) => asset.name));
   const missingMacAssets = expectedMacAssets.filter((asset) => !assetNames.has(asset));

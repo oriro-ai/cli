@@ -8,7 +8,7 @@ import android.os.Build
 import android.widget.Toast
 
 /** App version label shared by diagnostics and gateway-facing Android metadata. */
-internal fun oriroAndroidVersionLabel(): String {
+internal fun openOriroAndroidVersionLabel(): String {
   val versionName = BuildConfig.VERSION_NAME.trim().ifEmpty { "dev" }
   return if (BuildConfig.DEBUG && !versionName.contains("dev", ignoreCase = true)) {
     "$versionName-dev"
@@ -64,7 +64,7 @@ internal fun buildGatewayDiagnosticsReport(
 
     Debug info:
     - screen: $screen
-    - app version: ${oriroAndroidVersionLabel()}
+    - app version: ${openOriroAndroidVersionLabel()}
     - device: $device
     - android: $androidVersion (SDK ${Build.VERSION.SDK_INT})
     - gateway address: $endpoint

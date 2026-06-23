@@ -1,10 +1,10 @@
 {
   "name": "@oriro/sms",
-  "version": "2026.6.8",
-  "description": "Oriro SMS channel plugin for Twilio text messages.",
+  "version": "2026.6.9",
+  "description": "ORIRO SMS channel plugin for Twilio text messages.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "private": true,
   "type": "module",
@@ -30,10 +30,10 @@
       "quickstartAllowFrom": true
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8"
+      "oriroVersion": "2026.6.9"
     }
   }
 }

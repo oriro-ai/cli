@@ -4,7 +4,7 @@ import { defineBundledChannelEntry } from "oriro/plugin-sdk/channel-entry-contra
 export default defineBundledChannelEntry({
   id: "sms",
   name: "SMS",
-  description: "Twilio SMS channel plugin for Oriro text messages.",
+  description: "Twilio SMS channel plugin for ORIRO text messages.",
   importMetaUrl: import.meta.url,
   plugin: {
     specifier: "./channel-plugin-api.js",

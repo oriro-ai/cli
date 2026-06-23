@@ -88,7 +88,7 @@ enum OriroBrand {
 }
 
 extension View {
-    func oriroSheetChrome() -> some View {
+    func openOriroSheetChrome() -> some View {
         self
             .tint(OriroBrand.accent)
             .background {

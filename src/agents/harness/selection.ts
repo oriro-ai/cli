@@ -187,11 +187,11 @@ function selectAgentHarnessDecision(params: {
   // Oriro's built-in harness is intentionally not part of the plugin candidate list. Explicit plugin
   // runtimes fail closed; only `auto` may route an unmatched turn to Oriro.
   const pluginHarnesses = listPluginAgentHarnesses();
-  const oriroHarness = createOriroAgentHarness();
+  const openOriroHarness = createOriroAgentHarness();
   const runtime = policy.runtime;
   if (runtime === "oriro") {
     return buildSelectionDecision({
-      harness: oriroHarness,
+      harness: openOriroHarness,
       policy,
       selectedReason: "forced_oriro",
       candidates: listHarnessCandidates(pluginHarnesses),
@@ -215,7 +215,7 @@ function selectAgentHarnessDecision(params: {
       }
       if (isCliRuntimeAliasForProvider({ runtime, provider: params.provider })) {
         return buildSelectionDecision({
-          harness: oriroHarness,
+          harness: openOriroHarness,
           policy: {
             ...policy,
             runtime: "oriro",
@@ -232,7 +232,7 @@ function selectAgentHarnessDecision(params: {
     }
     if (runtime === "codex" && policy.runtimeSource === "implicit") {
       return buildSelectionDecision({
-        harness: oriroHarness,
+        harness: openOriroHarness,
         policy: {
           ...policy,
           runtime: "oriro",
@@ -249,7 +249,7 @@ function selectAgentHarnessDecision(params: {
       })
     ) {
       return buildSelectionDecision({
-        harness: oriroHarness,
+        harness: openOriroHarness,
         policy: {
           ...policy,
           runtime: "oriro",
@@ -290,7 +290,7 @@ function selectAgentHarnessDecision(params: {
     });
   }
   return buildSelectionDecision({
-    harness: oriroHarness,
+    harness: openOriroHarness,
     policy,
     selectedReason: "auto_oriro",
     candidates: candidates.map(toSelectionCandidate),
@@ -330,7 +330,7 @@ export async function runAgentHarnessAttempt(
   try {
     return await runWithDiagnosticTraceContext(harnessTrace, runAttempt);
   } catch (error) {
-    log.warn(`${harness.label} failed; not falling back to embedded Oriro backend`, {
+    log.warn(`${harness.label} failed; not falling back to embedded ORIRO backend`, {
       harnessId: harness.id,
       provider: params.provider,
       modelId: params.modelId,

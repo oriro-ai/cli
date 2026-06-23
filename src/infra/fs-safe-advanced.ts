@@ -12,4 +12,4 @@ export {
   writeViaSiblingTempPath,
   type AssertNoSymlinkParentsOptions,
   type FileIdentityStat,
-} from "@oriro/fs-safe/advanced";
+} from "@openclaw/fs-safe/advanced";

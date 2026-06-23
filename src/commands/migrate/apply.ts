@@ -15,8 +15,8 @@ import type { MigrateApplyOptions } from "./types.js";
 function shouldTreatMissingBackupAsEmptyState(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error);
   return (
-    message.includes("No local Oriro state was found to back up") ||
-    message.includes("No Oriro config file was found to back up")
+    message.includes("No local ORIRO state was found to back up") ||
+    message.includes("No ORIRO config file was found to back up")
   );
 }
 

@@ -172,7 +172,7 @@ describe("byteplus video generation provider", () => {
     await provider.generateVideo({
       provider: "byteplus",
       model: "seedance-1-0-pro-250528",
-      prompt: "A cinematic oriro montage",
+      prompt: "A cinematic lobster montage",
       providerOptions: {
         seed: 42,
         draft: true,
@@ -195,7 +195,7 @@ describe("byteplus video generation provider", () => {
     await provider.generateVideo({
       provider: "byteplus",
       model: "seedance-1-0-pro-250528",
-      prompt: "A cinematic oriro montage",
+      prompt: "A cinematic lobster montage",
       providerOptions: {
         seed: 1.5,
       },
@@ -212,7 +212,7 @@ describe("byteplus video generation provider", () => {
     await provider.generateVideo({
       provider: "byteplus",
       model: "seedance-1-0-pro-250528",
-      prompt: "A cinematic oriro montage",
+      prompt: "A cinematic lobster montage",
       durationSeconds: 99,
       cfg: {},
     });

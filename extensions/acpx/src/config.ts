@@ -153,15 +153,15 @@ function shellQuoteCommandArg(arg: string): string {
 
 function resolvePluginToolsMcpServerConfig(moduleUrl: string = import.meta.url): McpServerConfig {
   const pluginRoot = resolveAcpxPluginRoot(moduleUrl);
-  const oriroRoot = resolveOriroRoot(pluginRoot);
-  const distEntry = path.join(oriroRoot, "dist", "mcp", "plugin-tools-serve.js");
+  const openOriroRoot = resolveOriroRoot(pluginRoot);
+  const distEntry = path.join(openOriroRoot, "dist", "mcp", "plugin-tools-serve.js");
   if (fs.existsSync(distEntry)) {
     return {
       command: process.execPath,
       args: [distEntry],
     };
   }
-  const sourceEntry = path.join(oriroRoot, "src", "mcp", "plugin-tools-serve.ts");
+  const sourceEntry = path.join(openOriroRoot, "src", "mcp", "plugin-tools-serve.ts");
   return {
     command: process.execPath,
     args: ["--import", resolveTsxImportSpecifier(), sourceEntry],
@@ -170,15 +170,15 @@ function resolvePluginToolsMcpServerConfig(moduleUrl: string = import.meta.url):
 
 function resolveOriroToolsMcpServerConfig(moduleUrl: string = import.meta.url): McpServerConfig {
   const pluginRoot = resolveAcpxPluginRoot(moduleUrl);
-  const oriroRoot = resolveOriroRoot(pluginRoot);
-  const distEntry = path.join(oriroRoot, "dist", "mcp", "oriro-tools-serve.js");
+  const openOriroRoot = resolveOriroRoot(pluginRoot);
+  const distEntry = path.join(openOriroRoot, "dist", "mcp", "oriro-tools-serve.js");
   if (fs.existsSync(distEntry)) {
     return {
       command: process.execPath,
       args: [distEntry],
     };
   }
-  const sourceEntry = path.join(oriroRoot, "src", "mcp", "oriro-tools-serve.ts");
+  const sourceEntry = path.join(openOriroRoot, "src", "mcp", "oriro-tools-serve.ts");
   return {
     command: process.execPath,
     args: ["--import", resolveTsxImportSpecifier(), sourceEntry],
@@ -188,7 +188,7 @@ function resolveOriroToolsMcpServerConfig(moduleUrl: string = import.meta.url): 
 function resolveConfiguredMcpServers(params: {
   mcpServers?: Record<string, McpServerConfig>;
   pluginToolsMcpBridge: boolean;
-  oriroToolsMcpBridge: boolean;
+  openOriroToolsMcpBridge: boolean;
   moduleUrl?: string;
 }): Record<string, McpServerConfig> {
   const resolved = { ...params.mcpServers };
@@ -197,9 +197,9 @@ function resolveConfiguredMcpServers(params: {
       `mcpServers.${ACPX_PLUGIN_TOOLS_MCP_SERVER_NAME} is reserved when pluginToolsMcpBridge=true`,
     );
   }
-  if (params.oriroToolsMcpBridge && resolved[ACPX_ORIRO_TOOLS_MCP_SERVER_NAME]) {
+  if (params.openOriroToolsMcpBridge && resolved[ACPX_ORIRO_TOOLS_MCP_SERVER_NAME]) {
     throw new Error(
-      `mcpServers.${ACPX_ORIRO_TOOLS_MCP_SERVER_NAME} is reserved when oriroToolsMcpBridge=true`,
+      `mcpServers.${ACPX_ORIRO_TOOLS_MCP_SERVER_NAME} is reserved when openOriroToolsMcpBridge=true`,
     );
   }
   if (params.pluginToolsMcpBridge) {
@@ -207,7 +207,7 @@ function resolveConfiguredMcpServers(params: {
       params.moduleUrl,
     );
   }
-  if (params.oriroToolsMcpBridge) {
+  if (params.openOriroToolsMcpBridge) {
     resolved[ACPX_ORIRO_TOOLS_MCP_SERVER_NAME] = resolveOriroToolsMcpServerConfig(
       params.moduleUrl,
     );
@@ -215,7 +215,7 @@ function resolveConfiguredMcpServers(params: {
   return resolved;
 }
 
-/** Convert Oriro MCP server config into ACPX runtime MCP server entries. */
+/** Convert ORIRO MCP server config into ACPX runtime MCP server entries. */
 export function toAcpMcpServers(mcpServers: Record<string, McpServerConfig>): AcpxMcpServer[] {
   return Object.entries(mcpServers).map(([name, server]) => ({
     name,
@@ -244,11 +244,11 @@ export function resolveAcpxPluginConfig(params: {
   const cwd = path.resolve(normalized.cwd?.trim() || fallbackCwd);
   const stateDir = path.resolve(normalized.stateDir?.trim() || path.join(workspaceDir, "state"));
   const pluginToolsMcpBridge = normalized.pluginToolsMcpBridge === true;
-  const oriroToolsMcpBridge = normalized.oriroToolsMcpBridge === true;
+  const openOriroToolsMcpBridge = normalized.openOriroToolsMcpBridge === true;
   const mcpServers = resolveConfiguredMcpServers({
     mcpServers: normalized.mcpServers,
     pluginToolsMcpBridge,
-    oriroToolsMcpBridge,
+    openOriroToolsMcpBridge,
     moduleUrl: params.moduleUrl,
   });
   const agents = Object.fromEntries(
@@ -275,7 +275,7 @@ export function resolveAcpxPluginConfig(params: {
     nonInteractivePermissions:
       normalized.nonInteractivePermissions ?? DEFAULT_NON_INTERACTIVE_POLICY,
     pluginToolsMcpBridge,
-    oriroToolsMcpBridge,
+    openOriroToolsMcpBridge,
     strictWindowsCmdWrapper:
       normalized.strictWindowsCmdWrapper ?? DEFAULT_STRICT_WINDOWS_CMD_WRAPPER,
     timeoutSeconds: normalized.timeoutSeconds ?? DEFAULT_ACPX_TIMEOUT_SECONDS,

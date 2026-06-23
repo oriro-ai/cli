@@ -42,7 +42,7 @@ export function resolveSafeApprovalResult(method: string): Record<string, unknow
       contentItems: [
         {
           type: "inputText",
-          text: "Oriro Codex supervisor did not register a handler for this app-server tool call.",
+          text: "ORIRO Codex supervisor did not register a handler for this app-server tool call.",
         },
       ],
       success: false,
@@ -60,7 +60,7 @@ export function resolveSafeApprovalResult(method: string): Record<string, unknow
   if (method.endsWith("/requestApproval")) {
     return {
       decision: "decline",
-      reason: "Oriro Codex supervisor does not grant native approvals.",
+      reason: "ORIRO Codex supervisor does not grant native approvals.",
     };
   }
   if (method === "item/tool/requestUserInput") {
@@ -83,7 +83,7 @@ abstract class BaseCodexJsonRpcConnection implements CodexJsonRpcConnection {
     await this.request("initialize", {
       clientInfo: {
         name: "oriro-codex-supervisor",
-        title: "Oriro Codex Supervisor",
+        title: "ORIRO Codex Supervisor",
         version: "0.1.0",
       },
       capabilities: {
@@ -138,7 +138,7 @@ abstract class BaseCodexJsonRpcConnection implements CodexJsonRpcConnection {
                 id,
                 error: {
                   code: -32601,
-                  message: `Oriro Codex supervisor cannot handle app-server request: ${method}`,
+                  message: `ORIRO Codex supervisor cannot handle app-server request: ${method}`,
                 },
               }
             : { id, result },

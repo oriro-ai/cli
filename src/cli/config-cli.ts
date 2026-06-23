@@ -931,7 +931,7 @@ async function loadValidConfig(runtime: RuntimeEnv = defaultRuntime) {
   if (snapshot.valid) {
     return snapshot;
   }
-  runtime.error(`Oriro config is invalid: ${shortenHomePath(snapshot.path)}`);
+  runtime.error(`ORIRO config is invalid: ${shortenHomePath(snapshot.path)}`);
   for (const line of formatConfigIssueLines(snapshot.issues, "-", { normalizeRoot: true })) {
     runtime.error(line);
   }
@@ -1845,9 +1845,9 @@ function formatAutoManagedMetaError(paths: readonly PathSegment[][]): string {
   const targets = paths.map((path) => toDotPath(path));
   const subject = targets.length === 1 ? targets[0] : targets.join(", ");
   return [
-    `${subject} is auto-managed by Oriro and cannot be edited; the value would be overwritten on the next config write.`,
+    `${subject} is auto-managed by ORIRO and cannot be edited; the value would be overwritten on the next config write.`,
     "",
-    "These fields are stamped on every config write to record the Oriro version and timestamp that produced the file.",
+    "These fields are stamped on every config write to record the ORIRO version and timestamp that produced the file.",
   ].join("\n");
 }
 
@@ -2483,7 +2483,7 @@ export async function runConfigValidate(opts: { json?: boolean; runtime?: Runtim
       if (opts.json) {
         writeRuntimeJson(runtime, { valid: false, path: outputPath, issues });
       } else {
-        runtime.error(danger(`Oriro config is invalid: ${shortPath}`));
+        runtime.error(danger(`ORIRO config is invalid: ${shortPath}`));
         for (const line of formatConfigIssueLines(issues, danger("×"), { normalizeRoot: true })) {
           runtime.error(`  ${line}`);
         }

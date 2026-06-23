@@ -7,6 +7,7 @@ import { performance } from "node:perf_hooks";
 import { fileURLToPath } from "node:url";
 import { isAudioFileName } from "@oriro/media-core/mime";
 import { asOptionalRecord } from "@oriro/normalization-core/record-coerce";
+import type { FastMode } from "@oriro/normalization-core/string-coerce";
 import { uniqueStrings } from "@oriro/normalization-core/string-normalization";
 import {
   buildTtsSupplementMediaPayload,
@@ -3126,7 +3127,8 @@ export const chatHandlers: GatewayRequestHandlers = {
       sessionId?: string;
       message: string;
       thinking?: string;
-      fastMode?: boolean;
+      fastMode?: FastMode;
+      fastAutoOnSeconds?: number;
       deliver?: boolean;
       originatingChannel?: string;
       originatingTo?: string;
@@ -3647,7 +3649,7 @@ export const chatHandlers: GatewayRequestHandlers = {
       // identical bytes on the wire. BodyForAgent uses the same bare text as
       // Body; the transient gateway stamp is removed (stamping the live turn
       // here would diverge from bare stored history and bust the prompt cache).
-      // See: https://github.com/oriro-ai/cli/issues/3658
+      // See: https://github.com/oriro/oriro/issues/3658
       const ctx: MsgContext = {
         Body: messageForAgent,
         BodyForAgent: messageForAgent,
@@ -3681,6 +3683,7 @@ export const chatHandlers: GatewayRequestHandlers = {
               body: commandBody,
             },
         MessageSid: clientRunId,
+        ApprovalReviewerDeviceId: normalizeOptionalText(client?.connect?.device?.id),
         ...(!isOperatorUiClient(clientInfo)
           ? {
               SenderId: clientInfo?.id,
@@ -3960,6 +3963,7 @@ export const chatHandlers: GatewayRequestHandlers = {
               thinkingLevelOverride: p.thinking,
               fastModeOverride: p.fastMode,
               userTurnTranscriptRecorder: userTurnRecorder,
+              fastModeAutoOnSecondsOverride: p.fastAutoOnSeconds,
               onAgentRunStart: (runId) => {
                 agentRunStarted = true;
                 emitServerTiming(

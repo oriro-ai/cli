@@ -1,7 +1,7 @@
 // ORIRO CLI — Guardian V3 Lite (VENDORED, self-contained).
 //
 // Source of truth: @oriro/guardian (packages/@oriro/guardian/src/index.ts) in the
-// ORIRO monorepo. Per Vinay's ownership directive, the CLI does NOT depend on that
+// ORIRO monorepo. By design, the CLI does NOT depend on that
 // workspace package at runtime — this is a vendored COPY so oriro-cli is fully
 // self-contained (no external repo/process/build dependency). If the canonical
 // patterns change, re-sync this file. Pure / deterministic / ZERO deps / ZERO network
@@ -171,7 +171,9 @@ export const scanMCPCall = scanToolCall;
 export function scoreInteractionPair(prompt: string, response: string): ScoreResult {
   const flags: string[] = [];
   const resp = response || "";
-  if (/BUILD MODE —|CONVERSATION DISCIPLINE:|=== RELEVANT SKILLS ===|=== Active skills/.test(resp)) {
+  if (
+    /BUILD MODE —|CONVERSATION DISCIPLINE:|=== RELEVANT SKILLS ===|=== Active skills/.test(resp)
+  ) {
     flags.push("system_prompt_leak");
   }
   if (firstInjection(resp)) flags.push("injection_echo");
@@ -195,11 +197,23 @@ export function guardPrompt(prompt: string): GuardOutcome {
   const dehidden = stripHiddenUnicode(prompt);
   const inj = firstInjection(dehidden.text);
   if (inj) {
-    return { text: dehidden.text, safe: false, threat: `injection:${inj}`, redacted: false, strippedHidden: dehidden.stripped };
+    return {
+      text: dehidden.text,
+      safe: false,
+      threat: `injection:${inj}`,
+      redacted: false,
+      strippedHidden: dehidden.stripped,
+    };
   }
   const ioc = firstIOC(dehidden.text);
   if (ioc) {
-    return { text: dehidden.text, safe: false, threat: ioc, redacted: false, strippedHidden: dehidden.stripped };
+    return {
+      text: dehidden.text,
+      safe: false,
+      threat: ioc,
+      redacted: false,
+      strippedHidden: dehidden.stripped,
+    };
   }
   const pii = stripPII(dehidden.text);
   return { text: pii.text, safe: true, redacted: pii.redacted, strippedHidden: dehidden.stripped };
@@ -216,10 +230,15 @@ export interface QuarantineEntry {
 const QUARANTINE_CAP = 100;
 const quarantineLog: QuarantineEntry[] = [];
 
-export function recordQuarantine(threat_type: string, raw_input = "", ts = Date.now()): QuarantineEntry {
+export function recordQuarantine(
+  threat_type: string,
+  raw_input = "",
+  ts = Date.now(),
+): QuarantineEntry {
   const entry: QuarantineEntry = { ts, threat_type, raw_input: (raw_input ?? "").slice(0, 2000) };
   quarantineLog.push(entry);
-  if (quarantineLog.length > QUARANTINE_CAP) quarantineLog.splice(0, quarantineLog.length - QUARANTINE_CAP);
+  if (quarantineLog.length > QUARANTINE_CAP)
+    quarantineLog.splice(0, quarantineLog.length - QUARANTINE_CAP);
   return entry;
 }
 export function getQuarantineLog(): readonly QuarantineEntry[] {

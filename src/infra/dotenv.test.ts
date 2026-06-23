@@ -734,7 +734,7 @@ describe("loadCliDotEnv", () => {
     await withIsolatedEnvAndCwd(async () => {
       const base = await fs.mkdtemp(path.join(os.tmpdir(), "oriro-dotenv-legacy-"));
       const cwdDir = path.join(base, "cwd");
-      const legacyStateDir = path.join(base, ".clawdbot");
+      const legacyStateDir = path.join(base, ".oriro");
       setTestEnvValue("HOME", base);
       deleteTestEnvValue("ORIRO_STATE_DIR");
       delete process.env.ORIRO_TEST_FAST;
@@ -977,7 +977,7 @@ describe("workspace .env blocklist completeness", () => {
       await withDotEnvFixture(async ({ cwdDir }) => {
         await writeEnvFile(
           path.join(cwdDir, ".env"),
-          "MY_APP_KEY=user-value\nAPP_GITHUB_REPO=oriro-ai/cli\nDATABASE_URL_CUSTOM=pg://localhost\n",
+          "MY_APP_KEY=user-value\nAPP_GITHUB_REPO=oriro/oriro\nDATABASE_URL_CUSTOM=pg://localhost\n",
         );
 
         delete process.env.MY_APP_KEY;
@@ -987,7 +987,7 @@ describe("workspace .env blocklist completeness", () => {
         loadWorkspaceDotEnvFile(path.join(cwdDir, ".env"), { quiet: true });
 
         expect(process.env.MY_APP_KEY).toBe("user-value");
-        expect(process.env.APP_GITHUB_REPO).toBe("oriro-ai/cli");
+        expect(process.env.APP_GITHUB_REPO).toBe("oriro/oriro");
         expect(process.env.DATABASE_URL_CUSTOM).toBe("pg://localhost");
       });
     });

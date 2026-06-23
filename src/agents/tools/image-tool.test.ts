@@ -781,7 +781,7 @@ function installFastLocalImageProviderStubs(...providers: MediaUnderstandingProv
     loadImageWebMediaRuntime: async () => ({
       loadWebMedia: async (mediaUrl, options) => {
         const inboundRoots =
-          options && typeof options === "object" && "inboundRoots" in options
+          options && typeof options !== "number" && "inboundRoots" in options
             ? options.inboundRoots
             : [];
         if (
@@ -2464,7 +2464,7 @@ describe("image tool implicit imageModel config", () => {
 
       const res = await tool.execute("t1", {
         prompt: "Describe the image.",
-        image: "@/Users/steipete/.oriro/media/inbound/photo.png",
+        image: "@/Users/oriro/.oriro/media/inbound/photo.png",
       });
 
       expect(fetch).toHaveBeenCalledTimes(1);

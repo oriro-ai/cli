@@ -112,7 +112,7 @@ export const canvasConfigSchema: CanvasPluginConfigSchema = {
     },
     "host.root": {
       label: "Canvas Host Root Directory",
-      help: "Directory to serve. Defaults to the Oriro state canvas directory.",
+      help: "Directory to serve. Defaults to the ORIRO state canvas directory.",
       advanced: true,
     },
     "host.port": {

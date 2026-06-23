@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: gh-skill
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

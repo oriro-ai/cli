@@ -1,8 +1,8 @@
 {
   "name": "@oriro/duckduckgo-plugin",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro DuckDuckGo plugin",
+  "description": "ORIRO DuckDuckGo plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

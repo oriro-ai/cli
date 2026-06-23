@@ -6,6 +6,6 @@ import { VERSION } from "../version.js";
 /** ACP agent identity advertised during protocol initialization. */
 export const ACP_AGENT_INFO = {
   name: "oriro-acp",
-  title: "Oriro ACP Gateway",
+  title: "ORIRO ACP Gateway",
   version: VERSION,
 };

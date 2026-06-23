@@ -1,6 +1,6 @@
 ---
 name: security-triage
-description: "Triage Oriro security advisories, drafts, and GHSA reports with shipped-tag and trust-model proof."
+description: "Triage ORIRO security advisories, drafts, and GHSA reports with shipped-tag and trust-model proof."
 ---
 
 # Security Triage
@@ -25,7 +25,7 @@ Do not close only because `main` is fixed. If latest shipped tag or npm release 
 Before answering:
 
 1. Read `SECURITY.md`.
-2. Read the GHSA body with `gh api /repos/oriro-ai/cli/security-advisories/<GHSA>`.
+2. Read the GHSA body with `gh api /repos/oriro/oriro/security-advisories/<GHSA>`.
 3. Inspect the exact implicated code paths.
 4. Verify shipped state:
    - `git tag --sort=-creatordate | head`
@@ -128,14 +128,14 @@ Tell the user that the clipboard now contains the proposed response for that adv
 ## Useful Commands
 
 ```bash
-gh api /repos/oriro-ai/cli/security-advisories/<GHSA>
-gh api /repos/oriro-ai/cli/security-advisories --paginate
+gh api /repos/oriro/oriro/security-advisories/<GHSA>
+gh api /repos/oriro/oriro/security-advisories --paginate
 git tag --sort=-creatordate | head -n 20
 npm view oriro version --userconfig "$(mktemp)"
 git tag --contains <commit>
 git show <tag>:<path>
-gh search issues --repo oriro-ai/cli --match title,body,comments -- "<terms>"
-gh search prs --repo oriro-ai/cli --match title,body,comments -- "<terms>"
+gh search issues --repo oriro/oriro --match title,body,comments -- "<terms>"
+gh search prs --repo oriro/oriro --match title,body,comments -- "<terms>"
 ```
 
 ## Decision Notes

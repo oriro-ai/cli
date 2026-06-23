@@ -217,8 +217,8 @@ export function createCodexDynamicToolBridge(params: {
       const toolEntry = toolMap.get(call.tool);
       if (!toolEntry) {
         const message = registeredToolNames.has(call.tool)
-          ? `Oriro tool is not available for this turn: ${call.tool}`
-          : `Unknown Oriro tool: ${call.tool}`;
+          ? `ORIRO tool is not available for this turn: ${call.tool}`
+          : `Unknown ORIRO tool: ${call.tool}`;
         finalizeToolTerminalPresentation({
           toolCallId: call.callId,
           runId: toolResultHookContext.runId,
@@ -1012,7 +1012,7 @@ function convertToolContents(
     return content.flatMap(convertToolContent);
   }
 
-  const noticeText = `...(Oriro truncated dynamic tool result: original ${totalTextChars} chars, showing ${maxChars}; rerun with narrower args.)`;
+  const noticeText = `...(ORIRO truncated dynamic tool result: original ${totalTextChars} chars, showing ${maxChars}; rerun with narrower args.)`;
   const notice = `\n${noticeText}`;
   const textBudget = Math.max(0, maxChars - notice.length);
   let remainingTextBudget = textBudget;

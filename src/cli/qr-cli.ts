@@ -228,7 +228,7 @@ export function registerQrCli(program: Command) {
 
         const lines: string[] = [
           theme.heading("Pairing QR"),
-          "Scan this with the Oriro mobile app (Onboarding -> Scan QR).",
+          "Scan this with the ORIRO mobile app (Onboarding -> Scan QR).",
           "",
         ];
 

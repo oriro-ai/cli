@@ -1,12 +1,7 @@
 // Oriro SDK tests cover index behavior.
 import { describe, expect, it } from "vitest";
 import { EventHub, Oriro, normalizeGatewayEvent } from "./index.js";
-import type {
-  GatewayEvent,
-  GatewayRequestOptions,
-  OriroEvent,
-  OriroTransport,
-} from "./types.js";
+import type { GatewayEvent, GatewayRequestOptions, OriroEvent, OriroTransport } from "./types.js";
 
 type RequestCall = {
   method: string;
@@ -430,7 +425,7 @@ describe("Oriro SDK", () => {
         approvals: "ask",
       }),
     ).rejects.toThrow(
-      "Oriro Gateway does not support per-run SDK options yet: workspace, runtime, environment, approvals",
+      "ORIRO Gateway does not support per-run SDK options yet: workspace, runtime, environment, approvals",
     );
   });
 
@@ -445,6 +440,11 @@ describe("Oriro SDK", () => {
       timeoutMs: 1_500,
       idempotencyKey: "timeout-test",
     });
+    await oc.runs.create({
+      input: "run without SDK watchdog",
+      timeoutMs: 0,
+      idempotencyKey: "no-watchdog-test",
+    });
 
     expect(requireTransportCall(transport.calls, 0)).toEqual({
       method: "agent",
@@ -453,6 +453,15 @@ describe("Oriro SDK", () => {
         message: "short run",
         timeout: 2,
         idempotencyKey: "timeout-test",
+      },
+    });
+    expect(requireTransportCall(transport.calls, 1)).toEqual({
+      method: "agent",
+      options: { expectFinal: false, timeoutMs: null },
+      params: {
+        message: "run without SDK watchdog",
+        timeout: 0,
+        idempotencyKey: "no-watchdog-test",
       },
     });
     await expect(
@@ -533,10 +542,10 @@ describe("Oriro SDK", () => {
     const oc = new Oriro({ transport });
 
     await expect(oc.environments.create({ provider: "testbox" })).rejects.toThrow(
-      "oc.environments.create is not supported by the current Oriro Gateway yet",
+      "oc.environments.create is not supported by the current ORIRO Gateway yet",
     );
     await expect(oc.environments.delete("environment_123")).rejects.toThrow(
-      "oc.environments.delete is not supported by the current Oriro Gateway yet",
+      "oc.environments.delete is not supported by the current ORIRO Gateway yet",
     );
     expect(transport.calls).toStrictEqual([]);
   });
@@ -665,10 +674,10 @@ describe("Oriro SDK", () => {
     });
     await expect(oc.environments.status("gateway")).resolves.toEqual(gatewayEnvironment);
     await expect(oc.environments.create({ provider: "testbox" })).rejects.toThrow(
-      "oc.environments.create is not supported by the current Oriro Gateway yet",
+      "oc.environments.create is not supported by the current ORIRO Gateway yet",
     );
     await expect(oc.environments.delete("gateway")).rejects.toThrow(
-      "oc.environments.delete is not supported by the current Oriro Gateway yet",
+      "oc.environments.delete is not supported by the current ORIRO Gateway yet",
     );
     expect(transport.calls).toEqual([
       { method: "environments.list", params: {}, options: undefined },
@@ -766,13 +775,13 @@ describe("Oriro SDK", () => {
     const close = oc.close();
     transport.finishConnect();
 
-    await expect(connect).rejects.toThrow("Oriro SDK client is closed");
+    await expect(connect).rejects.toThrow("ORIRO SDK client is closed");
     await close;
-    await expect(oc.agents.list()).rejects.toThrow("Oriro SDK client is closed");
+    await expect(oc.agents.list()).rejects.toThrow("ORIRO SDK client is closed");
     await expect(oc.events()[Symbol.asyncIterator]().next()).rejects.toThrow(
-      "Oriro SDK client is closed",
+      "ORIRO SDK client is closed",
     );
-    expect(() => oc.rawEvents()).toThrow("Oriro SDK client is closed");
+    expect(() => oc.rawEvents()).toThrow("ORIRO SDK client is closed");
     expect(transport.connectCalls).toBe(1);
     expect(transport.calls).toEqual([]);
   });
@@ -814,7 +823,7 @@ describe("Oriro SDK", () => {
       closePromise = oc.close();
     };
 
-    await expect(oc.agents.list()).rejects.toThrow("Oriro SDK client is closed");
+    await expect(oc.agents.list()).rejects.toThrow("ORIRO SDK client is closed");
     await closePromise;
     expect(transport.calls).toEqual([]);
   });

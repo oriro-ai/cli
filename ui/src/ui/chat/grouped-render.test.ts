@@ -61,7 +61,7 @@ vi.mock("../views/agents-utils.ts", () => {
     /^data:image\//i.test(value) || (value.startsWith("/") && !value.startsWith("//"));
 
   return {
-    assistantAvatarFallbackUrl: () => "/oriro-oriro.png",
+    assistantAvatarFallbackUrl: () => "/oriro-molty.png",
     agentLogoUrl: () => "/oriro-logo.svg",
     isRenderableControlUiAvatarUrl,
     resolveAssistantTextAvatar: (value: string | null | undefined) => {

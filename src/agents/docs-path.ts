@@ -6,7 +6,7 @@ import path from "node:path";
 import { resolveOriroPackageRoot } from "../infra/oriro-root.js";
 
 export const ORIRO_DOCS_URL = "https://docs.oriro.ai";
-export const ORIRO_SOURCE_URL = "https://github.com/oriro-ai/cli";
+export const ORIRO_SOURCE_URL = "https://github.com/oriro/oriro";
 
 type ResolveOriroReferencePathParams = {
   workspaceDir?: string;

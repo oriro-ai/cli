@@ -1,8 +1,8 @@
 {
   "name": "@oriro/tencent-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Tencent Cloud provider plugin (TokenHub + Token Plan)",
+  "description": "ORIRO Tencent Cloud provider plugin (TokenHub + Token Plan)",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

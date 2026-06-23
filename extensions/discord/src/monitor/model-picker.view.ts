@@ -215,8 +215,8 @@ function getRuntimeChoices(params: {
   return [
     {
       id: "oriro",
-      label: "Oriro Default",
-      description: "Use the built-in Oriro runtime.",
+      label: "ORIRO Default",
+      description: "Use the built-in ORIRO runtime.",
     },
   ];
 }

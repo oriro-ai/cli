@@ -1,8 +1,8 @@
 {
   "name": "@oriro/google-plugin",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Google plugin",
+  "description": "ORIRO Google plugin",
   "type": "module",
   "dependencies": {
     "@google/genai": "2.7.0",

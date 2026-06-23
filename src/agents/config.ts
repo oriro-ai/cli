@@ -117,8 +117,8 @@ interface PackageJson {
 
 const pkg = JSON.parse(readFileSync(getPackageJsonPath(), "utf-8")) as PackageJson;
 
-const oriroConfigName: string | undefined = pkg.oriroConfig?.name;
-export const APP_NAME: string = oriroConfigName || "oriro";
+const openOriroConfigName: string | undefined = pkg.oriroConfig?.name;
+export const APP_NAME: string = openOriroConfigName || "oriro";
 export const CONFIG_DIR_NAME: string = pkg.oriroConfig?.configDir || ".oriro";
 export const VERSION: string = pkg.version || "0.0.0";
 

@@ -274,7 +274,7 @@ export function createMatrixUpdateKeepCredentialsPrompter(params?: {
     },
     text: {
       "Matrix homeserver URL": params?.homeserver ?? "https://matrix.example.org",
-      "Matrix device name (optional)": params?.deviceName ?? "Oriro Gateway",
+      "Matrix device name (optional)": params?.deviceName ?? "ORIRO Gateway",
     },
     confirm: {
       "Matrix credentials already configured. Keep them?": true,

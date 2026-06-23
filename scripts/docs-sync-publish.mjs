@@ -12,7 +12,7 @@ const ROOT = path.resolve(HERE, "..");
 const SOURCE_DOCS_DIR = path.join(ROOT, "docs");
 const SOURCE_CONFIG_PATH = path.join(SOURCE_DOCS_DIR, "docs.json");
 const INTERNAL_DOCS_DIRS = ["internal"];
-const DEFAULT_ORIROHUB_SOURCE_REPO = "oriro-ai/clihub";
+const DEFAULT_ORIROHUB_SOURCE_REPO = "oriro/orirohub";
 const ORIROHUB_DOCS_TARGET_DIR = "orirohub";
 const ORIROHUB_REPO_ENV = "ORIRO_DOCS_SYNC_ORIROHUB_REPO";
 const DEFAULT_ORIROHUB_REPO_CANDIDATES = [
@@ -172,7 +172,7 @@ const GENERATED_LOCALES = [
 
 function readOptionValue(argv, index, optionName) {
   const value = argv[index + 1];
-  if (value === undefined || value === "" || value.startsWith("--")) {
+  if (value === undefined || value === "" || value.startsWith("-")) {
     throw new Error(`${optionName} requires a value`);
   }
   return value;

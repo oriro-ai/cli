@@ -1,10 +1,10 @@
 {
   "name": "@oriro/copilot",
-  "version": "2026.6.8",
-  "description": "Oriro GitHub Copilot agent runtime plugin (registers a `github-copilot` AgentHarness backed by @github/copilot-sdk over JSON-RPC to the GitHub Copilot CLI)",
+  "version": "2026.6.9",
+  "description": "ORIRO GitHub Copilot agent runtime plugin (registers a `github-copilot` AgentHarness backed by @github/copilot-sdk over JSON-RPC to the GitHub Copilot CLI)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -25,10 +25,10 @@
       "minHostVersion": ">=2026.5.28"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8",
+      "oriroVersion": "2026.6.9",
       "bundledDist": false
     },
     "release": {

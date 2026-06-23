@@ -164,7 +164,7 @@ describe("imessage monitor gating + envelope builders", () => {
       is_from_me: false,
       text: "@oriro ping",
       is_group: true,
-      chat_name: "Oriro Squad",
+      chat_name: "Lobster Squad",
       participants: ["+1555", "+1556"],
     };
     const ctxPayload = await buildDispatchContextPayload({ cfg, message });
@@ -188,7 +188,7 @@ describe("imessage monitor gating + envelope builders", () => {
       is_from_me: false,
       text: "@oriro ping",
       is_group: true,
-      chat_name: "Oriro Squad",
+      chat_name: "Lobster Squad",
       participants: ["+1555", "+1556"],
     };
     const ctxPayload = await buildDispatchContextPayload({ cfg, message });

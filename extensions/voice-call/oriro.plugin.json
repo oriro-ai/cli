@@ -1,7 +1,7 @@
 {
   "id": "voice-call",
   "name": "Voice Call",
-  "description": "Oriro voice-call plugin for Twilio, Telnyx, and Plivo phone calls.",
+  "description": "ORIRO voice-call plugin for Twilio, Telnyx, and Plivo phone calls.",
   "commandAliases": [{ "name": "voicecall" }],
   "activation": {
     "onStartup": true,

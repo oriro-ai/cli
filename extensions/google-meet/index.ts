@@ -71,7 +71,7 @@ const googleMeetConfigSchema = {
     },
     defaultMode: {
       label: "Default Mode",
-      help: "Agent uses realtime transcription plus regular Oriro TTS. Bidi uses the realtime voice model directly. Transcribe observes only.",
+      help: "Agent uses realtime transcription plus regular ORIRO TTS. Bidi uses the realtime voice model directly. Transcribe observes only.",
     },
     "chrome.audioBackend": {
       label: "Chrome Audio Backend",
@@ -89,7 +89,7 @@ const googleMeetConfigSchema = {
     },
     "chrome.autoJoin": {
       label: "Auto Join Guest Screen",
-      help: "Best-effort guest-name fill and Join Now click through Oriro browser automation.",
+      help: "Best-effort guest-name fill and Join Now click through ORIRO browser automation.",
     },
     "chrome.waitForInCallMs": {
       label: "Wait For In-Call (ms)",
@@ -184,7 +184,7 @@ const googleMeetConfigSchema = {
     },
     "realtime.transcriptionProvider": {
       label: "Realtime Transcription Provider",
-      help: "Agent mode uses this provider to transcribe meeting audio before regular Oriro TTS answers.",
+      help: "Agent mode uses this provider to transcribe meeting audio before regular ORIRO TTS answers.",
     },
     "realtime.voiceProvider": {
       label: "Bidi Voice Provider",
@@ -192,7 +192,7 @@ const googleMeetConfigSchema = {
     },
     "realtime.model": {
       label: "Bidi Realtime Model",
-      help: "Only used by mode=bidi. Agent mode answers with the configured Oriro agent and regular TTS.",
+      help: "Only used by mode=bidi. Agent mode answers with the configured ORIRO agent and regular TTS.",
       advanced: true,
     },
     "realtime.instructions": { label: "Realtime Instructions", advanced: true },
@@ -202,7 +202,7 @@ const googleMeetConfigSchema = {
     },
     "realtime.agentId": {
       label: "Realtime Consult Agent",
-      help: 'Oriro agent id used by oriro_agent_consult. Defaults to "main".',
+      help: 'ORIRO agent id used by oriro_agent_consult. Defaults to "main".',
       advanced: true,
     },
     "realtime.toolPolicy": {
@@ -276,7 +276,7 @@ const GoogleMeetToolSchema = Type.Object({
     Type.String({
       enum: ["agent", "bidi", "transcribe"],
       description:
-        "Join mode. agent uses realtime transcription, the configured Oriro agent, and regular TTS. bidi uses the realtime voice model directly. transcribe joins observe-only.",
+        "Join mode. agent uses realtime transcription, the configured ORIRO agent, and regular TTS. bidi uses the realtime voice model directly. transcribe joins observe-only.",
     }),
   ),
   dialInNumber: Type.Optional(

@@ -15,7 +15,6 @@ export {
   loadZipArchiveWithPreflight,
   mergeExtractedTreeIntoDestination,
   prepareArchiveDestinationDir,
-  readZipCentralDirectoryEntryCount,
   resolveArchiveKind,
   resolvePackedRootDir,
   withStagedArchiveDestination,
@@ -25,4 +24,4 @@ export {
   type ArchiveLogger,
   type ArchiveSecurityErrorCode,
   type TarEntryInfo,
-} from "@oriro/fs-safe/archive";
+} from "@openclaw/fs-safe/archive";

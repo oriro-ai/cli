@@ -1,7 +1,7 @@
 // Resolves the Oriro package root from runtime and package metadata.
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { oriroRootFs, oriroRootFsSync } from "./oriro-root.fs.runtime.js";
+import { openOriroRootFs, openOriroRootFsSync } from "./oriro-root.fs.runtime.js";
 
 const CORE_PACKAGE_NAMES = new Set(["oriro"]);
 const packageNameCache = new Map<string, string | null>();
@@ -19,7 +19,7 @@ async function readPackageName(dir: string): Promise<string | null> {
     return packageNameCache.get(packageJsonPath) ?? null;
   }
   try {
-    const name = parsePackageName(await oriroRootFs.readFile(packageJsonPath, "utf-8"));
+    const name = parsePackageName(await openOriroRootFs.readFile(packageJsonPath, "utf-8"));
     packageNameCache.set(packageJsonPath, name);
     return name;
   } catch {
@@ -34,7 +34,7 @@ function readPackageNameSync(dir: string): string | null {
     return packageNameCache.get(packageJsonPath) ?? null;
   }
   try {
-    const name = parsePackageName(oriroRootFsSync.readFileSync(packageJsonPath, "utf-8"));
+    const name = parsePackageName(openOriroRootFsSync.readFileSync(packageJsonPath, "utf-8"));
     packageNameCache.set(packageJsonPath, name);
     return name;
   } catch {
@@ -87,7 +87,7 @@ function candidateDirsFromArgv1(argv1: string): string[] {
   // Resolve symlinks for version managers (nvm, fnm, n, Homebrew/Linuxbrew)
   // that create symlinks in bin/ pointing to the real package location.
   try {
-    const resolved = oriroRootFsSync.realpathSync(normalized);
+    const resolved = openOriroRootFsSync.realpathSync(normalized);
     if (resolved !== normalized) {
       candidates.push(path.dirname(resolved));
     }

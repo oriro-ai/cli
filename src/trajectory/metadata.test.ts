@@ -54,7 +54,7 @@ describe("trajectory metadata", () => {
       "/Users/tester/project/oriro.js",
       "--api-key",
       "super-secret",
-      "--config=/Users/tester/.oriro-ai/cli.json",
+      "--config=/Users/tester/.oriro/oriro.json",
     ];
     try {
       const metadata = buildTrajectoryRunMetadata({

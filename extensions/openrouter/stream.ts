@@ -115,7 +115,7 @@ async function fetchOpenRouterGenerationTotalCost(params: {
       headers: {
         Authorization: `Bearer ${params.apiKey}`,
         "HTTP-Referer": "https://oriro.ai",
-        "X-OpenRouter-Title": "Oriro",
+        "X-OpenRouter-Title": "ORIRO",
       },
     },
     OPENROUTER_GENERATION_LOOKUP_TIMEOUT_MS,

@@ -2,7 +2,7 @@
 import crypto from "node:crypto";
 import { normalizeProviderId } from "@oriro/model-catalog-core/provider-id";
 import { asDateTimestampMs } from "@oriro/normalization-core/number-coercion";
-import { normalizeOptionalString } from "@oriro/normalization-core/string-coerce";
+import { type FastMode, normalizeOptionalString } from "@oriro/normalization-core/string-coerce";
 import {
   clearAutoFallbackPrimaryProbeSelection,
   hasLegacyAutoFallbackWithoutOrigin,
@@ -409,6 +409,10 @@ type RunPreparedReplyParams = {
   directives: InlineDirectives;
   defaultActivation: Parameters<typeof buildGroupIntro>[0]["defaultActivation"];
   resolvedThinkLevel: ThinkLevel | undefined;
+  resolvedFastMode?: FastMode;
+  resolvedFastModeAutoOnSeconds?: number;
+  resolvedFastModeOverride?: boolean;
+  resolvedFastModeAutoOnSecondsOverride?: boolean;
   resolvedVerboseLevel: VerboseLevel | undefined;
   resolvedReasoningLevel: ReasoningLevel;
   resolvedElevatedLevel: ElevatedLevel;
@@ -1228,7 +1232,7 @@ export async function runPreparedReply(
           // LLM-boundary stamping site (normalizeMessagesForLlmBoundary) can
           // derive a stable per-message `[DOW YYYY-MM-DD HH:MM TZ]` prefix that
           // is identical whether this turn is sent as the current turn or
-          // replayed as history. See: https://github.com/oriro-ai/cli/issues/3658
+          // replayed as history. See: https://github.com/oriro/oriro/issues/3658
           ...(userTurnTimestamp ? { timestamp: userTurnTimestamp } : {}),
         }
       : undefined;
@@ -1323,6 +1327,7 @@ export async function runPreparedReply(
       senderIsOwner: command.senderIsOwner,
       traceAuthorized:
         command.senderIsOwner || (ctx.GatewayClientScopes ?? []).includes("operator.admin"),
+      approvalReviewerDeviceId: normalizeOptionalString(ctx.ApprovalReviewerDeviceId),
       sessionFile: preparedSessionState.sessionFile,
       workspaceDir,
       cwd: normalizeOptionalString(sessionEntry?.spawnedCwd),
@@ -1337,15 +1342,31 @@ export async function runPreparedReply(
       authProfileId,
       authProfileIdSource,
       thinkLevel: resolvedThinkLevel,
-      fastMode: useFastReplyRuntime
-        ? false
-        : resolveFastModeState({
-            cfg,
-            provider,
-            model,
-            agentId,
-            sessionEntry: preparedSessionState.sessionEntry,
-          }).enabled,
+      ...(() => {
+        if (useFastReplyRuntime) {
+          return {
+            fastMode: false,
+            fastModeAutoOnSeconds: undefined,
+            fastModeOverride: true,
+          };
+        }
+        const fastModeState = resolveFastModeState({
+          cfg,
+          provider,
+          model,
+          agentId,
+          sessionEntry: preparedSessionState.sessionEntry,
+        });
+        return {
+          fastMode: params.resolvedFastMode ?? fastModeState.mode,
+          fastModeAutoOnSeconds:
+            params.resolvedFastModeAutoOnSeconds ?? fastModeState.fastAutoOnSeconds,
+          ...(params.resolvedFastModeOverride ? { fastModeOverride: true } : {}),
+          ...(params.resolvedFastModeAutoOnSecondsOverride
+            ? { fastModeAutoOnSecondsOverride: true }
+            : {}),
+        };
+      })(),
       verboseLevel: resolvedVerboseLevel,
       reasoningLevel: resolvedReasoningLevel,
       elevatedLevel: resolvedElevatedLevel,

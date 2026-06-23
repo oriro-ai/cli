@@ -58,11 +58,11 @@ describe("resolveClaudeCliProjectDirForWorkspace", () => {
   it("matches Claude's sanitized workspace project dir shape", () => {
     expect(
       resolveClaudeCliProjectDirForWorkspace({
-        workspaceDir: "/Users/vincentkoc/GIT/_Perso/oriro/.oriro/workspace",
-        homeDir: "/Users/vincentkoc",
+        workspaceDir: "/Users/oriro/GIT/_Perso/oriro/.oriro/workspace",
+        homeDir: "/Users/oriro",
       }),
     ).toBe(
-      "/Users/vincentkoc/.claude/projects/-Users-vincentkoc-GIT--Perso-oriro--oriro-workspace",
+      "/Users/oriro/.claude/projects/-Users-oriro-GIT--Perso-oriro--oriro-workspace",
     );
   });
 });

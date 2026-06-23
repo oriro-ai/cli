@@ -3,7 +3,7 @@ export type {
   ChannelMessageActionName,
   ChannelMeta,
   ChannelPlugin,
-  ClawdbotConfig,
+  OriroConfig,
 } from "../runtime-api.js";
 
 export { DEFAULT_ACCOUNT_ID } from "oriro/plugin-sdk/account-resolution";

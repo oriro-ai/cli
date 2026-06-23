@@ -25,7 +25,7 @@ data:
         "list": [
           {
             "id": "default",
-            "name": "Oriro Assistant",
+            "name": "ORIRO Assistant",
             "workspace": "~/.oriro/workspace"
           }
         ]

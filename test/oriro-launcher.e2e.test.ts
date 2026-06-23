@@ -579,7 +579,7 @@ describe("oriro launcher", () => {
   it("checks legacy config candidates before using precomputed root help", async () => {
     const fixtureRoot = await makeLauncherFixture(fixtureRoots);
     const home = path.join(fixtureRoot, "home");
-    const legacyConfigDir = path.join(home, ".clawdbot");
+    const legacyConfigDir = path.join(home, ".oriro");
     await fs.mkdir(legacyConfigDir, { recursive: true });
     await fs.writeFile(
       path.join(fixtureRoot, "dist", "cli-startup-metadata.json"),
@@ -592,7 +592,7 @@ describe("oriro launcher", () => {
       "utf8",
     );
     await fs.writeFile(
-      path.join(legacyConfigDir, "clawdbot.json"),
+      path.join(legacyConfigDir, "oriro.json"),
       JSON.stringify({ plugins: { slots: { memory: "memory-lancedb" } } }),
       "utf8",
     );
@@ -648,7 +648,7 @@ describe("oriro launcher", () => {
     expect(result.stderr).toContain("missing dist/entry.(m)js");
     expect(result.stderr).toContain("unbuilt source tree or GitHub source archive");
     expect(result.stderr).toContain("pnpm install && pnpm build");
-    expect(result.stderr).toContain("github:oriro-ai/cli#<ref>");
+    expect(result.stderr).toContain("github:oriro/oriro#<ref>");
   });
 
   it("keeps compile cache off for source-checkout launchers", async () => {

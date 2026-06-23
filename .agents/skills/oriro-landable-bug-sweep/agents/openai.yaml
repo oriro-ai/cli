@@ -1,4 +1,4 @@
 interface:
-  display_name: "Oriro Landable Bug Sweep"
+  display_name: "ORIRO Landable Bug Sweep"
   short_description: "Find five small non-SDK landable bugfix PRs"
-  default_prompt: "Use $oriro-landable-bug-sweep to find or repair five small high-confidence non-SDK-boundary Oriro bugfix PRs and get them landable."
+  default_prompt: "Use $oriro-landable-bug-sweep to find or repair five small high-confidence non-SDK-boundary ORIRO bugfix PRs and get them landable."

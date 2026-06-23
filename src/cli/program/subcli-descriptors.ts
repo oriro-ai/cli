@@ -10,7 +10,7 @@ const subCliCommandCatalog = defineCommandDescriptorCatalog([
   { name: "acp", description: "Run and manage ACP-backed coding agents", hasSubcommands: true },
   {
     name: "gateway",
-    description: "Run, inspect, and query the Oriro Gateway",
+    description: "Run, inspect, and query the ORIRO Gateway",
     hasSubcommands: true,
   },
   {
@@ -99,7 +99,7 @@ const subCliCommandCatalog = defineCommandDescriptorCatalog([
   },
   {
     name: "docs",
-    description: "Search the live Oriro docs",
+    description: "Search the live ORIRO docs",
     hasSubcommands: false,
   },
   {
@@ -109,7 +109,7 @@ const subCliCommandCatalog = defineCommandDescriptorCatalog([
   },
   {
     name: "proxy",
-    description: "Run the Oriro debug proxy and inspect captured traffic",
+    description: "Run the ORIRO debug proxy and inspect captured traffic",
     hasSubcommands: true,
   },
   {
@@ -165,13 +165,24 @@ const subCliCommandCatalog = defineCommandDescriptorCatalog([
     hasSubcommands: true,
   },
   {
+    name: "routers",
+    description: "Free AI routers — list, add, and multi-select the Best-Router pool",
+    hasSubcommands: true,
+  },
+  {
+    name: "scribe",
+    description:
+      "Your local work journal (scribe): status, read, search — never leaves this machine",
+    hasSubcommands: true,
+  },
+  {
     name: "skills",
     description: "List, inspect, and install agent skills",
     hasSubcommands: true,
   },
   {
     name: "update",
-    description: "Update Oriro and inspect update channel status",
+    description: "Update ORIRO and inspect update channel status",
     hasSubcommands: true,
   },
   {

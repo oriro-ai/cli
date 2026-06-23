@@ -708,8 +708,8 @@ export async function createBackupArchive(
   if (plan.included.length === 0) {
     throw new Error(
       onlyConfig
-        ? "No Oriro config file was found to back up."
-        : "No local Oriro state was found to back up.",
+        ? "No ORIRO config file was found to back up."
+        : "No local ORIRO state was found to back up.",
     );
   }
 

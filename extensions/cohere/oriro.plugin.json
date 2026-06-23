@@ -1,7 +1,7 @@
 {
   "id": "cohere",
   "name": "Cohere",
-  "description": "Oriro Cohere provider plugin.",
+  "description": "ORIRO Cohere provider plugin.",
   "activation": {
     "onStartup": false
   },

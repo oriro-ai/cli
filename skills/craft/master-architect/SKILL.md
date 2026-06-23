@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: master-architect
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

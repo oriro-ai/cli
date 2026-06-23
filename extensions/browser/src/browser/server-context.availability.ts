@@ -79,16 +79,16 @@ function ensureOptionsKey(options?: BrowserEnsureOptions): string {
 
 function formatLocalPortOwnershipHint(profile: ResolvedBrowserProfile): string {
   const resetHint =
-    `If Oriro should own this local profile, run action=reset-profile profile=${profile.name} ` +
+    `If ORIRO should own this local profile, run action=reset-profile profile=${profile.name} ` +
     "to stop the conflicting process.";
   if (!profile.cdpIsLoopback) {
     return resetHint;
   }
   return (
     `${resetHint} If this port is an externally managed CDP service such as Browserless, ` +
-    `set browser.profiles.${profile.name}.attachOnly=true so Oriro attaches without trying ` +
+    `set browser.profiles.${profile.name}.attachOnly=true so ORIRO attaches without trying ` +
     "to manage the local process. For Browserless Docker, set EXTERNAL to the same WebSocket " +
-    "endpoint Oriro can reach via browser.profiles.<name>.cdpUrl."
+    "endpoint ORIRO can reach via browser.profiles.<name>.cdpUrl."
   );
 }
 

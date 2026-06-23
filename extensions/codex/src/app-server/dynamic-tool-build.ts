@@ -19,10 +19,7 @@ import {
 } from "oriro/plugin-sdk/agent-harness-runtime";
 import { resolveAgentDir } from "oriro/plugin-sdk/agent-runtime";
 import { isToolAllowed } from "oriro/plugin-sdk/sandbox";
-import {
-  readCodexPluginConfig,
-  type CodexPluginConfig,
-} from "./config.js";
+import { readCodexPluginConfig, type CodexPluginConfig } from "./config.js";
 import {
   filterCodexDynamicTools,
   isForcedPrivateQaCodexRuntime,
@@ -87,16 +84,16 @@ export type DynamicToolBuildParams = {
   onWebSearchPolicyResolved?: (allowed: boolean) => void;
 };
 
-let oriroCodingToolsFactoryForTests: OriroCodingToolsFactory | undefined;
+let openOriroCodingToolsFactoryForTests: OriroCodingToolsFactory | undefined;
 
 /** Overrides the runtime tool factory for tests that need deterministic tool catalogs. */
 export function setOriroCodingToolsFactoryForTests(factory: OriroCodingToolsFactory): void {
-  oriroCodingToolsFactoryForTests = factory;
+  openOriroCodingToolsFactoryForTests = factory;
 }
 
 /** Clears the test-only runtime tool factory override. */
 export function resetOriroCodingToolsFactoryForTests(): void {
-  oriroCodingToolsFactoryForTests = undefined;
+  openOriroCodingToolsFactoryForTests = undefined;
 }
 
 /** Splits sandbox and run session keys so tool calls can bind to both scopes when needed. */
@@ -228,7 +225,7 @@ export async function buildDynamicTools(input: DynamicToolBuildParams) {
   const agentDir = params.agentDir ?? resolveAgentDir(params.config ?? {}, input.sessionAgentId);
   const agentHarness = await import("oriro/plugin-sdk/agent-harness");
   const createOriroCodingTools =
-    oriroCodingToolsFactoryForTests ?? agentHarness.createOriroCodingTools;
+    openOriroCodingToolsFactoryForTests ?? agentHarness.createOriroCodingTools;
   toolBuildStages.mark("load-agent-harness-tools");
   const sessionKeys = resolveOriroCodingToolsSessionKeys(params, input.sandboxSessionKey);
   const nativeExecutionPolicy = resolveCodexNativeExecutionPolicyForDynamicTools(input);
@@ -260,6 +257,7 @@ export async function buildDynamicTools(input: DynamicToolBuildParams) {
     ...sessionKeys,
     sessionId: params.sessionId,
     runId: params.runId,
+    approvalReviewerDeviceId: params.approvalReviewerDeviceId,
     agentDir,
     cwd: input.effectiveCwd ?? input.effectiveWorkspace,
     workspaceDir: input.effectiveWorkspace,
@@ -593,9 +591,10 @@ export function resolveCodexAppServerExecutionCwd(params: {
   nativeToolSurfaceEnabled: boolean;
   remoteWorkspaceRoot?: string;
 }): string {
-  const cwd = params.environment && params.nativeToolSurfaceEnabled
-    ? params.environment.cwd
-    : params.effectiveCwd;
+  const cwd =
+    params.environment && params.nativeToolSurfaceEnabled
+      ? params.environment.cwd
+      : params.effectiveCwd;
   return mapCodexAppServerRemoteWorkspacePath({
     value: cwd,
     localWorkspaceRoot: params.localWorkspaceRoot,
@@ -624,7 +623,7 @@ export function mapCodexAppServerRemoteWorkspacePath(params: {
   const prefix = `${localRoot}/`;
   if (!normalizedValue.startsWith(prefix)) {
     throw new Error(
-      `Codex remoteWorkspaceRoot is configured but cwd ${params.value} is outside Oriro workspace root ${params.localWorkspaceRoot}; refusing to send a gateway-local cwd to the remote Codex app-server.`,
+      `Codex remoteWorkspaceRoot is configured but cwd ${params.value} is outside ORIRO workspace root ${params.localWorkspaceRoot}; refusing to send a gateway-local cwd to the remote Codex app-server.`,
     );
   }
   return joinRemoteWorkspacePath(remoteRoot, normalizedValue.slice(prefix.length));
@@ -697,7 +696,7 @@ export function addSandboxShellDynamicToolsIfAvailable(
     ...execTool,
     name: "sandbox_exec",
     description:
-      "Run a shell command through Oriro's configured sandbox backend for this session. Use when Oriro sandboxing is active or when a command must execute in the sandbox backend, such as an SSH-backed sandbox or Docker container-path bind layout. Use Codex's native shell only when no Oriro sandbox is active and native Code Mode is available.",
+      "Run a shell command through ORIRO's configured sandbox backend for this session. Use when ORIRO sandboxing is active or when a command must execute in the sandbox backend, such as an SSH-backed sandbox or Docker container-path bind layout. Use Codex's native shell only when no ORIRO sandbox is active and native Code Mode is available.",
     execute: async (toolCallId, args, signal, onUpdate) => {
       const result = await execTool.execute(toolCallId, args, signal, onUpdate);
       return {
@@ -719,7 +718,7 @@ export function addSandboxShellDynamicToolsIfAvailable(
     ...processTool,
     name: "sandbox_process",
     description:
-      "Manage sandbox_exec sessions that were started through Oriro's configured sandbox backend for this session: list, poll, log, write, send-keys, submit, paste, kill, clear, or remove. Use only for sandbox_exec follow-up; use Codex's native shell session handling only when no Oriro sandbox is active and native Code Mode is available.",
+      "Manage sandbox_exec sessions that were started through ORIRO's configured sandbox backend for this session: list, poll, log, write, send-keys, submit, paste, kill, clear, or remove. Use only for sandbox_exec follow-up; use Codex's native shell session handling only when no ORIRO sandbox is active and native Code Mode is available.",
   };
   return [...filteredTools, sandboxExecTool, sandboxProcessTool];
 }
@@ -803,7 +802,7 @@ function createNodeExecDynamicTool(
     ...execTool,
     name: CODEX_NODE_EXEC_DYNAMIC_TOOL_NAME,
     description:
-      "Run a shell command on the Oriro configured remote node for this session. This tool always uses Oriro host=node internally and follows the existing node exec approval and allowlist policy. Use node_process for follow-up on backgrounded node_exec sessions. Use Codex's native shell for local app-server work.",
+      "Run a shell command on the ORIRO configured remote node for this session. This tool always uses ORIRO host=node internally and follows the existing node exec approval and allowlist policy. Use node_process for follow-up on backgrounded node_exec sessions. Use Codex's native shell for local app-server work.",
     parameters: hideNodeExecDynamicToolParameters(execTool.parameters),
     execute: async (toolCallId, args, signal, onUpdate) => {
       const result = await execTool.execute(
@@ -834,7 +833,7 @@ function createNodeProcessDynamicTool(processTool: OriroDynamicTool): OriroDynam
     ...processTool,
     name: CODEX_NODE_PROCESS_DYNAMIC_TOOL_NAME,
     description:
-      "Manage node_exec sessions that were started on the Oriro configured remote node for this session: list, poll, log, write, send-keys, submit, paste, kill, clear, or remove. Use only for node_exec follow-up; use Codex's native shell session handling for local app-server work.",
+      "Manage node_exec sessions that were started on the ORIRO configured remote node for this session: list, poll, log, write, send-keys, submit, paste, kill, clear, or remove. Use only for node_exec follow-up; use Codex's native shell session handling for local app-server work.",
   };
 }
 

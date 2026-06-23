@@ -100,7 +100,7 @@ export const telegramChannelConfigUiHints = {
   },
   "streaming.progress.labels": {
     label: "Telegram Progress Label Pool",
-    help: 'Candidate labels for streaming.progress.label="auto". Leave unset to use Oriro built-in progress labels.',
+    help: 'Candidate labels for streaming.progress.label="auto". Leave unset to use ORIRO built-in progress labels.',
   },
   "streaming.progress.maxLines": {
     label: "Telegram Progress Max Lines",
@@ -188,7 +188,7 @@ export const telegramChannelConfigUiHints = {
   },
   execApprovals: {
     label: "Telegram Exec Approvals",
-    help: "Telegram-native exec approval routing and approver authorization. When unset, Oriro auto-enables DM-first native approvals if approvers can be resolved for the selected bot account.",
+    help: "Telegram-native exec approval routing and approver authorization. When unset, ORIRO auto-enables DM-first native approvals if approvers can be resolved for the selected bot account.",
   },
   "execApprovals.enabled": {
     label: "Telegram Exec Approvals Enabled",
@@ -196,7 +196,7 @@ export const telegramChannelConfigUiHints = {
   },
   "execApprovals.approvers": {
     label: "Telegram Exec Approval Approvers",
-    help: "Telegram user IDs allowed to approve exec requests for this bot account. Use numeric Telegram user IDs. If you leave this unset, Oriro falls back to numeric owner IDs inferred from commands.ownerAllowFrom when possible.",
+    help: "Telegram user IDs allowed to approve exec requests for this bot account. Use numeric Telegram user IDs. If you leave this unset, ORIRO falls back to numeric owner IDs inferred from commands.ownerAllowFrom when possible.",
   },
   "execApprovals.agentFilter": {
     label: "Telegram Exec Approval Agent Filter",

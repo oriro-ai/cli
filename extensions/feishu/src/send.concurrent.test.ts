@@ -7,7 +7,7 @@
  */
 
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig } from "../runtime-api.js";
+import type { OriroConfig } from "../runtime-api.js";
 
 const {
   mockClientCreate,
@@ -48,7 +48,7 @@ vi.mock("./runtime.js", () => ({
 
 let sendMessageFeishu: typeof import("./send.js").sendMessageFeishu;
 
-const MOCK_CFG = {} as ClawdbotConfig;
+const MOCK_CFG = {} as OriroConfig;
 
 /** Build a successful send response. */
 function okResponse(messageId: string) {

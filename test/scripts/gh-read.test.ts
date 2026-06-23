@@ -1,4 +1,5 @@
 // Gh Read tests cover gh read script behavior.
+import { execFileSync } from "node:child_process";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   buildReadPermissions,
@@ -16,17 +17,33 @@ describe("gh-read helpers", () => {
     vi.useRealTimers();
   });
 
+  it("prints wrapper usage before reading auth env", () => {
+    let stderr = "";
+    try {
+      execFileSync("bash", ["scripts/gh-read"], {
+        cwd: process.cwd(),
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+    } catch (error) {
+      stderr = String((error as { stderr?: unknown }).stderr ?? error);
+    }
+
+    expect(stderr).toContain("usage: scripts/gh-read <gh args...>");
+    expect(stderr).toContain("ORIRO_GH_READ_APP_ID");
+  });
+
   it("finds repo from gh args", () => {
-    expect(parseRepoArg(["pr", "view", "42", "-R", "oriro-ai/cli"])).toBe("oriro-ai/cli");
+    expect(parseRepoArg(["pr", "view", "42", "-R", "oriro/oriro"])).toBe("oriro/oriro");
     expect(parseRepoArg(["run", "list", "--repo=oriro/docs"])).toBe("oriro/docs");
     expect(parseRepoArg(["pr", "view", "42"])).toBeNull();
   });
 
   it("normalizes repo strings from common git formats", () => {
-    expect(normalizeRepo("oriro-ai/cli")).toBe("oriro-ai/cli");
-    expect(normalizeRepo("github.com/oriro-ai/cli")).toBe("oriro-ai/cli");
-    expect(normalizeRepo("https://github.com/oriro-ai/cli.git")).toBe("oriro-ai/cli");
-    expect(normalizeRepo("git@github.com:oriro-ai/cli.git")).toBe("oriro-ai/cli");
+    expect(normalizeRepo("oriro/oriro")).toBe("oriro/oriro");
+    expect(normalizeRepo("github.com/oriro/oriro")).toBe("oriro/oriro");
+    expect(normalizeRepo("https://github.com/oriro/oriro.git")).toBe("oriro/oriro");
+    expect(normalizeRepo("git@github.com:oriro/oriro.git")).toBe("oriro/oriro");
     expect(normalizeRepo("invalid")).toBeNull();
   });
 

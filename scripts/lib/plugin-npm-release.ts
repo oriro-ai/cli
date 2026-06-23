@@ -84,7 +84,7 @@ export type PublishablePluginPackageCandidate<
   readmeText?: string;
 };
 
-export const ORIRO_PLUGIN_NPM_REPOSITORY_URL = "https://github.com/oriro-ai/cli";
+export const ORIRO_PLUGIN_NPM_REPOSITORY_URL = "https://github.com/oriro/oriro";
 
 function readPluginPackageJson(path: string): unknown {
   return JSON.parse(readFileSync(path, "utf8"));

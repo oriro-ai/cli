@@ -27,7 +27,7 @@ tar -xzf "$package_tgz" -C "$git_root" --strip-components=1
   oriro_e2e_maybe_timeout "${ORIRO_E2E_NPM_INSTALL_TIMEOUT:-600s}" npm install --omit=optional --no-fund --no-audit >/tmp/oriro-git-install.log 2>&1
   git init -q
   git config user.email "docker-e2e@oriro.local"
-  git config user.name "Oriro Docker E2E"
+  git config user.name "ORIRO Docker E2E"
   git add -A --
   git commit -qm "test fixture"
 )

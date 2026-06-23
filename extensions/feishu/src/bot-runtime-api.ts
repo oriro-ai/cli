@@ -2,7 +2,7 @@
 export {
   buildAgentMediaPayload,
   resolveChannelContextVisibilityMode,
-  type ClawdbotConfig,
+  type OriroConfig,
   type RuntimeEnv,
 } from "../runtime-api.js";
 export {

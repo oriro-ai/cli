@@ -169,7 +169,7 @@ extension SettingsProTab {
             self.settingsListRow(
                 icon: "info.circle",
                 title: "About",
-                detail: DeviceInfoHelper.oriroVersionString(),
+                detail: DeviceInfoHelper.openOriroVersionString(),
                 route: .about)
         }
         .padding(.horizontal, OriroProMetric.pagePadding)
@@ -308,13 +308,55 @@ extension SettingsProTab {
             self.detailStatusCard(
                 icon: "checkmark.shield.fill",
                 title: "Approvals",
-                detail: self.pendingApproval == nil ? "No gateway actions are waiting for review." :
-                    "Review the pending gateway action.",
-                value: self.pendingApproval == nil ? "clear" : "1 waiting",
-                color: self.pendingApproval == nil ? OriroBrand.ok : OriroBrand.warn)
+                detail: self.notificationsNeedAttention
+                    ? "Out-of-app approval alerts need notification permission."
+                    : (self.pendingApproval == nil ? "No gateway actions are waiting for review." :
+                        "Review the pending gateway action."),
+                value: self.notificationsNeedAttention
+                    ? "Alerts Off"
+                    : (self.pendingApproval == nil ? "clear" : "1 waiting"),
+                color: self.notificationsNeedAttention ? OriroBrand.warn :
+                    (self.pendingApproval == nil ? OriroBrand.ok : OriroBrand.warn))
+
+            if self.notificationsNeedAttention {
+                self.approvalNotificationsWarningCard
+            }
 
             self.approvalsReviewCard
         }
+    }
+
+    var approvalNotificationsWarningCard: some View {
+        ProCard(radius: SettingsLayout.cardRadius) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
+                    ProIconBadge(systemName: "bell.slash.fill", color: OriroBrand.warn)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Notifications are off")
+                            .font(.subheadline.weight(.semibold))
+                        Text(
+                            """
+                            Enable Notifications to receive approval notifications while Oriro is not open.
+                            """)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                if self.directRoute == nil {
+                    Button {
+                        self.openNotificationsRouteFromApprovals()
+                    } label: {
+                        Label("Open Notifications", systemImage: "bell.badge")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+            }
+        }
+        .padding(.horizontal, OriroProMetric.pagePadding)
     }
 
     var approvalsReviewCard: some View {
@@ -449,7 +491,7 @@ extension SettingsProTab {
                 Divider()
                 self.detailRow("Platform", value: DeviceInfoHelper.platformStringForDisplay())
                 Divider()
-                self.detailRow("App", value: DeviceInfoHelper.oriroVersionString())
+                self.detailRow("App", value: DeviceInfoHelper.openOriroVersionString())
                 Divider()
                 self.detailRow("Model", value: DeviceInfoHelper.modelIdentifier())
             }
@@ -490,7 +532,7 @@ extension SettingsProTab {
             self.detailStatusCard(
                 icon: "bell",
                 title: "Notifications",
-                detail: "Approvals and event alerts from Oriro.",
+                detail: self.notificationStatusDetail,
                 value: self.notificationStatusText,
                 color: self.notificationStatus.color)
 
@@ -506,10 +548,25 @@ extension SettingsProTab {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
+                    .disabled(self.notificationStatus == .checking || self.isRequestingNotificationAuthorization)
 
-                    Text("Oriro uses notifications for approval prompts and mirrored event alerts.")
+                    Text(self.notificationStatusDetail)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Divider()
+
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "network")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(OriroBrand.accent)
+                            .frame(width: 22, height: 22)
+                        Text(self.notificationRelayDetail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             .padding(.horizontal, OriroProMetric.pagePadding)
@@ -522,11 +579,11 @@ extension SettingsProTab {
                 icon: "info.circle",
                 title: "Oriro",
                 detail: "iOS companion app",
-                value: DeviceInfoHelper.oriroVersionString(),
+                value: DeviceInfoHelper.openOriroVersionString(),
                 color: OriroBrand.accent)
 
             self.detailListCard {
-                self.detailRow("Version", value: DeviceInfoHelper.oriroVersionString())
+                self.detailRow("Version", value: DeviceInfoHelper.openOriroVersionString())
                 Divider()
                 self.detailRow("Device", value: DeviceInfoHelper.deviceFamily())
                 Divider()

@@ -1,11 +1,11 @@
 {
   "name": "@oriro/qqbot",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": false,
-  "description": "Oriro QQ Bot channel plugin for group and direct-message workflows.",
+  "description": "ORIRO QQ Bot channel plugin for group and direct-message workflows.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -18,10 +18,10 @@
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*",
     "@types/ws": "8.18.1",
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.6.8"
+    "oriro": "workspace:*"
   },
   "peerDependenciesMeta": {
     "oriro": {
@@ -50,10 +50,10 @@
       "minHostVersion": ">=2026.4.10"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8"
+      "oriroVersion": "2026.6.9"
     },
     "release": {
       "publishToOriroHub": true,

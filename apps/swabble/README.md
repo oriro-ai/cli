@@ -36,7 +36,7 @@ Add swabble as a SwiftPM dependency and import the `Swabble` or `SwabbleKit` pro
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/steipete/swabble.git", branch: "main"),
+    .package(url: "https://github.com/oriro/swabble.git", branch: "main"),
 ],
 targets: [
     .target(name: "MyApp", dependencies: [

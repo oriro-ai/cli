@@ -1,8 +1,8 @@
 {
   "name": "@oriro/fal-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro fal provider plugin",
+  "description": "ORIRO fal provider plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

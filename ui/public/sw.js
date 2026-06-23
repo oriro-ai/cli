@@ -107,10 +107,10 @@ self.addEventListener("push", (event) => {
   try {
     data = event.data.json();
   } catch {
-    data = { title: "Oriro", body: event.data.text() };
+    data = { title: "ORIRO", body: event.data.text() };
   }
 
-  const title = data.title || "Oriro";
+  const title = data.title || "ORIRO";
   const options = {
     body: data.body || "",
     icon: "./apple-touch-icon.png",

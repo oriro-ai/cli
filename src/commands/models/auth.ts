@@ -705,9 +705,9 @@ export async function modelsAuthPasteTokenCommand(
   logConfigUpdated(runtime);
   runtime.log(`Auth profile: ${profileId} (${provider}/token)`);
   if (provider === "anthropic") {
-    runtime.log("Anthropic setup-token auth is supported in Oriro.");
-    runtime.log("Oriro prefers Claude CLI reuse when it is available on the host.");
-    runtime.log("Anthropic staff told us this Oriro path is allowed again.");
+    runtime.log("Anthropic setup-token auth is supported in ORIRO.");
+    runtime.log("ORIRO prefers Claude CLI reuse when it is available on the host.");
+    runtime.log("Anthropic staff told us this ORIRO path is allowed again.");
   }
 }
 

@@ -221,7 +221,7 @@ export async function probeApnsHttp2ReachabilityViaProxy(
         }
         resolve({ status, body: body.text, responseHeaders });
       });
-      request.end(JSON.stringify({ aps: { alert: "Oriro APNs proxy validation" } }));
+      request.end(JSON.stringify({ aps: { alert: "ORIRO APNs proxy validation" } }));
     });
   } finally {
     if (!session.closed && !session.destroyed) {

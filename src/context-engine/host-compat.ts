@@ -21,7 +21,7 @@ export const GENERIC_CLI_CONTEXT_ENGINE_HOST_CAPABILITIES = [
 
 export const ORIRO_EMBEDDED_CONTEXT_ENGINE_HOST = {
   id: "oriro-embedded",
-  label: "Oriro embedded runner",
+  label: "ORIRO embedded runner",
   capabilities: [
     "bootstrap",
     "assemble-before-prompt",

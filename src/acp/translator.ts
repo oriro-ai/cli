@@ -34,7 +34,10 @@ import { readBool, readNonNegativeInteger, readString } from "@oriro/acp-core/me
 import { defaultAcpSessionStore, type AcpSessionStore } from "@oriro/acp-core/session";
 import { toAcpSessionLineageMeta } from "@oriro/acp-core/session-lineage-meta";
 import { timestampMsToIsoString } from "@oriro/normalization-core/number-coercion";
-import { normalizeOptionalString } from "@oriro/normalization-core/string-coerce";
+import {
+  normalizeFastMode,
+  normalizeOptionalString,
+} from "@oriro/normalization-core/string-coerce";
 import type { EventFrame } from "../../packages/gateway-protocol/src/index.js";
 import type { GatewayClient } from "../gateway/client.js";
 import type { GatewaySessionRow, SessionsListResult } from "../gateway/session-utils.js";
@@ -1495,6 +1498,7 @@ export class AcpGatewayAgent implements Agent {
       modelProvider: session.modelProvider,
       model: session.model,
       fastMode: session.fastMode,
+      effectiveFastMode: session.effectiveFastMode,
       verboseLevel: session.verboseLevel,
       traceLevel: session.traceLevel,
       reasoningLevel: session.reasoningLevel,
@@ -1524,11 +1528,16 @@ export class AcpGatewayAgent implements Agent {
           patch: { thinkingLevel: value },
           overrides: { thinkingLevel: value },
         };
-      case ACP_FAST_MODE_CONFIG_ID:
+      case ACP_FAST_MODE_CONFIG_ID: {
+        const fastMode = normalizeFastMode(value);
+        if (fastMode === undefined) {
+          throw new Error(`Unsupported fast mode value: ${value}`);
+        }
         return {
-          patch: { fastMode: value === "on" },
-          overrides: { fastMode: value === "on" },
+          patch: { fastMode },
+          overrides: { fastMode },
         };
+      }
       case ACP_VERBOSE_LEVEL_CONFIG_ID:
         return {
           patch: { verboseLevel: value },
@@ -1673,7 +1682,7 @@ export class AcpGatewayAgent implements Agent {
       return;
     }
     throw new Error(
-      "ACP bridge mode does not support per-session MCP servers. Configure MCP on the Oriro gateway or agent instead.",
+      "ACP bridge mode does not support per-session MCP servers. Configure MCP on the ORIRO gateway or agent instead.",
     );
   }
 

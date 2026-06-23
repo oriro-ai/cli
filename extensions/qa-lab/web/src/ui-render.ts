@@ -1495,9 +1495,9 @@ function renderChatView(state: UiState): string {
 
 function messageAvatar(m: Message): { emoji: string; bg: string; role: string } {
   if (m.direction === "outbound") {
-    return { emoji: "\uD83E\uDD80", bg: "#7c6cff", role: "Oriro" }; // 🦀
+    return { emoji: "\uD83E\uDD80", bg: "#7c6cff", role: "ORIRO" }; // 🦀
   }
-  return { emoji: "\uD83E\uDD9E", bg: "#d97706", role: "Orirofather" }; // ORIRO
+  return { emoji: "\uD83E\uDD9E", bg: "#d97706", role: "Orirofather" }; // 🦞
 }
 
 function renderMessage(m: Message): string {

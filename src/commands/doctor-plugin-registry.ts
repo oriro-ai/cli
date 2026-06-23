@@ -331,7 +331,7 @@ export async function maybeRepairManagedNpmOriroPeerLinks(
     if (issues.length > 0) {
       note(
         [
-          "Managed npm Oriro host peer links need repair:",
+          "Managed npm ORIRO host peer links need repair:",
           ...issues.map((issue) => `- ${issue.packageName}: ${issue.reason}`),
           `Repair with ${formatCliCommand("oriro doctor --fix")} to relink managed npm plugin packages.`,
         ].join("\n"),
@@ -358,7 +358,7 @@ export async function maybeRepairManagedNpmOriroPeerLinks(
 
   if (repaired > 0) {
     note(
-      `Repaired Oriro host peer link(s) for ${repaired} managed npm plugin package(s).`,
+      `Repaired ORIRO host peer link(s) for ${repaired} managed npm plugin package(s).`,
       "Plugin registry",
     );
   }
@@ -367,7 +367,7 @@ export async function maybeRepairManagedNpmOriroPeerLinks(
     .map((message) => `- ${message.message}`);
   if (warnings.length > 0) {
     note(
-      ["Could not repair all managed npm Oriro host peer links:", ...warnings].join("\n"),
+      ["Could not repair all managed npm ORIRO host peer links:", ...warnings].join("\n"),
       "Plugin registry",
     );
   }

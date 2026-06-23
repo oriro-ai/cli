@@ -137,16 +137,16 @@ export function resolvePreferredOriroTmpDir(
       }
       // Never continue with a symlinked, wrong-owner, or world-writable temp root;
       // callers create executable/media artifacts under this path.
-      throw new Error(`Unsafe fallback Oriro temp dir: ${fallbackPath}`);
+      throw new Error(`Unsafe fallback ORIRO temp dir: ${fallbackPath}`);
     }
     try {
       mkdirSync(fallbackPath, { recursive: true, mode: 0o700 });
       chmodSync(fallbackPath, 0o700);
     } catch {
-      throw new Error(`Unable to create fallback Oriro temp dir: ${fallbackPath}`);
+      throw new Error(`Unable to create fallback ORIRO temp dir: ${fallbackPath}`);
     }
     if (resolveDirState(fallbackPath) !== "available" && !tryRepairWritableBits(fallbackPath)) {
-      throw new Error(`Unsafe fallback Oriro temp dir: ${fallbackPath}`);
+      throw new Error(`Unsafe fallback ORIRO temp dir: ${fallbackPath}`);
     }
     return fallbackPath;
   };

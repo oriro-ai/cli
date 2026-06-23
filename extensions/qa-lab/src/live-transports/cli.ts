@@ -18,7 +18,7 @@ function createBlockedQaRunnerCliRegistration(params: {
         .description(params.description ?? `Run the ${params.commandName} live QA lane`)
         .action(() => {
           throw new Error(
-            `QA runner "${params.commandName}" is installed but not active. Enable or allow plugin "${params.pluginId}" in your Oriro config, then try again.`,
+            `QA runner "${params.commandName}" is installed but not active. Enable or allow plugin "${params.pluginId}" in your ORIRO config, then try again.`,
           );
         });
     },

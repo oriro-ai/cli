@@ -95,7 +95,7 @@ describe("runway video generation provider", () => {
     const result = await provider.generateVideo({
       provider: "runway",
       model: "gen4.5",
-      prompt: "a tiny oriro DJ under neon lights",
+      prompt: "a tiny lobster DJ under neon lights",
       cfg: {},
       durationSeconds: 4,
       aspectRatio: "16:9",
@@ -106,7 +106,7 @@ describe("runway video generation provider", () => {
     expect(createRequest.url).toBe("https://api.dev.runwayml.com/v1/text_to_video");
     expect(createRequest.body).toEqual({
       model: "gen4.5",
-      promptText: "a tiny oriro DJ under neon lights",
+      promptText: "a tiny lobster DJ under neon lights",
       ratio: "1280:720",
       duration: 4,
     });
@@ -182,7 +182,7 @@ describe("runway video generation provider", () => {
     await provider.generateVideo({
       provider: "runway",
       model: "gen4.5",
-      prompt: "a tiny oriro DJ under neon lights",
+      prompt: "a tiny lobster DJ under neon lights",
       cfg: {},
       durationSeconds: 4.5,
       aspectRatio: "16:9",

@@ -28,8 +28,6 @@ import {
 import { formatErrorMessage } from "../../infra/errors.js";
 import { readPositiveIntegerParam, readStringParam } from "./common.js";
 
-export const DEFAULT_GATEWAY_URL = "ws://127.0.0.1:18789";
-
 /** Optional gateway connection overrides accepted by agent tools. */
 export type GatewayCallOptions = {
   gatewayUrl?: string;
@@ -258,7 +256,7 @@ function resolveApprovalRequesterDeviceIdentityForGatewayTool(params: {
     throw new Error(
       [
         "remote approval gateway calls require a stable device identity.",
-        "Fix the Oriro state directory permissions or use the local approval-runtime gateway.",
+        "Fix the ORIRO state directory permissions or use the local approval-runtime gateway.",
       ].join(" "),
       { cause: error },
     );

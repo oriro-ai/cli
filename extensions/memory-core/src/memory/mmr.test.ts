@@ -164,8 +164,8 @@ describe("textSimilarity", () => {
     // Distinct Arabic snippets — must NOT merge.
     expect(textSimilarity("مرحبا بالعالم", "صباح الخير")).toBe(0);
     // Emoji-only — distinct must NOT merge, identical must merge.
-    expect(textSimilarity("ORIROORIROORIRO", "🚀🚀🚀")).toBe(0);
-    expect(textSimilarity("ORIROORIROORIRO", "ORIROORIROORIRO")).toBe(1);
+    expect(textSimilarity("🦞🦞🦞", "🚀🚀🚀")).toBe(0);
+    expect(textSimilarity("🦞🦞🦞", "🦞🦞🦞")).toBe(1);
     // Punctuation-only — distinct must NOT merge, identical must merge.
     expect(textSimilarity("!!!", "???")).toBe(0);
     expect(textSimilarity("!!!", "!!!")).toBe(1);

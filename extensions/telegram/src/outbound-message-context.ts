@@ -50,7 +50,7 @@ function buildOutboundCacheMessage(params: {
     from: params.message.from ?? {
       id: 0,
       is_bot: true,
-      first_name: params.account.name ?? "Oriro",
+      first_name: params.account.name ?? "ORIRO",
     },
     ...(text ? { text } : {}),
     ...(params.messageThreadId !== undefined ? { message_thread_id: params.messageThreadId } : {}),

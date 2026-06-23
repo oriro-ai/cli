@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: uipm-banner-design
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

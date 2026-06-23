@@ -631,7 +631,7 @@ export async function buildGatewayInstallPlan(params: {
     isSameServicePath(wrapperInput, resolveGatewayTaskScriptPath(params.env), platform);
   if (wrapperPointsAtWindowsTaskScript) {
     params.warn?.(
-      `Ignoring ${ORIRO_WRAPPER_ENV_KEY} because it points to the Windows task script; using the Oriro gateway entrypoint directly to avoid a recursive gateway.cmd wrapper.`,
+      `Ignoring ${ORIRO_WRAPPER_ENV_KEY} because it points to the Windows task script; using the ORIRO gateway entrypoint directly to avoid a recursive gateway.cmd wrapper.`,
     );
   }
   const wrapperPath = wrapperPointsAtWindowsTaskScript

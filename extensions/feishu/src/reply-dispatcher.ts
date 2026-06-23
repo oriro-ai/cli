@@ -18,7 +18,7 @@ import { sendMediaFeishu, shouldSuppressFeishuTextForVoiceMedia } from "./media.
 import type { MentionTarget } from "./mention-target.types.js";
 import {
   createReplyPrefixContext,
-  type ClawdbotConfig,
+  type OriroConfig,
   type OutboundIdentity,
   type ReplyPayload,
   type RuntimeEnv,
@@ -132,7 +132,7 @@ function resolveCardNote(
 }
 
 type CreateFeishuReplyDispatcherParams = {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   agentId: string;
   runtime: RuntimeEnv;
   chatId: string;

@@ -169,7 +169,7 @@ function redactPersistedDetailString(
   const redactedPrefix =
     boundaryIndex >= 0
       ? redactedScan.slice(0, boundaryIndex)
-      : "[Oriro persisted detail redacted: boundary marker removed]";
+      : "[ORIRO persisted detail redacted: boundary marker removed]";
   const safePrefixChars = Math.max(
     0,
     maxChars - Math.min(maxChars, MAX_PERSISTED_DETAIL_BOUNDARY_OVERLAP_CHARS),
@@ -178,10 +178,10 @@ function redactPersistedDetailString(
   const persistedPrefix =
     PARTIAL_STRUCTURED_SECRET_VALUE_RE.test(initialPersistedPrefix) ||
     PARTIAL_PRIVATE_KEY_BLOCK_RE.test(initialPersistedPrefix)
-      ? "[Oriro persisted detail redacted: partial secret span omitted]"
+      ? "[ORIRO persisted detail redacted: partial secret span omitted]"
       : initialPersistedPrefix;
-  const boundaryNotice = "[Oriro persisted detail redacted: boundary overlap omitted]";
-  return `${persistedPrefix}${persistedPrefix ? "\n" : ""}${boundaryNotice}\n\n[Oriro persisted detail truncated: ${Math.max(
+  const boundaryNotice = "[ORIRO persisted detail redacted: boundary overlap omitted]";
+  return `${persistedPrefix}${persistedPrefix ? "\n" : ""}${boundaryNotice}\n\n[ORIRO persisted detail truncated: ${Math.max(
     0,
     value.length - maxChars,
   )} original chars omitted]`;
@@ -228,7 +228,7 @@ function redactPersistedDetailValue(
     return value;
   }
   if (depth >= 8) {
-    return "[Oriro persisted detail redacted: max depth exceeded]";
+    return "[ORIRO persisted detail redacted: max depth exceeded]";
   }
   if (Array.isArray(value)) {
     let changed = false;

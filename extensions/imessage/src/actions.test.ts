@@ -447,7 +447,7 @@ describe("imessage message actions", () => {
     // `filename`. These tests cover the post-hydration contract: the
     // handler trusts only the buffer and refuses any unhydrated path
     // param so an agent cannot bypass the resolver.
-    const stringPath = "/tmp/cute-oriro.png";
+    const stringPath = "/tmp/cute-lobster.png";
     const base64Png = Buffer.from("PNGDATA").toString("base64");
 
     function readLastAttachment():
@@ -479,7 +479,7 @@ describe("imessage message actions", () => {
         params: {
           chatIdentifier: "team-thread",
           messageId: "message-guid",
-          text: "ORIRO here it is",
+          text: "🦞 here it is",
           buffer: base64Png,
           filename: "card.png",
         },
@@ -488,7 +488,7 @@ describe("imessage message actions", () => {
         [
           {
             chatGuid: "iMessage;+;resolved-ident",
-            text: "ORIRO here it is",
+            text: "🦞 here it is",
             replyToMessageId: "message-guid",
             partIndex: undefined,
             attachment: {
@@ -518,7 +518,7 @@ describe("imessage message actions", () => {
         params: {
           chatIdentifier: "team-thread",
           messageId: "message-guid",
-          text: "ORIRO here it is",
+          text: "🦞 here it is",
           buffer: base64Png,
         },
       } as never);
@@ -548,7 +548,7 @@ describe("imessage message actions", () => {
             params: {
               chatIdentifier: "team-thread",
               messageId: "message-guid",
-              text: "ORIRO here it is",
+              text: "🦞 here it is",
               [field]: stringPath,
             },
           } as never),
@@ -560,7 +560,7 @@ describe("imessage message actions", () => {
     it("rejects reply + attachment when imsg does not advertise send-rich --file", async () => {
       // Older imsg builds reject `--file` on send-rich, so refuse loudly
       // here rather than letting send-rich ship the text alone and silently
-      // drop the attachment (the original oriro-ai/cli#79822 symptom).
+      // drop the attachment (the original oriro/oriro#79822 symptom).
       probeMock.getCachedIMessagePrivateApiStatus.mockReturnValue({
         available: true,
         v2Ready: true,
@@ -577,7 +577,7 @@ describe("imessage message actions", () => {
           params: {
             chatIdentifier: "team-thread",
             messageId: "message-guid",
-            text: "ORIRO here it is",
+            text: "🦞 here it is",
             buffer: base64Png,
             filename: "card.png",
           },
@@ -720,7 +720,7 @@ describe("imessage message actions", () => {
     it("removes a tapback by fanning out across all known kinds when emoji is empty/unknown and remove:true", async () => {
       // Scenario from the audit: agent calls react with `remove: true` but
       // forgot which emoji was originally added (or used a non-mapped emoji
-      // like ORIRO). We fan a remove out to every known kind; the bridge no-ops
+      // like 🦞). We fan a remove out to every known kind; the bridge no-ops
       // kinds that weren't there.
       probeMock.getCachedIMessagePrivateApiStatus.mockReturnValue({
         available: true,
@@ -735,7 +735,7 @@ describe("imessage message actions", () => {
         params: {
           chatGuid: "iMessage;+;chat0000",
           messageId: "message-guid",
-          emoji: "ORIRO",
+          emoji: "🦞",
           remove: true,
         },
       } as never);

@@ -32,6 +32,7 @@ import {
 import { resolveContextEngineOwnerPluginId } from "../../../context-engine/registry.js";
 import { buildContextEngineRuntimeSettings } from "../../../context-engine/runtime-settings.js";
 import type { AssembleResult } from "../../../context-engine/types.js";
+import { diagnosticErrorCategory } from "../../../infra/diagnostic-error-metadata.js";
 import { emitTrustedDiagnosticEvent } from "../../../infra/diagnostic-events.js";
 import { resolveDiagnosticModelContentCapturePolicy } from "../../../infra/diagnostic-llm-content.js";
 import {
@@ -150,6 +151,7 @@ import {
   createCodeModeTools,
   resolveCodeModeConfig,
 } from "../../code-mode.js";
+import { resolveUserTimezone } from "../../date-time.js";
 import { DEFAULT_CONTEXT_TOKENS } from "../../defaults.js";
 import { resolveOriroReferencePaths } from "../../docs-path.js";
 import {
@@ -255,6 +257,10 @@ import { DEFAULT_BOOTSTRAP_FILENAME, type WorkspaceBootstrapFile } from "../../w
 import { isRunnerAbortError } from "../abort.js";
 import { isCacheTtlEligibleProvider, readLastCacheTtlTimestamp } from "../cache-ttl.js";
 import { resolveCompactionTimeoutMs } from "../compaction-safety-timeout.js";
+import {
+  rotateTranscriptAfterCompaction,
+  shouldRotateCompactionTranscript,
+} from "../compaction-successor-transcript.js";
 import { runContextEngineMaintenance } from "../context-engine-maintenance.js";
 import { applyFinalEffectiveToolPolicy } from "../effective-tool-policy.js";
 import { buildEmbeddedExtensionFactories } from "../extensions.js";
@@ -325,14 +331,25 @@ import {
 } from "../tool-result-context-guard.js";
 import {
   resolveLiveToolResultMaxChars,
+  createToolResultPromptProjectionState,
   truncateOversizedToolResultsInMessages,
+  type ToolResultPromptProjectionState,
   truncateOversizedToolResultsInSessionManager,
 } from "../tool-result-truncation.js";
 import { splitSdkTools } from "../tool-split.js";
 import { mapThinkingLevel } from "../utils.js";
 import { flushPendingToolResultsAfterIdle } from "../wait-for-idle-before-flush.js";
 import { abortable as abortableWithSignal } from "./abortable.js";
+import { releaseEmbeddedAttemptSessionLockForAbort } from "./attempt-abort.js";
+import { resolveAttemptWorkspaceBootstrapRouting } from "./attempt-bootstrap-routing.js";
+import { configureEmbeddedAttemptHttpRuntime } from "./attempt-http-runtime.js";
 import { createEmbeddedAgentSessionWithResourceLoader } from "./attempt-session.js";
+import {
+  createEmbeddedRunStageTracker,
+  formatEmbeddedRunStageSummary,
+  shouldWarnEmbeddedRunStageSummary,
+} from "./attempt-stage-timing.js";
+import { buildAttemptSystemPrompt } from "./attempt-system-prompt.js";
 import {
   applyEmbeddedAttemptToolsAllow,
   mergeForcedEmbeddedAttemptToolsAllow,
@@ -340,6 +357,7 @@ import {
   shouldCreateBundleLspRuntimeForAttempt,
   shouldCreateBundleMcpRuntimeForAttempt,
 } from "./attempt-tool-construction-plan.js";
+import { flushEmbeddedAttemptTrajectoryRecorder } from "./attempt-trajectory-flush-cleanup.js";
 import {
   resolveAttemptTrajectoryTerminal,
   resolveTerminalAssistantTexts,
@@ -355,22 +373,6 @@ import {
   isPrimaryBootstrapRun,
   remapInjectedContextFilesToWorkspace,
 } from "./attempt.bootstrap-context.js";
-export { buildContextEnginePromptCacheInfo } from "./attempt.context-engine-helpers.js";
-import { resolveUserTimezone } from "../../date-time.js";
-import {
-  rotateTranscriptAfterCompaction,
-  shouldRotateCompactionTranscript,
-} from "../compaction-successor-transcript.js";
-import { releaseEmbeddedAttemptSessionLockForAbort } from "./attempt-abort.js";
-import { resolveAttemptWorkspaceBootstrapRouting } from "./attempt-bootstrap-routing.js";
-import { configureEmbeddedAttemptHttpRuntime } from "./attempt-http-runtime.js";
-import {
-  createEmbeddedRunStageTracker,
-  formatEmbeddedRunStageSummary,
-  shouldWarnEmbeddedRunStageSummary,
-} from "./attempt-stage-timing.js";
-import { buildAttemptSystemPrompt } from "./attempt-system-prompt.js";
-import { flushEmbeddedAttemptTrajectoryRecorder } from "./attempt-trajectory-flush-cleanup.js";
 import {
   assembleAttemptContextEngine,
   buildLoopPromptCacheInfo,
@@ -388,10 +390,7 @@ import {
   normalizeMessagesForCurrentPromptBoundary,
   normalizeMessagesForLlmBoundary,
 } from "./attempt.llm-boundary.js";
-import {
-  diagnosticErrorCategory,
-  wrapStreamFnWithDiagnosticModelCallEvents,
-} from "./attempt.model-diagnostic-events.js";
+import { wrapStreamFnWithDiagnosticModelCallEvents } from "./attempt.model-diagnostic-events.js";
 import {
   buildAfterTurnRuntimeContext,
   buildAfterTurnRuntimeContextFromUsage,
@@ -519,22 +518,7 @@ export {
   resolvePromptBuildHookResult,
   resolvePromptModeForSession,
   shouldWarnOnOrphanedUserRepair,
-  shouldInjectHeartbeatPrompt,
 } from "./attempt.prompt-helpers.js";
-export {
-  persistSessionsYieldContextMessage,
-  queueSessionsYieldInterruptMessage,
-  stripSessionsYieldArtifacts,
-} from "./attempt.sessions-yield.js";
-export {
-  decodeHtmlEntitiesInObject,
-  wrapStreamFnRepairMalformedToolCallArguments,
-} from "./attempt.tool-call-argument-repair.js";
-export {
-  wrapStreamFnPromoteStandaloneTextToolCalls,
-  wrapStreamFnSanitizeMalformedToolCalls,
-  wrapStreamFnTrimToolCallNames,
-} from "./attempt.tool-call-normalization.js";
 export {
   resetEmbeddedAgentBaseStreamFnCacheForTest,
   resolveEmbeddedAgentBaseStreamFn,
@@ -1296,6 +1280,7 @@ export async function runEmbeddedAttempt(
                 : undefined,
             sessionId: params.sessionId,
             runId: params.runId,
+            approvalReviewerDeviceId: params.approvalReviewerDeviceId,
             oneShotCliRun: params.oneShotCliRun,
             toolSearchCatalogRef,
             agentDir,
@@ -1955,7 +1940,7 @@ export async function runEmbeddedAttempt(
     // When toolsAllow is set, use minimal prompt and strip skills catalog
     const effectivePromptMode = params.toolsAllow?.length ? ("minimal" as const) : promptMode;
     const effectiveSkillsPrompt = params.toolsAllow?.length ? undefined : skillsPrompt;
-    const oriroReferences = await resolveOriroReferencePaths({
+    const openOriroReferences = await resolveOriroReferencePaths({
       workspaceDir: effectiveWorkspace,
       argv1: process.argv[1],
       cwd: effectiveCwd,
@@ -2017,8 +2002,8 @@ export async function runEmbeddedAttempt(
         reasoningTagHint,
         heartbeatPrompt,
         skillsPrompt: effectiveSkillsPrompt,
-        docsPath: oriroReferences.docsPath ?? undefined,
-        sourcePath: oriroReferences.sourcePath ?? undefined,
+        docsPath: openOriroReferences.docsPath ?? undefined,
+        sourcePath: openOriroReferences.sourcePath ?? undefined,
         workspaceNotes: workspaceNotes?.length ? workspaceNotes : undefined,
         reactionGuidance,
         promptMode: effectivePromptMode,
@@ -2578,6 +2563,8 @@ export async function runEmbeddedAttempt(
           await baseConvertToLlm(normalizeMessagesForLlmBoundary(messages, buildBoundaryOptions()));
       }
       let prePromptMessageCount = activeSession.messages.length;
+      const toolResultPromptProjectionState: ToolResultPromptProjectionState =
+        createToolResultPromptProjectionState();
       let contextEngineAfterTurnCheckpoint: number | null = null;
       let unwindowedContextEngineMessagesForPrecheck: AgentMessage[] | undefined;
       let contextEnginePromptAuthority: NonNullable<AssembleResult["promptAuthority"]> =
@@ -2777,6 +2764,7 @@ export async function runEmbeddedAttempt(
         toolCount: effectiveTools.length,
         clientToolCount: clientToolDefs.length,
       });
+      const trajectoryFastMode = typeof params.fastMode === "boolean" ? params.fastMode : undefined;
       trajectoryRecorder?.recordEvent(
         "trace.metadata",
         buildTrajectoryRunMetadata({
@@ -2793,7 +2781,7 @@ export async function runEmbeddedAttempt(
           modelId: params.modelId,
           modelApi: params.model.api,
           timeoutMs: params.timeoutMs,
-          fastMode: params.fastMode,
+          fastMode: trajectoryFastMode,
           thinkLevel: params.thinkLevel,
           reasoningLevel: params.reasoningLevel,
           toolResultFormat: params.toolResultFormat,
@@ -3579,6 +3567,7 @@ export async function runEmbeddedAttempt(
             (params.deferTerminalLifecycle ?? params.deferTerminalLifecycleEnd)
               ? "finishing"
               : "end",
+          onToolStreamBoundary: params.onToolStreamBoundary,
           isTerminalAborted: () => aborted,
           resolveTerminalStopReason: () =>
             isAgentRunRestartAbortReason(runAbortController.signal.reason)
@@ -4176,8 +4165,9 @@ export async function runEmbeddedAttempt(
             contextTokenBudget,
             promptToolResultMaxChars,
             promptToolResultMaxChars * PROMPT_TOOL_RESULT_AGGREGATE_CAP_MULTIPLIER,
+            toolResultPromptProjectionState,
           );
-          if (promptToolResultTruncation.truncatedCount > 0) {
+          if (promptToolResultTruncation.messages !== activeSession.messages) {
             promptHistoryMessages = promptToolResultTruncation.messages;
             log.info(
               `[tool-result-truncation] Truncated ${promptToolResultTruncation.truncatedCount} ` +
@@ -4717,8 +4707,9 @@ export async function runEmbeddedAttempt(
                     contextTokenBudget,
                     promptToolResultMaxChars,
                     promptToolResultMaxChars * PROMPT_TOOL_RESULT_AGGREGATE_CAP_MULTIPLIER,
+                    toolResultPromptProjectionState,
                   );
-                  return providerPromptHistoryTruncation.truncatedCount > 0
+                  return providerPromptHistoryTruncation.messages !== messages
                     ? providerPromptHistoryTruncation.messages
                     : messages;
                 },
@@ -4988,7 +4979,7 @@ export async function runEmbeddedAttempt(
           // Previously this was before the prompt, which caused a custom entry to be
           // inserted between compaction and the next prompt — breaking the
           // prepareCompaction() guard that checks the last entry type, leading to
-          // double-compaction. See: https://github.com/oriro-ai/cli/issues/9282
+          // double-compaction. See: https://github.com/oriro/oriro/issues/9282
           // Skip when timed out during compaction — session state may be inconsistent.
           // Also skip when compaction ran this attempt — appending a custom entry
           // after compaction would break the guard again. See: #28491
@@ -5667,7 +5658,7 @@ export async function runEmbeddedAttempt(
       // *before* tool execution completes in the retried agent loop. Without this wait,
       // flushPendingToolResults() fires while tools are still executing, inserting
       // synthetic "missing tool result" errors and causing silent agent failures.
-      // See: https://github.com/oriro-ai/cli/issues/8643
+      // See: https://github.com/oriro/oriro/issues/8643
       let cleanupError: unknown;
       try {
         clearToolSearchCatalog({

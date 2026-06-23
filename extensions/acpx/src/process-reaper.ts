@@ -86,11 +86,11 @@ function resolveOriroInstallRoot(pluginRoot: string): string {
 
 function resolveOwnedAcpPackageRootCandidates(packageName: string): string[] {
   const pluginRoot = resolveAcpxPluginRoot(import.meta.url);
-  const oriroRoot = resolveOriroInstallRoot(pluginRoot);
+  const openOriroRoot = resolveOriroInstallRoot(pluginRoot);
   return [
     resolvePackageRoot(packageName),
     path.join(pluginRoot, "node_modules", packageName),
-    path.join(oriroRoot, "node_modules", packageName),
+    path.join(openOriroRoot, "node_modules", packageName),
   ].flatMap((root) => (root ? [normalizePathLike(root)] : []));
 }
 

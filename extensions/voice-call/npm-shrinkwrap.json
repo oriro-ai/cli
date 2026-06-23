@@ -1,12 +1,12 @@
 {
   "name": "@oriro/voice-call",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "@oriro/voice-call",
-      "version": "2026.6.8",
+      "version": "2026.6.9",
       "dependencies": {
         "commander": "14.0.3",
         "typebox": "1.1.39",
@@ -14,7 +14,7 @@
         "zod": "4.4.3"
       },
       "peerDependencies": {
-        "oriro": ">=2026.6.8"
+        "oriro": ">=2026.6.9"
       },
       "peerDependenciesMeta": {
         "oriro": {

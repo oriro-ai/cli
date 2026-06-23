@@ -115,8 +115,8 @@ describe("resolveHomeDir", () => {
 describe("shortenHomePath", () => {
   it("uses $ORIRO_HOME prefix when ORIRO_HOME is set", () => {
     withEnv({ ORIRO_HOME: "/srv/oriro-home", HOME: "/home/other" }, () => {
-      expect(shortenHomePath(`${path.resolve("/srv/oriro-home")}/.oriro-ai/cli.json`)).toBe(
-        "$ORIRO_HOME/.oriro-ai/cli.json",
+      expect(shortenHomePath(`${path.resolve("/srv/oriro-home")}/.oriro/oriro.json`)).toBe(
+        "$ORIRO_HOME/.oriro/oriro.json",
       );
     });
   });
@@ -127,9 +127,9 @@ describe("shortenHomeInString", () => {
     withEnv({ ORIRO_HOME: "/srv/oriro-home", HOME: "/home/other" }, () => {
       expect(
         shortenHomeInString(
-          `config: ${path.resolve("/srv/oriro-home")}/.oriro-ai/cli.json`,
+          `config: ${path.resolve("/srv/oriro-home")}/.oriro/oriro.json`,
         ),
-      ).toBe("config: $ORIRO_HOME/.oriro-ai/cli.json");
+      ).toBe("config: $ORIRO_HOME/.oriro/oriro.json");
     });
   });
 });

@@ -386,7 +386,7 @@ export async function runConfigureWizard(
   runtime: RuntimeEnv = defaultRuntime,
 ) {
   try {
-    intro(opts.command === "update" ? "Oriro update wizard" : "Oriro configure");
+    intro(opts.command === "update" ? "ORIRO update wizard" : "ORIRO configure");
     const prompter = createClackPrompter();
 
     const prepared = await readConfigFileSnapshotForWrite();

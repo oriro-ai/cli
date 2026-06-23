@@ -93,7 +93,7 @@ const CONFLICT_SETTLE_MS = 30_000;
 // previous 8s threshold was triggering false-positive teardowns on every gateway
 // restart in such environments. 20s gives healthy networks plenty of room while
 // still catching genuinely stuck advertisers (announce that never completes).
-// See https://github.com/oriro-ai/cli/issues/72481
+// See https://github.com/oriro/oriro/issues/72481
 const STUCK_ANNOUNCING_MS = 20_000;
 const MAX_CONSECUTIVE_RESTARTS = 3;
 const MAX_CONSECUTIVE_STUCK_STATE_RESTARTS = 1;
@@ -209,7 +209,7 @@ function resolveSystemMdnsHostname(): string | null {
 const MAX_DNS_LABEL_BYTES = 63;
 const utf8Encoder = new TextEncoder();
 
-function truncateToDnsLabel(name: string, fallback = "Oriro"): string {
+function truncateToDnsLabel(name: string, fallback = "ORIRO"): string {
   const encoded = utf8Encoder.encode(name);
   if (encoded.byteLength <= MAX_DNS_LABEL_BYTES) {
     return name;
@@ -227,7 +227,7 @@ function truncateToDnsLabel(name: string, fallback = "Oriro"): string {
 
 function safeServiceName(name: string) {
   const trimmed = name.trim();
-  return trimmed.length > 0 ? truncateToDnsLabel(trimmed) : "Oriro";
+  return trimmed.length > 0 ? truncateToDnsLabel(trimmed) : "ORIRO";
 }
 
 function prettifyInstanceName(name: string) {
@@ -444,7 +444,7 @@ export async function startGatewayBonjourAdvertiser(
     const instanceName =
       typeof opts.instanceName === "string" && opts.instanceName.trim()
         ? opts.instanceName.trim()
-        : `${hostname} (Oriro)`;
+        : `${hostname} (ORIRO)`;
     const displayName = prettifyInstanceName(instanceName);
 
     const txtBase: Record<string, string> = {

@@ -907,7 +907,7 @@ describe("gateway bonjour advertiser", () => {
     delete process.env.VITEST;
     process.env.NODE_ENV = "development";
     delete process.env.ORIRO_MDNS_HOSTNAME;
-    vi.spyOn(os, "hostname").mockReturnValue("My_Oriro Host");
+    vi.spyOn(os, "hostname").mockReturnValue("My_Lobster Host");
 
     const destroy = vi.fn().mockResolvedValue(undefined);
     const advertise = vi.fn().mockResolvedValue(undefined);
@@ -1003,7 +1003,7 @@ describe("gateway bonjour advertiser", () => {
     delete process.env.VITEST;
     process.env.NODE_ENV = "development";
     delete process.env.ORIRO_MDNS_HOSTNAME;
-    vi.spyOn(os, "hostname").mockReturnValue("Oriro");
+    vi.spyOn(os, "hostname").mockReturnValue("Lobster");
 
     const destroy = vi.fn().mockResolvedValue(undefined);
     const advertise = vi.fn().mockResolvedValue(undefined);
@@ -1015,8 +1015,8 @@ describe("gateway bonjour advertiser", () => {
     });
 
     const [gatewayCall] = createService.mock.calls as Array<[ServiceCall]>;
-    expect(gatewayCall?.[0]?.hostname).toBe("Oriro");
-    expect((gatewayCall?.[0]?.txt as Record<string, string>)?.lanHost).toBe("Oriro.local");
+    expect(gatewayCall?.[0]?.hostname).toBe("Lobster");
+    expect((gatewayCall?.[0]?.txt as Record<string, string>)?.lanHost).toBe("Lobster.local");
 
     await started.stop();
   });

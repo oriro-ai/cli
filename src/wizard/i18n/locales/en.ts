@@ -952,7 +952,7 @@ export const en = {
       gatewayTokenGenerate: "Generate token: {command}",
       gatewayTokenShared: "Gateway token: shared auth for the Gateway + Control UI.",
       gatewayTokenStored:
-        "Stored in: $ORIRO_CONFIG_PATH (default: ~/.oriro-ai/cli.json) under gateway.auth.token, or in ORIRO_GATEWAY_TOKEN.",
+        "Stored in: $ORIRO_CONFIG_PATH (default: ~/.oriro/oriro.json) under gateway.auth.token, or in ORIRO_GATEWAY_TOKEN.",
       gatewayTokenView: "View token: {command}",
       gatewayWsUrl: "Gateway WS: {url}",
       hatchLater: "Hatch later",

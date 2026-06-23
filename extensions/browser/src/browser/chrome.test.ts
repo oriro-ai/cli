@@ -241,7 +241,7 @@ describe("browser chrome profile decoration", () => {
 
   it("best-effort writes name when color is invalid", async () => {
     const userDataDir = await createUserDataDir();
-    decorateOriroProfile(userDataDir, { color: "oriro-orange" });
+    decorateOriroProfile(userDataDir, { color: "lobster-orange" });
     const def = await readDefaultProfileFromLocalState(userDataDir);
 
     expect(def.name).toBe(DEFAULT_ORIRO_BROWSER_PROFILE_NAME);

@@ -2114,15 +2114,15 @@ export function resolvePluginLoaderModuleConfig(params: {
 
 export function isBundledPluginExtensionPath(params: {
   modulePath: string;
-  oriroPackageRoot: string;
+  openOriroPackageRoot: string;
   bundledPluginsDir?: string;
 }): boolean {
   const normalizedModulePath = path.resolve(params.modulePath);
   const roots = [
     params.bundledPluginsDir ? path.resolve(params.bundledPluginsDir) : null,
-    path.join(params.oriroPackageRoot, "extensions"),
-    path.join(params.oriroPackageRoot, "dist", "extensions"),
-    path.join(params.oriroPackageRoot, "dist-runtime", "extensions"),
+    path.join(params.openOriroPackageRoot, "extensions"),
+    path.join(params.openOriroPackageRoot, "dist", "extensions"),
+    path.join(params.openOriroPackageRoot, "dist-runtime", "extensions"),
   ].filter((root): root is string => typeof root === "string");
   return roots.some(
     (root) =>

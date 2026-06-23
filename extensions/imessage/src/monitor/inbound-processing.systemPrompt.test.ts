@@ -202,7 +202,7 @@ describe("buildIMessageInboundContext forwards GroupSystemPrompt", () => {
         senderNormalized: "+15555550123",
         route: {
           accountId: "default",
-          agentId: "oriro",
+          agentId: "lobster",
           channel: "imessage",
           sessionKey: "k",
           mainSessionKey: "mk",

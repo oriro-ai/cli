@@ -45,7 +45,7 @@ describe("npm registry spec validation", () => {
       expected: "URLs are not allowed",
     },
     {
-      spec: "git+ssh://github.com/oriro-ai/cli",
+      spec: "git+ssh://github.com/oriro/oriro",
       expected: "URLs are not allowed",
     },
     {

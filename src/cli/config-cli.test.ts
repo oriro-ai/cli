@@ -3439,12 +3439,12 @@ describe("config cli", () => {
     it("handles config file path with home directory", async () => {
       const resolved: OriroConfig = { gateway: { port: 18789 } };
       const snapshot = buildSnapshot({ resolved, config: resolved });
-      snapshot.path = "/home/user/.oriro-ai/cli.json";
+      snapshot.path = "/home/user/.oriro/oriro.json";
       mockReadConfigFileSnapshot.mockResolvedValueOnce(snapshot);
 
       await runConfigCommand(["config", "file"]);
 
-      expect(mockLog).toHaveBeenCalledWith("/home/user/.oriro-ai/cli.json");
+      expect(mockLog).toHaveBeenCalledWith("/home/user/.oriro/oriro.json");
     });
   });
 });

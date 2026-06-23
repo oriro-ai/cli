@@ -129,7 +129,7 @@ describe("security-sensitive guard workflow", () => {
     expect(finalSteps.at(-1)?.env?.ORIRO_SECURITY_SENSITIVE_GUARD_MODE).toBe("enforce");
     expect(finalSteps.at(-1)?.env?.ORIRO_SECURITY_TEAM_SLUG).toBe("oriro-secops");
     expect(finalSteps.at(-1)?.env?.ORIRO_SECURITY_APPROVERS).toBe(
-      "vincentkoc,steipete,joshavant",
+      "oriro,oriro,oriro",
     );
   });
 
@@ -153,17 +153,17 @@ describe("security-sensitive guard workflow", () => {
   it("requires secops review for future workflow or guard changes", () => {
     const codeowners = readFileSync(CODEOWNERS, "utf8");
     expect(codeowners).toContain(
-      "/.github/workflows/security-sensitive-guard.yml @oriro-ai/cli-secops",
+      "/.github/workflows/security-sensitive-guard.yml @oriro/oriro-secops",
     );
     expect(codeowners).toContain(
-      "/test/scripts/security-sensitive-guard-workflow.test.ts @oriro-ai/cli-secops",
+      "/test/scripts/security-sensitive-guard-workflow.test.ts @oriro/oriro-secops",
     );
     expect(codeowners).toContain(
-      "/test/scripts/security-sensitive-guard-script.test.ts @oriro-ai/cli-secops",
+      "/test/scripts/security-sensitive-guard-script.test.ts @oriro/oriro-secops",
     );
     expect(codeowners).toContain(
-      "/scripts/github/security-sensitive-guard.mjs @oriro-ai/cli-secops",
+      "/scripts/github/security-sensitive-guard.mjs @oriro/oriro-secops",
     );
-    expect(codeowners).toContain("/.gitignore @oriro-ai/cli-secops");
+    expect(codeowners).toContain("/.gitignore @oriro/oriro-secops");
   });
 });

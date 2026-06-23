@@ -20,7 +20,6 @@ export const WIKI_VAULT_DIRECTORIES = [
   "_attachments",
   "_views",
   ".oriro-wiki",
-  ".oriro-wiki/locks",
   ".oriro-wiki/cache",
 ] as const;
 
@@ -59,7 +58,7 @@ function buildWikiOverviewMarkdown(config: ResolvedMemoryWikiConfig): string {
   return withTrailingNewline(`\
 # Memory Wiki
 
-This vault is maintained by the Oriro memory-wiki plugin.
+This vault is maintained by the ORIRO memory-wiki plugin.
 
 - Vault mode: \`${config.vaultMode}\`
 - Render mode: \`${config.vault.renderMode}\`
@@ -123,22 +122,6 @@ export async function initializeMemoryWikiVault(
     rootDir,
     "inbox.md",
     withTrailingNewline("# Inbox\n\nDrop raw ideas, questions, and source links here.\n"),
-    createdFiles,
-  );
-  await writeFileIfMissing(
-    rootDir,
-    ".oriro-wiki/state.json",
-    withTrailingNewline(
-      JSON.stringify(
-        {
-          version: 1,
-          createdAt: resolveMemoryWikiTimestamp(options?.nowMs),
-          renderMode: config.vault.renderMode,
-        },
-        null,
-        2,
-      ),
-    ),
     createdFiles,
   );
   await writeFileIfMissing(rootDir, ".oriro-wiki/log.jsonl", "", createdFiles);

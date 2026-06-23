@@ -322,7 +322,7 @@ function buildCreatePlan(options = {}) {
   };
 }
 
-/** Create an isolated Oriro test state directory and optional scenario config. */
+/** Create an isolated ORIRO test state directory and optional scenario config. */
 export async function createState(options = {}) {
   const label = normalizeLabel(options.label);
   const root = await fs.mkdtemp(path.join(os.tmpdir(), `oriro-${label}-`));
@@ -340,7 +340,7 @@ export function renderEnvFile(plan) {
   return `${renderExports(plan.env)}\n`;
 }
 
-/** Render shell commands that create and export an isolated Oriro test state. */
+/** Render shell commands that create and export an isolated ORIRO test state. */
 export function renderShellSnippet(options = {}) {
   const label = normalizeLabel(options.label);
   const scenario = requireScenario(options.scenario);
@@ -373,7 +373,7 @@ export function renderShellSnippet(options = {}) {
   return `${lines.join("\n")}\n`;
 }
 
-/** Render a reusable shell function for creating isolated Oriro test state. */
+/** Render a reusable shell function for creating isolated ORIRO test state. */
 export function renderShellFunction() {
   return `oriro_test_state_create() {
   local raw_label="\${1:-state}"
@@ -382,7 +382,7 @@ export function renderShellFunction() {
   case "$scenario" in
     empty|minimal|update-stable|upgrade-survivor|gateway-loopback|external-service) ;;
     *)
-      echo "unknown Oriro test-state scenario: $scenario" >&2
+      echo "unknown ORIRO test-state scenario: $scenario" >&2
       return 1
       ;;
   esac

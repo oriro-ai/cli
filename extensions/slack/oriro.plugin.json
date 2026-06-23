@@ -1,7 +1,7 @@
 {
   "id": "slack",
   "name": "Slack",
-  "description": "Oriro Slack channel plugin for channels, DMs, commands, and app events.",
+  "description": "ORIRO Slack channel plugin for channels, DMs, commands, and app events.",
   "activation": {
     "onStartup": false
   },

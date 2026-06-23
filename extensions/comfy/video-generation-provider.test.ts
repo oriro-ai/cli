@@ -98,7 +98,7 @@ describe("comfy video-generation provider", () => {
     const result = await provider.generateVideo({
       provider: "comfy",
       model: "workflow",
-      prompt: "animate a oriro",
+      prompt: "animate a lobster",
       cfg: buildComfyConfig({
         video: {
           workflow: {
@@ -115,7 +115,7 @@ describe("comfy video-generation provider", () => {
     expect(fetchGuardParams(0).auditContext).toBe("comfy-video-generate");
     expect(parseJsonBody(1)).toEqual({
       prompt: {
-        "6": { inputs: { text: "animate a oriro" } },
+        "6": { inputs: { text: "animate a lobster" } },
         "9": { inputs: {} },
       },
     });
@@ -186,7 +186,7 @@ describe("comfy video-generation provider", () => {
       provider.generateVideo({
         provider: "comfy",
         model: "workflow",
-        prompt: "animate a oriro",
+        prompt: "animate a lobster",
         cfg: {
           ...buildComfyConfig({
             video: {

@@ -44,7 +44,7 @@ const EXPECTED_BUNDLED_STARTUP_PLUGIN_IDS = [
   "file-transfer",
   "google-meet",
   "llm-task",
-  "oriro",
+  "lobster",
   "memory-wiki",
   "openshell",
   "phone-control",

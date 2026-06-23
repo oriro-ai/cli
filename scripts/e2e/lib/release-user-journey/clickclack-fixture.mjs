@@ -24,7 +24,7 @@ const channel = {
 const botUser = {
   id: "usr_bot",
   kind: "bot",
-  display_name: "Oriro Bot",
+  display_name: "ORIRO Bot",
   handle: "oriro",
   avatar_url: "",
   created_at: new Date(0).toISOString(),

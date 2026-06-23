@@ -1808,7 +1808,7 @@ export const agentHandlers: GatewayRequestHandlers = {
       // identical bytes on the wire. The transient gateway injectTimestamp call
       // is removed — stamping the live turn here would diverge from the bare
       // stored history and bust the prompt cache.
-      // See: https://github.com/oriro-ai/cli/issues/3658
+      // See: https://github.com/oriro/oriro/issues/3658
 
       if (requestedSessionKey) {
         const sessionLoadOptions = {
@@ -2770,6 +2770,7 @@ export const agentHandlers: GatewayRequestHandlers = {
               acpTurnSource: request.acpTurnSource,
               internalEvents: request.internalEvents,
               inputProvenance,
+              senderIsOwner: clientHasAdminScope(client),
               sessionEffects,
               skipInitialSessionTouch: skipAgentInitialSessionTouch,
               preserveUserFacingSessionModelState,

@@ -46,12 +46,12 @@ Restart=on-failure
 WantedBy=default.target
 `;
 
-const CLAWDBOT_GATEWAY_CONTENTS = `\
+const ORIRO_GATEWAY_CONTENTS = `\
 [Unit]
-Description=Clawdbot Gateway
+Description=Oriro Gateway
 [Service]
-ExecStart=/usr/bin/node /opt/clawdbot/dist/entry.js gateway --port 18789
-Environment=HOME=/home/clawdbot
+ExecStart=/usr/bin/node /opt/oriro/dist/entry.js gateway --port 18789
+Environment=HOME=/home/oriro
 `;
 
 const COMPANION_SERVICE_CONTENTS = `\
@@ -81,8 +81,8 @@ describe("detectMarkerLineWithGateway", () => {
     expect(detectMarkerLineWithGateway(GATEWAY_SERVICE_CONTENTS)).toBe("oriro");
   });
 
-  it("returns clawdbot for a clawdbot gateway unit", () => {
-    expect(detectMarkerLineWithGateway(CLAWDBOT_GATEWAY_CONTENTS)).toBe("clawdbot");
+  it("returns oriro for a oriro gateway unit", () => {
+    expect(detectMarkerLineWithGateway(ORIRO_GATEWAY_CONTENTS)).toBe("oriro");
   });
 
   it("handles line continuations — marker and gateway split across physical lines", () => {
@@ -139,22 +139,22 @@ describe("findExtraGatewayServices (linux / scanSystemdDir) — real filesystem"
   );
 
   it.skipIf(!isLinux)(
-    "reports a legacy clawdbot-gateway service as an extra gateway service",
+    "reports a legacy oriro-gateway service as an extra gateway service",
     async () => {
       const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oriro-test-"));
       const systemdDir = path.join(tmpHome, ".config", "systemd", "user");
-      const unitPath = path.join(systemdDir, "clawdbot-gateway.service");
+      const unitPath = path.join(systemdDir, "oriro-gateway.service");
       try {
         await fs.mkdir(systemdDir, { recursive: true });
-        await fs.writeFile(unitPath, CLAWDBOT_GATEWAY_CONTENTS);
+        await fs.writeFile(unitPath, ORIRO_GATEWAY_CONTENTS);
         const result = await findExtraGatewayServices({ HOME: tmpHome });
         expect(result).toEqual([
           {
             platform: "linux",
-            label: "clawdbot-gateway.service",
+            label: "oriro-gateway.service",
             detail: `unit: ${unitPath}`,
             scope: "user",
-            marker: "clawdbot",
+            marker: "oriro",
             legacy: true,
           },
         ]);
@@ -268,7 +268,7 @@ describe("findExtraGatewayServices (darwin / scanLaunchdDir) — real filesystem
     }
   });
 
-  it("does not report non-gateway LaunchAgents that mention clawdbot in environment values", async () => {
+  it("does not report non-gateway LaunchAgents that mention oriro in environment values", async () => {
     const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oriro-test-"));
     const launchdDir = path.join(tmpHome, "Library", "LaunchAgents");
     try {
@@ -278,7 +278,7 @@ describe("findExtraGatewayServices (darwin / scanLaunchdDir) — real filesystem
         `<?xml version="1.0" encoding="UTF-8"?>
 <plist version="1.0"><dict>
 <key>Label</key><string>com.github.facebook.watchman</string>
-<key>EnvironmentVariables</key><dict><key>PATH</key><string>/Users/test/Projects/clawdbot2/node_modules/.bin:/opt/homebrew/bin</string></dict>
+<key>EnvironmentVariables</key><dict><key>PATH</key><string>/Users/test/Projects/oriro2/node_modules/.bin:/opt/homebrew/bin</string></dict>
 <key>ProgramArguments</key><array><string>/opt/homebrew/bin/watchman</string><string>--foreground</string></array>
 </dict></plist>`,
       );
@@ -364,8 +364,8 @@ describe("findExtraGatewayServices (win32)", () => {
         "TaskName:\\Oriro Gateway",
         "Task To Run: C:\\Program Files\\Oriro\\oriro.exe gateway run",
         "",
-        "TaskName: Clawdbot Legacy",
-        "Task To Run: C:\\clawdbot\\clawdbot.exe run",
+        "TaskName: Oriro Legacy",
+        "Task To Run: C:\\oriro\\oriro.exe run",
         "",
         "TaskName: Other Task",
         "Task To Run: C:\\tools\\helper.exe",
@@ -376,14 +376,14 @@ describe("findExtraGatewayServices (win32)", () => {
 
     const result = await findExtraGatewayServices({}, { deep: true });
     // The \Oriro Gateway task is the live launcher — it must be skipped.
-    // Only the unrelated clawdbot task should be flagged.
+    // Only the unrelated oriro task should be flagged.
     expect(result).toEqual([
       {
         platform: "win32",
-        label: "Clawdbot Legacy",
-        detail: "task: Clawdbot Legacy, run: C:\\clawdbot\\clawdbot.exe run",
+        label: "Oriro Legacy",
+        detail: "task: Oriro Legacy, run: C:\\oriro\\oriro.exe run",
         scope: "system",
-        marker: "clawdbot",
+        marker: "oriro",
         legacy: true,
       },
     ]);

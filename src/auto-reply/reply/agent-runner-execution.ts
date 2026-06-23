@@ -44,6 +44,7 @@ import { isMessagingToolSendAction } from "../../agents/embedded-agent-messaging
 import { mergeEmbeddedAgentRunResultForModelFallbackExhaustion } from "../../agents/embedded-agent-runner/result-fallback-classifier.js";
 import { runEmbeddedAgent } from "../../agents/embedded-agent.js";
 import { isFailoverError } from "../../agents/failover-error.js";
+import type { FastModeAutoProgressState } from "../../agents/fast-mode.js";
 import { resolveAgentHarnessPolicy } from "../../agents/harness/policy.js";
 import { ensureSelectedAgentHarnessPlugin } from "../../agents/harness/runtime-plugin.js";
 import { LiveSessionModelSwitchError } from "../../agents/live-model-switch-error.js";
@@ -123,6 +124,7 @@ import {
   buildEmbeddedRunExecutionParams,
   resolveQueuedReplyRuntimeConfig,
   resolveModelFallbackOptions,
+  resolveRunFastModeForFallbackCandidate,
 } from "./agent-runner-utils.js";
 import type { BlockReplyPipeline } from "./block-reply-pipeline.js";
 import {
@@ -149,7 +151,7 @@ import type { TypingSignaler } from "./typing-mode.js";
 // Maximum number of LiveSessionModelSwitchError retries before surfacing a
 // user-visible error. Prevents infinite ping-pong when the persisted session
 // selection keeps conflicting with fallback model choices.
-// See: https://github.com/oriro-ai/cli/issues/58348
+// See: https://github.com/oriro/oriro/issues/58348
 export const MAX_LIVE_SWITCH_RETRIES = 2;
 
 type AgentTurnTimingSpan = {
@@ -843,10 +845,10 @@ const CODEX_APP_SERVER_TURN_COMPLETION_IDLE_TIMEOUT_RE =
 function buildCodexAppServerFailureText(message: string): string | null {
   const normalizedMessage = collapseRepeatedFailureDetail(message);
   if (CODEX_APP_SERVER_CLIENT_CLOSED_BEFORE_REPLY_RE.test(normalizedMessage)) {
-    return "⚠️ Codex app-server connection closed before this turn finished. Oriro retried once when the stdio turn was still replay-safe; please try again if this keeps happening.";
+    return "⚠️ Codex app-server connection closed before this turn finished. ORIRO retried once when the stdio turn was still replay-safe; please try again if this keeps happening.";
   }
   if (CODEX_APP_SERVER_TURN_COMPLETION_IDLE_TIMEOUT_RE.test(normalizedMessage)) {
-    return "⚠️ Codex app-server stopped before confirming turn completion. Oriro did not replay the turn automatically because it may still be active; try again, or use /new if the session stays stuck.";
+    return "⚠️ Codex app-server stopped before confirming turn completion. ORIRO did not replay the turn automatically because it may still be active; try again, or use /new if the session stays stuck.";
   }
   return null;
 }
@@ -1593,6 +1595,19 @@ export async function runAgentTurnWithFallback(params: {
   replyMediaContext?: ReplyMediaContext;
   onCompactionNoticePayload?: (payload: ReplyPayload) => Promise<void> | void;
 }): Promise<AgentRunLoopResult> {
+  // ORIRO language bridge (input) — translate the user's message to English for the
+  // model; keep the original (user's language) for the transcript/display. English,
+  // slash-commands, and unconfigured users pass through unchanged (no model, no cost).
+  try {
+    const { translateIncoming } = await import("../../language/gateway.js");
+    const englishBody = await translateIncoming(params.commandBody);
+    if (englishBody !== params.commandBody) {
+      params.transcriptCommandBody ??= params.commandBody;
+      params.commandBody = englishBody;
+    }
+  } catch {
+    /* language bridge is best-effort — a translator/runtime failure never breaks a turn */
+  }
   const TRANSIENT_HTTP_RETRY_DELAY_MS = 2_500;
   let didLogHeartbeatStrip = false;
   let autoCompactionCount = 0;
@@ -2077,7 +2092,9 @@ export async function runAgentTurnWithFallback(params: {
       const sourceRepliesAreToolOnly =
         params.followupRun.run.sourceReplyDeliveryMode === "message_tool_only";
       const shouldSuppressProgressAfterMessageToolDelivery = () =>
-        sourceRepliesAreToolOnly && messageToolOnlyDeliveryCompleted;
+        sourceRepliesAreToolOnly &&
+        messageToolOnlyDeliveryCompleted &&
+        params.opts?.allowProgressCallbacksWhenSourceDeliverySuppressed !== true;
       const onToolResult = params.opts?.onToolResult;
       const outcomePlan = buildAgentRuntimeOutcomePlan();
       const runLane = CommandLane.Main;
@@ -2088,6 +2105,11 @@ export async function runAgentTurnWithFallback(params: {
         params.followupRun.userTurnTranscriptRecorder ?? params.opts?.userTurnTranscriptRecorder;
       const notifyUserMessagePersisted = () => {
         queuedUserMessagePersistedAcrossFallback = true;
+      };
+      const fastModeStartedAtMs = Date.now();
+      const fastModeAutoProgressState: FastModeAutoProgressState = {
+        offAnnounced: false,
+        resetAnnounced: false,
       };
       // Profiler-only milestone: it separates fallback setup from the actual
       // model run without adding extra live logs/snapshots to normal turns.
@@ -2155,6 +2177,13 @@ export async function runAgentTurnWithFallback(params: {
             const suppressAssistantErrorPersistenceForCandidate =
               assistantErrorPersistedAcrossFallback;
             const candidateRun = resolveRunForFallbackCandidate(provider, model);
+            const candidateFastMode = resolveRunFastModeForFallbackCandidate({
+              run: candidateRun,
+              config: runtimeConfig,
+              provider,
+              model,
+              sessionEntry: params.getActiveSessionEntry(),
+            });
             const activeProbe = effectiveRun.autoFallbackPrimaryProbe;
             if (activeProbe && provider === activeProbe.provider && model === activeProbe.model) {
               markAutoFallbackPrimaryProbe({
@@ -2302,14 +2331,17 @@ export async function runAgentTurnWithFallback(params: {
                   },
                   onCommentaryText:
                     params.opts?.commentaryProgressEnabled === true && params.opts.onItemEvent
-                      ? async ({ text, itemId }) => {
+                      ? async (payload) => {
                           await params.opts?.onItemEvent?.({
+                            itemId: payload.itemId,
                             kind: "preamble",
-                            progressText: text,
-                            itemId,
+                            progressText: payload.text,
                           });
                         }
                       : undefined,
+                  onFastModeAutoProgress: async (payload) => {
+                    await params.opts?.onToolResult?.(payload);
+                  },
                   onErrorBeforeLifecycle: async () => {
                     if (!rollbackFallbackCandidateSelection) {
                       return;
@@ -2358,6 +2390,11 @@ export async function runAgentTurnWithFallback(params: {
                     provider: cliExecutionProvider,
                     model,
                     thinkLevel: params.followupRun.run.thinkLevel,
+                    fastMode: candidateFastMode.fastMode,
+                    fastModeStartedAtMs,
+                    fastModeAutoOnSeconds: candidateFastMode.fastModeAutoOnSeconds,
+                    fastModeAutoProgressState,
+                    isFinalFallbackAttempt: runOptions?.isFinalFallbackAttempt,
                     timeoutMs: params.followupRun.run.timeoutMs,
                     runTimeoutOverrideMs: params.followupRun.run.runTimeoutOverrideMs,
                     runId,
@@ -2393,6 +2430,7 @@ export async function runAgentTurnWithFallback(params: {
                     agentAccountId: params.followupRun.run.agentAccountId,
                     senderId: params.followupRun.run.senderId,
                     senderIsOwner: params.followupRun.run.senderIsOwner,
+                    approvalReviewerDeviceId: params.followupRun.run.approvalReviewerDeviceId,
                     toolsAllow: params.opts?.toolsAllow,
                     disableTools: params.opts?.disableTools,
                     abortSignal: runAbortSignal,
@@ -2416,7 +2454,7 @@ export async function runAgentTurnWithFallback(params: {
             }
             const { embeddedContext, senderContext, runBaseParams } =
               buildEmbeddedRunExecutionParams({
-                run: candidateRun,
+                run: { ...candidateRun, ...candidateFastMode },
                 replyRoute: params.followupRun,
                 sessionCtx: params.sessionCtx,
                 hasRepliedRef: params.opts?.hasRepliedRef,
@@ -2490,6 +2528,9 @@ export async function runAgentTurnWithFallback(params: {
                     provider: embeddedRunProvider,
                     agentHarnessId: embeddedRunHarnessOverride,
                     agentHarnessRuntimeOverride: embeddedRunHarnessOverride,
+                    fastModeStartedAtMs,
+                    fastModeAutoProgressState,
+                    isFinalFallbackAttempt: runOptions?.isFinalFallbackAttempt,
                     sandboxSessionKey: params.runtimePolicySessionKey,
                     prompt: params.commandBody,
                     transcriptPrompt: params.transcriptCommandBody,
@@ -2829,7 +2870,7 @@ export async function runAgentTurnWithFallback(params: {
                           // Serialize tool result delivery to preserve message ordering.
                           // Without this, concurrent tool callbacks race through typing signals
                           // and message sends, causing out-of-order delivery to the user.
-                          // See: https://github.com/oriro-ai/cli/issues/11044
+                          // See: https://github.com/oriro/oriro/issues/11044
                           let toolResultChain: Promise<void> = Promise.resolve();
                           return (payload: ReplyPayload) => {
                             toolResultChain = toolResultChain
@@ -3023,7 +3064,7 @@ export async function runAgentTurnWithFallback(params: {
           // conflicting with fallback model choices (e.g. overloaded primary
           // triggers fallback, but session store keeps pulling back to the
           // overloaded model). Surface the last error to the user instead.
-          // See: https://github.com/oriro-ai/cli/issues/58348
+          // See: https://github.com/oriro/oriro/issues/58348
           defaultRuntime.error(
             `Live model switch failed after ${MAX_LIVE_SWITCH_RETRIES} retries ` +
               `(${sanitizeForLog(err.provider)}/${sanitizeForLog(err.model)}). The requested model may be unavailable.`,

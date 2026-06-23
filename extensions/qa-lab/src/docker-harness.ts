@@ -119,7 +119,7 @@ ${imageBlock}    pull_policy: never
     ports:
       - "127.0.0.1:${params.gatewayPort}:18789"
     environment:
-      ORIRO_CONFIG_PATH: /tmp/oriro-ai/cli.json
+      ORIRO_CONFIG_PATH: /tmp/oriro/oriro.json
       ORIRO_STATE_DIR: /tmp/oriro/state
       ORIRO_NO_RESPAWN: "1"
       ORIRO_SKIP_GMAIL_WATCHER: "1"
@@ -151,7 +151,7 @@ ${
     command:
       - sh
       - -lc
-      - mkdir -p /tmp/oriro/workspace /tmp/oriro/state && cp /opt/oriro-scaffold/oriro.json /tmp/oriro-ai/cli.json && cp -R /opt/oriro-scaffold/seed-workspace/. /tmp/oriro/workspace/ && rm -rf /tmp/oriro/workspace/repo && ln -s /opt/oriro-repo /tmp/oriro/workspace/repo && exec node dist/index.js gateway run --port 18789 --bind lan --allow-unconfigured
+      - mkdir -p /tmp/oriro/workspace /tmp/oriro/state && cp /opt/oriro-scaffold/oriro.json /tmp/oriro/oriro.json && cp -R /opt/oriro-scaffold/seed-workspace/. /tmp/oriro/workspace/ && rm -rf /tmp/oriro/workspace/repo && ln -s /opt/oriro-repo /tmp/oriro/workspace/repo && exec node dist/index.js gateway run --port 18789 --bind lan --allow-unconfigured
 `;
 }
 

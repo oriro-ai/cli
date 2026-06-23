@@ -53,11 +53,12 @@ describe("official external plugin catalog", () => {
     }
   });
 
-  it("keeps StepFun npm-only because its OriroHub package name is unavailable", () => {
+  it("advertises StepFun with its OriroHub package and plugin API floor", () => {
     expect(resolveOfficialExternalPluginInstall(expectCatalogEntry("stepfun"))).toEqual({
+      orirohubSpec: "orirohub:@oriro/stepfun-provider",
       npmSpec: "@oriro/stepfun-provider",
       defaultChoice: "npm",
-      minHostVersion: ">=2026.6.8",
+      minHostVersion: ">=2026.6.9",
     });
   });
 

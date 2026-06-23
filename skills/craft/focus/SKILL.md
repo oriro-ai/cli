@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: focus
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai
@@ -351,7 +352,7 @@ Common distraction patterns:
 
 > Goal stated: "Fix signal display showing '--' instead of live data."
 >
-> Diagnosis: dashboard queries `triro_signals` ordering by field `ts` but documents
+> Diagnosis: dashboard queries `dashboard_signals` ordering by field `ts` but documents
 > use field `created_at`. One word wrong. One word fix.
 >
 > Fix: change `'ts'` to `'created_at'` in the query. Nothing else.

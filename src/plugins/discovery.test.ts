@@ -635,7 +635,7 @@ describe("discoverOriroPlugins", () => {
       pluginId: "workspace-plugin",
     });
 
-    const unrelatedWorkspaceDir = path.join(workspaceDir, "oriro-integrations", "bin");
+    const unrelatedWorkspaceDir = path.join(workspaceDir, "lobster-integrations", "bin");
     createPackagePluginWithEntry({
       packageDir: unrelatedWorkspaceDir,
       packageName: "@oriro/stray-workspace-plugin",

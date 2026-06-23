@@ -441,7 +441,7 @@ function formatRuntimeGatewayAuthTokenWarning(): string {
   }
   return [
     base,
-    "In Nix mode, set gateway.auth.token in your Nix-managed Oriro config and rebuild.",
+    "In Nix mode, set gateway.auth.token in your Nix-managed ORIRO config and rebuild.",
     "For the first-party Nix flow, see https://github.com/oriro/nix-oriro#quick-start and https://docs.oriro.ai/install/nix.",
   ].join(" ");
 }

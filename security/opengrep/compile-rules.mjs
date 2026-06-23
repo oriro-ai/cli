@@ -15,7 +15,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseDocument, stringify } from "yaml";
 
-const REPO_BASENAME = "oriro-ai/cli";
+const REPO_BASENAME = "oriro/oriro";
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(SCRIPT_DIR, "..", "..");
 const DEFAULT_OUT_DIR = path.resolve(REPO_ROOT, "security", "opengrep");

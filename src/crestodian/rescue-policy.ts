@@ -106,7 +106,7 @@ export function resolveCrestodianRescuePolicy(
       sandboxActive,
       reason: "sandbox-active",
       message:
-        "Crestodian rescue is blocked because Oriro sandboxing is active. Fix the install locally or disable sandboxing before using remote rescue.",
+        "Crestodian rescue is blocked because ORIRO sandboxing is active. Fix the install locally or disable sandboxing before using remote rescue.",
     };
   }
   if (configuredEnabled === "auto" && !yolo) {
@@ -131,7 +131,7 @@ export function resolveCrestodianRescuePolicy(
       yolo,
       sandboxActive,
       reason: "not-owner",
-      message: "Crestodian rescue only accepts commands from an Oriro owner.",
+      message: "Crestodian rescue only accepts commands from an ORIRO owner.",
     };
   }
   if (ownerDmOnly && !input.isDirectMessage) {

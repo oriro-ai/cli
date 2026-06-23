@@ -200,6 +200,7 @@ export const ko: TranslationMap = {
     inherit: "상속",
     defaultOption: "기본값({value})",
     offExplicit: "꺼짐(명시적)",
+    auto: "auto",
     on: "켜짐",
     off: "꺼짐",
     full: "전체",
@@ -1299,7 +1300,7 @@ export const ko: TranslationMap = {
         stepDevUi:
           "pnpm ui:dev를 사용하는 경우 현재 checkout 기준으로 개발 UI를 다시 빌드하거나 다시 시작하세요.",
         stepRestart:
-          "Oriro를 업데이트한 뒤 Gateway를 다시 시작하여 현재 프로토콜을 제공하게 하세요.",
+          "ORIRO를 업데이트한 뒤 Gateway를 다시 시작하여 현재 프로토콜을 제공하게 하세요.",
       },
       network: {
         title: "연결할 수 없음",
@@ -1608,6 +1609,7 @@ export const ko: TranslationMap = {
       nextHeartbeat: "다음 하트비트",
       wakeModeHelp: "Now는 즉시 트리거됩니다. Next heartbeat는 다음 주기를 기다립니다.",
       payloadKind: "무엇을 실행할까요?",
+      command: "Command",
       systemEvent: "메인 타임라인에 메시지 게시",
       agentTurn: "어시스턴트 작업 실행(격리됨)",
       systemEventHelp: "텍스트를 gateway 메인 타임라인으로 보냅니다(알림/트리거에 적합).",

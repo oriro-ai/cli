@@ -1,8 +1,8 @@
 {
   "name": "@oriro/ollama-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Ollama provider plugin",
+  "description": "ORIRO Ollama provider plugin",
   "type": "module",
   "dependencies": {
     "typebox": "1.1.39"

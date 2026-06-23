@@ -447,7 +447,7 @@ export function registerNodesCanvasCommands(nodes: Command, deps: CanvasCliDepen
           const { version, messageCount } = validateA2UIJsonl(jsonl);
           if (version === "v0.9") {
             throw new Error(
-              "Detected A2UI v0.9 JSONL (createSurface). Oriro currently supports v0.8 only.",
+              "Detected A2UI v0.9 JSONL (createSurface). ORIRO currently supports v0.8 only.",
             );
           }
           await invokeCanvas(deps, opts, "canvas.a2ui.pushJSONL", { jsonl });

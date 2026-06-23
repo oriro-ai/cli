@@ -201,6 +201,7 @@ export const es: TranslationMap = {
     inherit: "heredar",
     defaultOption: "Predeterminado ({value})",
     offExplicit: "desactivado (explícito)",
+    auto: "auto",
     on: "activado",
     off: "apagado",
     full: "completo",
@@ -440,7 +441,7 @@ export const es: TranslationMap = {
       "Revisa, perfecciona y aplica propuestas antes de que se conviertan en Skills activas.",
     nodes: "Dispositivos emparejados, capacidades y exposición de comandos.",
     chat: "Sesión de chat directa con la puerta de enlace para intervenciones rápidas.",
-    config: "Editar ~/.oriro-ai/cli.json de forma segura.",
+    config: "Editar ~/.oriro/oriro.json de forma segura.",
     communications: "Canales, mensajes y configuración de audio.",
     appearance: "Configuración del tema, la UI y el asistente de configuración.",
     automation: "Comandos, hooks, cron y plugins.",
@@ -1316,7 +1317,7 @@ export const es: TranslationMap = {
         stepDevUi:
           "Si usas pnpm ui:dev, reconstruye o reinicia la UI de desarrollo contra el checkout actual.",
         stepRestart:
-          "Reinicia el Gateway después de actualizar Oriro para que sirva el protocolo actual.",
+          "Reinicia el Gateway después de actualizar ORIRO para que sirva el protocolo actual.",
       },
       network: {
         title: "No se pudo conectar",
@@ -1630,6 +1631,7 @@ export const es: TranslationMap = {
       nextHeartbeat: "Próximo latido",
       wakeModeHelp: "Ahora se activa inmediatamente. Próximo latido espera el siguiente ciclo.",
       payloadKind: "¿Qué debe ejecutarse?",
+      command: "Command",
       systemEvent: "Publicar mensaje en la línea de tiempo principal",
       agentTurn: "Ejecutar tarea del asistente (aislada)",
       systemEventHelp:

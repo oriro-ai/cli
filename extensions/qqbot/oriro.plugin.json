@@ -1,7 +1,7 @@
 {
   "id": "qqbot",
   "name": "QQ Bot",
-  "description": "Oriro QQ Bot channel plugin for group and direct-message workflows.",
+  "description": "ORIRO QQ Bot channel plugin for group and direct-message workflows.",
   "activation": {
     "onStartup": false
   },

@@ -22,7 +22,7 @@ const outputPath = path.join(
   "apps",
   "macos",
   "Sources",
-  "Oriro",
+  "ORIRO",
   "HostEnvSecurityPolicy.generated.swift",
 );
 

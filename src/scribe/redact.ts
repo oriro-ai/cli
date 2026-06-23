@@ -1,0 +1,110 @@
+// ORIRO Scribe — defense-in-depth redaction. Runs BEFORE any byte reaches disk.
+// Raw secrets/PII are never written; each match becomes a stable marker so the
+// journal stays useful and auditable. This is the gate that stops the scribe from
+// becoming the exact leak we exist to prevent.
+
+export interface RedactionSummary {
+  label: string;
+  count: number;
+}
+
+export interface RedactionResult {
+  text: string;
+  redactions: RedactionSummary[];
+}
+
+interface Rule {
+  label: string;
+  re: RegExp;
+}
+
+// Specific → generic. Provider key shapes first, then identifiers, then contact PII.
+const RULES: Rule[] = [
+  {
+    label: "private-key",
+    re: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
+  },
+  { label: "anthropic-key", re: /sk-ant-[A-Za-z0-9_-]{20,}/g },
+  { label: "openrouter-key", re: /sk-or-v1-[A-Za-z0-9]{20,}/g },
+  { label: "openai-key", re: /sk-(?:proj-)?[A-Za-z0-9]{20,}/g },
+  { label: "google-key", re: /AIza[0-9A-Za-z_-]{30,}/g },
+  { label: "groq-key", re: /gsk_[A-Za-z0-9]{20,}/g },
+  { label: "github-pat", re: /github_pat_[A-Za-z0-9_]{20,}/g },
+  { label: "github-token", re: /gh[posr]_[A-Za-z0-9]{30,}/g },
+  { label: "xai-key", re: /xai-[A-Za-z0-9]{20,}/g },
+  { label: "aws-key", re: /AKIA[0-9A-Z]{16}/g },
+  { label: "jwt", re: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{6,}/g },
+  { label: "telegram-token", re: /\b\d{8,10}:[A-Za-z0-9_-]{35}\b/g },
+  { label: "email", re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g },
+  { label: "phone", re: /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}/g },
+];
+
+function marker(label: string): string {
+  return `⟨REDACTED:${label}⟩`;
+}
+
+/** Shannon entropy (bits/char) of a string. */
+function entropy(s: string): number {
+  const freq = new Map<string, number>();
+  for (const ch of s) freq.set(ch, (freq.get(ch) ?? 0) + 1);
+  let h = 0;
+  for (const n of freq.values()) {
+    const p = n / s.length;
+    h -= p * Math.log2(p);
+  }
+  return h;
+}
+
+// Conservative backstop for unknown secret shapes: only very long, high-entropy,
+// mixed-charset tokens. Excludes pure-hex (git SHAs/hashes are useful, not secret)
+// and anything already containing a redaction marker.
+function looksLikeUnknownSecret(token: string): boolean {
+  if (token.length < 40) return false;
+  if (token.includes("⟨REDACTED:")) return false;
+  if (/^[0-9a-f]+$/i.test(token)) return false; // hex hashes/SHAs — not secrets
+  if (!/[a-z]/.test(token) || !/[A-Z]/.test(token) || !/[0-9]/.test(token)) return false;
+  return entropy(token) >= 4.2;
+}
+
+/** Redact secrets/PII. Returns the safe text plus a per-label tally. */
+export function redact(input: string): RedactionResult {
+  const counts = new Map<string, number>();
+  let text = input;
+
+  for (const rule of RULES) {
+    text = text.replace(rule.re, () => {
+      counts.set(rule.label, (counts.get(rule.label) ?? 0) + 1);
+      return marker(rule.label);
+    });
+  }
+
+  // Entropy backstop over whitespace-delimited tokens.
+  text = text
+    .split(/(\s+)/)
+    .map((tok) => {
+      if (looksLikeUnknownSecret(tok)) {
+        counts.set("high-entropy", (counts.get("high-entropy") ?? 0) + 1);
+        return marker("high-entropy");
+      }
+      return tok;
+    })
+    .join("");
+
+  const redactions: RedactionSummary[] = [...counts.entries()].map(([label, count]) => ({
+    label,
+    count,
+  }));
+  return { text, redactions };
+}
+
+/** True if the text still contains a raw secret/PII pattern (post-redaction self-audit). */
+export function containsSecret(text: string): boolean {
+  for (const rule of RULES) {
+    rule.re.lastIndex = 0;
+    if (rule.re.test(text)) return true;
+  }
+  for (const tok of text.split(/\s+/)) {
+    if (looksLikeUnknownSecret(tok)) return true;
+  }
+  return false;
+}

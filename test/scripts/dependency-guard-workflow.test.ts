@@ -163,7 +163,7 @@ describe("dependency guard workflow", () => {
     const script = readFileSync("scripts/github/dependency-guard.mjs", "utf8");
 
     expect(runStep.env?.ORIRO_SECURITY_TEAM_SLUG).toBe("oriro-secops");
-    expect(runStep.env?.ORIRO_SECURITY_APPROVERS).toBe("vincentkoc,steipete,joshavant");
+    expect(runStep.env?.ORIRO_SECURITY_APPROVERS).toBe("oriro,oriro,oriro");
     expect(workflow).toContain("scripts/github/dependency-guard.mjs");
     expect(script).toContain('"dependencies-changed"');
     expect(script).not.toContain('"blocked: dependencies"');
@@ -238,15 +238,15 @@ describe("dependency guard workflow", () => {
   it("requires secops review for future workflow or guard changes", () => {
     const codeowners = readFileSync(CODEOWNERS, "utf8");
     expect(codeowners).toContain(
-      "/.github/workflows/dependency-guard.yml @oriro-ai/cli-secops",
+      "/.github/workflows/dependency-guard.yml @oriro/oriro-secops",
     );
     expect(codeowners).toContain(
-      "/test/scripts/dependency-guard-workflow.test.ts @oriro-ai/cli-secops",
+      "/test/scripts/dependency-guard-workflow.test.ts @oriro/oriro-secops",
     );
-    expect(codeowners).toContain("/scripts/github/dependency-guard.mjs @oriro-ai/cli-secops");
-    expect(codeowners).toContain("/package-lock.json @oriro-ai/cli-secops");
-    expect(codeowners).toContain("/npm-shrinkwrap.json @oriro-ai/cli-secops");
-    expect(codeowners).toContain("/extensions/*/package-lock.json @oriro-ai/cli-secops");
-    expect(codeowners).toContain("/extensions/*/npm-shrinkwrap.json @oriro-ai/cli-secops");
+    expect(codeowners).toContain("/scripts/github/dependency-guard.mjs @oriro/oriro-secops");
+    expect(codeowners).toContain("/package-lock.json @oriro/oriro-secops");
+    expect(codeowners).toContain("/npm-shrinkwrap.json @oriro/oriro-secops");
+    expect(codeowners).toContain("/extensions/*/package-lock.json @oriro/oriro-secops");
+    expect(codeowners).toContain("/extensions/*/npm-shrinkwrap.json @oriro/oriro-secops");
   });
 });

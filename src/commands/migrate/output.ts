@@ -128,8 +128,8 @@ const REASON_CODE_MESSAGES: Record<string, string> = {
   disabled: "Plugin is disabled in Codex",
   refresh_failed: "Failed to refresh the Codex plugin marketplace",
   auth_required: "Plugin requires additional authentication",
-  already_active: "Plugin is already active in Oriro",
-  installed: "Plugin is already installed in Oriro",
+  already_active: "Plugin is already active in ORIRO",
+  installed: "Plugin is already installed in ORIRO",
   plugin_install_failed: "Plugin installation failed",
   codex_subscription_required: "Plugin requires an active Codex subscription",
   "not selected for migration": "Skipped because it was not selected for migration",
@@ -170,10 +170,10 @@ function formatItemMessage(item: MigrationItem, mode: FormatMode): string | unde
       return humanizeReason(item.reason) ?? item.message;
     }
     if (item.kind === "skill" && item.action === "copy") {
-      return "Copy Codex skill into Oriro";
+      return "Copy Codex skill into ORIRO";
     }
     if (item.kind === "plugin" && item.action === "install") {
-      return "Install Codex plugin into Oriro";
+      return "Install Codex plugin into ORIRO";
     }
     return item.message ?? humanizeReason(item.reason);
   }
@@ -255,7 +255,7 @@ export function writeApplyResult(
   if (result.backupPath) {
     runtime.log(`Backup: ${result.backupPath}`);
   } else if (!opts.noBackup) {
-    runtime.log("Backup: skipped (no existing Oriro state found)");
+    runtime.log("Backup: skipped (no existing ORIRO state found)");
   }
   if (result.reportDir) {
     runtime.log(`Report: ${result.reportDir}`);

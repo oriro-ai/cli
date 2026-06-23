@@ -385,13 +385,13 @@ function assertAgentTurn() {
   const marker = process.argv[3];
   const sessionId = process.argv[4];
   const modelRef = process.argv[5];
-  const stdout = readTextFileBounded("/tmp/oriro-codex-agent.json", "Oriro agent JSON");
-  const stderr = readTextFileTail("/tmp/oriro-codex-agent.err", "Oriro agent stderr");
+  const stdout = readTextFileBounded("/tmp/oriro-codex-agent.json", "ORIRO agent JSON");
+  const stderr = readTextFileTail("/tmp/oriro-codex-agent.err", "ORIRO agent stderr");
   const response = JSON.parse(stdout);
   const text = extractAgentReplyTexts(JSON.stringify(response)).join("\n");
   if (!text.includes(marker)) {
     throw new Error(
-      `Oriro agent reply did not contain ${marker}:\nstdout=${stdout}\nstderr=${stderr}`,
+      `ORIRO agent reply did not contain ${marker}:\nstdout=${stdout}\nstderr=${stderr}`,
     );
   }
   const expectedProvider = modelRef.split("/")[0] || "codex";
@@ -416,7 +416,7 @@ function assertAgentTurn() {
     throw new Error(`unexpected session model override: ${entry.modelOverride}`);
   }
   if (typeof entry.sessionFile !== "string" || !fs.existsSync(entry.sessionFile)) {
-    throw new Error(`missing Oriro session file: ${entry.sessionFile}`);
+    throw new Error(`missing ORIRO session file: ${entry.sessionFile}`);
   }
 
   const bindingPath = `${entry.sessionFile}.codex-app-server.json`;
@@ -476,7 +476,7 @@ function assertAgentError() {
   const status = Number(process.argv[3]);
   if (!Number.isInteger(status) || status === 0) {
     throw new Error(
-      `expected Oriro agent to fail after Codex uninstall, got status ${process.argv[3]}`,
+      `expected ORIRO agent to fail after Codex uninstall, got status ${process.argv[3]}`,
     );
   }
   const stdout = fs.existsSync("/tmp/oriro-codex-agent-after-uninstall.json")

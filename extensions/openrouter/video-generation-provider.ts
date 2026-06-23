@@ -485,7 +485,7 @@ export function buildOpenRouterVideoGenerationProvider(): VideoGenerationProvide
             Authorization: `Bearer ${auth.apiKey}`,
             "Content-Type": "application/json",
             "HTTP-Referer": "https://oriro.ai",
-            "X-OpenRouter-Title": "Oriro",
+            "X-OpenRouter-Title": "ORIRO",
           },
           request: sanitizeConfiguredModelProviderRequest(
             req.cfg?.models?.providers?.openrouter?.request,

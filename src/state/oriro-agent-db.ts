@@ -21,7 +21,6 @@ import { ORIRO_AGENT_SCHEMA_SQL } from "./oriro-agent-schema.generated.js";
 import type { DB as OriroStateKyselyDatabase } from "./oriro-state-db.generated.js";
 import {
   ORIRO_SQLITE_BUSY_TIMEOUT_MS,
-  openOriroStateDatabase,
   runOriroStateWriteTransaction,
   type OriroStateDatabaseOptions,
 } from "./oriro-state-db.js";
@@ -51,15 +50,6 @@ export type OriroAgentDatabaseOptions = OriroStateDatabaseOptions & {
   agentId: string;
 };
 
-/** Shared-state registry row describing an agent database seen by this process. */
-export type OriroRegisteredAgentDatabase = {
-  agentId: string;
-  path: string;
-  schemaVersion: number;
-  lastSeenAt: number;
-  sizeBytes: number | null;
-};
-
 type OriroAgentMetadataDatabase = Pick<OriroAgentKyselyDatabase, "schema_meta">;
 type OriroAgentRegistryDatabase = Pick<OriroStateKyselyDatabase, "agent_databases">;
 
@@ -79,7 +69,7 @@ function assertSupportedAgentSchemaVersion(db: DatabaseSync, pathname: string): 
   const userVersion = readSqliteUserVersion(db);
   if (userVersion > ORIRO_AGENT_SCHEMA_VERSION) {
     throw new Error(
-      `Oriro agent database ${pathname} uses newer schema version ${userVersion}; this Oriro build supports ${ORIRO_AGENT_SCHEMA_VERSION}.`,
+      `ORIRO agent database ${pathname} uses newer schema version ${userVersion}; this ORIRO build supports ${ORIRO_AGENT_SCHEMA_VERSION}.`,
     );
   }
 }
@@ -137,15 +127,15 @@ function assertExistingSchemaOwner(
   // Agent DB files are not interchangeable; opening another role/id would corrupt ownership.
   if (existing.role !== "agent") {
     throw new Error(
-      `Oriro agent database ${pathname} has schema role ${existing.role ?? "unknown"}; expected agent.`,
+      `ORIRO agent database ${pathname} has schema role ${existing.role ?? "unknown"}; expected agent.`,
     );
   }
   if (!existing.agentId) {
-    throw new Error(`Oriro agent database ${pathname} has no agent owner.`);
+    throw new Error(`ORIRO agent database ${pathname} has no agent owner.`);
   }
   if (normalizeAgentId(existing.agentId) !== agentId) {
     throw new Error(
-      `Oriro agent database ${pathname} belongs to agent ${existing.agentId}; requested agent ${agentId}.`,
+      `ORIRO agent database ${pathname} belongs to agent ${existing.agentId}; requested agent ${agentId}.`,
     );
   }
 }
@@ -237,25 +227,6 @@ function registerAgentDatabase(params: {
   );
 }
 
-/** List agent databases recorded in the shared Oriro state registry. */
-export function listOriroRegisteredAgentDatabases(
-  options: OriroStateDatabaseOptions = {},
-): OriroRegisteredAgentDatabase[] {
-  const database = openOriroStateDatabase(options);
-  const db = getNodeSqliteKysely<OriroAgentRegistryDatabase>(database.db);
-  const rows = executeSqliteQuerySync(
-    database.db,
-    db.selectFrom("agent_databases").selectAll().orderBy("agent_id", "asc").orderBy("path", "asc"),
-  ).rows;
-  return rows.map((row) => ({
-    agentId: normalizeAgentId(row.agent_id),
-    path: row.path,
-    schemaVersion: row.schema_version,
-    lastSeenAt: row.last_seen_at,
-    sizeBytes: row.size_bytes,
-  }));
-}
-
 /** Open or return a cached per-agent database after schema and owner validation. */
 export function openOriroAgentDatabase(
   options: OriroAgentDatabaseOptions,
@@ -267,7 +238,7 @@ export function openOriroAgentDatabase(
   if (cached?.db.isOpen) {
     if (cached.agentId !== agentId) {
       throw new Error(
-        `Oriro agent database ${pathname} is already open for agent ${cached.agentId}; requested agent ${agentId}.`,
+        `ORIRO agent database ${pathname} is already open for agent ${cached.agentId}; requested agent ${agentId}.`,
       );
     }
     registerAgentDatabase({ agentId, path: pathname, env: options.env });

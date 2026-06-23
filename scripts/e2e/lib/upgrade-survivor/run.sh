@@ -89,7 +89,7 @@ validate_baseline_package_spec() {
   if [[ "$spec" =~ ^oriro@(alpha|beta|latest|[0-9]{4}\.[1-9][0-9]*\.[1-9][0-9]*(-[1-9][0-9]*|-(alpha|beta)\.[1-9][0-9]*)?)$ ]]; then
     return 0
   fi
-  echo "ORIRO_UPGRADE_SURVIVOR_BASELINE must be oriro@latest, oriro@beta, oriro@alpha, an exact Oriro release version, or a bare release version; got: $spec" >&2
+  echo "ORIRO_UPGRADE_SURVIVOR_BASELINE must be oriro@latest, oriro@beta, oriro@alpha, an exact ORIRO release version, or a bare release version; got: $spec" >&2
   return 1
 }
 

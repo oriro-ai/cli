@@ -280,11 +280,11 @@ describe("handleCommands /plugins install", () => {
       targetDir: "/tmp/orirohub-demo",
       version: "1.2.3",
       extensions: ["index.js"],
-      packageName: "@oriro-ai/clihub-demo",
+      packageName: "@oriro/orirohub-demo",
       orirohub: {
         source: "orirohub",
         orirohubUrl: "https://orirohub.ai",
-        orirohubPackage: "@oriro-ai/clihub-demo",
+        orirohubPackage: "@oriro/orirohub-demo",
         orirohubFamily: "code-plugin",
         orirohubChannel: "official",
         version: "1.2.3",
@@ -297,7 +297,7 @@ describe("handleCommands /plugins install", () => {
     await withTempHome("oriro-command-plugins-home-", async () => {
       const workspaceDir = await workspaceHarness.createWorkspace();
       const params = buildPluginsParams(
-        "/plugins install orirohub:@oriro-ai/clihub-demo@1.2.3",
+        "/plugins install orirohub:@oriro/orirohub-demo@1.2.3",
         workspaceDir,
       );
       const result = await handlePluginsCommand(params, true);
@@ -306,15 +306,15 @@ describe("handleCommands /plugins install", () => {
       }
       expect(result.reply?.text).toContain('Installed plugin "orirohub-demo"');
       expect(mockFirstObjectArg(installPluginFromOriroHubMock).spec).toBe(
-        "orirohub:@oriro-ai/clihub-demo@1.2.3",
+        "orirohub:@oriro/orirohub-demo@1.2.3",
       );
       expectPersistedInstall("orirohub-demo", {
         source: "orirohub",
-        spec: "orirohub:@oriro-ai/clihub-demo@1.2.3",
+        spec: "orirohub:@oriro/orirohub-demo@1.2.3",
         installPath: "/tmp/orirohub-demo",
         version: "1.2.3",
         integrity: "sha512-demo",
-        orirohubPackage: "@oriro-ai/clihub-demo",
+        orirohubPackage: "@oriro/orirohub-demo",
         orirohubChannel: "official",
       });
     });

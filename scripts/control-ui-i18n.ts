@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { completeSimple, type AssistantMessage, type Model } from "oriro/plugin-sdk/llm";
 import * as ts from "typescript";
 import { formatErrorMessage } from "../src/infra/errors.ts";
+import { resolveWindowsTaskkillPath } from "./lib/windows-taskkill.mjs";
 
 interface TranslationMap {
   [key: string]: string | TranslationMap;
@@ -163,7 +164,7 @@ const LOCALE_ENTRIES: readonly LocaleEntry[] = [
 ];
 
 const DEFAULT_GLOSSARY: readonly GlossaryEntry[] = [
-  { source: "Oriro", target: "Oriro" },
+  { source: "ORIRO", target: "ORIRO" },
   { source: "Gateway", target: "Gateway" },
   { source: "Control UI", target: "Control UI" },
   { source: "Skills", target: "Skills" },
@@ -1048,7 +1049,7 @@ export async function runProcess(
       if (force) {
         taskkillArgs.push("/F");
       }
-      const result = spawnSync("taskkill.exe", taskkillArgs, { stdio: "ignore" });
+      const result = spawnSync(resolveWindowsTaskkillPath(), taskkillArgs, { stdio: "ignore" });
       return result.status === 0;
     };
     const signalChild = (signal: NodeJS.Signals) => {

@@ -32,7 +32,7 @@ Inspired by Simon Willison's [Running Oriro in Docker](https://til.simonwillison
 **Install:**
 
 ```bash
-mkdir -p ~/.orirodock && curl -sL https://raw.githubusercontent.com/oriro-ai/cli/main/scripts/orirodock/orirodock-helpers.sh -o ~/.orirodock/orirodock-helpers.sh
+mkdir -p ~/.orirodock && curl -sL https://raw.githubusercontent.com/oriro/oriro/main/scripts/orirodock/orirodock-helpers.sh -o ~/.orirodock/orirodock-helpers.sh
 ```
 
 ```bash
@@ -156,7 +156,7 @@ The Docker setup uses three config files on the host. The container never stores
 | --------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
 | `<project>/.env`            | **Docker infra** — image, ports, gateway token   | `ORIRO_GATEWAY_TOKEN`, `ORIRO_IMAGE`, `ORIRO_GATEWAY_PORT`, `ORIRO_AUTH_PROFILE_SECRET_DIR` |
 | `~/.oriro/.env`          | **Secrets** — API keys and bot tokens            | `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`                                             |
-| `~/.oriro-ai/cli.json` | **Behavior config** — models, channels, policies | Model selection, WhatsApp allowlists, agent settings                                                    |
+| `~/.oriro/oriro.json` | **Behavior config** — models, channels, policies | Model selection, WhatsApp allowlists, agent settings                                                    |
 
 **Do NOT** put API keys or bot tokens in `oriro.json`. Use `~/.oriro/.env` for all secrets.
 
@@ -201,7 +201,7 @@ volumes:
 This means:
 
 - `~/.oriro/.env` is available inside the container at `/home/node/.oriro/.env` — Oriro loads it automatically as the global env fallback
-- `~/.oriro-ai/cli.json` is available at `/home/node/.oriro-ai/cli.json` — the gateway watches it and hot-reloads most changes
+- `~/.oriro/oriro.json` is available at `/home/node/.oriro/oriro.json` — the gateway watches it and hot-reloads most changes
 - `~/.oriro-auth-profile-secrets` is available at `/home/node/.config/oriro` — Oriro stores the auth-profile encryption key there
 - Downloadable external plugin packages and install records live under the mounted Oriro home
 - Bundled Oriro channel plugins, such as Discord when present in the image,

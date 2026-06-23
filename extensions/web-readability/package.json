@@ -1,8 +1,8 @@
 {
   "name": "@oriro/web-readability-plugin",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro local Readability web extraction plugin",
+  "description": "ORIRO local Readability web extraction plugin",
   "type": "module",
   "dependencies": {
     "@mozilla/readability": "0.6.0",

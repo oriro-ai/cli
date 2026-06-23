@@ -162,7 +162,7 @@ docker_e2e_prepare_package_tgz() {
 
   if [ -n "$package_tgz" ]; then
     if [ ! -f "$package_tgz" ]; then
-      echo "Oriro package tarball does not exist: $package_tgz" >&2
+      echo "ORIRO package tarball does not exist: $package_tgz" >&2
       return 1
     fi
     docker_e2e_abs_path "$package_tgz"
@@ -182,7 +182,7 @@ docker_e2e_prepare_package_tgz() {
     return "$pack_status"
   fi
   if [ -z "$package_tgz" ]; then
-    echo "missing packed Oriro tarball" >&2
+    echo "missing packed ORIRO tarball" >&2
     rm -rf "$pack_dir"
     return 1
   fi

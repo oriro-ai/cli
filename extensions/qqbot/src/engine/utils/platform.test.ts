@@ -150,7 +150,7 @@ describe("qqbot local media path remapping", () => {
   });
 });
 
-// Regression coverage for https://github.com/oriro-ai/cli/issues/83562 —
+// Regression coverage for https://github.com/oriro/oriro/issues/83562 —
 // when HOME and ORIRO_HOME diverge (Docker, multi-user hosts), QQ Bot media
 // paths must be anchored on ORIRO_HOME so files written under
 // `$ORIRO_HOME/.oriro/media/qqbot/` are accepted by the outbound

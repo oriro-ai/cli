@@ -10,4 +10,4 @@ export {
   resolveRootPathSync,
   type ResolvedRootPath,
   type RootPathAliasPolicy,
-} from "@oriro/fs-safe/advanced";
+} from "@openclaw/fs-safe/advanced";

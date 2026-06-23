@@ -72,7 +72,7 @@ export function parseTimeoutMsOrExit(timeout?: string): number | undefined | nul
   return seconds * 1000;
 }
 
-const ORIRO_REPO_URL = "https://github.com/oriro-ai/cli.git";
+const ORIRO_REPO_URL = "https://github.com/oriro/oriro.git";
 const MAX_LOG_CHARS = 8000;
 
 export const DEFAULT_PACKAGE_NAME = "oriro";

@@ -7,7 +7,7 @@ const exporter = createDiagnosticsPrometheusExporter();
 export default definePluginEntry({
   id: "diagnostics-prometheus",
   name: "Diagnostics Prometheus",
-  description: "Expose Oriro diagnostics metrics in Prometheus text format",
+  description: "Expose ORIRO diagnostics metrics in Prometheus text format",
   register(api) {
     api.registerService(exporter.service);
     api.registerHttpRoute({

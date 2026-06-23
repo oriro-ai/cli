@@ -176,9 +176,9 @@ function isTrustedSourceLinkedOfficialPackage(pkg: NonNullable<OriroHubPackageDe
     pkg.channel === "official" &&
     pkg.isOfficial &&
     pkg.verification?.tier === "source-linked" &&
-    (sourceRepo === "oriro-ai/cli" ||
-      sourceRepo === "github.com/oriro-ai/cli" ||
-      sourceRepo === "https://github.com/oriro-ai/cli")
+    (sourceRepo === "oriro/oriro" ||
+      sourceRepo === "github.com/oriro/oriro" ||
+      sourceRepo === "https://github.com/oriro/oriro")
   );
 }
 
@@ -986,7 +986,7 @@ function validateOriroHubPluginPackage(params: {
     !satisfiesPluginApiRange(runtimeVersion, compatibility.pluginApiRange)
   ) {
     return buildOriroHubInstallFailure(
-      `Plugin "${pkg.name}" requires plugin API ${compatibility.pluginApiRange}, but this Oriro runtime exposes ${runtimeVersion}.`,
+      `Plugin "${pkg.name}" requires plugin API ${compatibility.pluginApiRange}, but this ORIRO runtime exposes ${runtimeVersion}.`,
       ORIROHUB_INSTALL_ERROR_CODE.INCOMPATIBLE_PLUGIN_API,
     );
   }
@@ -996,7 +996,7 @@ function validateOriroHubPluginPackage(params: {
     !satisfiesGatewayMinimum(runtimeVersion, compatibility.minGatewayVersion)
   ) {
     return buildOriroHubInstallFailure(
-      `Plugin "${pkg.name}" requires Oriro >=${compatibility.minGatewayVersion}, but this host is ${runtimeVersion}.`,
+      `Plugin "${pkg.name}" requires ORIRO >=${compatibility.minGatewayVersion}, but this host is ${runtimeVersion}.`,
       ORIROHUB_INSTALL_ERROR_CODE.INCOMPATIBLE_GATEWAY,
     );
   }

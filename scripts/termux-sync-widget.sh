@@ -1,13 +1,13 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # Oriro OAuth Sync Widget
-# Syncs Claude Code tokens to Oriro on l36 server
+# Syncs Claude Code tokens to Oriro over SSH
 # Place in ~/.shortcuts/ on phone for Termux:Widget
 
-termux-toast "Syncing Oriro auth..."
+termux-toast "Syncing ORIRO auth..."
 
-# Run sync on l36 server
-SERVER="${ORIRO_SERVER:-l36}"
-RESULT=$(ssh "$SERVER" '/home/admin/oriro/scripts/sync-claude-code-auth.sh' 2>&1)
+# Run sync on the configured Oriro host.
+SERVER="${ORIRO_SERVER:-oriro-host}"
+RESULT=$(ssh "$SERVER" '$HOME/oriro/scripts/sync-claude-code-auth.sh' 2>&1)
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 0 ]; then
@@ -15,7 +15,7 @@ if [ $EXIT_CODE -eq 0 ]; then
     EXPIRY=$(echo "$RESULT" | grep "Token expires:" | cut -d: -f2-)
 
     termux-vibrate -d 100
-    termux-toast "Oriro synced! Expires:${EXPIRY}"
+    termux-toast "ORIRO synced! Expires:${EXPIRY}"
 
     # Optional: restart oriro service
     ssh "$SERVER" 'systemctl --user restart oriro' 2>/dev/null

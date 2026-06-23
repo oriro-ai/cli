@@ -642,15 +642,15 @@ describe("loadSettings default gateway URL derivation", () => {
       pathname: "/",
     });
 
-    saveLocalUserIdentity({ name: "Buns", avatar: "ORIRO" });
+    saveLocalUserIdentity({ name: "Buns", avatar: "🦞" });
 
     expect(loadLocalUserIdentity()).toEqual({
       name: "Buns",
-      avatar: "ORIRO",
+      avatar: "🦞",
     });
     expect(JSON.parse(localStorage.getItem("oriro.control.user.v1") ?? "{}")).toEqual({
       name: "Buns",
-      avatar: "ORIRO",
+      avatar: "🦞",
     });
   });
 

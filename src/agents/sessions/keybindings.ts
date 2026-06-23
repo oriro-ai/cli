@@ -22,7 +22,6 @@ export interface AppKeybindings {
   "app.exit": true;
   "app.suspend": true;
   "app.thinking.cycle": true;
-  "app.permission.cycle": true;
   "app.model.cycleForward": true;
   "app.model.cycleBackward": true;
   "app.model.select": true;
@@ -79,12 +78,8 @@ export const KEYBINDINGS = {
     description: "Suspend to background",
   },
   "app.thinking.cycle": {
-    defaultKeys: "alt+shift+t",
-    description: "Cycle thinking level",
-  },
-  "app.permission.cycle": {
     defaultKeys: "shift+tab",
-    description: "Cycle permission posture (Manual / Accept-Edits / Auto / Plan)",
+    description: "Cycle thinking level",
   },
   "app.model.cycleForward": {
     defaultKeys: "ctrl+p",

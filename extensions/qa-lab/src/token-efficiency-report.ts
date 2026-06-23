@@ -181,6 +181,26 @@ function liveEvidenceFailures(row: TokenEfficiencyRow): string[] {
   return failures;
 }
 
+function liveUsageShapeFailures(
+  scenarioId: string,
+  runtime: RuntimeId,
+  usage: RuntimeParityCell["usage"],
+): string[] {
+  const failures: string[] = [];
+  for (const key of ["inputTokens", "outputTokens", "totalTokens"] as const) {
+    const value: unknown = usage[key];
+    if (
+      typeof value !== "number" ||
+      !Number.isFinite(value) ||
+      !Number.isInteger(value) ||
+      value < 0
+    ) {
+      failures.push(`${scenarioId} ${runtime} live usage ${key} must be a non-negative integer`);
+    }
+  }
+  return failures;
+}
+
 export function buildTokenEfficiencyReport(
   params: BuildTokenEfficiencyReportParams,
 ): TokenEfficiencyReport {
@@ -218,8 +238,16 @@ export function buildTokenEfficiencyReport(
     }),
   );
   const aggregate = buildAggregate(rows);
-  const failures = rows.flatMap((row) => {
-    const rowFailures = liveUsage ? liveEvidenceFailures(row) : [];
+  const failures = rows.flatMap((row, index) => {
+    const result = parityResults[index];
+    const rowFailures =
+      liveUsage && result
+        ? [
+            ...liveUsageShapeFailures(row.scenarioId, "oriro", result.cells.oriro.usage),
+            ...liveUsageShapeFailures(row.scenarioId, "codex", result.cells.codex.usage),
+            ...liveEvidenceFailures(row),
+          ]
+        : [];
     if (row.flagged) {
       rowFailures.push(
         `${row.scenarioId} token delta=${formatPercent(row.deltaPercent)} exceeds ${thresholdPercent.toFixed(1)}% Codex increase threshold`,
@@ -250,7 +278,7 @@ export function buildTokenEfficiencyReport(
 
 export function renderTokenEfficiencyMarkdownReport(report: TokenEfficiencyReport): string {
   const lines = [
-    `# Oriro Runtime Token Efficiency - ${report.runtimePair[0]} vs ${report.runtimePair[1]}`,
+    `# ORIRO Runtime Token Efficiency - ${report.runtimePair[0]} vs ${report.runtimePair[1]}`,
     "",
     `- Generated at: ${report.generatedAt}`,
     ...(report.providerMode ? [`- Provider mode: ${report.providerMode}`] : []),
@@ -279,7 +307,7 @@ export function renderTokenEfficiencyMarkdownReport(report: TokenEfficiencyRepor
     lines.push(
       "## Scenario Efficiency",
       "",
-      "| Scenario | Source | Oriro in/out/total/tools | Codex in/out/total/tools | Token delta | Classification | Flagged | Tools used |",
+      "| Scenario | Source | ORIRO in/out/total/tools | Codex in/out/total/tools | Token delta | Classification | Flagged | Tools used |",
       "| --- | --- | ---: | ---: | ---: | --- | --- | --- |",
     );
     for (const row of report.rows) {

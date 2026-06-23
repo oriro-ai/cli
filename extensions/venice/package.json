@@ -1,8 +1,8 @@
 {
   "name": "@oriro/venice-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Venice provider plugin",
+  "description": "ORIRO Venice provider plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

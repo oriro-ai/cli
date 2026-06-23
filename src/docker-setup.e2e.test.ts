@@ -149,6 +149,10 @@ async function createDockerSetupSandbox(): Promise<DockerSetupSandbox> {
     join(repoRoot, "scripts", "lib", "docker-e2e-container.sh"),
     join(rootDir, "scripts", "lib", "docker-e2e-container.sh"),
   );
+  await copyFile(
+    join(repoRoot, "scripts", "lib", "host-timeout.sh"),
+    join(rootDir, "scripts", "lib", "host-timeout.sh"),
+  );
   await chmod(scriptPath, 0o755);
   await writeFile(dockerfilePath, "FROM scratch\n");
   await writeFile(
@@ -166,7 +170,7 @@ const prestartContainerEnvFlags = [
   "-e HOME=/home/node",
   "-e ORIRO_HOME=/home/node",
   "-e ORIRO_STATE_DIR=/home/node/.oriro",
-  "-e ORIRO_CONFIG_PATH=/home/node/.oriro-ai/cli.json",
+  "-e ORIRO_CONFIG_PATH=/home/node/.oriro/oriro.json",
   "-e ORIRO_CONFIG_DIR=/home/node/.oriro",
   "-e ORIRO_WORKSPACE_DIR=/home/node/.oriro/workspace",
 ].join(" ");
@@ -517,7 +521,7 @@ describe("scripts/docker/setup.sh", () => {
     const result = runDockerSetup(activeSandbox, {
       ORIRO_HOME: "/mnt/c/Users/Trevor",
       ORIRO_STATE_DIR: "/mnt/c/Users/Trevor/.oriro",
-      ORIRO_CONFIG_PATH: "/mnt/c/Users/Trevor/.oriro-ai/cli.json",
+      ORIRO_CONFIG_PATH: "/mnt/c/Users/Trevor/.oriro/oriro.json",
       ORIRO_SKIP_ONBOARDING: "1",
     });
     expect(result.status).toBe(0);
@@ -572,7 +576,7 @@ describe("scripts/docker/setup.sh", () => {
     const result = runDockerSetup(
       activeSandbox,
       {
-        ORIRO_IMAGE: "ghcr.io/oriro-ai/cli:latest",
+        ORIRO_IMAGE: "ghcr.io/oriro/oriro:latest",
         ORIRO_SKIP_ONBOARDING: "1",
       },
       ["--offline"],
@@ -580,12 +584,12 @@ describe("scripts/docker/setup.sh", () => {
 
     expect(result.status).toBe(0);
     expect(result.stdout).toContain(
-      "Using preloaded Docker image: ghcr.io/oriro-ai/cli:latest",
+      "Using preloaded Docker image: ghcr.io/oriro/oriro:latest",
     );
 
     const lines = await readDockerLogLines(activeSandbox);
     const log = lines.join("\n");
-    expect(log).toContain("image inspect ghcr.io/oriro-ai/cli:latest");
+    expect(log).toContain("image inspect ghcr.io/oriro/oriro:latest");
     expect(log).not.toMatch(/^build /m);
     expect(log).not.toMatch(/^pull /m);
     expect(log).toContain("config set --batch-json");
@@ -599,19 +603,19 @@ describe("scripts/docker/setup.sh", () => {
     const result = runDockerSetup(
       activeSandbox,
       {
-        ORIRO_IMAGE: "ghcr.io/oriro-ai/cli:offline",
-        DOCKER_STUB_MISSING_IMAGES: "ghcr.io/oriro-ai/cli:offline",
+        ORIRO_IMAGE: "ghcr.io/oriro/oriro:offline",
+        DOCKER_STUB_MISSING_IMAGES: "ghcr.io/oriro/oriro:offline",
       },
       ["--offline"],
     );
 
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain(
-      "Offline Docker setup requires preloaded image ghcr.io/oriro-ai/cli:offline",
+      "Offline Docker setup requires preloaded image ghcr.io/oriro/oriro:offline",
     );
 
     const log = await readDockerLog(activeSandbox);
-    expect(log).toContain("image inspect ghcr.io/oriro-ai/cli:offline");
+    expect(log).toContain("image inspect ghcr.io/oriro/oriro:offline");
     expect(log).not.toMatch(/^build /m);
     expect(log).not.toMatch(/^pull /m);
     expect(log).not.toContain("up -d oriro-gateway");

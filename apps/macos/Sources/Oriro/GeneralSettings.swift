@@ -68,7 +68,7 @@ struct GeneralSettings: View {
                 title: "General",
                 subtitle: "Everyday Oriro app behavior.")
 
-            self.oriroStatusPanel
+            self.openOriroStatusPanel
 
             SettingsCardGroup("App") {
                 SettingsCardToggleRow(
@@ -131,7 +131,7 @@ struct GeneralSettings: View {
         }
     }
 
-    private var oriroStatusPanel: some View {
+    private var openOriroStatusPanel: some View {
         HStack(alignment: .center, spacing: 14) {
             ZStack {
                 Circle()

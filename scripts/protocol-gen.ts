@@ -16,7 +16,7 @@ async function writeJsonSchema() {
   const rootSchema = {
     $schema: "http://json-schema.org/draft-07/schema#",
     $id: "https://oriro.ai/protocol.schema.json",
-    title: "Oriro Gateway Protocol",
+    title: "ORIRO Gateway Protocol",
     description: "Handshake, request/response, and event frames for the Gateway WebSocket.",
     oneOf: [
       { $ref: "#/definitions/RequestFrame" },

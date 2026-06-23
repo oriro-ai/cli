@@ -216,7 +216,7 @@ describe("json file helpers", () => {
     /**
      * Helper: spy on fsPromises.lstat for our target file path.
      * Returns a real Stats object with a modified ino to trigger
-     * verifyStableReadTarget in @oriro/fs-safe.
+     * verifyStableReadTarget in @openclaw/fs-safe.
      * Object.assign + Object.create preserves the Stats prototype.
      */
     function setupLstatSpy(targetPath: string, targetCallCount: number): () => number {

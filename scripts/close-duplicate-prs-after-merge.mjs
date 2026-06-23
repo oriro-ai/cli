@@ -40,7 +40,7 @@ export function parseArgs(argv, env = process.env) {
     duplicates: [],
     labels: DEFAULT_LABELS,
     landedPr: undefined,
-    repo: env.GITHUB_REPOSITORY || "oriro-ai/cli",
+    repo: env.GITHUB_REPOSITORY || "oriro/oriro",
   };
 
   for (let index = 0; index < argv.length; index += 1) {

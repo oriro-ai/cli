@@ -4,7 +4,7 @@ import { defineBundledChannelEntry } from "oriro/plugin-sdk/channel-entry-contra
 export default defineBundledChannelEntry({
   id: "synology-chat",
   name: "Synology Chat",
-  description: "Native Synology Chat channel plugin for Oriro",
+  description: "Native Synology Chat channel plugin for ORIRO",
   importMetaUrl: import.meta.url,
   plugin: {
     specifier: "./channel-plugin-api.js",

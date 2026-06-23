@@ -58,7 +58,7 @@ export function createPolicyDataAuthChecks(deps: PolicyDoctorCheckDeps): readonl
     id: CHECK_IDS.policySecretsUnmanagedProvider,
     kind: "plugin",
     description:
-      "Oriro config SecretRefs use configured secret providers when policy requires managed providers.",
+      "ORIRO config SecretRefs use configured secret providers when policy requires managed providers.",
     source: "policy",
     async detect(ctx) {
       return findingsForCheck(await evaluatePolicy(ctx), CHECK_IDS.policySecretsUnmanagedProvider);
@@ -68,7 +68,7 @@ export function createPolicyDataAuthChecks(deps: PolicyDoctorCheckDeps): readonl
     id: CHECK_IDS.policySecretsDeniedProviderSource,
     kind: "plugin",
     description:
-      "Oriro config secret providers and SecretRefs do not use sources denied by policy.",
+      "ORIRO config secret providers and SecretRefs do not use sources denied by policy.",
     source: "policy",
     async detect(ctx) {
       return findingsForCheck(
@@ -90,7 +90,7 @@ export function createPolicyDataAuthChecks(deps: PolicyDoctorCheckDeps): readonl
   const policyAuthProfileInvalidMetadataCheck: HealthCheck = {
     id: CHECK_IDS.policyAuthProfileInvalidMetadata,
     kind: "plugin",
-    description: "Oriro config auth profiles declare required provider and mode metadata.",
+    description: "ORIRO config auth profiles declare required provider and mode metadata.",
     source: "policy",
     async detect(ctx) {
       return findingsForCheck(
@@ -102,7 +102,7 @@ export function createPolicyDataAuthChecks(deps: PolicyDoctorCheckDeps): readonl
   const policyAuthProfileUnapprovedModeCheck: HealthCheck = {
     id: CHECK_IDS.policyAuthProfileUnapprovedMode,
     kind: "plugin",
-    description: "Oriro config auth profile modes stay within the policy allowlist.",
+    description: "ORIRO config auth profile modes stay within the policy allowlist.",
     source: "policy",
     async detect(ctx) {
       return findingsForCheck(await evaluatePolicy(ctx), CHECK_IDS.policyAuthProfileUnapprovedMode);

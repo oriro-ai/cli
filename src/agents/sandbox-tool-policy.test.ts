@@ -61,19 +61,19 @@ describe("pickSandboxToolPolicy", () => {
     const cfg: OriroConfig = {
       tools: {
         profile: "coding",
-        alsoAllow: ["oriro"],
+        alsoAllow: ["lobster"],
       },
     };
 
     const resolved = resolveEffectiveToolPolicy({ config: cfg, agentId: "main" });
-    expect(resolved.globalPolicy).toEqual({ allow: ["*", "oriro"], deny: undefined });
-    expect(resolved.profileAlsoAllow).toEqual(["oriro"]);
+    expect(resolved.globalPolicy).toEqual({ allow: ["*", "lobster"], deny: undefined });
+    expect(resolved.profileAlsoAllow).toEqual(["lobster"]);
   });
 
   it("does not block fs root expansion when only global alsoAllow is configured", () => {
     const cfg: OriroConfig = {
       tools: {
-        alsoAllow: ["oriro"],
+        alsoAllow: ["lobster"],
       },
     };
 

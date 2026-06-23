@@ -10,7 +10,7 @@ function pathFor(platform: NodeJS.Platform) {
 // codex-home, a systemd service home, or a sudo'd shell). Without GH_CONFIG_DIR
 // the gh CLI looks at $XDG_CONFIG_HOME/gh or $HOME/.config/gh and reports
 // "not logged in", even though the operator HOME has a valid hosts.yml.
-// See https://github.com/oriro-ai/cli/issues/78063.
+// See https://github.com/oriro/oriro/issues/78063.
 
 type GhConfigDiscoveryEnv = {
   HOME?: string;
@@ -162,7 +162,7 @@ export function detectGhConfigDirMismatch(input: GhConfigDiscoveryInput): GhConf
 
 export function formatGhConfigDirMismatchHint(mismatch: GhConfigDirMismatch): string[] {
   const lines: string[] = [
-    "GitHub CLI auth was found at a different HOME than the one this Oriro process uses.",
+    "GitHub CLI auth was found at a different HOME than the one this ORIRO process uses.",
     `  Process gh config dir: ${mismatch.effectiveConfigDir}`,
     `  Authenticated config:  ${mismatch.alternateConfigDir} (contains ${HOSTS_FILE})`,
   ];
@@ -170,7 +170,7 @@ export function formatGhConfigDirMismatchHint(mismatch: GhConfigDirMismatch): st
     lines.push(`  Authenticated HOME:    ${mismatch.alternateHomeHint}`);
   }
   lines.push(
-    `  Fix: set GH_CONFIG_DIR=${mismatch.suggestedEnvValue} on the Oriro service environment, then restart the gateway.`,
+    `  Fix: set GH_CONFIG_DIR=${mismatch.suggestedEnvValue} on the ORIRO service environment, then restart the gateway.`,
   );
   return lines;
 }

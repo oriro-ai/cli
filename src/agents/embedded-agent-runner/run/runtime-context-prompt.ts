@@ -12,7 +12,7 @@ import {
 } from "../../internal-runtime-context.js";
 import type { CurrentInboundPromptContext } from "./params.js";
 
-const ORIRO_RUNTIME_EVENT_USER_PROMPT = "Continue the Oriro runtime event.";
+const ORIRO_RUNTIME_EVENT_USER_PROMPT = "Continue the ORIRO runtime event.";
 
 type RuntimeContextPromptParts = {
   prompt: string;

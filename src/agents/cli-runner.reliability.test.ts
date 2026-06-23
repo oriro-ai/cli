@@ -157,7 +157,7 @@ function buildPreparedContext(params?: {
   cliSessionId?: string;
   runId?: string;
   lane?: string;
-  oriroHistoryPrompt?: string;
+  openOriroHistoryPrompt?: string;
   provider?: string;
   model?: string;
   executionMode?: PreparedCliRunContext["params"]["executionMode"];
@@ -216,8 +216,8 @@ function buildPreparedContext(params?: {
     systemPrompt: "You are a helpful assistant.",
     systemPromptReport: {} as PreparedCliRunContext["systemPromptReport"],
     bootstrapPromptWarningLines: [],
-    ...(params?.oriroHistoryPrompt
-      ? { oriroHistoryPrompt: params.oriroHistoryPrompt }
+    ...(params?.openOriroHistoryPrompt
+      ? { openOriroHistoryPrompt: params.openOriroHistoryPrompt }
       : {}),
     authEpochVersion: 2,
   };
@@ -582,7 +582,7 @@ describe("runCliAgent reliability", () => {
       cliSessionId: "stale-cli-session",
       provider: "claude-cli",
       model: "opus",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
 
     const result = await runPreparedCliAgent(context);
@@ -643,7 +643,7 @@ describe("runCliAgent reliability", () => {
       cliSessionId: "stale-cli-session",
       provider: "claude-cli",
       model: "opus",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
     context.mcpDeliveryCapture = true;
 
@@ -1137,7 +1137,7 @@ describe("runCliAgent reliability", () => {
       cliSessionId: "stale-cli-session",
       provider: "claude-cli",
       model: "opus",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
     context.mcpDeliveryCapture = true;
 
@@ -1184,7 +1184,7 @@ describe("runCliAgent reliability", () => {
       cliSessionId: "stale-cli-session",
       provider: "claude-cli",
       model: "opus",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
     context.mcpDeliveryCapture = true;
 
@@ -1237,7 +1237,7 @@ describe("runCliAgent reliability", () => {
       cliSessionId: "stale-cli-session",
       provider: "claude-cli",
       model: "opus",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
     context.mcpDeliveryCapture = true;
 
@@ -1297,7 +1297,7 @@ describe("runCliAgent reliability", () => {
       cliSessionId: "stale-cli-session",
       provider: "claude-cli",
       model: "opus",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
     context.mcpDeliveryCapture = true;
 
@@ -1331,7 +1331,7 @@ describe("runCliAgent reliability", () => {
       cliSessionId: "stale-cli-session",
       provider: "claude-cli",
       model: "opus",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
 
     await expect(
@@ -1369,7 +1369,7 @@ describe("runCliAgent reliability", () => {
       cliSessionId: "stale-cli-session",
       provider: "claude-cli",
       model: "opus",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
     const expiredBudgetContext = {
       ...context,
@@ -1412,7 +1412,7 @@ describe("runCliAgent reliability", () => {
       cliSessionId: "stale-cli-session",
       provider: "claude-cli",
       model: "opus",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
 
     await expect(
@@ -1451,7 +1451,7 @@ describe("runCliAgent reliability", () => {
       cliSessionId: "stale-cli-session",
       provider: "claude-cli",
       model: "opus",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
 
     await expect(
@@ -1538,7 +1538,7 @@ describe("runCliAgent reliability", () => {
           cliSessionId: "stale-cli-session",
           provider: "claude-cli",
           model: "opus",
-          oriroHistoryPrompt: CLI_RESEED_PROMPT,
+          openOriroHistoryPrompt: CLI_RESEED_PROMPT,
         });
         const result = await runPreparedCliAgent({
           ...context,
@@ -1620,7 +1620,7 @@ describe("runCliAgent reliability", () => {
       sessionKey: "agent:main:subagent:retry",
       runId: "run-retry-failure",
       cliSessionId: "thread-123",
-      oriroHistoryPrompt: CLI_RESEED_PROMPT,
+      openOriroHistoryPrompt: CLI_RESEED_PROMPT,
     });
     const clearBeforeRetry = vi.fn(async () => true);
 
@@ -1748,7 +1748,7 @@ describe("runCliAgent reliability", () => {
 
     const result = await runPreparedCliAgent(
       buildPreparedContext({
-        oriroHistoryPrompt:
+        openOriroHistoryPrompt:
           "Continue this conversation using the Oriro transcript below.\n\nUser: earlier ask\n\nAssistant: earlier answer\n\n<next_user_message>\nhi\n</next_user_message>",
       }),
     );
@@ -1774,7 +1774,7 @@ describe("runCliAgent reliability", () => {
     const result = await runPreparedCliAgent(
       buildPreparedContext({
         cliSessionId: "cli-session",
-        oriroHistoryPrompt: "User: earlier ask",
+        openOriroHistoryPrompt: "User: earlier ask",
       }),
     );
 
@@ -2985,7 +2985,7 @@ describe("runCliAgent reliability", () => {
       sessionKey: "agent:main:main",
       runId: "run-retry-success",
       cliSessionId: "thread-123",
-      oriroHistoryPrompt:
+      openOriroHistoryPrompt:
         "Continue this conversation using the Oriro transcript below.\n\nUser: recovered history\n\n<next_user_message>\nhi\n</next_user_message>",
     });
     const clearBeforeRetry = vi.fn(async () => true);
@@ -3118,9 +3118,9 @@ describe("runCliAgent reliability", () => {
       });
 
       expect(context.params.prompt).toBe("hook context\n\ncurrent ask");
-      expect(context.oriroHistoryPrompt).toContain("Compaction summary: compacted earlier ask");
-      expect(context.oriroHistoryPrompt).toContain("hook context");
-      expect(context.oriroHistoryPrompt).toContain("current ask");
+      expect(context.openOriroHistoryPrompt).toContain("Compaction summary: compacted earlier ask");
+      expect(context.openOriroHistoryPrompt).toContain("hook context");
+      expect(context.openOriroHistoryPrompt).toContain("current ask");
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

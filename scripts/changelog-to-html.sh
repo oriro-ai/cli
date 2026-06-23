@@ -57,13 +57,13 @@ markdown_to_html() {
 
 version_content=$(extract_version_section "$VERSION" "$CHANGELOG_FILE")
 if [[ -z "$version_content" ]]; then
-  echo "<h2>Oriro $VERSION</h2>"
-  echo "<p>Latest Oriro update.</p>"
+  echo "<h2>ORIRO $VERSION</h2>"
+  echo "<p>Latest ORIRO update.</p>"
   echo "<p><a href=\"https://github.com/oriro/oriro/blob/main/CHANGELOG.md\">View full changelog</a></p>"
   exit 0
 fi
 
-echo "<h2>Oriro $VERSION</h2>"
+echo "<h2>ORIRO $VERSION</h2>"
 
 in_list=false
 while IFS= read -r line; do

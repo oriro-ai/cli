@@ -20,10 +20,10 @@ export function resolveIsNixMode(env: NodeJS.ProcessEnv = process.env): boolean 
 export let isNixMode = resolveIsNixMode();
 
 // Support the remaining legacy pre-rebrand state dir.
-const LEGACY_STATE_DIRNAMES = [".clawdbot"] as const;
+const LEGACY_STATE_DIRNAMES = [".oriro"] as const;
 const NEW_STATE_DIRNAME = ".oriro";
 const CONFIG_FILENAME = "oriro.json";
-const LEGACY_CONFIG_FILENAMES = ["clawdbot.json"] as const;
+const LEGACY_CONFIG_FILENAMES = ["oriro.json"] as const;
 
 function resolveDefaultHomeDir(): string {
   return resolveRequiredHomeDir(process.env, os.homedir);
@@ -147,7 +147,7 @@ export let STATE_DIR = resolveStateDir();
 /**
  * Config file path (JSON or JSON5).
  * Can be overridden via ORIRO_CONFIG_PATH.
- * Default: ~/.oriro-ai/cli.json (or $ORIRO_STATE_DIR/oriro.json)
+ * Default: ~/.oriro/oriro.json (or $ORIRO_STATE_DIR/oriro.json)
  */
 export function resolveCanonicalConfigPath(
   env: NodeJS.ProcessEnv = process.env,

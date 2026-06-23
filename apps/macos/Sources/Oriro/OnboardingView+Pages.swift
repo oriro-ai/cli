@@ -584,7 +584,7 @@ extension OnboardingView {
                 Spacer(minLength: 0)
                 SelectionStateIndicator(selected: selected)
             }
-            .oriroSelectableRowChrome(selected: selected)
+            .openOriroSelectableRowChrome(selected: selected)
         }
         .buttonStyle(.plain)
     }

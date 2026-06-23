@@ -95,6 +95,7 @@ type ProcessGatewayAllowlistParams = {
   /** Session-store template, so the direct/denied followup can detect a rebind. */
   sessionStore?: string;
   bashElevated?: ExecElevatedDefaults;
+  approvalReviewerDeviceId?: string;
   turnSourceChannel?: string;
   turnSourceTo?: string;
   turnSourceAccountId?: string;
@@ -283,7 +284,7 @@ function formatDiagnosticsExportSuccess(aggregated: string): string {
       lines.push(`Generated at: ${manifest.generatedAt}`);
     }
     if (typeof manifest.oriroVersion === "string") {
-      lines.push(`Oriro version: ${manifest.oriroVersion}`);
+      lines.push(`ORIRO version: ${manifest.oriroVersion}`);
     }
     const contents = formatDiagnosticsContents(manifest);
     if (contents.length > 0) {
@@ -695,6 +696,9 @@ export async function processGatewayAllowlist(
           agentId: params.agentId,
           sessionKey: params.sessionKey,
         }),
+        approvalReviewerDeviceIds: params.approvalReviewerDeviceId
+          ? [params.approvalReviewerDeviceId]
+          : undefined,
         resolvedPath: resolveApprovalAuditTrustPath(
           allowlistEval.segments[0]?.resolution ?? null,
           params.workdir,

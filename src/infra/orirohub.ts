@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { readResponseWithLimit } from "@oriro/media-core/read-response-with-limit";
+import { resolveTimerTimeoutMs } from "@oriro/normalization-core/number-coercion";
 import {
   normalizeLowercaseStringOrEmpty,
   normalizeOptionalString,
@@ -59,7 +60,6 @@ export type OriroHubPackageArtifactSummary = {
   tarballUrl?: string | null;
   legacyDownloadUrl?: string | null;
 };
-export type OriroHubArtifactKind = "legacy-zip" | "npm-pack";
 export type OriroHubArtifactScanState =
   | "pending"
   | "clean"
@@ -383,6 +383,10 @@ type OriroHubConfigLike = {
   user?: OriroHubConfigLike | null;
 };
 
+function resolveOriroHubRequestTimeoutMs(timeoutMs: unknown): number {
+  return resolveTimerTimeoutMs(timeoutMs, DEFAULT_FETCH_TIMEOUT_MS);
+}
+
 export class OriroHubRequestError extends Error {
   readonly status: number;
   readonly requestPath: string;
@@ -638,15 +642,14 @@ async function orirohubRequest(
   const token = params.skipAuth
     ? undefined
     : normalizeOptionalString(params.token) || (await resolveOriroHubAuthToken());
+  const timeoutMs = resolveOriroHubRequestTimeoutMs(params.timeoutMs);
   const controller = new AbortController();
   const timeout = setTimeout(
     () =>
       controller.abort(
-        new Error(
-          `OriroHub request timed out after ${params.timeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS}ms`,
-        ),
+        new Error(`OriroHub request timed out after ${timeoutMs}ms`),
       ),
-    params.timeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS,
+    timeoutMs,
   );
   try {
     const headers = {
@@ -730,7 +733,7 @@ async function readOriroHubResponseBytes(params: {
   timeoutMs?: number;
   resourceLabel: string;
 }): Promise<Uint8Array> {
-  const timeoutMs = params.timeoutMs ?? DEFAULT_FETCH_TIMEOUT_MS;
+  const timeoutMs = resolveOriroHubRequestTimeoutMs(params.timeoutMs);
   return await readResponseWithLimit(params.response, params.maxBytes ?? Number.MAX_SAFE_INTEGER, {
     chunkTimeoutMs: timeoutMs,
     onOverflow: ({ size, maxBytes }) =>

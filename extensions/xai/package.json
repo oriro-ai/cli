@@ -1,8 +1,8 @@
 {
   "name": "@oriro/xai-plugin",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro xAI plugin",
+  "description": "ORIRO xAI plugin",
   "type": "module",
   "dependencies": {
     "typebox": "1.1.39"

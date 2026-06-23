@@ -2158,19 +2158,19 @@ describe("plugin sdk alias helpers", () => {
     expect(
       isBundledPluginExtensionPath({
         modulePath: "/repo/extensions/demo/api.js",
-        oriroPackageRoot: "/repo",
+        openOriroPackageRoot: "/repo",
       }),
     ).toBe(true);
     expect(
       isBundledPluginExtensionPath({
         modulePath: "/repo/dist/extensions/demo/api.js",
-        oriroPackageRoot: "/repo",
+        openOriroPackageRoot: "/repo",
       }),
     ).toBe(true);
     expect(
       isBundledPluginExtensionPath({
         modulePath: "/repo/vendor/demo/api.js",
-        oriroPackageRoot: "/repo",
+        openOriroPackageRoot: "/repo",
       }),
     ).toBe(false);
   });

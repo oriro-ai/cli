@@ -35,7 +35,7 @@ describeLive("xai x_search live", () => {
     let result: Awaited<ReturnType<typeof tool.execute>>;
     try {
       result = await tool.execute("x-search:live", {
-        query: "Oriro from:steipete",
+        query: "Oriro from:oriro",
         to_date: "2026-03-28",
       });
     } catch (error) {

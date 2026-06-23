@@ -9,6 +9,7 @@ import type { AgentMessage } from "../../runtime/index.js";
 import { stripToolResultDetails } from "../../session-transcript-repair.js";
 import { normalizeAssistantReplayContent } from "../replay-history.js";
 import { markTranscriptPromptText } from "../tool-result-context-guard.js";
+import { isRunnerToolCallBlockType } from "./attempt.tool-call-block-type.js";
 import type { RuntimeContextCustomMessage } from "./runtime-context-prompt.js";
 
 type LlmBoundaryOptions = {
@@ -342,7 +343,7 @@ export function installModelPromptTransform(params: {
  * Turns with attachments (image / document blocks) must remain as arrays and
  * are NOT collapsed.
  *
- * @see https://github.com/oriro-ai/cli/issues/3658
+ * @see https://github.com/oriro/oriro/issues/3658
  */
 function canonicalizeTextOnlyUserContent(content: unknown): unknown {
   if (!Array.isArray(content)) {
@@ -633,6 +634,6 @@ function isToolCallAssistantMessage(message: AgentMessage): boolean {
       return false;
     }
     const type = (block as { type?: unknown }).type;
-    return type === "toolCall" || type === "toolUse" || type === "functionCall";
+    return isRunnerToolCallBlockType(type);
   });
 }

@@ -46,7 +46,7 @@ export {
   wrapToolParamValidation,
 } from "./agent-tools.params.js";
 
-// NOTE(steipete): Upstream read now does file-magic MIME detection; we keep the wrapper
+// NOTE(oriro): Upstream read now does file-magic MIME detection; we keep the wrapper
 // to sanitize oversized images before they hit providers.
 type ToolContentBlock = AgentToolResult<unknown>["content"][number];
 type ImageContentBlock = Extract<ToolContentBlock, { type: "image" }>;

@@ -25,6 +25,7 @@ import type { SubagentDelegationMode } from "../config/types.agent-defaults.js";
 import type { MemoryCitationsMode } from "../config/types.memory.js";
 import { buildMemoryPromptSection } from "../plugins/memory-state.js";
 import type { AgentPromptSurfaceKind } from "../plugins/types.js";
+import { isScribeEnabled, readDigest, readTimeline, scribeDir } from "../scribe/index.js";
 import { listDeliverableMessageChannels } from "../utils/message-channel.js";
 import type { ActiveProcessSessionReference } from "./bash-process-references.js";
 import type { BootstrapMode } from "./bootstrap-mode.js";
@@ -330,6 +331,40 @@ export function buildAgentBootstrapSystemContext(params: {
   ];
 }
 
+// ORIRO Scribe — inject the user's local working memory (digest + full-history
+// timeline + retrieval path) so any router, on any session/resume/router-switch,
+// starts already in context. Best-effort and empty-safe: returns [] when no scribe
+// exists yet (so existing behaviour/tests are unchanged until the scribe records work).
+function buildScribeSection(): string[] {
+  try {
+    if (!isScribeEnabled()) {
+      return [];
+    }
+    const digest = readDigest().trim();
+    const timeline = readTimeline().trim();
+    if (!digest && !timeline) {
+      return [];
+    }
+    const lines = [
+      "## ORIRO Scribe — your working memory (local, never leaves this machine)",
+      "This is the persistent record of what this user has done on this machine. Consult it before deriving or re-asking; prefer it over guessing. The full per-day history is on disk and you can read any of it.",
+    ];
+    if (digest) {
+      lines.push(digest);
+    }
+    if (timeline) {
+      lines.push(timeline);
+    }
+    lines.push(
+      `Full journals: ${scribeDir()} — read a specific day with \`oriro scribe read <YYYY-MM-DD>\` or find anything with \`oriro scribe search <text>\`.`,
+      "",
+    );
+    return lines;
+  } catch {
+    return [];
+  }
+}
+
 export function buildAgentBootstrapSystemPromptSections(params: {
   bootstrapMode?: BootstrapMode;
   bootstrapTruncationNotice?: string;
@@ -351,6 +386,7 @@ export function buildAgentBootstrapSystemPromptSections(params: {
   if (bootstrapTruncationNotice) {
     lines.push("## Bootstrap Context Notice", bootstrapTruncationNotice, "");
   }
+  lines.push(...buildScribeSection());
   return lines;
 }
 
@@ -533,7 +569,7 @@ function buildMessagingSection(params: {
     "- Cross-session messaging → use sessions_send(sessionKey, message)",
     subagentOrchestrationGuidance,
     completionEventGuidance,
-    "- Never use exec/curl for provider messaging; Oriro handles all routing internally.",
+    "- Never use exec/curl for provider messaging; ORIRO handles all routing internally.",
     params.availableTools.has("message")
       ? [
           "",
@@ -553,7 +589,7 @@ function buildMessagingSection(params: {
           messageToolOnly
             ? "- If you use `message` (`action=send`) to deliver visible output, do not repeat that visible content in your final answer."
             : suppressSilentTokenGuidance
-              ? "- Do not use `message(action=send)` to deliver the current source-channel reply; reply normally so Oriro can route it once."
+              ? "- Do not use `message(action=send)` to deliver the current source-channel reply; reply normally so ORIRO can route it once."
               : `- If you use \`message\` (\`action=send\`) to deliver your user-visible reply, respond with ONLY: ${SILENT_REPLY_TOKEN} (avoid duplicate replies).`,
           showGenericInlineButtonHint
             ? params.inlineButtonsEnabled
@@ -608,10 +644,10 @@ function buildDocsSection(params: {
     "## Documentation",
     docsPath ? `Docs: ${docsPath}` : "Docs: https://docs.oriro.ai",
     docsPath ? "Mirror: https://docs.oriro.ai" : undefined,
-    sourcePath ? `Source: ${sourcePath}` : "Source: https://github.com/oriro-ai/cli",
+    sourcePath ? `Source: ${sourcePath}` : "Source: https://github.com/oriro/oriro",
     docsPath
-      ? `Docs are authoritative for Oriro self-knowledge: before understanding how Oriro works (memory/daily notes, sessions, tools, Gateway, config, commands, project context), use \`${params.readToolName}\` or search local docs first; treat AGENTS.md/project context, workspace/profile/memory notes, and \`memory_search\` as instruction context or user memory, not Oriro design/implementation knowledge.`
-      : "Docs are authoritative for Oriro self-knowledge: before understanding how Oriro works (memory/daily notes, sessions, tools, Gateway, config, commands, project context), use the docs mirror first when web tooling is available; treat AGENTS.md/project context, workspace/profile/memory notes, and `memory_search` as instruction context or user memory, not Oriro design/implementation knowledge.",
+      ? `Docs are authoritative for ORIRO self-knowledge: before understanding how ORIRO works (memory/daily notes, sessions, tools, Gateway, config, commands, project context), use \`${params.readToolName}\` or search local docs first; treat AGENTS.md/project context, workspace/profile/memory notes, and \`memory_search\` as instruction context or user memory, not ORIRO design/implementation knowledge.`
+      : "Docs are authoritative for ORIRO self-knowledge: before understanding how ORIRO works (memory/daily notes, sessions, tools, Gateway, config, commands, project context), use the docs mirror first when web tooling is available; treat AGENTS.md/project context, workspace/profile/memory notes, and `memory_search` as instruction context or user memory, not ORIRO design/implementation knowledge.",
     "Config fields: use `gateway` action `config.schema.lookup`; broader config docs: `docs/gateway/configuration.md`, `docs/gateway/configuration-reference.md`.",
     sourcePath
       ? "If docs are silent/stale, say so and inspect local source."
@@ -774,10 +810,10 @@ export function buildAgentSystemPrompt(params: {
     nodes: "List/describe/notify/camera/screen on paired nodes",
     cron: "Manage cron jobs and wake events (use for reminders; when scheduling a reminder, write the systemEvent text as something that will read like a reminder when it fires, and mention that it is a reminder depending on the time gap between setting and firing; include recent context in reminder text if appropriate)",
     message: "Send messages and channel actions",
-    gateway: "Restart, apply config, or run updates on the running Oriro process",
+    gateway: "Restart, apply config, or run updates on the running ORIRO process",
     agents_list: acpSpawnRuntimeEnabled
-      ? 'List Oriro agent ids allowed for sessions_spawn when runtime="subagent" (not ACP harness ids)'
-      : "List Oriro agent ids allowed for sessions_spawn",
+      ? 'List ORIRO agent ids allowed for sessions_spawn when runtime="subagent" (not ACP harness ids)'
+      : "List ORIRO agent ids allowed for sessions_spawn",
     sessions_list: "List other sessions (incl. sub-agents) with filters/last",
     sessions_history: "Fetch history for another session/sub-agent",
     sessions_send: "Send a message to another session/sub-agent",
@@ -987,7 +1023,7 @@ export function buildAgentSystemPrompt(params: {
 
   // For "none" mode, return just the basic identity line
   if (promptMode === "none") {
-    return ["You are a personal assistant running inside Oriro.", modelIdentityLine]
+    return ["You are a personal assistant running inside ORIRO.", modelIdentityLine]
       .filter(Boolean)
       .join("\n");
   }
@@ -1043,7 +1079,7 @@ export function buildAgentSystemPrompt(params: {
   });
   const stablePrefix = cacheStablePromptPrefix(stablePrefixCacheKey, () => {
     const lines = [
-      "You are a personal assistant running inside Oriro.",
+      "You are a personal assistant running inside ORIRO.",
       "",
       "## Tooling",
       "Available tools are policy-filtered. Names are case-sensitive; call exactly as listed.",
@@ -1131,7 +1167,7 @@ export function buildAgentSystemPrompt(params: {
         fallback: [],
       }),
       ...safetySection,
-      "## Oriro Control",
+      "## ORIRO Control",
       "Do not invent commands.",
       "Config/restart: prefer `gateway` tool (`config.schema.lookup|get|patch|apply`, `restart`).",
       "CLI lifecycle only on explicit user request: `oriro gateway status|restart|start|stop`.",
@@ -1140,13 +1176,13 @@ export function buildAgentSystemPrompt(params: {
       ...skillsSection,
       ...skillWorkshopSection,
       ...memorySection,
-      hasGateway && !isMinimal ? "## Oriro Self-Update" : "",
+      hasGateway && !isMinimal ? "## ORIRO Self-Update" : "",
       hasGateway && !isMinimal
         ? [
             "Only explicit user request.",
             "Before config edits/questions: `config.schema.lookup` for the exact dot path.",
             "Actions: config.get, config.patch, config.apply, update.run. Config writes hot-reload when possible; restart when required.",
-            "After restart, Oriro pings the last active session automatically.",
+            "After restart, ORIRO pings the last active session automatically.",
           ].join("\n")
         : "",
       hasGateway && !isMinimal ? "" : "",
@@ -1240,7 +1276,7 @@ export function buildAgentSystemPrompt(params: {
       }),
       ...bootstrapSystemPromptSections,
       "## Workspace Files (injected)",
-      "These user-editable files are loaded by Oriro and included below in Project Context.",
+      "These user-editable files are loaded by ORIRO and included below in Project Context.",
       "",
       ...buildAssistantOutputDirectivesSection({ isMinimal, sourceMessageToolOnly }),
     ];

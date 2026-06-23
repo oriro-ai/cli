@@ -165,7 +165,7 @@ export function registerDnsCli(program: Command) {
       defaultRuntime.log("");
       defaultRuntime.log(
         theme.heading(
-          "Recommended config ($ORIRO_CONFIG_PATH, default ~/.oriro-ai/cli.json):",
+          "Recommended config ($ORIRO_CONFIG_PATH, default ~/.oriro/oriro.json):",
         ),
       );
       defaultRuntime.writeJson({
@@ -262,7 +262,7 @@ export function registerDnsCli(program: Command) {
         defaultRuntime.log("");
         defaultRuntime.log(
           theme.muted(
-            "Note: enable discovery.wideArea.enabled in the active Oriro config ($ORIRO_CONFIG_PATH, default ~/.oriro-ai/cli.json) on the gateway and restart the gateway so it writes the DNS-SD zone.",
+            "Note: enable discovery.wideArea.enabled in the active Oriro config ($ORIRO_CONFIG_PATH, default ~/.oriro/oriro.json) on the gateway and restart the gateway so it writes the DNS-SD zone.",
           ),
         );
       }

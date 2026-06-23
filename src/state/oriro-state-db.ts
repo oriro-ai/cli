@@ -67,7 +67,7 @@ function assertSupportedSchemaVersion(db: DatabaseSync, pathname: string): void 
   const userVersion = readSqliteUserVersion(db);
   if (userVersion > ORIRO_STATE_SCHEMA_VERSION) {
     throw new Error(
-      `Oriro state database ${pathname} uses newer schema version ${userVersion}; this Oriro build supports ${ORIRO_STATE_SCHEMA_VERSION}.`,
+      `ORIRO state database ${pathname} uses newer schema version ${userVersion}; this ORIRO build supports ${ORIRO_STATE_SCHEMA_VERSION}.`,
     );
   }
 }
@@ -96,7 +96,7 @@ function ensureOriroStatePermissions(pathname: string, env: NodeJS.ProcessEnv): 
   const isDefaultStateDatabase =
     path.resolve(pathname) === path.resolve(resolveOriroStateSqlitePath(env));
   if (isDefaultStateDatabase && dir !== defaultDir) {
-    throw new Error(`Oriro state database path resolved outside its state dir: ${pathname}`);
+    throw new Error(`ORIRO state database path resolved outside its state dir: ${pathname}`);
   }
   const dirExisted = existsSync(dir);
   mkdirSync(dir, { recursive: true, mode: ORIRO_STATE_DIR_MODE });
@@ -254,7 +254,7 @@ function assertCanonicalStateSchemaShape(db: DatabaseSync, pathname: string): vo
     return;
   }
   throw new Error(
-    `Oriro state database ${pathname} has a legacy agent database registry schema; run oriro doctor --fix to migrate it.`,
+    `ORIRO state database ${pathname} has a legacy agent database registry schema; run oriro doctor --fix to migrate it.`,
   );
 }
 

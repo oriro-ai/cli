@@ -298,7 +298,7 @@ export const mainLanes = [
     "live-cli-backend-gemini",
     liveDockerScriptCommand(
       "test-live-cli-backend-docker.sh",
-      "ORIRO_LIVE_CLI_BACKEND_MODEL=google-gemini-cli/gemini-3-flash-preview",
+      "ORIRO_LIVE_CLI_BACKEND_ADVISORY=1 ORIRO_LIVE_CLI_BACKEND_ALLOW_PROVIDER_SKIP=1 ORIRO_LIVE_CLI_BACKEND_MODEL=google-gemini-cli/gemini-3-flash-preview",
     ),
     {
       cacheKey: "cli-backend-gemini",

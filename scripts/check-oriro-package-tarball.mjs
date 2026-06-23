@@ -33,11 +33,11 @@ function parseArgs(argv) {
     throw new Error(usage());
   }
   if (tarball.startsWith("-")) {
-    throw new Error(`Unknown Oriro package tarball check option: ${tarball}`);
+    throw new Error(`Unknown ORIRO package tarball check option: ${tarball}`);
   }
   const extraArg = args[1]?.trim();
   if (extraArg) {
-    throw new Error(`Unexpected Oriro package tarball check argument: ${extraArg}`);
+    throw new Error(`Unexpected ORIRO package tarball check argument: ${extraArg}`);
   }
   return { help: false, tarball };
 }
@@ -55,7 +55,7 @@ if (cliArgs.help) {
 
 const { tarball } = cliArgs;
 if (!fs.existsSync(tarball)) {
-  fail(`Oriro package tarball does not exist: ${tarball}`);
+  fail(`ORIRO package tarball does not exist: ${tarball}`);
 }
 
 const phaseTimingsEnabled = process.env.ORIRO_PACKAGE_TARBALL_CHECK_TIMINGS !== "0";
@@ -343,11 +343,11 @@ errors.push(
 
 if (errors.length > 0) {
   fs.rmSync(extractDir, { recursive: true, force: true });
-  fail(`Oriro package tarball integrity failed:\n${errors.join("\n")}`);
+  fail(`ORIRO package tarball integrity failed:\n${errors.join("\n")}`);
 }
 
 for (const warning of warnings) {
-  console.warn(`Oriro package tarball integrity warning: ${warning}`);
+  console.warn(`ORIRO package tarball integrity warning: ${warning}`);
 }
 fs.rmSync(extractDir, { recursive: true, force: true });
-console.log("Oriro package tarball integrity passed.");
+console.log("ORIRO package tarball integrity passed.");

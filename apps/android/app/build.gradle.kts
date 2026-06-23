@@ -2,21 +2,21 @@ import com.android.build.api.variant.impl.VariantOutputImpl
 import java.util.Properties
 
 val dnsjavaInetAddressResolverService = "META-INF/services/java.net.spi.InetAddressResolverProvider"
-val oriroAndroidVersionFile = rootProject.file("Config/Version.properties")
-val oriroAndroidVersionProperties =
+val openOriroAndroidVersionFile = rootProject.file("Config/Version.properties")
+val openOriroAndroidVersionProperties =
   Properties().apply {
-    if (!oriroAndroidVersionFile.isFile) {
+    if (!openOriroAndroidVersionFile.isFile) {
       error("Missing Android version properties. Run `pnpm android:version:sync`.")
     }
-    oriroAndroidVersionFile.inputStream().use(::load)
+    openOriroAndroidVersionFile.inputStream().use(::load)
   }
 
 fun requireOriroAndroidVersionProperty(name: String): String =
-  oriroAndroidVersionProperties.getProperty(name)?.trim()?.takeIf { it.isNotEmpty() }
+  openOriroAndroidVersionProperties.getProperty(name)?.trim()?.takeIf { it.isNotEmpty() }
     ?: error("Missing $name in Config/Version.properties. Run `pnpm android:version:sync`.")
 
-val oriroAndroidVersionName = requireOriroAndroidVersionProperty("ORIRO_ANDROID_VERSION_NAME")
-val oriroAndroidVersionCode =
+val openOriroAndroidVersionName = requireOriroAndroidVersionProperty("ORIRO_ANDROID_VERSION_NAME")
+val openOriroAndroidVersionCode =
   requireOriroAndroidVersionProperty("ORIRO_ANDROID_VERSION_CODE").toIntOrNull()
     ?: error("ORIRO_ANDROID_VERSION_CODE must be an integer in Config/Version.properties.")
 
@@ -83,8 +83,8 @@ android {
     applicationId = "ai.oriro.app"
     minSdk = 31
     targetSdk = 36
-    versionCode = oriroAndroidVersionCode
-    versionName = oriroAndroidVersionName
+    versionCode = openOriroAndroidVersionCode
+    versionName = openOriroAndroidVersionName
     ndk {
       // Support all major ABIs — native libs are tiny (~47 KB per ABI)
       abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")

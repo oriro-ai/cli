@@ -1461,7 +1461,7 @@ export function discoverOriroPlugins(params: {
           result.diagnostics.push({
             level: "warn",
             source: trimmed,
-            message: `ignored plugins.load.paths entry that points at Oriro's ${bundledAlias.kind} bundled plugin directory; remove this redundant path or run oriro doctor --fix`,
+            message: `ignored plugins.load.paths entry that points at ORIRO's ${bundledAlias.kind} bundled plugin directory; remove this redundant path or run oriro doctor --fix`,
           });
           continue;
         }

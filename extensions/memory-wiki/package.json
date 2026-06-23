@@ -1,8 +1,8 @@
 {
   "name": "@oriro/memory-wiki",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro persistent wiki plugin",
+  "description": "ORIRO persistent wiki plugin",
   "type": "module",
   "dependencies": {
     "typebox": "1.1.39",
@@ -11,10 +11,10 @@
   },
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*",
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.6.8"
+    "oriro": "workspace:*"
   },
   "peerDependenciesMeta": {
     "oriro": {

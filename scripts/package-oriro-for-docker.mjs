@@ -17,6 +17,7 @@ const DEFAULT_TIMEOUT_KILL_AFTER_MS = 5_000;
 const PROCESS_GROUP_EXIT_POLL_MS = 25;
 const POST_FORCE_KILL_WAIT_MS = 1_000;
 const DEFAULT_CAPTURED_STDOUT_MAX_BYTES = 1024 * 1024;
+const MAX_TIMER_TIMEOUT_MS = 2_147_000_000;
 const ACTIVE_CHILD_KILLERS = new Set();
 const SIGNAL_EXIT_CODES = {
   SIGHUP: 129,
@@ -65,16 +66,33 @@ function resolveTimeoutMs(envName, defaultValue) {
   return parsed;
 }
 
+function numericTimerValueMs(valueMs) {
+  const value = Number(valueMs);
+  return Number.isFinite(value) ? Math.floor(value) : undefined;
+}
+
+function resolveTimerTimeoutMs(valueMs, fallbackMs = MAX_TIMER_TIMEOUT_MS) {
+  const value = numericTimerValueMs(valueMs) ?? numericTimerValueMs(fallbackMs);
+  return Math.min(Math.max(value ?? MAX_TIMER_TIMEOUT_MS, 1), MAX_TIMER_TIMEOUT_MS);
+}
+
+function resolveOptionalTimerTimeoutMs(valueMs) {
+  if (valueMs === undefined) {
+    return undefined;
+  }
+  return resolveTimerTimeoutMs(valueMs, 1);
+}
+
 function readOptionValue(argv, index, optionName) {
   const value = argv[index + 1];
-  if (value === undefined || value === "" || value.startsWith("--")) {
+  if (value === undefined || value === "" || value.startsWith("-")) {
     throw new Error(`${optionName} requires a value`);
   }
   return value;
 }
 
 function readEqualsOptionValue(value, optionName) {
-  if (value === "" || value.startsWith("--")) {
+  if (value === "" || value.startsWith("-")) {
     throw new Error(`${optionName} requires a value`);
   }
   return value;
@@ -103,7 +121,7 @@ function resolvePackedOriroFileName(value) {
     filename !== path.basename(filename) ||
     filename !== path.win32.basename(filename)
   ) {
-    throw new Error(`npm pack reported unsafe Oriro tarball filename: ${filename}`);
+    throw new Error(`npm pack reported unsafe ORIRO tarball filename: ${filename}`);
   }
   return filename;
 }
@@ -149,6 +167,11 @@ export function parseArgs(argv) {
 
 function run(command, args, cwd, options = {}) {
   return new Promise((resolve, reject) => {
+    const resolvedTimeoutMs = resolveOptionalTimerTimeoutMs(options.timeoutMs);
+    const resolvedKillAfterMs = resolveTimerTimeoutMs(
+      options.killAfterMs,
+      DEFAULT_TIMEOUT_KILL_AFTER_MS,
+    );
     const useProcessGroup = process.platform !== "win32";
     const child = spawn(command, args, {
       cwd,
@@ -230,21 +253,21 @@ function run(command, args, cwd, options = {}) {
           return;
         }
         killChild("SIGKILL");
-      }, options.killAfterMs ?? DEFAULT_TIMEOUT_KILL_AFTER_MS);
+      }, resolvedKillAfterMs);
       forceKillTimeout.unref?.();
     };
     ACTIVE_CHILD_KILLERS.add(killChild);
     const timeout =
-      options.timeoutMs === undefined
+      resolvedTimeoutMs === undefined
         ? undefined
         : setTimeout(() => {
             timedOut = true;
             terminateChild();
-          }, options.timeoutMs);
+          }, resolvedTimeoutMs);
     timeout?.unref?.();
     const finishAfterTeardown = async (error, value = "") => {
       if (processGroupAlive()) {
-        await waitForProcessGroupExit(options.killAfterMs ?? DEFAULT_TIMEOUT_KILL_AFTER_MS);
+        await waitForProcessGroupExit(resolvedKillAfterMs);
       }
       if (processGroupAlive()) {
         killChild("SIGKILL");
@@ -275,7 +298,7 @@ function run(command, args, cwd, options = {}) {
     child.on("close", (status, signal) => {
       if (timedOut) {
         void finishAfterTeardown(
-          new Error(`${command} ${args.join(" ")} timed out after ${options.timeoutMs}ms`),
+          new Error(`${command} ${args.join(" ")} timed out after ${resolvedTimeoutMs}ms`),
         );
         return;
       }
@@ -298,7 +321,7 @@ function run(command, args, cwd, options = {}) {
 
 const PACKAGE_ARTIFACT_BUILD_STEPS = [
   {
-    label: "Building Oriro package artifacts",
+    label: "Building ORIRO package artifacts",
     command: "node",
     args: ["scripts/build-all.mjs"],
   },
@@ -352,7 +375,7 @@ async function newestOriroTarball(outputDir, packOutput) {
     .toSorted()
     .at(-1);
   if (!packed) {
-    throw new Error(`missing packed Oriro tarball in ${outputDir}`);
+    throw new Error(`missing packed ORIRO tarball in ${outputDir}`);
   }
   return path.join(outputDir, packed);
 }
@@ -385,7 +408,7 @@ export async function packOriroPackageForDocker(sourceDir, outputDir, options = 
   const runCaptureImpl = options.runCaptureImpl ?? runCapture;
   const prepareChangelog = options.prepareChangelog ?? preparePackageChangelog;
   const restoreChangelog = options.restoreChangelog ?? restorePackageChangelog;
-  console.error("==> Packing Oriro package");
+  console.error("==> Packing ORIRO package");
   await prepareChangelog(sourceDir);
   let packOutput;
   try {
@@ -421,7 +444,7 @@ async function main() {
     await buildPackageArtifacts(sourceDir);
   }
 
-  console.error("==> Writing Oriro package inventory");
+  console.error("==> Writing ORIRO package inventory");
   await run(
     "node",
     [
@@ -451,7 +474,7 @@ async function main() {
     }
   }
 
-  console.error("==> Checking Oriro package tarball");
+  console.error("==> Checking ORIRO package tarball");
   const checkStartedAt = Date.now();
   await run(
     "node",
@@ -465,7 +488,7 @@ async function main() {
     },
   );
   console.error(
-    `==> Oriro package tarball check finished in ${Math.round((Date.now() - checkStartedAt) / 1000)}s`,
+    `==> ORIRO package tarball check finished in ${Math.round((Date.now() - checkStartedAt) / 1000)}s`,
   );
 
   process.stdout.write(`${tarball}\n`);

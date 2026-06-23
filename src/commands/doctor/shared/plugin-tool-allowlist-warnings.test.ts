@@ -22,16 +22,16 @@ const manifestRegistry: PluginManifestRegistry = {
       },
     },
     {
-      id: "oriro",
+      id: "lobster",
       channels: [],
       cliBackends: [],
       hooks: [],
-      manifestPath: "/virtual/oriro-ai/cli.plugin.json",
+      manifestPath: "/virtual/lobster/oriro.plugin.json",
       origin: "bundled",
       providers: [],
-      rootDir: "/virtual/oriro",
+      rootDir: "/virtual/lobster",
       skills: [],
-      source: "/virtual/oriro/index.ts",
+      source: "/virtual/lobster/index.ts",
     },
   ],
 };
@@ -73,7 +73,7 @@ describe("collectPluginToolAllowlistWarnings", () => {
           list: [
             {
               id: "agent-a",
-              tools: { alsoAllow: ["oriro"] },
+              tools: { alsoAllow: ["lobster"] },
             },
           ],
         },
@@ -82,7 +82,7 @@ describe("collectPluginToolAllowlistWarnings", () => {
     });
 
     expect(warnings).toEqual([
-      '- agents.list[0].tools.alsoAllow references plugin "oriro", but plugins.allow does not include it. Add "oriro" to plugins.allow or remove plugins.allow.',
+      '- agents.list[0].tools.alsoAllow references plugin "lobster", but plugins.allow does not include it. Add "lobster" to plugins.allow or remove plugins.allow.',
     ]);
   });
 

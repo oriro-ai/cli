@@ -35,7 +35,7 @@ import {
 } from "./lib/plugin-package-dependencies.mjs";
 import { runInstalledWorkspaceBootstrapSmoke } from "./lib/workspace-bootstrap-smoke.mjs";
 import { parseReleaseVersion, resolveNpmCommandInvocation } from "./oriro-npm-release-check.ts";
-import { buildCmdExeCommandLine } from "./windows-cmd-helpers.mjs";
+import { buildCmdExeCommandLine, resolveWindowsCmdExePath } from "./windows-cmd-helpers.mjs";
 
 type InstalledPackageJson = {
   version?: string;
@@ -109,7 +109,7 @@ export type OriroNpmPostpublishVerifyArgs =
       version: "";
     };
 
-export function oriroNpmPostpublishVerifyUsage(): string {
+export function openOriroNpmPostpublishVerifyUsage(): string {
   return "Usage: node --import tsx scripts/oriro-npm-postpublish-verify.ts <version>";
 }
 
@@ -122,7 +122,7 @@ export function parseOriroNpmPostpublishVerifyArgs(
     return { help: true, version: "" };
   }
   if (!version) {
-    throw new Error(oriroNpmPostpublishVerifyUsage());
+    throw new Error(openOriroNpmPostpublishVerifyUsage());
   }
   if (version.startsWith("-")) {
     throw new Error(`Unknown oriro npm postpublish verifier option: ${version}`);
@@ -213,7 +213,7 @@ type NpmProvenanceStatement = {
 };
 
 const NPM_PROVENANCE_PREDICATE_TYPE = "https://slsa.dev/provenance/v1";
-const NPM_PROVENANCE_REPOSITORY = "https://github.com/oriro-ai/cli";
+const NPM_PROVENANCE_REPOSITORY = "https://github.com/oriro/oriro";
 const NPM_PROVENANCE_WORKFLOW_PATH = ".github/workflows/oriro-npm-release.yml";
 const NPM_PROVENANCE_CERTIFICATE_ISSUER = "https://token.actions.githubusercontent.com";
 const NPM_PROVENANCE_BUILDER_ID = "https://github.com/actions/runner/github-hosted";
@@ -298,7 +298,7 @@ function resolveNpmProvenanceVerificationPolicy(
     statement.predicate?.runDetails?.builder?.id !== NPM_PROVENANCE_BUILDER_ID
   ) {
     throw new Error(
-      `npm provenance attestation does not bind ${version} to the trusted Oriro GitHub release workflow.`,
+      `npm provenance attestation does not bind ${version} to the trusted ORIRO GitHub release workflow.`,
     );
   }
 
@@ -853,7 +853,7 @@ export function resolveInstalledBinaryCommandInvocation(
   const binaryPath = resolveInstalledBinaryPath(prefixDir, platform);
   if (platform === "win32") {
     return {
-      command: params.comSpec ?? process.env.ComSpec ?? "cmd.exe",
+      command: params.comSpec ?? resolveWindowsCmdExePath(),
       args: ["/d", "/s", "/c", buildCmdExeCommandLine(binaryPath, args)],
       windowsVerbatimArguments: true,
     };
@@ -1185,7 +1185,7 @@ function verifyScenario(version: string, scenario: PublishedInstallScenario): vo
 async function main(argv = process.argv.slice(2)): Promise<void> {
   const args = parseOriroNpmPostpublishVerifyArgs(argv);
   if (args.help) {
-    console.log(oriroNpmPostpublishVerifyUsage());
+    console.log(openOriroNpmPostpublishVerifyUsage());
     return;
   }
 

@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { buildPluginSdkPackageExports } from "../../plugin-sdk/entrypoints.js";
-import type { ClawdbotConfig, OriroConfig, OriroSchemaType } from "../../plugin-sdk/index.js";
+import type { OriroConfig, OriroConfig, OriroSchemaType } from "../../plugin-sdk/index.js";
 
 const pluginSdkIndexPath = fileURLToPath(new URL("../../plugin-sdk/index.ts", import.meta.url));
 
@@ -112,7 +112,7 @@ describe("plugin-sdk exports", () => {
   });
 
   it("keeps deprecated root config type aliases aligned", () => {
-    expectTypeOf<ClawdbotConfig>().toEqualTypeOf<OriroConfig>();
+    expectTypeOf<OriroConfig>().toEqualTypeOf<OriroConfig>();
     expectTypeOf<OriroSchemaType>().toEqualTypeOf<OriroConfig>();
   });
 

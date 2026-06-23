@@ -2,6 +2,7 @@
 import type { AgentMessage } from "oriro/plugin-sdk/agent-core";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ModelProviderConfig, OriroConfig } from "../config/types.js";
+import { captureEnv, deleteTestEnvValue, setTestEnvValue } from "../test-utils/env.js";
 import type { ProviderRuntimeModel } from "./provider-runtime-model.types.js";
 import {
   expectAugmentedCodexCatalog,
@@ -748,32 +749,22 @@ describe("provider-runtime", () => {
       auth: [],
     };
     const config = {} as OriroConfig;
-    const originalHome = process.env.HOME;
-    const originalOriroHome = process.env.ORIRO_HOME;
+    const envSnapshot = captureEnv(["HOME", "ORIRO_HOME"]);
     try {
-      process.env.HOME = "/home/one";
-      delete process.env.ORIRO_HOME;
+      setTestEnvValue("HOME", "/home/one");
+      deleteTestEnvValue("ORIRO_HOME");
       resolvePluginProvidersMock.mockReturnValueOnce([firstProvider]);
       expect(resolveProviderRuntimePlugin({ provider: DEMO_PROVIDER_ID, config })).toBe(
         firstProvider,
       );
 
-      process.env.HOME = "/home/two";
+      setTestEnvValue("HOME", "/home/two");
       resolvePluginProvidersMock.mockReturnValueOnce([secondProvider]);
       expect(resolveProviderRuntimePlugin({ provider: DEMO_PROVIDER_ID, config })).toBe(
         secondProvider,
       );
     } finally {
-      if (originalHome === undefined) {
-        delete process.env.HOME;
-      } else {
-        process.env.HOME = originalHome;
-      }
-      if (originalOriroHome === undefined) {
-        delete process.env.ORIRO_HOME;
-      } else {
-        process.env.ORIRO_HOME = originalOriroHome;
-      }
+      envSnapshot.restore();
     }
 
     expect(resolvePluginProvidersMock).toHaveBeenCalledTimes(2);

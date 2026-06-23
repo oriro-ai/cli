@@ -147,7 +147,7 @@ function createMatrixPostHealthySyncDecryptFailureTracker(params: {
 function formatMatrixSelfDecryptionHint(accountId: string): string {
   return (
     "matrix: failed to decrypt a message from this same Matrix user. " +
-    "This usually means another Matrix device did not share the room key, or another Oriro runtime is using the same account. " +
+    "This usually means another Matrix device did not share the room key, or another ORIRO runtime is using the same account. " +
     `Check 'oriro matrix verify status --verbose --account ${accountId}' and 'oriro matrix devices list --account ${accountId}'.`
   );
 }

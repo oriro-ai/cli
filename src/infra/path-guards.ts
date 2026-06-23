@@ -16,4 +16,4 @@ export {
   safeRealpathSync,
   safeStatSync,
   splitSafeRelativePath,
-} from "@oriro/fs-safe/path";
+} from "@openclaw/fs-safe/path";

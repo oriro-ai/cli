@@ -4,7 +4,7 @@
     "onStartup": true
   },
   "name": "Diffs",
-  "description": "Oriro read-only diff viewer plugin and file renderer for agents.",
+  "description": "ORIRO read-only diff viewer plugin and file renderer for agents.",
   "contracts": {
     "tools": ["diffs"]
   },

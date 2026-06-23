@@ -4,17 +4,17 @@ import { normalizeLowercaseStringOrEmpty } from "@oriro/normalization-core/strin
 // Default service labels (canonical + legacy compatibility)
 export const GATEWAY_LAUNCH_AGENT_LABEL = "ai.oriro.gateway";
 export const GATEWAY_SYSTEMD_SERVICE_NAME = "oriro-gateway";
-export const GATEWAY_WINDOWS_TASK_NAME = "Oriro Gateway";
+export const GATEWAY_WINDOWS_TASK_NAME = "ORIRO Gateway";
 export const GATEWAY_SERVICE_MARKER = "oriro";
 export const GATEWAY_SERVICE_KIND = "gateway";
 export const GATEWAY_SERVICE_RUNTIME_PID_ENV = "ORIRO_GATEWAY_SERVICE_PID";
 const NODE_LAUNCH_AGENT_LABEL = "ai.oriro.node";
 const NODE_SYSTEMD_SERVICE_NAME = "oriro-node";
-const NODE_WINDOWS_TASK_NAME = "Oriro Node";
+const NODE_WINDOWS_TASK_NAME = "ORIRO Node";
 export const NODE_SERVICE_MARKER = "oriro";
 export const NODE_SERVICE_KIND = "node";
 export const NODE_WINDOWS_TASK_SCRIPT_NAME = "node.cmd";
-export const LEGACY_GATEWAY_SYSTEMD_SERVICE_NAMES: string[] = ["clawdbot-gateway"];
+export const LEGACY_GATEWAY_SYSTEMD_SERVICE_NAMES: string[] = ["oriro-gateway"];
 
 export function normalizeGatewayProfile(profile?: string): string | null {
   const trimmed = profile?.trim();
@@ -56,7 +56,7 @@ export function resolveGatewayWindowsTaskName(profile?: string): string {
   if (!normalized) {
     return GATEWAY_WINDOWS_TASK_NAME;
   }
-  return `Oriro Gateway (${normalized})`;
+  return `ORIRO Gateway (${normalized})`;
 }
 
 export function formatGatewayServiceDescription(params?: {
@@ -73,9 +73,9 @@ export function formatGatewayServiceDescription(params?: {
     parts.push(`v${version}`);
   }
   if (parts.length === 0) {
-    return "Oriro Gateway";
+    return "ORIRO Gateway";
   }
-  return `Oriro Gateway (${parts.join(", ")})`;
+  return `ORIRO Gateway (${parts.join(", ")})`;
 }
 
 export function resolveGatewayServiceDescription(params: {
@@ -107,7 +107,7 @@ export function resolveNodeWindowsTaskName(): string {
 export function formatNodeServiceDescription(params?: { version?: string }): string {
   const version = params?.version?.trim();
   if (!version) {
-    return "Oriro Node Host";
+    return "ORIRO Node Host";
   }
-  return `Oriro Node Host (v${version})`;
+  return `ORIRO Node Host (v${version})`;
 }

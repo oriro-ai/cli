@@ -93,8 +93,6 @@ export type {
 } from "../plugins/runtime/task-domain-types.js";
 export type { OriroConfig } from "../config/config.js";
 /** @deprecated Use OriroConfig instead */
-export type { OriroConfig as ClawdbotConfig } from "../config/config.js";
-/** @deprecated Use OriroConfig instead */
 export type { OriroConfig as OriroSchemaType } from "../config/config.js";
 export type {
   MemoryPluginCapability,

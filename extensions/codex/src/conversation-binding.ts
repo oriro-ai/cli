@@ -77,7 +77,7 @@ const INVALID_AGENT_ID_CHARS_PATTERN = /[^a-z0-9_-]+/g;
 const LEADING_DASH_PATTERN = /^-+/;
 const TRAILING_DASH_PATTERN = /-+$/;
 const NATIVE_CONVERSATION_INTERACTIVE_APPROVALS_UNAVAILABLE =
-  "Oriro native Codex conversation binding cannot route interactive approvals yet; use the Codex harness or explicit /acp spawn codex for that workflow.";
+  "ORIRO native Codex conversation binding cannot route interactive approvals yet; use the Codex harness or explicit /acp spawn codex for that workflow.";
 
 export {
   createCodexCliNodeConversationBindingData,
@@ -159,14 +159,14 @@ async function resolveConversationAppServerRuntime(params: {
     model: params.model,
     config: params.config,
     agentDir: params.agentDir,
-    oriroSandboxActive: Boolean(sandboxForPolicy?.enabled),
+    openOriroSandboxActive: Boolean(sandboxForPolicy?.enabled),
   });
   return { execPolicy, runtime };
 }
 
 const CODEX_CONVERSATION_GLOBAL_STATE = Symbol.for("oriro.codex.conversationBinding");
 const CODEX_CONVERSATION_THREAD_DEVELOPER_INSTRUCTIONS =
-  "This Codex thread is bound to an Oriro conversation. Answer normally; Oriro will deliver your final response back to the conversation.";
+  "This Codex thread is bound to an ORIRO conversation. Answer normally; ORIRO will deliver your final response back to the conversation.";
 
 function getGlobalState(): CodexConversationGlobalState {
   const globalState = globalThis as typeof globalThis & {
@@ -511,7 +511,7 @@ async function writeThreadBindingFromResponse(
       sandbox: resolved.execPolicy?.touched
         ? resolved.runtime.sandbox
         : (params.sandbox ?? resolved.runtime.sandbox),
-      serviceTier: params.serviceTier ?? resolved.runtime.serviceTier,
+      serviceTier: params.serviceTier ?? resolved.runtime.serviceTier ?? undefined,
       networkProxyProfileName: resolved.runtime.networkProxy?.profileName,
       networkProxyConfigFingerprint: resolved.runtime.networkProxy?.configFingerprint,
     },
@@ -689,7 +689,7 @@ async function runBoundTurn(params: {
           }),
           approvalPolicy: typeof approvalPolicy === "string" ? approvalPolicy : undefined,
           sandbox,
-          serviceTier,
+          serviceTier: serviceTier ?? undefined,
           networkProxyProfileName: modelScopedRuntime.networkProxy?.profileName,
           networkProxyConfigFingerprint: modelScopedRuntime.networkProxy?.configFingerprint,
         },
@@ -707,7 +707,7 @@ async function runBoundTurn(params: {
           contentItems: [
             {
               type: "inputText",
-              text: "Oriro native Codex conversation binding does not expose dynamic Oriro tools yet.",
+              text: "ORIRO native Codex conversation binding does not expose dynamic ORIRO tools yet.",
             },
           ],
           success: false,
@@ -720,7 +720,7 @@ async function runBoundTurn(params: {
         return {
           decision: "decline",
           reason:
-            "Oriro native Codex conversation binding cannot route interactive approvals yet; use the Codex harness or explicit /acp spawn codex for that workflow.",
+            "ORIRO native Codex conversation binding cannot route interactive approvals yet; use the Codex harness or explicit /acp spawn codex for that workflow.",
         };
       }
       if (request.method === "item/permissions/requestApproval") {
@@ -730,7 +730,7 @@ async function runBoundTurn(params: {
         return {
           decision: "decline",
           reason:
-            "Oriro native Codex conversation binding cannot route interactive approvals yet; use the Codex harness or explicit /acp spawn codex for that workflow.",
+            "ORIRO native Codex conversation binding cannot route interactive approvals yet; use the Codex harness or explicit /acp spawn codex for that workflow.",
         };
       }
       return undefined;

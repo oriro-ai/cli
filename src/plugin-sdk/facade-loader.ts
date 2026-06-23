@@ -146,7 +146,7 @@ export function loadFacadeModuleAtLocationSync<T extends object>(params: {
     rootPath: location.boundaryRoot,
     boundaryLabel:
       location.boundaryRoot === getOriroPackageRoot()
-        ? "Oriro package root"
+        ? "ORIRO package root"
         : (() => {
             const bundledDir = resolveBundledPluginsDir();
             return bundledDir && path.resolve(location.boundaryRoot) === path.resolve(bundledDir)
@@ -227,7 +227,7 @@ export async function loadBundledPluginPublicSurfaceModule<T extends object>(par
     rootPath: preparedLocation.boundaryRoot,
     boundaryLabel:
       preparedLocation.boundaryRoot === getOriroPackageRoot()
-        ? "Oriro package root"
+        ? "ORIRO package root"
         : "plugin root",
     rejectHardlinks: false,
   });

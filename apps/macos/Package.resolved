@@ -4,7 +4,7 @@
     {
       "identity" : "axorcist",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/steipete/AXorcist.git",
+      "location" : "https://github.com/oriro/AXorcist.git",
       "state" : {
         "revision" : "289d403c53ce26cdd2fcb2bfb8672cd43adc2b43",
         "version" : "0.1.2"
@@ -13,7 +13,7 @@
     {
       "identity" : "commander",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/steipete/Commander.git",
+      "location" : "https://github.com/oriro/Commander.git",
       "state" : {
         "revision" : "ae2ce746b386ff94b26648cfe5625cfa8d02639b",
         "version" : "0.2.2"
@@ -22,7 +22,7 @@
     {
       "identity" : "elevenlabskit",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/steipete/ElevenLabsKit",
+      "location" : "https://github.com/oriro/ElevenLabsKit",
       "state" : {
         "revision" : "0f1e4c039bd0e22b03c0cb7f43c00c1865858f0b",
         "version" : "0.1.1"
@@ -40,7 +40,7 @@
     {
       "identity" : "peekaboo",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/steipete/Peekaboo.git",
+      "location" : "https://github.com/oriro/Peekaboo.git",
       "state" : {
         "revision" : "1fa8eead7eeac3ff618a3111fc333ae78db043d2",
         "version" : "3.5.2"

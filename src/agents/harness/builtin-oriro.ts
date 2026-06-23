@@ -12,7 +12,7 @@ import type { AgentHarness } from "./types.js";
 export function createOriroAgentHarness(): AgentHarness {
   return {
     id: "oriro",
-    label: "Oriro embedded agent",
+    label: "ORIRO embedded agent",
     contextEngineHostCapabilities: ORIRO_EMBEDDED_CONTEXT_ENGINE_HOST.capabilities,
     supports: () => ({ supported: true, priority: 0 }),
     runAttempt: runEmbeddedAttempt,

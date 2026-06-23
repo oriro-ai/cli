@@ -122,7 +122,7 @@ export function configureProgramHelp(
   if (isRootVersionInvocation(process.argv)) {
     const commit = resolveCommitHash({ moduleUrl: import.meta.url });
     console.log(
-      commit ? `Oriro ${ctx.programVersion} (${commit})` : `Oriro ${ctx.programVersion}`,
+      commit ? `ORIRO ${ctx.programVersion} (${commit})` : `ORIRO ${ctx.programVersion}`,
     );
     process.exit(0);
   }

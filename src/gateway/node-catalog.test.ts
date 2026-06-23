@@ -70,7 +70,7 @@ describe("gateway/node-catalog", () => {
         pairedDevice({
           deviceId: "legacy-mac",
           displayName: "Peter's Mac Studio",
-          clientId: "clawdbot-macos",
+          clientId: "oriro-macos",
           tokens: {
             node: {
               token: "legacy-token",

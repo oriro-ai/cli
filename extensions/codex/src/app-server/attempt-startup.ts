@@ -287,7 +287,7 @@ export async function startCodexAttemptThread(params: {
                 !startupSandboxEnvironment
               ) {
                 throw new Error(
-                  "Codex app-server did not register an Oriro sandbox exec-server environment.",
+                  "Codex app-server did not register an ORIRO sandbox exec-server environment.",
                 );
               }
             } catch (error) {

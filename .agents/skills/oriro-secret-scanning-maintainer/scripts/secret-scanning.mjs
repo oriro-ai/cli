@@ -11,7 +11,7 @@ import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-const REPO = "oriro-ai/cli";
+const REPO = "oriro/oriro";
 const REPO_URL = `https://github.com/${REPO}`;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -702,7 +702,7 @@ function cmdNotify(target, author, locationType, secretTypes, replyToNodeId) {
   }
 
   const body = [
-    `> **Note:** This is an automated message sent by the Oriro maintainer team. **NO_REPLY.**`,
+    `> **Note:** This is an automated message sent by the ORIRO maintainer team. **NO_REPLY.**`,
     "",
     `@${author} :warning: **Security Notice: Secret Leakage Detected**`,
     "",

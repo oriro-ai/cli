@@ -424,7 +424,7 @@ async function runInternalExecAutoReviewForApprovalRequest(params: {
   }
   return {
     outcome: "approved-once",
-    reason: `Codex app-server command approval granted by Oriro exec auto-reviewer: ${formatCodexDisplayText(
+    reason: `Codex app-server command approval granted by ORIRO exec auto-reviewer: ${formatCodexDisplayText(
       decision.rationale,
     )}`,
   };
@@ -682,7 +682,7 @@ async function runOriroToolPolicyForApprovalRequest(params: {
     return {
       outcome: "denied",
       reason:
-        "Oriro tool policy rewrote Codex app-server approval params; refusing original request.",
+        "ORIRO tool policy rewrote Codex app-server approval params; refusing original request.",
     };
   }
   if (outcome.approvalResolution) {
@@ -785,7 +785,7 @@ async function runNativeRelayToolPolicyForApprovalRequest(params: {
     return {
       handled: true,
       blocked: true,
-      reason: `Oriro native hook relay unavailable for Codex app-server approval: ${formatCodexDisplayText(
+      reason: `ORIRO native hook relay unavailable for Codex app-server approval: ${formatCodexDisplayText(
         formatErrorMessage(error),
       )}`,
     };
@@ -827,7 +827,7 @@ function readNativeRelayPreToolUseDecision(
       reason:
         sanitizeRelayDecisionReason(response?.stderr) ||
         sanitizeRelayDecisionReason(response?.stdout) ||
-        "Oriro native hook relay failed for Codex app-server approval.",
+        "ORIRO native hook relay failed for Codex app-server approval.",
     };
   }
   const stdout = response.stdout?.trim();
@@ -841,7 +841,7 @@ function readNativeRelayPreToolUseDecision(
       blocked: true,
       reason:
         readString(output, "permissionDecisionReason") ||
-        "Oriro native hook policy denied Codex app-server approval.",
+        "ORIRO native hook policy denied Codex app-server approval.",
     };
   }
   // The app-server bridge invokes the relay in report mode, where the relay
@@ -849,8 +849,8 @@ function readNativeRelayPreToolUseDecision(
   return {
     blocked: true,
     reason: output
-      ? "Oriro native hook relay returned a non-deny Codex app-server approval decision."
-      : "Oriro native hook relay returned an unreadable Codex app-server approval result.",
+      ? "ORIRO native hook relay returned a non-deny Codex app-server approval decision."
+      : "ORIRO native hook relay returned an unreadable Codex app-server approval result.",
   };
 }
 
@@ -983,7 +983,7 @@ function requestedPermissions(requestParams: JsonObject | undefined): JsonObject
 function unsupportedApprovalResponse(): JsonValue {
   return {
     decision: "decline",
-    reason: "Oriro codex app-server bridge does not grant native approvals yet.",
+    reason: "ORIRO codex app-server bridge does not grant native approvals yet.",
   };
 }
 

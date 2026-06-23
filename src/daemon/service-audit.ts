@@ -290,11 +290,6 @@ function readGatewayServiceCommandPortState(
   return { kind: "missing" };
 }
 
-export function readGatewayServiceCommandPort(programArguments?: string[]): number | undefined {
-  const servicePort = readGatewayServiceCommandPortState(programArguments);
-  return servicePort.kind === "valid" ? servicePort.port : undefined;
-}
-
 function auditGatewayServicePort(params: {
   programArguments: string[] | undefined;
   issues: ServiceConfigIssue[];
@@ -616,7 +611,7 @@ function auditGatewayServiceVersion(command: GatewayServiceCommand, issues: Serv
 
   issues.push({
     code: SERVICE_AUDIT_CODES.gatewayServiceVersionMismatch,
-    message: `Gateway service was installed by Oriro ${serviceVersion}; current CLI is ${VERSION}.`,
+    message: `Gateway service was installed by ORIRO ${serviceVersion}; current CLI is ${VERSION}.`,
     detail: command?.sourcePath,
     level: "recommended",
   });

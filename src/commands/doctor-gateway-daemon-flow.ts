@@ -136,9 +136,9 @@ async function maybeRepairLaunchAgentBootstrap(params: {
 
 function renderBlockingSystemGatewayServices(services: ExtraGatewayService[]): string {
   return [
-    "System-level Oriro gateway service detected while the user gateway service is not installed.",
+    "System-level ORIRO gateway service detected while the user gateway service is not installed.",
     ...services.map((svc) => `- ${svc.label} (${svc.detail})`),
-    "Oriro will not install a second user-level gateway service automatically.",
+    "ORIRO will not install a second user-level gateway service automatically.",
     "Run `oriro gateway status --deep` or `oriro doctor --deep` to inspect duplicate services.",
     `Set ${SERVICE_REPAIR_POLICY_ENV}=external if a system supervisor owns the gateway lifecycle.`,
   ].join("\n");
@@ -156,7 +156,7 @@ function renderEstablishedGatewayConnections(connections: PortConnection[]): str
       return `- ${pid} ${direction}${command}${address}${commandLine}`;
     }),
     ...(connections.length > 8 ? [`- ... ${connections.length - 8} more connection(s)`] : []),
-    "If logs show protocol mismatch after rollback, stop stale Oriro client processes listed here and rerun doctor.",
+    "If logs show protocol mismatch after rollback, stop stale ORIRO client processes listed here and rerun doctor.",
   ].join("\n");
 }
 

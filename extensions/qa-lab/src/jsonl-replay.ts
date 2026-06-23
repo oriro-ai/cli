@@ -249,7 +249,7 @@ export function renderJsonlReplayMarkdownReport(report: JsonlReplayMarkdownRepor
     (entry) => entry.firstDriftAtTurn !== undefined,
   );
   const lines = [
-    `# Oriro JSONL Replay Report - ${report.runtimePair[0]} vs ${report.runtimePair[1]}`,
+    `# ORIRO JSONL Replay Report - ${report.runtimePair[0]} vs ${report.runtimePair[1]}`,
     "",
     `- Generated at: ${report.generatedAt}`,
     `- Provider mode: ${report.providerMode}`,

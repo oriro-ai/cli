@@ -52,7 +52,7 @@ export function resolveTrustedOutboundMediaPath(
     resolveLocalPathFromRootsSync({
       filePath: p,
       roots: [tmpRoot],
-      label: "Oriro temp media root",
+      label: "ORIRO temp media root",
       allowMissing: options.allowMissing === true,
     })?.path ?? null
   );

@@ -9,7 +9,10 @@ import {
   type AcpSessionLineageMeta,
 } from "@oriro/acp-core/session-lineage-meta";
 import { timestampMsToIsoString } from "@oriro/normalization-core/number-coercion";
-import { normalizeOptionalString } from "@oriro/normalization-core/string-coerce";
+import {
+  normalizeFastMode,
+  normalizeOptionalString,
+} from "@oriro/normalization-core/string-coerce";
 import { BASE_THINKING_LEVELS } from "../auto-reply/thinking.shared.js";
 import type { GatewaySessionRow } from "../gateway/session-utils.js";
 
@@ -50,6 +53,7 @@ export type GatewaySessionPresentationRow = Pick<
   | "updatedAt"
   | "thinkingLevel"
   | "fastMode"
+  | "effectiveFastMode"
   | "modelProvider"
   | "model"
   | "thinkingLevels"
@@ -160,6 +164,7 @@ export function buildSessionPresentation(params: {
     ...BASE_THINKING_LEVELS,
   ];
   const currentModeId = normalizeOptionalString(row.thinkingLevel) || "adaptive";
+  const currentFastMode = normalizeFastMode(row.effectiveFastMode ?? row.fastMode) ?? false;
   if (!availableLevelIds.includes(currentModeId)) {
     availableLevelIds.push(currentModeId);
   }
@@ -179,7 +184,7 @@ export function buildSessionPresentation(params: {
       name: "Thought level",
       category: "thought_level",
       description:
-        "Controls how much deliberate reasoning Oriro requests from the Gateway model.",
+        "Controls how much deliberate reasoning ORIRO requests from the Gateway model.",
       currentValue: currentModeId,
       values: availableLevelIds,
     }),
@@ -187,14 +192,14 @@ export function buildSessionPresentation(params: {
       id: ACP_FAST_MODE_CONFIG_ID,
       name: "Fast mode",
       description: "Controls whether OpenAI sessions use the Gateway fast-mode profile.",
-      currentValue: row.fastMode ? "on" : "off",
-      values: ["off", "on"],
+      currentValue: currentFastMode === "auto" ? "auto" : currentFastMode ? "on" : "off",
+      values: ["off", "auto", "on"],
     }),
     buildSelectConfigOption({
       id: ACP_VERBOSE_LEVEL_CONFIG_ID,
       name: "Tool verbosity",
       description:
-        "Controls how much tool progress and output detail Oriro keeps enabled for the session.",
+        "Controls how much tool progress and output detail ORIRO keeps enabled for the session.",
       currentValue: normalizeOptionalString(row.verboseLevel) || "off",
       values: ["off", "on", "full"],
     }),
@@ -216,7 +221,7 @@ export function buildSessionPresentation(params: {
       id: ACP_RESPONSE_USAGE_CONFIG_ID,
       name: "Usage detail",
       description:
-        "Controls how much usage information Oriro attaches to responses for the session.",
+        "Controls how much usage information ORIRO attaches to responses for the session.",
       currentValue: normalizeOptionalString(row.responseUsage) || "off",
       values: ["off", "tokens", "full"],
     }),

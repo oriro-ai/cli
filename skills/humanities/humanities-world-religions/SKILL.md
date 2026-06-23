@@ -1,4 +1,6 @@
 ---
+watermark: ORIRO
+disable-model-invocation: true
 name: humanities-world-religions
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

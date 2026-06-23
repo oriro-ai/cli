@@ -125,7 +125,7 @@ async function main(): Promise<void> {
   }
 
   console.log(
-    `Codex app-server generated protocol matches Oriro bridge assumptions: ${source.codexRepo}`,
+    `Codex app-server generated protocol matches ORIRO bridge assumptions: ${source.codexRepo}`,
   );
 }
 

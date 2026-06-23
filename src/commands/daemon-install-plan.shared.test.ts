@@ -57,10 +57,10 @@ describe("resolveDaemonOriroBinDir", () => {
 
   it("finds the PATH shim that resolves to the active package entrypoint", () => {
     const realpaths = new Map([
-      ["/Users/testuser/.npm-global/bin/oriro", "/pkg/oriro-ai/cli.mjs"],
+      ["/Users/testuser/.npm-global/bin/oriro", "/pkg/oriro/oriro.mjs"],
       [
-        "/Users/testuser/.npm-global/lib/node_modules/oriro-ai/cli.mjs",
-        "/pkg/oriro-ai/cli.mjs",
+        "/Users/testuser/.npm-global/lib/node_modules/oriro/oriro.mjs",
+        "/pkg/oriro/oriro.mjs",
       ],
     ]);
 
@@ -68,7 +68,7 @@ describe("resolveDaemonOriroBinDir", () => {
       resolveDaemonOriroBinDir({
         argv: [
           "node",
-          "/Users/testuser/.npm-global/lib/node_modules/oriro-ai/cli.mjs",
+          "/Users/testuser/.npm-global/lib/node_modules/oriro/oriro.mjs",
           "gateway",
           "install",
         ],
@@ -83,7 +83,7 @@ describe("resolveDaemonOriroBinDir", () => {
   it("ignores unrelated oriro commands elsewhere on PATH", () => {
     expect(
       resolveDaemonOriroBinDir({
-        argv: ["node", "/opt/oriro-ai/cli.mjs", "gateway", "install"],
+        argv: ["node", "/opt/oriro/oriro.mjs", "gateway", "install"],
         env: { PATH: "/Users/testuser/.npm-global/bin" },
         platform: "darwin",
         existsSync: () => true,

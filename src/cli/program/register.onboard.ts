@@ -106,8 +106,6 @@ export function registerOnboardCommand(program: Command): void {
     )
     .option("--reset-scope <scope>", "Reset scope: config|config+creds+sessions|full")
     .option("--non-interactive", "Run without prompts", false)
-    .option("--skip-language", "Skip the first-run language selection step", false)
-    .option("--skip-avatar", "Skip the first-run avatar selection step", false)
     .option("--modern", "Use the conversational setup/repair assistant", false)
     .option(
       "--accept-risk",
@@ -178,41 +176,56 @@ export function registerOnboardCommand(program: Command): void {
     .option("--import-from <provider>", "Migration provider to run during onboarding")
     .option("--import-source <path>", "Source agent home for --import-from")
     .option("--import-secrets", "Import supported secrets during onboarding migration", false)
+    .option("--skip-language", "Skip the first-run language selection step", false)
+    .option("--skip-avatar", "Skip the first-run avatar selection step", false)
+    .option("--skip-scribe", "Skip the first-run scribe consent step", false)
     .option("--json", "Output JSON summary", false);
 
   command.action(async (opts, commandRuntime) => {
-    // ORIRO step 1 — the first thing a user does: pick the terminal's language.
-    // Interactive only; never blocks onboarding if the picker is unavailable.
-    if (!opts.nonInteractive && opts.skipLanguage !== true) {
-      try {
-        const { runLanguageOnboarding } = await import("../../language/index.js");
-        await runLanguageOnboarding();
-      } catch {
-        /* language step is best-effort — fall through to the rest of onboarding */
-      }
-    }
-    // ORIRO step 2 — Guardian V3 activates automatically with the language, no prompt
-    // and no opt-out: a user must be protected by default. Runs in non-interactive too.
-    try {
-      const { activateGuardian } = await import("../../guardian/index.js");
-      const status = await activateGuardian();
-      process.stdout.write(`  ${status}\n\n`);
-    } catch {
-      /* Guardian activation is best-effort here; the runtime also self-activates */
-    }
-    // ORIRO step 3 — offer the avatar: a face that floats in the terminal and speaks
-    // (speaking on by default) in its paired voice. Interactive only; skipped if one is
-    // already chosen, and never blocks the rest of onboarding.
-    if (!opts.nonInteractive && opts.skipAvatar !== true) {
-      try {
-        const { runAvatarOnboarding } = await import("../../avatar/onboarding.js");
-        await runAvatarOnboarding();
-      } catch {
-        /* avatar step is best-effort — fall through to the rest of onboarding */
-      }
-    }
     const { defaultRuntime } = await import("../../runtime.js");
     await runCommandWithRuntime(defaultRuntime, async () => {
+      // ORIRO step 1 — first run: pick the terminal's language (interactive only;
+      // best-effort, never blocks the rest of onboarding).
+      if (!opts.nonInteractive && opts.skipLanguage !== true) {
+        try {
+          const { runLanguageOnboarding } = await import("../../language/index.js");
+          await runLanguageOnboarding();
+        } catch {
+          /* language step is best-effort — fall through */
+        }
+      }
+      // ORIRO step 2 — Guardian V3 activates automatically, default-on, no opt-out:
+      // a user must be protected by default. Runs in non-interactive too.
+      try {
+        const { activateGuardian } = await import("../../guardian/index.js");
+        const status = await activateGuardian();
+        process.stdout.write(`  ${status}\n\n`);
+      } catch {
+        /* Guardian activation is best-effort; the runtime also self-activates */
+      }
+      // ORIRO step 3 — avatar: a face that floats in the terminal and speaks (speaking
+      // on by default). Interactive only; skipped if one is already chosen.
+      if (!opts.nonInteractive && opts.skipAvatar !== true) {
+        try {
+          const { runAvatarOnboarding } = await import("../../avatar/onboarding.js");
+          await runAvatarOnboarding();
+        } catch {
+          /* avatar step is best-effort — fall through */
+        }
+      }
+      // ORIRO step (after Skills) — Scribe consent: opt-in, not forced. Records/injects
+      // nothing until the user says Yes. Interactive only; non-interactive stays off.
+      if (!opts.nonInteractive && opts.skipScribe !== true) {
+        try {
+          const { hasScribeChoice } = await import("../../scribe/index.js");
+          if (!hasScribeChoice()) {
+            const { runScribeConsentOnboarding } = await import("../../scribe/onboarding.js");
+            await runScribeConsentOnboarding();
+          }
+        } catch {
+          /* scribe consent is best-effort — fall through */
+        }
+      }
       if (opts.modern) {
         const { runCrestodian } = await import("../../crestodian/crestodian.js");
         await runCrestodian({

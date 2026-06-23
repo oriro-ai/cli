@@ -29,7 +29,7 @@ function hasDurableGatewayPasswordEnvForInstall(
   const durableServiceEnv = collectDurableServiceEnvVars({ env, config: cfg });
   return Boolean(
     normalizeOptionalString(durableServiceEnv.ORIRO_GATEWAY_PASSWORD) ||
-    normalizeOptionalString(durableServiceEnv.CLAWDBOT_GATEWAY_PASSWORD),
+    normalizeOptionalString(durableServiceEnv.ORIRO_GATEWAY_PASSWORD),
   );
 }
 

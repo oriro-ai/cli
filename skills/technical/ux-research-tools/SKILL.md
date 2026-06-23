@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: ux-research-tools
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

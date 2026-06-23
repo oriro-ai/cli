@@ -41,7 +41,7 @@ export class DashboardHeader extends LitElement {
             href=${pathForTab("overview", this.basePath)}
             @click=${this.handleOverviewClick}
           >
-            Oriro
+            ORIRO
           </a>
           ${agentLabel
             ? html`

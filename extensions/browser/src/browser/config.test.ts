@@ -41,7 +41,7 @@ function withEnv<T>(env: Record<string, string | undefined>, fn: () => T): T {
 }
 
 describe("browser config", () => {
-  it("defaults to enabled with loopback defaults and oriro-orange color", () => {
+  it("defaults to enabled with loopback defaults and lobster-orange color", () => {
     const resolved = resolveBrowserConfig(undefined);
     expect(resolved.enabled).toBe(true);
     expect(resolved.controlPort).toBe(18791);

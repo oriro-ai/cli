@@ -90,7 +90,7 @@ describe("buildQaGatewayConfig", () => {
       enabled: true,
       config: {
         pluginToolsMcpBridge: true,
-        oriroToolsMcpBridge: true,
+        openOriroToolsMcpBridge: true,
       },
     });
     expect(cfg.plugins?.entries?.["memory-core"]).toEqual({ enabled: true });

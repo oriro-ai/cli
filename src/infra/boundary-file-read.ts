@@ -13,4 +13,4 @@ export {
   type RootFileOpenFailure,
   type RootFileOpenFailureReason,
   type RootFileOpenResult,
-} from "@oriro/fs-safe/advanced";
+} from "@openclaw/fs-safe/advanced";

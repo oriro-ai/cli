@@ -57,10 +57,10 @@ describe("matchesExecAllowlistPattern", () => {
   );
 
   it("expands home-prefix patterns", () => {
-    const oriroHome = path.join(path.resolve("/srv/oriro-home"), "bin", "tool");
+    const openOriroHome = path.join(path.resolve("/srv/oriro-home"), "bin", "tool");
     const fallbackHome = path.join(path.resolve("/home/other"), "bin", "tool");
     withEnv({ ORIRO_HOME: "/srv/oriro-home", HOME: "/home/other" }, () => {
-      expect(matchesExecAllowlistPattern("~/bin/tool", oriroHome)).toBe(true);
+      expect(matchesExecAllowlistPattern("~/bin/tool", openOriroHome)).toBe(true);
       expect(matchesExecAllowlistPattern("~/bin/tool", fallbackHome)).toBe(false);
     });
   });

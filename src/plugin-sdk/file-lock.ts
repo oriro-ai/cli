@@ -4,7 +4,7 @@ import {
   acquireFileLock as acquireFsSafeFileLock,
   drainFileLockManagerForTest,
   resetFileLockManagerForTest,
-} from "@oriro/fs-safe/file-lock";
+} from "@openclaw/fs-safe/file-lock";
 import { shouldRemoveDeadOwnerOrExpiredLock } from "../infra/stale-lock-file.js";
 import { getProcessStartTime } from "../shared/pid-alive.js";
 

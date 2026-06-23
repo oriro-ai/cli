@@ -9,6 +9,8 @@ import { ensureAvatarImage, readCachedAvatar } from "./cache.js";
 import { isAvatarConfigured, setSelectedAvatar } from "./config.js";
 import { AVATAR_COUNT, avatarCategories, avatarsInCategory, type AvatarEntry } from "./manifest.js";
 import { renderAvatar } from "./render.js";
+import { setupSystemVoice } from "./system-voice.js";
+import { speak } from "./voice.js";
 
 // ORIRO palette (teal → purple, matching the logo gradient).
 const C = {
@@ -33,6 +35,13 @@ export async function previewAvatar(avatar: AvatarEntry): Promise<void> {
     /* offline → ASCII card */
   }
   stdout.write("\n" + renderAvatar(avatar, png) + "\n");
+  // Actually speak: wire the on-device OS voice and greet in the avatar's voice.
+  setupSystemVoice();
+  const spoke = await speak(`Hi, I'm ${avatar.slug}, your ORIRO terminal face. I'll speak your replies.`, {
+    voiceId: avatar.slug,
+    lang: "en-US",
+  });
+  if (spoke) stdout.write(`  ${C.dim}(spoken aloud in your terminal's voice)${C.reset}\n`);
 }
 
 /** Interactive picker: category → avatar. Returns the chosen avatar, or null if cancelled. */

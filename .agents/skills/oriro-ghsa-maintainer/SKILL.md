@@ -1,6 +1,6 @@
 ---
 name: oriro-ghsa-maintainer
-description: "Inspect, patch, validate, publish, or confirm Oriro GHSA security advisories and private-fork state."
+description: "Inspect, patch, validate, publish, or confirm ORIRO GHSA security advisories and private-fork state."
 ---
 
 # Oriro GHSA Maintainer
@@ -18,7 +18,7 @@ Use this skill for repo security advisory workflow only. Keep general release wo
 Fetch the current advisory and the latest published npm version:
 
 ```bash
-gh api /repos/oriro-ai/cli/security-advisories/<GHSA>
+gh api /repos/oriro/oriro/security-advisories/<GHSA>
 npm view oriro version --userconfig "$(mktemp)"
 ```
 
@@ -29,7 +29,7 @@ Use the fetch output to confirm the advisory state, linked private fork, and vul
 Before publishing, verify that the advisory's private fork has no open PRs:
 
 ```bash
-fork=$(gh api /repos/oriro-ai/cli/security-advisories/<GHSA> | jq -r .private_fork.full_name)
+fork=$(gh api /repos/oriro/oriro/security-advisories/<GHSA> | jq -r .private_fork.full_name)
 gh pr list -R "$fork" --state open
 ```
 
@@ -61,7 +61,7 @@ jq -n --rawfile desc /tmp/ghsa.desc.md \
 Example shape:
 
 ```bash
-gh api -X PATCH /repos/oriro-ai/cli/security-advisories/<GHSA> \
+gh api -X PATCH /repos/oriro/oriro/security-advisories/<GHSA> \
   --input /tmp/ghsa.patch.json
 ```
 
@@ -76,7 +76,7 @@ After publish, re-fetch the advisory and confirm:
 Verification pattern:
 
 ```bash
-gh api /repos/oriro-ai/cli/security-advisories/<GHSA>
+gh api /repos/oriro/oriro/security-advisories/<GHSA>
 jq -r .description < /tmp/ghsa.refetch.json | rg '\\\\n'
 ```
 

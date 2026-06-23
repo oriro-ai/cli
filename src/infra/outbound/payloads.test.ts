@@ -106,7 +106,7 @@ describe("normalizeReplyPayloadsForDelivery", () => {
         { text: "Replied in-thread." },
         { text: "Replied in #maintainers." },
         {
-          text: "Updated [wiki/providers.md](/Users/steipete/.oriro/workspace/wiki/providers.md:33). No channel reply.",
+          text: "Updated [wiki/providers.md](/Users/oriro/.oriro/workspace/wiki/providers.md:33). No channel reply.",
         },
         {
           text: "Updated [wiki/tools.md] with the rollback failure-mode nuance. No channel reply.",
@@ -266,6 +266,33 @@ describe("normalizeReplyPayloadsForDelivery", () => {
     ]);
     const twice = normalizeReplyPayloadsForDelivery(once);
     expect(twice).toEqual(once);
+  });
+
+  it("parses Telegram reaction directives into channel data without visible text", () => {
+    expect(
+      normalizeReplyPayloadsForDelivery([
+        {
+          text: "[[react_to_current:🔥]] Thanks",
+          channelData: { telegram: { quoteText: "quoted" } },
+        },
+      ]),
+    ).toEqual([
+      {
+        text: "Thanks",
+        mediaUrls: undefined,
+        mediaUrl: undefined,
+        replyToId: undefined,
+        replyToCurrent: true,
+        replyToTag: false,
+        audioAsVoice: false,
+        channelData: {
+          telegram: {
+            quoteText: "quoted",
+            reaction: { emoji: "🔥", replyToCurrent: true },
+          },
+        },
+      },
+    ]);
   });
 
   it("captures a tricky payload matrix snapshot", () => {

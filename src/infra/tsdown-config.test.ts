@@ -264,8 +264,8 @@ describe("tsdown config", () => {
       throw new Error("expected unified graph alwaysBundle predicate");
     }
 
-    expect(alwaysBundle("@oriro/fs-safe")).toBe(true);
-    expect(alwaysBundle("@oriro/fs-safe/path")).toBe(true);
+    expect(alwaysBundle("@openclaw/fs-safe")).toBe(true);
+    expect(alwaysBundle("@openclaw/fs-safe/path")).toBe(true);
     expect(alwaysBundle("zod")).toBe(true);
     expect(alwaysBundle("zod/v4/core")).toBe(true);
     expect(alwaysBundle("not-a-runtime-dependency")).toBe(false);

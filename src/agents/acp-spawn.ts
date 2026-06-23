@@ -470,8 +470,8 @@ function resolveTargetAcpAgentId(params: {
       return {
         ok: false,
         error:
-          `agentId "${requested}" is an Oriro config agent, not an ACP harness. ` +
-          'Use runtime="subagent" or omit runtime for Oriro config agents. ' +
+          `agentId "${requested}" is an ORIRO config agent, not an ACP harness. ` +
+          'Use runtime="subagent" or omit runtime for ORIRO config agents. ' +
           'Use runtime="acp" only with external ACP harness ids such as codex, claude, droid, gemini, or opencode, or configure agents.list[].runtime.type="acp" with runtime.acp.agent.',
       };
     }

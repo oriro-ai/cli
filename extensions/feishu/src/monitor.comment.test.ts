@@ -1,7 +1,7 @@
 // Feishu tests cover monitor.comment plugin behavior.
 import { createNonExitingRuntimeEnv } from "oriro/plugin-sdk/plugin-test-runtime";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig } from "../runtime-api.js";
+import type { OriroConfig } from "../runtime-api.js";
 import * as dedup from "./dedup.js";
 import { createFeishuDriveCommentNoticeHandler } from "./monitor.comment-notice-handler.js";
 import {
@@ -30,14 +30,14 @@ afterAll(() => {
   vi.resetModules();
 });
 
-function buildMonitorConfig(): ClawdbotConfig {
+function buildMonitorConfig(): OriroConfig {
   return {
     channels: {
       feishu: {
         enabled: true,
       },
     },
-  } as ClawdbotConfig;
+  } as OriroConfig;
 }
 
 function makeDriveCommentEvent(

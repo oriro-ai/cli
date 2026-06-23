@@ -17,14 +17,14 @@ struct SelectionStateIndicator: View {
 }
 
 extension View {
-    func oriroSelectableRowChrome(selected: Bool, hovered: Bool = false) -> some View {
+    func openOriroSelectableRowChrome(selected: Bool, hovered: Bool = false) -> some View {
         self
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(self.oriroRowBackground(selected: selected, hovered: hovered)))
+                    .fill(self.openOriroRowBackground(selected: selected, hovered: hovered)))
             .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -33,7 +33,7 @@ extension View {
                         lineWidth: 1))
     }
 
-    private func oriroRowBackground(selected: Bool, hovered: Bool) -> Color {
+    private func openOriroRowBackground(selected: Bool, hovered: Bool) -> Color {
         if selected { return Color.accentColor.opacity(0.12) }
         if hovered { return Color.secondary.opacity(0.08) }
         return Color.clear

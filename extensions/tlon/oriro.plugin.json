@@ -1,7 +1,7 @@
 {
   "id": "tlon",
   "name": "Tlon/Urbit",
-  "description": "Oriro Tlon/Urbit channel plugin for chat workflows.",
+  "description": "ORIRO Tlon/Urbit channel plugin for chat workflows.",
   "activation": {
     "onStartup": false
   },

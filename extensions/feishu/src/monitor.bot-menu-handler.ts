@@ -1,6 +1,6 @@
 // Feishu plugin module implements monitor.bot menu handler behavior.
 import { isRecord, readStringValue as readString } from "oriro/plugin-sdk/string-coerce-runtime";
-import type { ClawdbotConfig, HistoryEntry, PluginRuntime, RuntimeEnv } from "../runtime-api.js";
+import type { OriroConfig, HistoryEntry, PluginRuntime, RuntimeEnv } from "../runtime-api.js";
 import { handleFeishuMessage, type FeishuMessageEvent } from "./bot.js";
 import { maybeHandleFeishuQuickActionMenu } from "./card-ux-launcher.js";
 import {
@@ -52,7 +52,7 @@ function parseFeishuBotMenuEvent(value: unknown): FeishuBotMenuEvent | null {
 }
 
 export function createFeishuBotMenuHandler(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   accountId: string;
   runtime?: RuntimeEnv;
   channelRuntime?: PluginRuntime["channel"];

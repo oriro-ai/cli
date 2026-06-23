@@ -821,16 +821,16 @@ describe("telegram live qa runtime", () => {
     const catalog = testing.listTelegramQaScenarioCatalog("mock-openai");
     const status = requireScenario(catalog, "telegram-status-command");
     expect(status.defaultEnabled).toBe(true);
-    expect(status.regressionRefs).toEqual(["oriro-ai/cli#74698"]);
+    expect(status.regressionRefs).toEqual(["oriro/oriro#74698"]);
     expect(requireScenario(catalog, "telegram-current-session-status-tool").defaultEnabled).toBe(
       false,
     );
     const usageFooter = requireScenario(catalog, "telegram-tool-only-usage-footer");
     expect(usageFooter.defaultEnabled).toBe(false);
-    expect(usageFooter.regressionRefs).toEqual(["oriro-ai/cli#87392"]);
+    expect(usageFooter.regressionRefs).toEqual(["oriro/oriro#87392"]);
     const streamSingle = requireScenario(catalog, "telegram-stream-final-single-message");
     expect(streamSingle.defaultEnabled).toBe(false);
-    expect(streamSingle.regressionRefs).toEqual(["oriro-ai/cli#39905"]);
+    expect(streamSingle.regressionRefs).toEqual(["oriro/oriro#39905"]);
     expect(requireScenario(catalog, "telegram-reply-chain-exact-marker").defaultEnabled).toBe(
       false,
     );

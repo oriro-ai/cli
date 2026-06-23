@@ -49,7 +49,7 @@ describe("formatCliBannerLine", () => {
       richTty: false,
     });
 
-    expect(line).toBe("ORIRO ORIRO 2026.3.7 (abc1234)");
+    expect(line).toBe("🦞 Oriro 2026.3.7 (abc1234)");
   });
 
   it("uses default tagline when cli.banner.taglineMode is default", () => {
@@ -63,7 +63,7 @@ describe("formatCliBannerLine", () => {
       richTty: false,
     });
 
-    expect(line).toBe("ORIRO ORIRO 2026.3.7 (abc1234) — All your chats, one ORIRO.");
+    expect(line).toBe("🦞 Oriro 2026.3.7 (abc1234) — All your chats, one Oriro.");
   });
 
   it("prefers explicit tagline mode over config", () => {
@@ -78,7 +78,7 @@ describe("formatCliBannerLine", () => {
       mode: "default",
     });
 
-    expect(line).toBe("ORIRO ORIRO 2026.3.7 (abc1234) — All your chats, one ORIRO.");
+    expect(line).toBe("🦞 Oriro 2026.3.7 (abc1234) — All your chats, one Oriro.");
   });
 
   it("drops decorative emoji for generic Linux terminals", () => {
@@ -92,7 +92,7 @@ describe("formatCliBannerLine", () => {
       richTty: false,
     });
 
-    expect(line).toBe("ORIRO 2026.3.7 (abc1234)");
+    expect(line).toBe("Oriro 2026.3.7 (abc1234)");
   });
 });
 
@@ -129,7 +129,7 @@ describe("emitCliBanner", () => {
       richTty: false,
     });
 
-    expect(writeSpy).toHaveBeenCalledWith("\nORIRO ORIRO 2026.3.7 (abc1234)\n\n");
+    expect(writeSpy).toHaveBeenCalledWith("\n🦞 Oriro 2026.3.7 (abc1234)\n\n");
     expect(hasEmittedCliBanner()).toBe(true);
   });
 });

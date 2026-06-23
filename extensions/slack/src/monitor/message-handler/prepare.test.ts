@@ -901,7 +901,7 @@ describe("slack prepareSlackMessage inbound contract", () => {
   });
 
   it("recovers full Slack DM text from top-level rich text blocks when text is only a preview", async () => {
-    const preview = "Yo Oriro what is uppppp ".repeat(7).slice(0, 160);
+    const preview = "Yo Molty what is uppppp ".repeat(7).slice(0, 160);
     const fullText = `${preview}and this tail should still reach the agent`;
 
     const prepared = await prepareWithDefaultCtx(
@@ -2281,7 +2281,7 @@ Second paragraph should still reach the agent after Slack's preview cutoff.`;
         channel: "C0AHZFCAS1K",
         channel_type: "channel",
         user: "U_BEK",
-        text: "https://github.com/oriro-ai/cli/issues/50621",
+        text: "https://github.com/oriro/oriro/issues/50621",
         ts: "1777244714.000100",
         thread_ts: rootTs,
       } as SlackMessageEvent,
@@ -2345,7 +2345,7 @@ Second paragraph should still reach the agent after Slack's preview cutoff.`;
         channel: "C0AHZFCAS1K",
         channel_type: "channel",
         user: "U_BEK",
-        text: "https://github.com/oriro-ai/cli/issues/50621",
+        text: "https://github.com/oriro/oriro/issues/50621",
         ts: "1777244714.000100",
         thread_ts: rootTs,
       } as SlackMessageEvent,
@@ -2733,7 +2733,7 @@ Second paragraph should still reach the agent after Slack's preview cutoff.`;
         channel: "C0AHZFCAS1K",
         channel_type: "channel",
         user: "U_BEK",
-        text: "https://github.com/oriro-ai/cli/issues/50621",
+        text: "https://github.com/oriro/oriro/issues/50621",
         ts: "1777244714.000100",
         thread_ts: rootTs,
       } as SlackMessageEvent,
@@ -2815,7 +2815,7 @@ Second paragraph should still reach the agent after Slack's preview cutoff.`;
           channel: "C0AHZFCAS1K",
           channel_type: "channel",
           user: "U_BEK",
-          text: "https://github.com/oriro-ai/cli/issues/50621",
+          text: "https://github.com/oriro/oriro/issues/50621",
           ts: "1777244714.000100",
           thread_ts: rootTs,
         } as SlackMessageEvent,
@@ -2904,7 +2904,7 @@ Second paragraph should still reach the agent after Slack's preview cutoff.`;
           channel: "C0AHZFCAS1K",
           channel_type: "channel",
           user: "U_BEK",
-          text: "https://github.com/oriro-ai/cli/issues/50621",
+          text: "https://github.com/oriro/oriro/issues/50621",
           ts: "1777244714.000100",
           thread_ts: rootTs,
         } as SlackMessageEvent,

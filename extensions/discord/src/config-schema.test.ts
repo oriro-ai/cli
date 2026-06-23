@@ -132,7 +132,7 @@ describe("discord config schema", () => {
       enabled: true,
       dm: {
         enabled: true,
-        allowFrom: ["steipete"],
+        allowFrom: ["oriro"],
         groupEnabled: true,
         groupChannels: ["oriro-dm"],
       },
@@ -145,7 +145,7 @@ describe("discord config schema", () => {
         "123": {
           slug: "friends-of-oriro",
           requireMention: false,
-          users: ["steipete"],
+          users: ["oriro"],
           channels: {
             general: { enabled: true, autoThread: true },
           },
@@ -205,7 +205,7 @@ describe("discord config schema", () => {
           toolPolicy: "safe-read-only",
           consultPolicy: "always",
           requireWakeName: true,
-          wakeNames: ["Oriro"],
+          wakeNames: ["Molty"],
           bootstrapContextFiles: ["IDENTITY.md", "USER.md", "SOUL.md"],
           bargeIn: true,
           minBargeInAudioEndMs: 500,
@@ -230,7 +230,7 @@ describe("discord config schema", () => {
     expect(cfg.voice?.realtime?.toolPolicy).toBe("safe-read-only");
     expect(cfg.voice?.realtime?.consultPolicy).toBe("always");
     expect(cfg.voice?.realtime?.requireWakeName).toBe(true);
-    expect(cfg.voice?.realtime?.wakeNames).toEqual(["Oriro"]);
+    expect(cfg.voice?.realtime?.wakeNames).toEqual(["Molty"]);
     expect(cfg.voice?.realtime?.bootstrapContextFiles).toEqual([
       "IDENTITY.md",
       "USER.md",

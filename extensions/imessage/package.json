@@ -1,8 +1,8 @@
 {
   "name": "@oriro/imessage",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro iMessage channel plugin using imsg on a signed-in Mac",
+  "description": "ORIRO iMessage channel plugin using imsg on a signed-in Mac",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"
@@ -43,10 +43,10 @@
       ]
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8"
+      "oriroVersion": "2026.6.9"
     }
   },
   "pluginInspector": {

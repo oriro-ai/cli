@@ -1,7 +1,7 @@
 // Feishu plugin module implements monitor.comment behavior.
 import { formatErrorMessage } from "oriro/plugin-sdk/error-runtime";
 import { asBoolean as readBoolean } from "oriro/plugin-sdk/string-coerce-runtime";
-import type { ClawdbotConfig } from "../runtime-api.js";
+import type { OriroConfig } from "../runtime-api.js";
 import { raceWithTimeoutAndAbort } from "./async.js";
 import { createFeishuClient } from "./client.js";
 import {
@@ -51,7 +51,7 @@ export type FeishuDriveCommentNoticeEvent = {
 };
 
 type ResolveDriveCommentEventParams = {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   accountId: string;
   event: FeishuDriveCommentNoticeEvent;
   account?: ResolvedFeishuAccount;

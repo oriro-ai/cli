@@ -642,7 +642,7 @@ describe("qa mock openai server", () => {
     expect(debugPayload.plannedToolName).toBe("read");
   });
 
-  it("drives the Oriro Invaders write flow and memory recall responses", async () => {
+  it("drives the Lobster Invaders write flow and memory recall responses", async () => {
     const server = await startQaMockOpenAiServer({
       host: "127.0.0.1",
       port: 0,
@@ -651,7 +651,7 @@ describe("qa mock openai server", () => {
       await server.stop();
     });
 
-    const oriro = await fetch(`${server.baseUrl}/v1/responses`, {
+    const lobster = await fetch(`${server.baseUrl}/v1/responses`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -663,7 +663,7 @@ describe("qa mock openai server", () => {
           {
             role: "user",
             content: [
-              { type: "input_text", text: "Please build Oriro Invaders after reading context." },
+              { type: "input_text", text: "Please build Lobster Invaders after reading context." },
             ],
           },
           {
@@ -673,10 +673,10 @@ describe("qa mock openai server", () => {
         ],
       }),
     });
-    expect(oriro.status).toBe(200);
-    const oriroBody = await oriro.text();
-    expect(oriroBody).toContain('"name":"write"');
-    expect(oriroBody).toContain("oriro-invaders.html");
+    expect(lobster.status).toBe(200);
+    const lobsterBody = await lobster.text();
+    expect(lobsterBody).toContain('"name":"write"');
+    expect(lobsterBody).toContain("lobster-invaders.html");
 
     const recall = await fetch(`${server.baseUrl}/v1/responses`, {
       method: "POST",
@@ -4240,7 +4240,7 @@ describe("qa mock openai server", () => {
     expect(body).not.toContain("HEARTBEAT_OK");
   });
 
-  it("rejects malformed Anthropic /v1/messages JSON with an invalid_request_error", async () => {
+  it("rejects malformed or non-object Anthropic /v1/messages JSON", async () => {
     const server = await startQaMockOpenAiServer({
       host: "127.0.0.1",
       port: 0,
@@ -4249,20 +4249,55 @@ describe("qa mock openai server", () => {
       await server.stop();
     });
 
-    const response = await fetch(`${server.baseUrl}/v1/messages`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: '{"model":"claude-opus-4-8","messages":[',
+    for (const rawBody of ['{"model":"claude-opus-4-8","messages":[', "null", "[]", '"text"']) {
+      const response = await fetch(`${server.baseUrl}/v1/messages`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: rawBody,
+      });
+
+      expect(response.status).toBe(400);
+      const body = (await response.json()) as {
+        type: string;
+        error: { type: string; message: string };
+      };
+      expect(body.type).toBe("error");
+      expect(body.error.type).toBe("invalid_request_error");
+      expect(body.error.message).toContain("Malformed JSON body");
+    }
+
+    const health = await fetch(`${server.baseUrl}/healthz`);
+    expect(health.status).toBe(200);
+  });
+
+  it("rejects malformed OpenAI-compatible JSON without crashing the mock server", async () => {
+    const server = await startQaMockOpenAiServer({
+      host: "127.0.0.1",
+      port: 0,
+    });
+    cleanups.push(async () => {
+      await server.stop();
     });
 
-    expect(response.status).toBe(400);
-    const body = (await response.json()) as {
-      type: string;
-      error: { type: string; message: string };
-    };
-    expect(body.type).toBe("error");
-    expect(body.error.type).toBe("invalid_request_error");
-    expect(body.error.message).toContain("Malformed JSON body");
+    for (const path of ["/v1/responses", "/v1/embeddings", "/v1/images/generations"]) {
+      for (const rawBody of ["{bad", "[]", '"text"']) {
+        const response = await fetch(`${server.baseUrl}${path}`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: rawBody,
+        });
+
+        expect(response.status).toBe(400);
+        const body = (await response.json()) as {
+          error: { type: string; message: string };
+        };
+        expect(body.error.type).toBe("invalid_request_error");
+        expect(body.error.message).toContain("Malformed JSON body");
+      }
+    }
+
+    const health = await fetch(`${server.baseUrl}/healthz`);
+    expect(health.status).toBe(200);
   });
 
   it("defaults empty-string Anthropic /v1/messages model to claude-opus-4-8", async () => {

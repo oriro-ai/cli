@@ -1,7 +1,7 @@
 {
   "id": "nextcloud-talk",
   "name": "Nextcloud Talk",
-  "description": "Oriro Nextcloud Talk channel plugin for conversations.",
+  "description": "ORIRO Nextcloud Talk channel plugin for conversations.",
   "activation": {
     "onStartup": false
   },

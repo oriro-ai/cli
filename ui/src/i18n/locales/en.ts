@@ -199,6 +199,7 @@ export const en: TranslationMap = {
     inherit: "inherit",
     defaultOption: "Default ({value})",
     offExplicit: "off (explicit)",
+    auto: "auto",
     on: "on",
     off: "off",
     full: "full",
@@ -1299,7 +1300,7 @@ export const en: TranslationMap = {
         stepDevUi:
           "If using pnpm ui:dev, rebuild or restart the dev UI against the current checkout.",
         stepRestart:
-          "Restart the Gateway after updating Oriro so it serves the current protocol.",
+          "Restart the Gateway after updating ORIRO so it serves the current protocol.",
       },
       network: {
         title: "Could not connect",
@@ -1607,6 +1608,7 @@ export const en: TranslationMap = {
       nextHeartbeat: "Next heartbeat",
       wakeModeHelp: "Now triggers immediately. Next heartbeat waits for the next cycle.",
       payloadKind: "What should run?",
+      command: "Command",
       systemEvent: "Post message to main timeline",
       agentTurn: "Run assistant task (isolated)",
       systemEventHelp:

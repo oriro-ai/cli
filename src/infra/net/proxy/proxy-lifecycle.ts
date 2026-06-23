@@ -4,7 +4,7 @@ import {
   installGlobalProxy,
   type ProxylineHandle,
   type ProxylineUndiciOptions,
-} from "@oriro/proxyline";
+} from "@openclaw/proxyline";
 import type { ProxyConfig } from "../../../config/zod-schema.proxy.js";
 
 type ProxyLoopbackMode = NonNullable<NonNullable<ProxyConfig>["loopbackMode"]>;

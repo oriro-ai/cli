@@ -1068,7 +1068,36 @@ async function agentCommandInternal(
       }
 
       const finalTextRaw = visibleTextAccumulator.finalizeRaw();
-      const finalText = visibleTextAccumulator.finalize();
+      let finalText = visibleTextAccumulator.finalize();
+      // ORIRO language bridge (output) — buffer-then-translate the complete English reply
+      // into the user's language for display (finalTextRaw stays English for the transcript).
+      // English/unconfigured users pass through unchanged; best-effort, never breaks a turn.
+      try {
+        const { translateOutgoing } = await import("../language/gateway.js");
+        finalText = await translateOutgoing(finalText);
+      } catch {
+        /* language bridge is best-effort */
+      }
+      // ORIRO Scribe (5A.2) — capture this terminal turn into the local journal.
+      // Skip internal/subagent/raw runs and empty turns. Fully guarded: a scribe
+      // failure logs nothing and never affects the turn (capture is best-effort here;
+      // durability + failover come from the scribe engine itself).
+      try {
+        if (!isRawModelRun && !suppressVisibleSessionEffects && body?.trim()) {
+          const { supervisedCapture, isScribeEnabled } = await import("../scribe/index.js");
+          if (isScribeEnabled()) {
+            const now = new Date();
+            supervisedCapture({
+              ts: now.toISOString(),
+              date: now.toISOString().slice(0, 10),
+              user: body,
+              router: finalTextRaw,
+            });
+          }
+        }
+      } catch {
+        /* scribe is best-effort at the capture site; never breaks a turn */
+      }
       try {
         const [{ resolveAcpSessionCwd }, { resolveSessionTranscriptFile }] = await Promise.all([
           loadAcpSessionIdentifiersRuntime(),
@@ -1805,6 +1834,7 @@ async function agentCommandInternal(
     const MAX_LIVE_SWITCH_RETRIES = 5;
     let liveSwitchRetries = 0;
     let autoFallbackPrimaryProbeInterruptedByLiveSwitch = false;
+    const fastModeStartedAtMs = Date.now();
     const fallbackTrajectoryRecorder = createTrajectoryRuntimeRecorder({
       cfg,
       runId,
@@ -1895,6 +1925,14 @@ async function agentCommandInternal(
               provider: providerOverride,
               model: modelOverride,
             });
+            const fastModeState = resolveFastModeState({
+              cfg,
+              provider: providerOverride,
+              model: modelOverride,
+              agentId: sessionAgentId,
+              sessionEntry,
+            });
+            const fastMode = opts.fastMode ?? fastModeState.mode;
             return attemptExecutionRuntime.runAgentAttempt({
               providerOverride,
               modelOverride,
@@ -1911,13 +1949,13 @@ async function agentCommandInternal(
               body,
               isFallbackRetry,
               resolvedThinkLevel,
-              fastMode: resolveFastModeState({
-                cfg,
-                provider: providerOverride,
-                model: modelOverride,
-                agentId: sessionAgentId,
-                sessionEntry,
-              }).enabled,
+              fastMode,
+              fastModeStartedAtMs,
+              fastModeAutoOnSeconds:
+                fastMode === "auto"
+                  ? (opts.fastModeAutoOnSeconds ?? fastModeState.fastAutoOnSeconds)
+                  : fastModeState.fastAutoOnSeconds,
+              isFinalFallbackAttempt: runOptions?.isFinalFallbackAttempt,
               timeoutMs,
               runTimeoutOverrideMs,
               runId,
@@ -2168,6 +2206,31 @@ async function agentCommandInternal(
         transcriptPersistenceRunner === "embedded" ||
         (transcriptPersistenceRunner === undefined &&
           Boolean(result.meta.finalAssistantVisibleText?.trim()));
+      // ORIRO Scribe (5A.2/5A.3) — capture the embedded/cli turn (the `oriro agent` path;
+      // the ACP path captures separately above). Consent-gated, skips internal/raw/empty
+      // turns, supervised+durable. A run takes one path, so there is no double-capture.
+      try {
+        const scribeReplyText = result.meta.finalAssistantVisibleText;
+        if (
+          !isRawModelRun &&
+          !suppressVisibleSessionEffects &&
+          body?.trim() &&
+          scribeReplyText?.trim()
+        ) {
+          const { supervisedCapture, isScribeEnabled } = await import("../scribe/index.js");
+          if (isScribeEnabled()) {
+            const now = new Date();
+            supervisedCapture({
+              ts: now.toISOString(),
+              date: now.toISOString().slice(0, 10),
+              user: body,
+              router: scribeReplyText,
+            });
+          }
+        }
+      } catch {
+        /* scribe is best-effort at the capture site; never breaks a turn */
+      }
       if (
         !sessionReboundDuringRun &&
         (transcriptPersistenceRunner === "cli" || embeddedAssistantGapFill)

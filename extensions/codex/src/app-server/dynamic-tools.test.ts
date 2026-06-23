@@ -1324,7 +1324,7 @@ describe("createCodexDynamicToolBridge", () => {
     const bridge = createCodexDynamicToolBridge({
       tools: [
         createTool({
-          name: "oriro",
+          name: "lobster",
           execute: vi.fn(async () => cancelledResult),
         }),
       ],
@@ -1337,7 +1337,7 @@ describe("createCodexDynamicToolBridge", () => {
         turnId: "turn-1",
         callId: "call-1",
         namespace: null,
-        tool: "oriro",
+        tool: "lobster",
         arguments: {},
       },
       { onAgentToolResult },
@@ -1345,7 +1345,7 @@ describe("createCodexDynamicToolBridge", () => {
 
     expect(result).toMatchObject({ success: true });
     expect(onAgentToolResult).toHaveBeenCalledWith({
-      toolName: "oriro",
+      toolName: "lobster",
       result: cancelledResult,
       isError: false,
     });

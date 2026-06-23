@@ -2,6 +2,7 @@
 import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { MAX_TIMER_TIMEOUT_MS } from "@oriro/normalization-core/number-coercion";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { runWindowsBackgroundPowerShell } from "../../scripts/e2e/parallels/guest-transports.ts";
 import { run as hostCommandRun } from "../../scripts/e2e/parallels/host-command.ts";
@@ -285,7 +286,7 @@ exit 1
 
     expect(script).toContain("assertPublishedTargetMatchesHarnessCheckout");
     expect(script).toContain("readHarnessCheckoutVersion");
-    expect(script).toContain("oriroVersionFamily");
+    expect(script).toContain("openOriroVersionFamily");
     expect(script).toContain("ORIRO_PARALLELS_ALLOW_HARNESS_TARGET_MISMATCH");
     expect(script).toContain("checkout the matching release branch");
   });
@@ -405,6 +406,29 @@ exit 1
     withEnv({ ORIRO_PARALLELS_NPM_UPDATE_FRESH_TIMEOUT_S: "3" }, () => {
       expect(freshLaneTimeoutMs("macos")).toBe(3000);
     });
+
+    withEnv(
+      { ORIRO_PARALLELS_NPM_UPDATE_FRESH_TIMEOUT_S: String(Number.MAX_SAFE_INTEGER) },
+      () => {
+        expect(freshLaneTimeoutMs("linux")).toBe(MAX_TIMER_TIMEOUT_MS);
+      },
+    );
+  });
+
+  it("clamps oversized fresh lane command timeouts before scheduling", async () => {
+    const root = makeTempDir();
+    const logPath = path.join(root, "fresh.log");
+
+    const code = await spawnLoggedCommand(
+      process.execPath,
+      ["-e", "setTimeout(() => process.exit(0), 25);"],
+      logPath,
+      {},
+      undefined,
+      { timeoutMs: Number.MAX_SAFE_INTEGER },
+    );
+
+    expect(code).toBe(0);
   });
 
   it.runIf(process.platform !== "win32")("times out fresh lane process groups", async () => {

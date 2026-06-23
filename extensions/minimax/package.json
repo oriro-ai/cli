@@ -1,8 +1,8 @@
 {
   "name": "@oriro/minimax-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro MiniMax provider and OAuth plugin",
+  "description": "ORIRO MiniMax provider and OAuth plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

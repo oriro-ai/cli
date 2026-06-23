@@ -79,7 +79,7 @@ export type ApnsPushResult = {
 type ApnsPushAlertResult = ApnsPushResult;
 type ApnsPushWakeResult = ApnsPushResult;
 
-const EXEC_APPROVAL_GENERIC_ALERT_BODY = "Open Oriro to review this request.";
+const EXEC_APPROVAL_GENERIC_ALERT_BODY = "Open ORIRO to review this request.";
 const EXEC_APPROVAL_NOTIFICATION_CATEGORY = "oriro.exec-approval";
 
 type ApnsPushType = "alert" | "background";

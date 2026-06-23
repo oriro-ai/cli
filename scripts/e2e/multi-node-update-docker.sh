@@ -98,7 +98,7 @@ NODE_B_VERSION="$("$NODE_B" --version)"
 echo "node-B: $NODE_B ($NODE_B_VERSION)"
 
 echo ""
-echo "── Step 2: Install Oriro under node-A ──"
+echo "── Step 2: Install ORIRO under node-A ──"
 
 # Use node-A to install oriro with npm prefix A.
 export npm_config_prefix="$NPM_PREFIX_A"
@@ -108,8 +108,8 @@ export npm_config_fund=false
 export npm_config_audit=false
 export PATH="$NPM_PREFIX_A/bin:$NODE_A_DIR:$PATH"
 
-echo "Installing Oriro package under node-A prefix: $NPM_PREFIX_A"
-oriro_e2e_install_package "$ARTIFACTS/install-a.log" "Oriro package under node-A prefix" "$NPM_PREFIX_A"
+echo "Installing ORIRO package under node-A prefix: $NPM_PREFIX_A"
+oriro_e2e_install_package "$ARTIFACTS/install-a.log" "ORIRO package under node-A prefix" "$NPM_PREFIX_A"
 echo "Installed. Checking oriro location..."
 
 ORIRO_A="$(command -v oriro)"
@@ -368,7 +368,7 @@ echo ""
 # Check 1: Did the baked node path change from A to B?
 if [ "$BAKED_NODE_AFTER" = "$NODE_B" ] && [ "$BAKED_NODE_BEFORE" != "$NODE_B" ]; then
   echo "BUG CONFIRMED: Gateway service now points at node-B ($NODE_B)"
-  echo "   but Oriro package is still under node-A prefix ($PACKAGE_ROOT_A)."
+  echo "   but ORIRO package is still under node-A prefix ($PACKAGE_ROOT_A)."
   echo "   The gateway will use node-B to run an entrypoint that may reference"
   echo "   node-A dependencies or may not exist under node-B global prefix."
 elif [ "$BAKED_NODE_AFTER" = "$BAKED_NODE_BEFORE" ]; then
@@ -379,9 +379,9 @@ fi
 
 # Check 2: Is the Oriro package installed under node-B npm prefix?
 if [ -f "$NPM_PREFIX_B/lib/node_modules/oriro/package.json" ]; then
-  echo "WARNING: Oriro was ALSO installed under node-B prefix (split install)"
+  echo "WARNING: ORIRO was ALSO installed under node-B prefix (split install)"
 else
-  echo "OK: Oriro is NOT under node-B prefix (expected: only under node-A)"
+  echo "OK: ORIRO is NOT under node-B prefix (expected: only under node-A)"
 fi
 
 # Check 3: Does the entrypoint in the unit file actually exist?
@@ -397,7 +397,7 @@ fi
 
 # Check 4: Were there any warnings about split install in the update output?
 if [ -f "$ARTIFACTS/update.err" ]; then
-  if grep -qi "Shell Oriro root differs" "$ARTIFACTS/update.err" 2>/dev/null; then
+  if grep -qi "Shell ORIRO root differs" "$ARTIFACTS/update.err" 2>/dev/null; then
     echo "OK: Update warned about split root"
   fi
   if grep -qi "Managed gateway service Node" "$ARTIFACTS/update.err" 2>/dev/null; then

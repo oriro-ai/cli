@@ -195,7 +195,7 @@ export class CodexAppServerClient {
     const response = await this.request("initialize", {
       clientInfo: {
         name: "oriro",
-        title: "Oriro",
+        title: "ORIRO",
         version: ORIRO_VERSION,
       },
       capabilities: {
@@ -565,7 +565,7 @@ function defaultServerRequestResponse(
       contentItems: [
         {
           type: "inputText",
-          text: "Oriro did not register a handler for this app-server tool call.",
+          text: "ORIRO did not register a handler for this app-server tool call.",
         },
       ],
       success: false,
@@ -583,7 +583,7 @@ function defaultServerRequestResponse(
   if (isCodexAppServerApprovalRequest(request.method)) {
     return {
       decision: "decline",
-      reason: "Oriro codex app-server bridge does not grant native approvals yet.",
+      reason: "ORIRO codex app-server bridge does not grant native approvals yet.",
     };
   }
   if (request.method === "item/tool/requestUserInput") {
@@ -617,7 +617,7 @@ function timeoutServerRequestResponse(
     contentItems: [
       {
         type: "inputText",
-        text: `Oriro dynamic tool call timed out after ${CODEX_DYNAMIC_TOOL_SERVER_REQUEST_TIMEOUT_MS}ms before sending a response to Codex.`,
+        text: `ORIRO dynamic tool call timed out after ${CODEX_DYNAMIC_TOOL_SERVER_REQUEST_TIMEOUT_MS}ms before sending a response to Codex.`,
       },
     ],
     success: false,
@@ -628,7 +628,7 @@ function assertSupportedCodexAppServerVersion(response: CodexInitializeResponse)
   const detectedVersion = readCodexVersionFromUserAgent(response.userAgent);
   if (!detectedVersion) {
     throw new Error(
-      `Codex app-server ${MIN_CODEX_APP_SERVER_VERSION} or newer is required, but Oriro could not determine the running Codex version. Update the configured Codex app-server binary, or remove custom command overrides to use the managed binary.`,
+      `Codex app-server ${MIN_CODEX_APP_SERVER_VERSION} or newer is required, but ORIRO could not determine the running Codex version. Update the configured Codex app-server binary, or remove custom command overrides to use the managed binary.`,
     );
   }
   if (compareCodexAppServerVersions(detectedVersion, MIN_CODEX_APP_SERVER_VERSION) < 0) {

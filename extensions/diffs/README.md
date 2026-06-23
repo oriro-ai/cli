@@ -91,7 +91,7 @@ Input safety limits:
 
 ## Plugin Defaults
 
-Set plugin-wide defaults in `~/.oriro-ai/cli.json`:
+Set plugin-wide defaults in `~/.oriro/oriro.json`:
 
 ```json5
 {
@@ -187,10 +187,10 @@ Use the `diffs` tool in `file` mode for this before and after input. After it re
 Path: README.md
 
 Before:
-Oriro supports plugins.
+ORIRO supports plugins.
 
 After:
-Oriro supports plugins and hosted diff views.
+ORIRO supports plugins and hosted diff views.
 ```
 
 Do both:

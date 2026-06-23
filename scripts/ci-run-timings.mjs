@@ -4,7 +4,7 @@
 import { execFileSync } from "node:child_process";
 import { parsePositiveInt } from "./lib/numeric-options.mjs";
 
-const DEFAULT_GITHUB_REPOSITORY = "oriro-ai/cli";
+const DEFAULT_GITHUB_REPOSITORY = "oriro/oriro";
 const RUN_JOBS_PAGE_SIZE = 20;
 const RUN_JOBS_MAX_PAGES = 25;
 const GH_JSON_RETRY_DELAYS_MS = [1_000, 3_000, 6_000];
@@ -416,7 +416,7 @@ function consumePositiveIntFlag(args, index, flag) {
     return null;
   }
   const rawValue = args[index + 1];
-  if (!rawValue || rawValue.startsWith("--")) {
+  if (!rawValue || rawValue.startsWith("-")) {
     throw new Error(`${flag} requires a value`);
   }
   return {

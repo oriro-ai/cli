@@ -101,7 +101,7 @@ export function formatCompletionReloadCommand(shell: CompletionShell, profilePat
 }
 
 function isCompletionProfileHeader(line: string): boolean {
-  return line.trim() === "# Oriro Completion";
+  return line.trim() === "# ORIRO Completion";
 }
 
 function isCompletionProfileLine(line: string, binName: string, cachePath: string | null): boolean {
@@ -148,7 +148,7 @@ function updateCompletionProfile(
   }
 
   const trimmed = filtered.join("\n").trimEnd();
-  const block = `# Oriro Completion\n${sourceLine}`;
+  const block = `# ORIRO Completion\n${sourceLine}`;
   const next = trimmed ? `${trimmed}\n\n${block}\n` : `${block}\n`;
   return { next, changed: next !== content, hadExisting };
 }

@@ -7,7 +7,7 @@ rules:
     message: Use connectApnsHttp2Session() from src/infra/push-apns-http2.ts instead of raw http2.connect() so APNs HTTP/2 honors managed proxy policy.
     metadata:
       advisory-id: ORIRO-POLICY-RAW-HTTP2-CONNECT
-      advisory-url: https://github.com/oriro-ai/cli/pull/74905
+      advisory-url: https://github.com/oriro/oriro/pull/74905
       cwe:
         - "CWE-441"
       category: security

@@ -243,8 +243,8 @@ describe("security-sensitive guard script", () => {
   });
 
   it("parses explicit security approver allowlists", () => {
-    expect(securityApproverSet("vincentkoc, steipete\njoshavant")).toEqual(
-      new Set(["vincentkoc", "steipete", "joshavant"]),
+    expect(securityApproverSet("oriro, oriro\noriro")).toEqual(
+      new Set(["oriro", "oriro", "oriro"]),
     );
   });
 
@@ -257,7 +257,7 @@ describe("security-sensitive guard script", () => {
             headers: { "content-length": "65" },
           }),
         )) as typeof fetch,
-    }).request("/repos/oriro-ai/cli");
+    }).request("/repos/oriro/oriro");
 
     await expect(request).rejects.toThrow("GitHub response body exceeded 64 bytes");
     expect(GITHUB_RESPONSE_BODY_MAX_BYTES).toBeGreaterThan(64);

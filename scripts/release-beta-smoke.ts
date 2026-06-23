@@ -43,7 +43,7 @@ Options:
   --model <provider/model>     Parallels agent-turn model. Default: openai/gpt-5.4
   --provider-mode <mode>       Telegram workflow provider mode. Default: mock-openai
   --ref <ref>                  GitHub workflow dispatch ref. Default: main
-  --repo <owner/repo>          GitHub repo. Default: oriro-ai/cli
+  --repo <owner/repo>          GitHub repo. Default: oriro/oriro
   --skip-parallels             Only run Telegram workflow
   --skip-telegram              Only run Parallels beta validation
   -h, --help                   Show help
@@ -57,7 +57,7 @@ export function parseArgs(argv: string[]): Options {
     model: "openai/gpt-5.4",
     providerMode: "mock-openai",
     ref: "main",
-    repo: "oriro-ai/cli",
+    repo: "oriro/oriro",
     skipParallels: false,
     skipTelegram: false,
   };

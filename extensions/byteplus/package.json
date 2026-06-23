@@ -1,8 +1,8 @@
 {
   "name": "@oriro/byteplus-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro BytePlus provider plugin",
+  "description": "ORIRO BytePlus provider plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

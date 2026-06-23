@@ -1,11 +1,18 @@
 #!/usr/bin/env -S node --import tsx
 // Telegram User Crabbox Proof script supports Oriro repository automation.
 
-import { type ChildProcess, spawn, type SpawnOptionsWithoutStdio } from "node:child_process";
+import {
+  type ChildProcess,
+  spawn,
+  spawnSync,
+  type SpawnOptionsWithoutStdio,
+} from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { clampTimerTimeoutMs } from "@oriro/normalization-core/number-coercion";
+import { resolveWindowsTaskkillPath } from "../lib/windows-taskkill.mjs";
 import { createPnpmRunnerSpawnSpec } from "../pnpm-runner.mjs";
 import { readPositiveIntEnv } from "./lib/env-limits.mjs";
 import { telegramBotApi } from "./telegram-bot-api.ts";
@@ -174,7 +181,7 @@ const TELEGRAM_PROOF_CROP = {
 function usageText() {
   return [
     "Usage:",
-    "  node --import tsx scripts/e2e/telegram-user-crabbox-proof.ts [probe] [--text /status] [--expect Oriro]",
+    "  node --import tsx scripts/e2e/telegram-user-crabbox-proof.ts [probe] [--text /status] [--expect ORIRO]",
     "  node --import tsx scripts/e2e/telegram-user-crabbox-proof.ts start [--tdlib-url <url>]",
     "  node --import tsx scripts/e2e/telegram-user-crabbox-proof.ts send --session <session.json> --text <text>",
     "  node --import tsx scripts/e2e/telegram-user-crabbox-proof.ts run --session <session.json> -- <remote command>",
@@ -199,7 +206,7 @@ function usageText() {
     "  --pr <number>                 Pull request number for publish.",
     "  --record-fps <fps>             Desktop recording frames per second. Default: 24.",
     "  --record-seconds <seconds>    Desktop video duration. Default: 35.",
-    "  --repo <owner/name>           GitHub repo for publish. Default: oriro-ai/cli.",
+    "  --repo <owner/name>           GitHub repo for publish. Default: oriro/oriro.",
     "  --session <path>              Session file from start. Default: <output-dir>/session.json.",
     "  --summary <text>              Artifact publish summary.",
     "  --full-artifacts              Publish all session artifacts. Default publishes only the motion GIF.",
@@ -229,6 +236,11 @@ function trimToValue(value: string | undefined) {
 }
 
 const positiveIntegerPattern = /^[1-9]\d*$/u;
+const SHORT_OPTION_TOKENS = new Set(["-h"]);
+
+function isMissingOptionValue(value: string | undefined) {
+  return !value || SHORT_OPTION_TOKENS.has(value) || value.startsWith("--");
+}
 
 function parsePositiveInteger(value: string, label: string) {
   const trimmed = value.trim();
@@ -242,6 +254,14 @@ function parsePositiveInteger(value: string, label: string) {
   return parsed;
 }
 
+function resolveTelegramProofTimerTimeoutMs(value: number) {
+  return clampTimerTimeoutMs(value) ?? 1;
+}
+
+function parsePositiveTimerMs(value: string, label: string) {
+  return resolveTelegramProofTimerTimeoutMs(parsePositiveInteger(value, label));
+}
+
 function parseTcpPort(value: string, label: string) {
   const parsed = parsePositiveInteger(value, label);
   if (parsed > 65_535) {
@@ -250,7 +270,7 @@ function parseTcpPort(value: string, label: string) {
   return parsed;
 }
 
-function parseArgs(argvInput: string[]): Options {
+export function parseArgs(argvInput: string[]): Options {
   let argv = argvInput;
   argv = argv[0] === "--" ? argv.slice(1) : argv;
   const commands = new Set([
@@ -271,9 +291,9 @@ function parseArgs(argvInput: string[]): Options {
     command,
     crabboxBin: trimToValue(process.env.ORIRO_TELEGRAM_USER_CRABBOX_BIN) ?? "crabbox",
     desktopChatTitle:
-      trimToValue(process.env.ORIRO_TELEGRAM_USER_DESKTOP_CHAT_TITLE) ?? "Oriro Testing",
+      trimToValue(process.env.ORIRO_TELEGRAM_USER_DESKTOP_CHAT_TITLE) ?? "ORIRO Testing",
     dryRun: false,
-    expect: ["Oriro"],
+    expect: ["ORIRO"],
     gatewayPort: 19_879,
     idleTimeout: "60m",
     keepBox: false,
@@ -285,7 +305,7 @@ function parseArgs(argvInput: string[]): Options {
     previewWidth: 1920,
     provider: process.env.ORIRO_TELEGRAM_USER_CRABBOX_PROVIDER?.trim() || "aws",
     publishFullArtifacts: false,
-    publishRepo: "oriro-ai/cli",
+    publishRepo: "oriro/oriro",
     recordFps: 24,
     recordSeconds: 35,
     remoteCommand: [],
@@ -306,7 +326,7 @@ function parseArgs(argvInput: string[]): Options {
     const arg = argv[index];
     const readValue = () => {
       const value = argv[index + 1];
-      if (!value || value.startsWith("--")) {
+      if (isMissingOptionValue(value)) {
         usage();
       }
       index += 1;
@@ -383,7 +403,7 @@ function parseArgs(argvInput: string[]): Options {
     } else if (arg === "--text") {
       opts.text = readValue();
     } else if (arg === "--timeout-ms") {
-      opts.timeoutMs = parsePositiveInteger(readValue(), "--timeout-ms");
+      opts.timeoutMs = parsePositiveTimerMs(readValue(), "--timeout-ms");
     } else if (arg === "--ttl") {
       opts.ttl = readValue();
     } else if (arg === "--user-driver-script") {
@@ -419,7 +439,7 @@ function repoRoot() {
     !fs.existsSync(path.join(cwd, "package.json")) ||
     !fs.existsSync(path.join(cwd, "scripts/e2e/mock-openai-server.mjs"))
   ) {
-    throw new Error("Run from the Oriro repo root.");
+    throw new Error("Run from the ORIRO repo root.");
   }
   return cwd;
 }
@@ -587,12 +607,43 @@ function timedOutError(message: string) {
 const activeCommandChildren = new Set<ChildProcess>();
 let commandCleanupHandlersInstalled = false;
 
-function signalCommandTree(child: ChildProcess, signal: NodeJS.Signals) {
-  if (child.pid && process.platform !== "win32") {
+type CommandTreeTarget = Pick<ChildProcess, "kill" | "pid">;
+
+export function signalCommandTree(
+  child: CommandTreeTarget,
+  signal: NodeJS.Signals,
+  {
+    platform = process.platform,
+    runTaskkill = spawnSync,
+    useProcessGroup = platform !== "win32",
+  }: {
+    platform?: NodeJS.Platform;
+    runTaskkill?: typeof spawnSync;
+    useProcessGroup?: boolean;
+  } = {},
+) {
+  if (child.pid && useProcessGroup) {
     try {
       process.kill(-child.pid, signal);
       return;
     } catch {}
+  }
+  if (platform === "win32" && typeof child.pid === "number") {
+    const args = ["/PID", String(child.pid), "/T"];
+    if (signal === "SIGKILL") {
+      args.push("/F");
+    }
+    const taskkillPath = resolveWindowsTaskkillPath();
+    const result = runTaskkill(taskkillPath, args, { stdio: "ignore" });
+    if (!result?.error && result?.status === 0) {
+      return;
+    }
+    if (signal !== "SIGKILL") {
+      const forceResult = runTaskkill(taskkillPath, [...args, "/F"], { stdio: "ignore" });
+      if (!forceResult?.error && forceResult?.status === 0) {
+        return;
+      }
+    }
   }
   child.kill(signal);
 }
@@ -705,8 +756,10 @@ export function runCommand(params: {
     let timeoutError: Error | null = null;
     let forceKillAt: number | undefined;
     let killTimer: NodeJS.Timeout | undefined;
-    const timeoutMs = params.timeoutMs ?? COMMAND_TIMEOUT_MS;
-    const timeoutKillGraceMs = params.timeoutKillGraceMs ?? COMMAND_TIMEOUT_KILL_GRACE_MS;
+    const timeoutMs = resolveTelegramProofTimerTimeoutMs(params.timeoutMs ?? COMMAND_TIMEOUT_MS);
+    const timeoutKillGraceMs = resolveTelegramProofTimerTimeoutMs(
+      params.timeoutKillGraceMs ?? COMMAND_TIMEOUT_KILL_GRACE_MS,
+    );
     const clearTimers = () => {
       clearTimeout(timeout);
       if (killTimer) {
@@ -846,11 +899,14 @@ function waitForOutput(
   timeoutMs: number,
 ) {
   return new Promise<void>((resolve, reject) => {
+    const resolvedTimeoutMs = resolveTelegramProofTimerTimeoutMs(timeoutMs);
     const timeout = setTimeout(() => {
       reject(
-        new Error(`${label} did not become ready within ${timeoutMs}ms\n${output().slice(-4000)}`),
+        new Error(
+          `${label} did not become ready within ${resolvedTimeoutMs}ms\n${output().slice(-4000)}`,
+        ),
       );
-    }, timeoutMs);
+    }, resolvedTimeoutMs);
     const onData = () => {
       if (pattern.test(output())) {
         cleanup();

@@ -378,7 +378,7 @@ describe("ensureOriroCliOnPath", () => {
     setDir("/home/linuxbrew");
     setDir("/home/linuxbrew/.linuxbrew");
     setDir(globalLinuxbrewBin);
-    resetBootstrapEnv("/usr/bin:/bin");
+    resetBootstrapEnv(["/usr/bin", "/bin"].join(path.delimiter));
 
     const updated = bootstrapPath({
       execPath: appCli,
@@ -394,7 +394,7 @@ describe("ensureOriroCliOnPath", () => {
   it("keeps inherited Linuxbrew path entries on macOS", () => {
     const { tmp, appCli } = setupAppCliRoot("case-keep-darwin-linuxbrew");
     const globalLinuxbrewBin = "/home/linuxbrew/.linuxbrew/bin";
-    resetBootstrapEnv(`${globalLinuxbrewBin}:/usr/bin:/bin`);
+    resetBootstrapEnv([globalLinuxbrewBin, "/usr/bin", "/bin"].join(path.delimiter));
 
     const updated = bootstrapPath({
       execPath: appCli,

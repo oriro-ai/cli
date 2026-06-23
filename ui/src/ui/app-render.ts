@@ -1824,10 +1824,12 @@ export function renderApp(state: AppViewState) {
               : typeof agentsDefaults.thinkingLevel === "string"
                 ? agentsDefaults.thinkingLevel
                 : "off";
+          const resolvedFastMode =
+            activeSession?.effectiveFastMode ?? activeSession?.fastMode ?? agentsDefaults.fastMode;
           const fastMode =
-            typeof activeSession?.fastMode === "boolean"
-              ? activeSession.fastMode
-              : agentsDefaults.fastMode === true;
+            resolvedFastMode === "auto" || typeof resolvedFastMode === "boolean"
+              ? resolvedFastMode
+              : false;
           return renderQuickSettings({
             currentModel,
             thinkingLevel,
@@ -1842,8 +1844,8 @@ export function renderApp(state: AppViewState) {
                 requestHostUpdate?.(),
               );
             },
-            onFastModeToggle: () => {
-              void patchSession(state, state.sessionKey, { fastMode: !fastMode }).then(() =>
+            onFastModeChange: (mode) => {
+              void patchSession(state, state.sessionKey, { fastMode: mode }).then(() =>
                 requestHostUpdate?.(),
               );
             },
@@ -2538,7 +2540,7 @@ export function renderApp(state: AppViewState) {
                       <img
                         class="sidebar-brand__logo"
                         src="${agentLogoUrl(basePath)}"
-                        alt="Oriro"
+                        alt="ORIRO"
                       />
                       <span class="sidebar-brand__copy">
                         <span class="sidebar-brand__eyebrow">${t("nav.control")}</span>

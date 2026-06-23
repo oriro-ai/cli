@@ -195,7 +195,7 @@ function normalizeScenario(
   const sessionKey = scenario.sessionKey?.trim() || "main";
   return {
     assistantAgentId: scenario.assistantAgentId?.trim() || defaultAgentId,
-    assistantName: scenario.assistantName?.trim() || "Oriro",
+    assistantName: scenario.assistantName?.trim() || "ORIRO",
     defaultAgentId,
     deferredMethods: scenario.deferredMethods ?? [],
     historyMessages: scenario.historyMessages ?? [],

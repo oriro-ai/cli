@@ -364,7 +364,7 @@ export function resolveGoogleMeetRealtimeTranscriptionProvider(params: {
 
 export function buildGoogleMeetSpeakExactUserMessage(text: string): string {
   return [
-    "Speak this exact Oriro answer to the meeting, without adding, removing, or rephrasing words.",
+    "Speak this exact ORIRO answer to the meeting, without adding, removing, or rephrasing words.",
     `Answer: ${JSON.stringify(text)}`,
   ].join("\n");
 }

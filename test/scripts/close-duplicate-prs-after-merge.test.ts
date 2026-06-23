@@ -27,7 +27,7 @@ function pr(params: {
     number: params.number,
     state: params.state ?? "OPEN",
     title: params.title ?? `PR ${params.number}`,
-    url: `https://github.com/oriro-ai/cli/pull/${params.number}`,
+    url: `https://github.com/oriro/oriro/pull/${params.number}`,
   };
 }
 
@@ -75,14 +75,14 @@ diff --git a/b.ts b/b.ts
       candidates: [candidate],
       diffs,
       landed,
-      repo: "oriro-ai/cli",
+      repo: "oriro/oriro",
     });
 
     expect(plan).toStrictEqual([
       {
         action: "close",
         candidate,
-        comment: `Thanks for the fix. This is now covered by the landed #70532 / commit https://github.com/oriro-ai/cli/commit/6415e35.
+        comment: `Thanks for the fix. This is now covered by the landed #70532 / commit https://github.com/oriro/oriro/commit/6415e35.
 
 Evidence: overlapping changed hunks; shared file(s): ui/src/ui/chat/grouped-render.ts.
 
@@ -122,13 +122,13 @@ Closing #70530 as a duplicate.`,
       candidates: [candidate],
       diffs,
       landed,
-      repo: "oriro-ai/cli",
+      repo: "oriro/oriro",
     });
 
     expect(plan[0]).toStrictEqual({
       action: "close",
       candidate,
-      comment: `Thanks for the fix. This is now covered by the landed #70532 / commit https://github.com/oriro-ai/cli/commit/6415e35.
+      comment: `Thanks for the fix. This is now covered by the landed #70532 / commit https://github.com/oriro/oriro/commit/6415e35.
 
 Evidence: shared issue(s): #70491; shared file(s): ui/src/ui/chat/grouped-render.ts.
 
@@ -160,7 +160,7 @@ Closing #70592 as a duplicate.`,
         candidates: [candidate],
         diffs,
         landed,
-        repo: "oriro-ai/cli",
+        repo: "oriro/oriro",
       }),
     ).toThrow("Refusing to close #1");
   });
@@ -169,7 +169,7 @@ Closing #70592 as a duplicate.`,
     const calls: string[][] = [];
     const responses = new Map<string, string>([
       [
-        "pr view 70532 --repo oriro-ai/cli --json number,title,body,state,mergedAt,mergeCommit,closingIssuesReferences,files,url",
+        "pr view 70532 --repo oriro/oriro --json number,title,body,state,mergedAt,mergeCommit,closingIssuesReferences,files,url",
         JSON.stringify(
           pr({
             body: "Fixes #70491",
@@ -181,15 +181,15 @@ Closing #70592 as a duplicate.`,
         ),
       ],
       [
-        "pr view 70592 --repo oriro-ai/cli --json number,title,body,state,mergedAt,mergeCommit,closingIssuesReferences,files,url",
+        "pr view 70592 --repo oriro/oriro --json number,title,body,state,mergedAt,mergeCommit,closingIssuesReferences,files,url",
         JSON.stringify(pr({ body: "Closes #70491", number: 70592 })),
       ],
       [
-        "pr diff 70532 --repo oriro-ai/cli --color=never",
+        "pr diff 70532 --repo oriro/oriro --color=never",
         "diff --git a/ui/src/ui/chat/grouped-render.ts b/ui/src/ui/chat/grouped-render.ts\n@@ -402,8 +402,11 @@",
       ],
       [
-        "pr diff 70592 --repo oriro-ai/cli --color=never",
+        "pr diff 70592 --repo oriro/oriro --color=never",
         "diff --git a/ui/src/ui/chat/grouped-render.ts b/ui/src/ui/chat/grouped-render.ts\n@@ -286,8 +286,11 @@",
       ],
     ]);
@@ -204,7 +204,7 @@ Closing #70592 as a duplicate.`,
     };
 
     const args = parseArgs(["--landed-pr", "70532", "--duplicates", "70592"], {
-      GITHUB_REPOSITORY: "oriro-ai/cli",
+      GITHUB_REPOSITORY: "oriro/oriro",
     });
     const plan = runDuplicateCloseWorkflow(args, runGh);
 
@@ -229,7 +229,7 @@ Closing #70592 as a duplicate.`,
           evidence: { overlappingHunks: false, sharedFiles: [], sharedIssues: [70491] },
         },
       ],
-      repo: "oriro-ai/cli",
+      repo: "oriro/oriro",
       runGh: (args: string[]) => {
         calls.push(args);
         return "";
@@ -242,14 +242,14 @@ Closing #70592 as a duplicate.`,
         "edit",
         "70592",
         "--repo",
-        "oriro-ai/cli",
+        "oriro/oriro",
         "--add-label",
         "duplicate",
         "--add-label",
         "close:duplicate",
       ],
-      ["pr", "comment", "70592", "--repo", "oriro-ai/cli", "--body", "closing"],
-      ["pr", "close", "70592", "--repo", "oriro-ai/cli"],
+      ["pr", "comment", "70592", "--repo", "oriro/oriro", "--body", "closing"],
+      ["pr", "close", "70592", "--repo", "oriro/oriro"],
     ]);
   });
 });

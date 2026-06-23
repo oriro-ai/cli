@@ -245,7 +245,7 @@ describe("kimi web search provider", () => {
   it("accepts final responses with search result citations", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({
-        search_results: [{ title: "Oriro", url: "https://github.com/oriro-ai/cli" }],
+        search_results: [{ title: "Oriro", url: "https://github.com/oriro/oriro" }],
         choices: [
           {
             finish_reason: "stop",
@@ -261,7 +261,7 @@ describe("kimi web search provider", () => {
 
       expect(result.provider).toBe("kimi");
       expectStringFieldContains(result, "content", "Oriro is on GitHub.");
-      expect(result.citations).toEqual(["https://github.com/oriro-ai/cli"]);
+      expect(result.citations).toEqual(["https://github.com/oriro/oriro"]);
       expect(result).not.toHaveProperty("error");
     });
   });

@@ -1,5 +1,5 @@
 // Feishu plugin module implements monitor.comment notice handler behavior.
-import type { ClawdbotConfig, RuntimeEnv } from "../runtime-api.js";
+import type { OriroConfig, RuntimeEnv } from "../runtime-api.js";
 import { handleFeishuCommentEvent } from "./comment-handler.js";
 import {
   claimUnprocessedFeishuMessage,
@@ -23,7 +23,7 @@ function buildCommentNoticeQueueKey(event: {
 }
 
 export function createFeishuDriveCommentNoticeHandler(params: {
-  cfg: ClawdbotConfig;
+  cfg: OriroConfig;
   accountId: string;
   runtime?: RuntimeEnv;
   fireAndForget?: boolean;

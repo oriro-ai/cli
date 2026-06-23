@@ -190,7 +190,7 @@ export function renderCopilotWorkspaceBootstrapInstructions(
   }
   const hasSoulFile = files.some((file) => getCopilotContextFileBasename(file.path) === "soul.md");
   const lines: string[] = [
-    "Oriro loaded these user-editable workspace files. Treat them as project/user context. The Copilot SDK loads AGENTS.md natively from its instruction directories, so AGENTS.md is not repeated here.",
+    "ORIRO loaded these user-editable workspace files. Treat them as project/user context. The Copilot SDK loads AGENTS.md natively from its instruction directories, so AGENTS.md is not repeated here.",
     "",
     "# Project Context",
     "",

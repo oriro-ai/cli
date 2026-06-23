@@ -8,21 +8,21 @@ describe("docs-sync-publish", () => {
         "--target",
         "generated-docs",
         "--source-repo",
-        "oriro-ai/cli",
+        "oriro/oriro",
         "--source-sha",
         "abc123",
         "--orirohub-repo",
         "../orirohub",
         "--orirohub-source-repo",
-        "oriro-ai/clihub",
+        "oriro/orirohub",
         "--orirohub-source-sha",
         "def456",
       ]),
     ).toMatchObject({
       orirohubRepo: "../orirohub",
-      orirohubSourceRepo: "oriro-ai/clihub",
+      orirohubSourceRepo: "oriro/orirohub",
       orirohubSourceSha: "def456",
-      sourceRepo: "oriro-ai/cli",
+      sourceRepo: "oriro/oriro",
       sourceSha: "abc123",
       target: "generated-docs",
     });
@@ -41,6 +41,7 @@ describe("docs-sync-publish", () => {
       expect(() => parseArgs([flag, "--target", "generated-docs"])).toThrow(
         `${flag} requires a value`,
       );
+      expect(() => parseArgs([flag, "-h"])).toThrow(`${flag} requires a value`);
     }
   });
 });

@@ -1,11 +1,10 @@
 // CLI banner formatter and one-shot emitter.
 import { visibleWidth } from "../../packages/terminal-core/src/ansi.js";
 import {
-  decorativeEmoji,
-  decorativePrefix,
   stripDecorativeEmojiForTerminal,
   type DecorativeEmojiOptions,
 } from "../../packages/terminal-core/src/decorative-emoji.js";
+import { oriroInlineBrand } from "./brand-banner.js";
 import { isRich, theme } from "../../packages/terminal-core/src/theme.js";
 import { resolveCommitHash } from "../infra/git-commit.js";
 import { hasRootVersionAlias } from "./argv.js";
@@ -56,9 +55,9 @@ export function formatCliBannerLine(version: string, options: BannerOptions = {}
     emojiOptions,
   );
   const rich = options.richTty ?? isRich();
-  const title = decorativePrefix("ORIRO", "ORIRO", emojiOptions);
-  const prefix = decorativeEmoji("ORIRO", emojiOptions);
-  const indent = prefix ? `${prefix} ` : "";
+  const title = "ORIRO";
+  const richTitle = oriroInlineBrand(true);
+  const indent = "";
   const columns = options.columns ?? process.stdout.columns ?? 120;
   const plainBaseLine = `${title} ${version} (${commitLabel})`;
   const plainFullLine = tagline ? `${plainBaseLine} — ${tagline}` : plainBaseLine;
@@ -66,13 +65,13 @@ export function formatCliBannerLine(version: string, options: BannerOptions = {}
   if (rich) {
     if (fitsOnOneLine) {
       if (!tagline) {
-        return `${theme.heading(title)} ${theme.info(version)} ${theme.muted(`(${commitLabel})`)}`;
+        return `${richTitle} ${theme.info(version)} ${theme.muted(`(${commitLabel})`)}`;
       }
-      return `${theme.heading(title)} ${theme.info(version)} ${theme.muted(
+      return `${richTitle} ${theme.info(version)} ${theme.muted(
         `(${commitLabel})`,
       )} ${theme.muted("—")} ${theme.accentDim(tagline)}`;
     }
-    const line1 = `${theme.heading(title)} ${theme.info(version)} ${theme.muted(
+    const line1 = `${richTitle} ${theme.info(version)} ${theme.muted(
       `(${commitLabel})`,
     )}`;
     if (!tagline) {

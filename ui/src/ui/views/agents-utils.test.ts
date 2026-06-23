@@ -118,7 +118,7 @@ describe("agentLogoUrl", () => {
 });
 
 describe("assistantAvatarFallbackUrl", () => {
-  it("uses the bundled Oriro png for assistant profile fallbacks", () => {
+  it("uses the bundled Molty png for assistant profile fallbacks", () => {
     expect(assistantAvatarFallbackUrl("/ui")).toBe("/ui/apple-touch-icon.png");
     expect(assistantAvatarFallbackUrl("")).toBe("/apple-touch-icon.png");
   });
@@ -165,7 +165,7 @@ describe("resolveAgentAvatarUrl", () => {
 
   it("returns null for initials or emoji avatar values without a URL", () => {
     expect(resolveAgentAvatarUrl({ identity: { avatar: "A" } })).toBeNull();
-    expect(resolveAgentAvatarUrl({ identity: { avatar: "ORIRO" } })).toBeNull();
+    expect(resolveAgentAvatarUrl({ identity: { avatar: "🦞" } })).toBeNull();
   });
 });
 

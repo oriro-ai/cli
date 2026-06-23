@@ -27,7 +27,7 @@ export function inferKind(filename: string): OcKind | null {
   if (lower.endsWith(".jsonc") || lower.endsWith(".json")) {
     return "jsonc";
   }
-  if (lower.endsWith(".yaml") || lower.endsWith(".yml") || lower.endsWith(".oriro")) {
+  if (lower.endsWith(".yaml") || lower.endsWith(".yml") || lower.endsWith(".lobster")) {
     return "yaml";
   }
   return null;

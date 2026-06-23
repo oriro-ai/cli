@@ -4,12 +4,12 @@ import { isVitestRuntimeEnv } from "../infra/env.js";
 
 // Legacy env warnings are process-wide and intentionally one-shot so normal
 // gateway startup is noisy enough to notice but not spammed by repeated imports.
-const LEGACY_ENV_PREFIXES = ["CLAWDBOT_", "ORIRO_"] as const;
+const LEGACY_ENV_PREFIXES = ["MOLTBOT_"] as const;
 type LegacyEnvPrefix = (typeof LEGACY_ENV_PREFIXES)[number];
 
 let warned = false;
 
-/** Emits a one-time warning when ignored legacy CLAWDBOT_/ORIRO_ env vars are present. */
+/** Emits a one-time warning when ignored legacy ORIRO_/MOLTBOT_ env vars are present. */
 export function warnLegacyOriroEnvVars(env: NodeJS.ProcessEnv = process.env): void {
   if (warned || isVitestRuntimeEnv(env)) {
     return;
@@ -30,9 +30,13 @@ export function warnLegacyOriroEnvVars(env: NodeJS.ProcessEnv = process.env): vo
     return;
   }
 
+  const detectedPrefixes = LEGACY_ENV_PREFIXES.filter((prefix) => prefixCounts.has(prefix))
+    .map((prefix) => `${prefix}*`)
+    .join(", ");
+
   process.emitWarning(
     [
-      `Legacy environment variables were detected (${legacyVarCount} total), but Oriro only reads ORIRO_* names now.`,
+      `Legacy ${detectedPrefixes} environment variables were detected (${legacyVarCount} total), but ORIRO only reads ORIRO_* names now.`,
       "Rename them by replacing the legacy prefix with ORIRO_; the old names are ignored.",
     ].join("\n"),
     { code: "ORIRO_LEGACY_ENV_VARS", type: "DeprecationWarning" },

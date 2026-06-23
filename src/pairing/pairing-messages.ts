@@ -12,7 +12,7 @@ export function buildPairingReply(params: {
   const { channel, idLine, code } = params;
   const approveCommand = formatCliCommand(`oriro pairing approve ${channel} ${code}`);
   return [
-    "Oriro: access not configured.",
+    "ORIRO: access not configured.",
     "",
     idLine,
     "Pairing code:",

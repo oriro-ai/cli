@@ -65,7 +65,7 @@ pnpm android:release:archive
 Generate deterministic Google Play screenshots:
 
 ```bash
-ANDROID_SCREENSHOT_AVD=Oriro_QA_API35 pnpm android:screenshots
+ANDROID_SCREENSHOT_AVD=ORIRO_QA_API35 pnpm android:screenshots
 ```
 
 If exactly one ADB device is already connected, `pnpm android:screenshots`

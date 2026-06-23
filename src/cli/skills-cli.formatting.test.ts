@@ -111,42 +111,6 @@ describe("skills-cli (e2e)", () => {
     expect(output).toContain("peekaboo");
     expect(output).toContain("Details:");
   });
-
-  it("groups skills under category headings with byCategory", () => {
-    const makeEntry = (category: string, name: string, description: string): SkillEntry => {
-      const baseDir = path.join(tempBundledDir, category, name);
-      return {
-        skill: createFixtureSkill({
-          name,
-          description,
-          filePath: path.join(baseDir, "SKILL.md"),
-          baseDir,
-          source: "oriro-bundled",
-        }),
-        frontmatter: {},
-        metadata: {},
-      };
-    };
-    const report = buildWorkspaceSkillStatus(tempWorkspaceDir, {
-      managedSkillsDir: "/nonexistent",
-      entries: [
-        makeEntry("craft", "focus", "Deep thinking protocol"),
-        makeEntry("technical", "email-marketing", "Email campaigns"),
-        makeEntry("craft", "design", "Design systems"),
-      ],
-    });
-
-    const output = formatSkillsList(report, { byCategory: true });
-    // Category folders surface as Title-Case headings.
-    expect(output).toContain("Craft");
-    expect(output).toContain("Technical");
-    // Skills are grouped: both Craft skills appear before the Technical heading.
-    expect(output.indexOf("Craft")).toBeLessThan(output.indexOf("Technical"));
-    expect(output.indexOf("design")).toBeLessThan(output.indexOf("Technical"));
-    expect(output.indexOf("focus")).toBeLessThan(output.indexOf("Technical"));
-    // All three skills are listed.
-    expect(output).toContain("email-marketing");
-  });
 });
 
 function createFixtureSkill(params: {

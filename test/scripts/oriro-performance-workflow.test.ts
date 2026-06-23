@@ -58,10 +58,10 @@ describe("Oriro performance workflow", () => {
     expect(prepare.env?.ORIROGRIT_REPORTS_TOKEN).toBe("${{ secrets.ORIROGRIT_REPORTS_TOKEN }}");
     expect(publish.env?.ORIROGRIT_REPORTS_TOKEN).toBe("${{ secrets.ORIROGRIT_REPORTS_TOKEN }}");
     expect(prepare.run).toContain(
-      'remote add origin "https://x-access-token:${ORIROGRIT_REPORTS_TOKEN}@github.com/oriro-ai/cligrit-reports.git"',
+      'remote add origin "https://x-access-token:${ORIROGRIT_REPORTS_TOKEN}@github.com/oriro/orirogrit-reports.git"',
     );
     expect(publish.run).toContain(
-      'remote set-url origin "https://x-access-token:${ORIROGRIT_REPORTS_TOKEN}@github.com/oriro-ai/cligrit-reports.git"',
+      'remote set-url origin "https://x-access-token:${ORIROGRIT_REPORTS_TOKEN}@github.com/oriro/orirogrit-reports.git"',
     );
     expect(publish.run).toContain('git -C "$reports_root" push origin HEAD:main');
   });

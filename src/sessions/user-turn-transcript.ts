@@ -235,7 +235,7 @@ function buildPersistedUserTurnMessage(params: UserTurnInput): PersistedUserTurn
   // derived from each message's own `timestamp` field, so the current turn and
   // every historical turn serialize identically on the wire. Persisting a stamp
   // here would NOT match the bare-current arrival (the gateway no longer stamps
-  // the live turn) — see https://github.com/oriro-ai/cli/issues/3658.
+  // the live turn) — see https://github.com/oriro/oriro/issues/3658.
   const content = text || (hasMedia ? (params.mediaOnlyText ?? "") : "");
 
   const message = {

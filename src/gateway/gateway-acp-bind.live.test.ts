@@ -660,7 +660,7 @@ describeLive("gateway live (ACP bind)", () => {
                 probeAgent: liveAgent,
                 permissionMode: "approve-all",
                 nonInteractivePermissions: "deny",
-                oriroToolsMcpBridge: true,
+                openOriroToolsMcpBridge: true,
                 ...(agentCommandOverride
                   ? {
                       agents: {

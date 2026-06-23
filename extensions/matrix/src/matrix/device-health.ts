@@ -11,7 +11,7 @@ export type MatrixDeviceHealthSummary = {
   currentOriroDevices: MatrixManagedDeviceInfo[];
 };
 
-const ORIRO_DEVICE_NAME_PREFIX = "Oriro ";
+const ORIRO_DEVICE_NAME_PREFIX = "ORIRO ";
 
 export function isOriroManagedMatrixDevice(displayName: string | null | undefined): boolean {
   return displayName?.startsWith(ORIRO_DEVICE_NAME_PREFIX) === true;
@@ -21,12 +21,12 @@ export function summarizeMatrixDeviceHealth(
   devices: MatrixManagedDeviceInfo[],
 ): MatrixDeviceHealthSummary {
   const currentDeviceId = devices.find((device) => device.current)?.deviceId ?? null;
-  const oriroDevices = devices.filter((device) =>
+  const openOriroDevices = devices.filter((device) =>
     isOriroManagedMatrixDevice(device.displayName),
   );
   return {
     currentDeviceId,
-    staleOriroDevices: oriroDevices.filter((device) => !device.current),
-    currentOriroDevices: oriroDevices.filter((device) => device.current),
+    staleOriroDevices: openOriroDevices.filter((device) => !device.current),
+    currentOriroDevices: openOriroDevices.filter((device) => device.current),
   };
 }

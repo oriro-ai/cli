@@ -95,7 +95,7 @@ async function buildSkillItems(params: {
           : targetExists && !params.overwrite
             ? MIGRATION_REASON_TARGET_EXISTS
             : undefined,
-        message: `Copy ${item.skill.sourceLabel} into this Oriro agent workspace.`,
+        message: `Copy ${item.skill.sourceLabel} into this ORIRO agent workspace.`,
         details: {
           skillName: item.name,
           sourceLabel: item.skill.sourceLabel,
@@ -227,7 +227,7 @@ function buildPluginItems(
           reason: conflict ? MIGRATION_REASON_PLUGIN_EXISTS : undefined,
           source: plugin.source,
           target: `plugins.entries.codex.config.codexPlugins.plugins.${configKey}`,
-          message: `Install Codex plugin "${plugin.pluginName}" in the Oriro-managed Codex app-server runtime.`,
+          message: `Install Codex plugin "${plugin.pluginName}" in the ORIRO-managed Codex app-server runtime.`,
           details: {
             configKey,
             marketplaceName: CODEX_PLUGINS_MARKETPLACE_NAME,
@@ -461,7 +461,7 @@ function buildPluginConfigItem(
     status: conflict ? "conflict" : "planned",
     reason: conflict ? MIGRATION_REASON_TARGET_EXISTS : undefined,
     message:
-      "Enable Oriro's Codex plugin integration and record migrated source-installed curated plugins.",
+      "Enable ORIRO's Codex plugin integration and record migrated source-installed curated plugins.",
     details: {
       path: [...CODEX_PLUGIN_CONFIG_PATH],
       value,
@@ -543,7 +543,7 @@ export async function buildCodexMigrationPlan(
     warnings,
     nextSteps: [
       "Run oriro doctor after applying the migration.",
-      "Review skipped or auth-required Codex plugin/config/hook items before exposing them in Oriro sessions.",
+      "Review skipped or auth-required Codex plugin/config/hook items before exposing them in ORIRO sessions.",
     ],
     metadata: {
       agentDir: targets.agentDir,

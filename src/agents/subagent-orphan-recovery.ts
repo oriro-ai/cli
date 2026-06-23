@@ -7,7 +7,7 @@
  * synthetic resume message to restart their work. Parent notification is handled
  * separately by completion delivery after the child reaches a terminal result.
  *
- * @see https://github.com/oriro-ai/cli/issues/47711
+ * @see https://github.com/oriro/oriro/issues/47711
  */
 
 import crypto from "node:crypto";

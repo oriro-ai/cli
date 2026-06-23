@@ -20,7 +20,7 @@ function successfulRun(name: string, id: number, updatedAt: string) {
     path: ".github/workflows/ci.yml",
     created_at: "2026-06-17T10:46:24Z",
     updated_at: updatedAt,
-    html_url: `https://github.com/oriro-ai/cli/actions/runs/${id}`,
+    html_url: `https://github.com/oriro/oriro/actions/runs/${id}`,
   };
 }
 
@@ -291,19 +291,35 @@ describe("verify-pr-hosted-gates", () => {
     expect(
       parseArgs([
         "--repo",
-        "oriro-ai/cli",
+        "oriro/oriro",
         "--sha",
         sha,
         "--output",
         ".local/gates-hosted-checks.json",
       ]),
     ).toEqual({
-      repo: "oriro-ai/cli",
+      repo: "oriro/oriro",
       sha,
       output: ".local/gates-hosted-checks.json",
       changelogOnly: false,
     });
-    expect(() => parseArgs(["--repo", "oriro-ai/cli"])).toThrow("Usage:");
+    expect(() => parseArgs(["--repo", "oriro/oriro"])).toThrow("Usage:");
+    expect(() =>
+      parseArgs(["--repo", "-h", "--sha", sha, "--output", ".local/gates-hosted-checks.json"]),
+    ).toThrow("Expected --repo <value>.");
+    expect(() =>
+      parseArgs([
+        "--repo",
+        "oriro/oriro",
+        "--sha",
+        "-h",
+        "--output",
+        ".local/gates-hosted-checks.json",
+      ]),
+    ).toThrow("Expected --sha <value>.");
+    expect(() =>
+      parseArgs(["--repo", "oriro/oriro", "--sha", sha, "--output", "-h"]),
+    ).toThrow("Expected --output <value>.");
   });
 
   it("accepts JSON emitted through a colorizing GitHub CLI shim", () => {

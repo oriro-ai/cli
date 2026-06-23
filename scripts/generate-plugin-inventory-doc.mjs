@@ -188,12 +188,12 @@ function resolveDescription({ manifest, packageJson }) {
   if (channels.length > 0) {
     const channelLabel = displayList(channels);
     const channelNoun = channelLabel.toLowerCase().includes("channel") ? "" : " channel";
-    return `Adds the ${channelLabel}${channelNoun} surface for sending and receiving Oriro messages.`;
+    return `Adds the ${channelLabel}${channelNoun} surface for sending and receiving ORIRO messages.`;
   }
 
   const providers = Array.isArray(manifest.providers) ? manifest.providers : [];
   if (providers.length > 0) {
-    return `Adds ${displayList(providers)} model provider support to Oriro.`;
+    return `Adds ${displayList(providers)} model provider support to ORIRO.`;
   }
 
   const contracts = Object.keys(manifest.contracts ?? {}).toSorted((left, right) =>
@@ -224,7 +224,7 @@ function resolveDescription({ manifest, packageJson }) {
   }
 
   const packageDescription = normalizePackageDescription(packageJson.description);
-  return packageDescription ? `${packageDescription}.` : "Provides an Oriro plugin.";
+  return packageDescription ? `${packageDescription}.` : "Provides an ORIRO plugin.";
 }
 
 function pushUniqueDocLink(values, value) {
@@ -325,9 +325,9 @@ function resolveInstallRoute(packageJson, status) {
   if (status === "core") {
     const release = packageJson.oriro?.release;
     if (release?.publishToOriroHub === true || release?.publishToNpm === true) {
-      return `included in Oriro; ${resolveInstallRoute(packageJson, "external")}`;
+      return `included in ORIRO; ${resolveInstallRoute(packageJson, "external")}`;
     }
-    return "included in Oriro";
+    return "included in ORIRO";
   }
   const install = packageJson.oriro?.install;
   const release = packageJson.oriro?.release;
@@ -459,9 +459,9 @@ ${record.surface}${manualBlock ? `\n\n${manualBlock}` : ""}${relatedDocs ? `\n\n
 function renderReferenceIndex(records) {
   const referenceCount = records.filter(hasGeneratedReferencePage).length;
   return `---
-summary: "Generated index of Oriro plugin reference pages"
+summary: "Generated index of ORIRO plugin reference pages"
 read_when:
-  - You need a reference page for a specific Oriro plugin
+  - You need a reference page for a specific ORIRO plugin
   - You are auditing plugin docs coverage
 title: "Plugin reference"
 ---
@@ -579,7 +579,7 @@ function renderDocument() {
   };
 
   return `---
-summary: "Generated inventory of Oriro plugins shipped in core, published externally, or kept source-only"
+summary: "Generated inventory of ORIRO plugins shipped in core, published externally, or kept source-only"
 read_when:
   - You are deciding whether a plugin ships in the core npm package or installs separately
   - You are updating bundled plugin package metadata or release automation
@@ -599,7 +599,7 @@ pnpm plugins:inventory:gen
 ## Definitions
 
 - **Core npm package:** built into the \`oriro\` npm package and available without a separate plugin install.
-- **Official external package:** Oriro-maintained plugin omitted from the core npm package, kept in this official inventory, and installed on demand through OriroHub and/or npm.
+- **Official external package:** ORIRO-maintained plugin omitted from the core npm package, kept in this official inventory, and installed on demand through OriroHub and/or npm.
 - **Source checkout only:** repo-local plugin omitted from published npm artifacts and not advertised as an installable package.
 
 Source checkouts are different from npm installs: after \`pnpm install\`, bundled

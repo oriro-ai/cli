@@ -236,7 +236,7 @@ start_oriro_gateway() {
   stop_oriro_gateway_processes
   rm -f /tmp/oriro-parallels-macos-gateway.log
   trap '' HUP
-  /usr/bin/env ORIRO_HOME="$HOME" ORIRO_STATE_DIR="$HOME/.oriro" ORIRO_CONFIG_PATH="$HOME/.oriro-ai/cli.json" ${input.auth.apiKeyEnv}=${shellQuote(
+  /usr/bin/env ORIRO_HOME="$HOME" ORIRO_STATE_DIR="$HOME/.oriro" ORIRO_CONFIG_PATH="$HOME/.oriro/oriro.json" ${input.auth.apiKeyEnv}=${shellQuote(
     input.auth.apiKeyValue,
   )} "$ORIRO_BIN" gateway run --bind loopback --port 18789 --force >/tmp/oriro-parallels-macos-gateway.log 2>&1 </dev/null &
   sleep 1
@@ -380,7 +380,7 @@ start_oriro_gateway() {
   pkill -f "oriro gateway run" >/dev/null 2>&1 || true
   rm -f /tmp/oriro-parallels-linux-gateway.log
   setsid sh -lc ${shellQuote(
-    `exec env ORIRO_HOME=/root ORIRO_STATE_DIR=/root/.oriro ORIRO_CONFIG_PATH=/root/.oriro-ai/cli.json ORIRO_DISABLE_BONJOUR=1 ORIRO_ALLOW_ROOT=1 ${input.auth.apiKeyEnv}=${shellQuote(
+    `exec env ORIRO_HOME=/root ORIRO_STATE_DIR=/root/.oriro ORIRO_CONFIG_PATH=/root/.oriro/oriro.json ORIRO_DISABLE_BONJOUR=1 ORIRO_ALLOW_ROOT=1 ${input.auth.apiKeyEnv}=${shellQuote(
       input.auth.apiKeyValue,
     )} oriro gateway run --bind loopback --port 18789 --force >/tmp/oriro-parallels-linux-gateway.log 2>&1`,
   )} >/dev/null 2>&1 < /dev/null &

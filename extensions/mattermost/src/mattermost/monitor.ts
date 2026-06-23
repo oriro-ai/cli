@@ -653,7 +653,7 @@ export async function monitorMattermostProvider(opts: MonitorMattermostOpts = {}
               message: post.message ?? "",
               props: post.props ?? undefined,
             },
-            ephemeral_text: `Oriro ignored this action for ${decision.roomLabel}.`,
+            ephemeral_text: `ORIRO ignored this action for ${decision.roomLabel}.`,
           },
         };
       },

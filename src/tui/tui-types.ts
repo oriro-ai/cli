@@ -1,6 +1,6 @@
 // Defines shared TUI state, backend, and event types.
-import type { PostureId } from "../cli/posture.js";
 import type { SessionGoal } from "../config/sessions/types.js";
+import type { FastMode } from "@oriro/normalization-core/string-coerce";
 
 export type TuiOptions = {
   local?: boolean;
@@ -74,7 +74,7 @@ export type ResponseUsageMode = "on" | "off" | "tokens" | "full";
 export type SessionInfo = {
   thinkingLevel?: string;
   thinkingLevels?: Array<{ id: string; label: string }>;
-  fastMode?: boolean;
+  fastMode?: FastMode;
   verboseLevel?: string;
   traceLevel?: string;
   reasoningLevel?: string;
@@ -94,12 +94,6 @@ export type SessionInfo = {
   responseUsage?: ResponseUsageMode;
   updatedAt?: number | null;
   displayName?: string;
-  /**
-   * The local permission posture (shift+tab cycle). UI-only mirror of the
-   * exec policy patched to the gateway; the gateway enforces via
-   * execSecurity/execAsk (commands) — Guardian floor is never bypassed.
-   */
-  posture?: PostureId;
 };
 
 export type SessionScope = "per-sender" | "global";

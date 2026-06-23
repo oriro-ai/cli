@@ -63,7 +63,7 @@ describe("loadCrestodianOverview", () => {
     expect(overview.gateway.url).toBe("ws://127.0.0.1:19001");
     expect(overview.gateway.reachable).toBe(false);
     expect(overview.references.docsPath).toMatch(/docs$/);
-    expect(overview.references.sourceUrl).toBe("https://github.com/oriro-ai/cli");
+    expect(overview.references.sourceUrl).toBe("https://github.com/oriro/oriro");
     expect(formatCrestodianOverview(overview)).toContain(
       'Next: run "gateway status" or "restart gateway"',
     );

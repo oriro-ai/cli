@@ -943,7 +943,7 @@ export async function dispatchCronDelivery(
   let directCronSessionDeleted = false;
   const formatDeliveryTargetError = (error: string) =>
     params.sourceDeliveryOutcome.unverifiedMessageToolDelivery
-      ? `${error}; the agent used the message tool, but Oriro could not verify that message matched the cron delivery target`
+      ? `${error}; the agent used the message tool, but ORIRO could not verify that message matched the cron delivery target`
       : error;
   const failDeliveryTarget = (error: string) =>
     params.withRunSession({
@@ -1133,7 +1133,7 @@ export async function dispatchCronDelivery(
           // Keep all attempts out of the write-ahead delivery queue so a
           // late-successful first send cannot leave behind a failed queue
           // entry that replays on the next restart.
-          // See: https://github.com/oriro-ai/cli/issues/40545
+          // See: https://github.com/oriro/oriro/issues/40545
           skipQueue: true,
         });
         if (send.status === "failed") {

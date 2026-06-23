@@ -105,7 +105,9 @@ describe("gateway CPU scenario guard", () => {
       "--cpu-core-warn",
       "--hot-wall-warn-ms",
     ]) {
-      expect(() => testing.parseArgs([flag, "--skip-qa"])).toThrow(`Missing value for ${flag}`);
+      for (const value of ["--skip-qa", "-h"]) {
+        expect(() => testing.parseArgs([flag, value])).toThrow(`Missing value for ${flag}`);
+      }
     }
   });
 
@@ -320,7 +322,7 @@ describe("gateway CPU scenario guard", () => {
       cwd,
       env: {
         HOME: "/real/user/home",
-        ORIRO_CONFIG_PATH: "/real/user/.oriro-ai/cli.json",
+        ORIRO_CONFIG_PATH: "/real/user/.oriro/oriro.json",
         ORIRO_HOME: "/real/user/home",
         ORIRO_STATE_DIR: "/real/user/.oriro",
       },

@@ -2603,7 +2603,7 @@ describe("active-memory plugin", () => {
     };
     const error = makeMemoryToolAllowlistError(
       "no registered tools matched",
-      "tools.allow: *, oriro; runtime toolsAllow: memory_search, memory_get",
+      "tools.allow: *, lobster; runtime toolsAllow: memory_search, memory_get",
     );
     expect(testing.isMissingRegisteredMemoryToolsError(error)).toBe(true);
     runEmbeddedAgent.mockRejectedValueOnce(error);

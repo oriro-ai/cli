@@ -209,7 +209,7 @@ async function findManagedCodexAppServerCommandPath(params: {
   throw new Error(
     [
       `Managed Codex app-server binary was not found for ${MANAGED_CODEX_APP_SERVER_PACKAGE}.`,
-      "Reinstall or update Oriro, or run pnpm install in a source checkout.",
+      "Reinstall or update ORIRO, or run pnpm install in a source checkout.",
       "Set plugins.entries.codex.config.appServer.command or ORIRO_CODEX_APP_SERVER_BIN to use a custom Codex binary.",
     ].join(" "),
   );

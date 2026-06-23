@@ -1,13 +1,12 @@
 // Non-interactive plugin provider auth tests cover provider choice setup and runtime plugin install requirements.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { OriroConfig } from "../../../config/config.js";
-import type { CodexRuntimePluginInstallResult } from "../../codex-runtime-plugin-install.js";
-import type { CopilotRuntimePluginInstallResult } from "../../copilot-runtime-plugin-install.js";
+import type { RuntimePluginInstallResult } from "../../runtime-plugin-install.js";
 import { applyNonInteractivePluginProviderChoice } from "./auth-choice.plugin-providers.js";
 
 const ensureCodexRuntimePluginForModelSelection = vi.hoisted(() =>
   vi.fn(
-    async ({ cfg }: { cfg: OriroConfig }): Promise<CodexRuntimePluginInstallResult> => ({
+    async ({ cfg }: { cfg: OriroConfig }): Promise<RuntimePluginInstallResult> => ({
       cfg,
       required: false,
       installed: false,
@@ -20,7 +19,7 @@ vi.mock("../../codex-runtime-plugin-install.js", () => ({
 }));
 const ensureCopilotRuntimePluginForModelSelection = vi.hoisted(() =>
   vi.fn(
-    async ({ cfg }: { cfg: OriroConfig }): Promise<CopilotRuntimePluginInstallResult> => ({
+    async ({ cfg }: { cfg: OriroConfig }): Promise<RuntimePluginInstallResult> => ({
       cfg,
       required: false,
       installed: false,

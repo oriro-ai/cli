@@ -372,7 +372,23 @@ function buildReplyPayloadSendingBeforeDeliver(
         runId,
       },
     });
-    return hookedPayload && hasOutboundReplyContent(hookedPayload) ? hookedPayload : null;
+    const out = hookedPayload && hasOutboundReplyContent(hookedPayload) ? hookedPayload : null;
+    if (!out || !out.text) {
+      return out;
+    }
+    // ORIRO language bridge (output) — translate the reply into the user's language for
+    // display on chat/channels (English/unconfigured pass through). Best-effort: a
+    // translator/runtime failure never blocks delivery.
+    try {
+      const { translateOutgoing } = await import("../language/gateway.js");
+      const translated = await translateOutgoing(out.text);
+      if (translated !== out.text) {
+        return copyReplyPayloadMetadata(out, { ...out, text: translated });
+      }
+    } catch {
+      /* best-effort — never break reply delivery */
+    }
+    return out;
   };
 }
 

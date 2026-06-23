@@ -101,7 +101,7 @@ function formatWorkspaceHealthLine(
     return `- ${label}: ${display} (writable).`;
   }
   if (health === "missing") {
-    return `- ${label}: ${display} (missing; Oriro will create it on first run).`;
+    return `- ${label}: ${display} (missing; ORIRO will create it on first run).`;
   }
   if (health === "not_directory") {
     return `- ${label}: ${display} exists but is not a directory.`;
@@ -263,7 +263,7 @@ export function noteClaudeCliHealth(
   }
 
   if (!storedProfile) {
-    lines.push(`- Oriro auth profile: missing (${CLAUDE_CLI_PROFILE_ID}) in ${authStorePath}.`);
+    lines.push(`- ORIRO auth profile: missing (${CLAUDE_CLI_PROFILE_ID}) in ${authStorePath}.`);
     fixHints.push(
       `- Fix: run ${formatCliCommand(
         "oriro models auth login --provider anthropic --method cli --set-default",
@@ -271,7 +271,7 @@ export function noteClaudeCliHealth(
     );
   } else if (storedProfile.provider !== CLAUDE_CLI_PROVIDER) {
     lines.push(
-      `- Oriro auth profile: ${CLAUDE_CLI_PROFILE_ID} is wired to provider "${storedProfile.provider}" instead of "${CLAUDE_CLI_PROVIDER}".`,
+      `- ORIRO auth profile: ${CLAUDE_CLI_PROFILE_ID} is wired to provider "${storedProfile.provider}" instead of "${CLAUDE_CLI_PROVIDER}".`,
     );
     fixHints.push(
       `- Fix: rerun ${formatCliCommand(
@@ -280,7 +280,7 @@ export function noteClaudeCliHealth(
     );
   } else {
     lines.push(
-      `- Oriro auth profile: ${CLAUDE_CLI_PROFILE_ID} (provider ${CLAUDE_CLI_PROVIDER}).`,
+      `- ORIRO auth profile: ${CLAUDE_CLI_PROFILE_ID} (provider ${CLAUDE_CLI_PROVIDER}).`,
     );
   }
 

@@ -3,17 +3,18 @@ import { describeAccountSnapshot } from "oriro/plugin-sdk/account-helpers";
 import { hasConfiguredSecretInput } from "oriro/plugin-sdk/secret-input";
 import { patchChannelConfigForAccount } from "oriro/plugin-sdk/setup-runtime";
 import { formatDocsLink } from "oriro/plugin-sdk/setup-tools";
+import { isSlackPluginAccountConfigured } from "./account-configured.js";
 import type { ResolvedSlackAccount } from "./accounts.js";
 import type { OriroConfig } from "./channel-api.js";
 
 export const SLACK_CHANNEL = "slack" as const;
 
-export function buildSlackManifest(botName = "Oriro") {
-  const safeName = botName.trim() || "Oriro";
+export function buildSlackManifest(botName = "ORIRO") {
+  const safeName = botName.trim() || "ORIRO";
   const manifest = {
     display_information: {
       name: safeName,
-      description: `${safeName} connector for Oriro`,
+      description: `${safeName} connector for ORIRO`,
     },
     features: {
       bot_user: {
@@ -26,7 +27,7 @@ export function buildSlackManifest(botName = "Oriro") {
         messages_tab_read_only_enabled: false,
       },
       assistant_view: {
-        assistant_description: `${safeName} connects Slack assistant threads to Oriro agents.`,
+        assistant_description: `${safeName} connects Slack assistant threads to ORIRO agents.`,
         suggested_prompts: [
           {
             title: "What can you do?",
@@ -45,7 +46,7 @@ export function buildSlackManifest(botName = "Oriro") {
       slash_commands: [
         {
           command: "/oriro",
-          description: "Send a message to Oriro",
+          description: "Send a message to ORIRO",
           should_escape: false,
         },
       ],
@@ -133,6 +134,9 @@ export function setSlackChannelAllowlist(
 }
 
 export function isSlackSetupAccountConfigured(account: ResolvedSlackAccount): boolean {
+  if (account.config.mode === "relay") {
+    return isSlackPluginAccountConfigured(account);
+  }
   const hasConfiguredBotToken =
     Boolean(account.botToken?.trim()) || hasConfiguredSecretInput(account.config.botToken);
   const hasConfiguredAppToken =

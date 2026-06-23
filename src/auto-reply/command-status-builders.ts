@@ -63,7 +63,7 @@ export function buildHelpMessage(cfg?: OriroConfig): string {
   const optionParts = [
     "/think <level|default>",
     "/model <id>",
-    "/fast status|on|off|default",
+    "/fast status|auto|on|off|default",
     "/verbose on|off|full",
     "/trace on|off|raw",
   ];

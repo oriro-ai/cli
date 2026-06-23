@@ -6,7 +6,7 @@ import {
 import { hasControlCommand, isControlCommandMessage } from "oriro/plugin-sdk/command-detection";
 import { createNonExitingRuntimeEnv } from "oriro/plugin-sdk/plugin-test-runtime";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig, PluginRuntime } from "../runtime-api.js";
+import type { OriroConfig, PluginRuntime } from "../runtime-api.js";
 import { parseFeishuMessageEvent, type FeishuMessageEvent } from "./bot.js";
 import * as dedup from "./dedup.js";
 import {
@@ -54,7 +54,7 @@ afterAll(() => {
   vi.resetModules();
 });
 
-const cfg = {} as ClawdbotConfig;
+const cfg = {} as OriroConfig;
 
 function makeReactionEvent(
   overrides: Partial<FeishuReactionCreatedEvent> = {},
@@ -95,7 +95,7 @@ async function resolveReactionWithLookup(params: {
   });
 }
 
-async function resolveNonBotReaction(params?: { cfg?: ClawdbotConfig; uuid?: () => string }) {
+async function resolveNonBotReaction(params?: { cfg?: OriroConfig; uuid?: () => string }) {
   return await resolveReactionSyntheticEvent({
     cfg: params?.cfg ?? cfg,
     accountId: "default",
@@ -116,7 +116,7 @@ async function resolveNonBotReaction(params?: { cfg?: ClawdbotConfig; uuid?: () 
 
 type FeishuMention = NonNullable<FeishuMessageEvent["message"]["mentions"]>[number];
 
-function buildDebounceConfig(): ClawdbotConfig {
+function buildDebounceConfig(): OriroConfig {
   return {
     messages: {
       inbound: {
@@ -131,7 +131,7 @@ function buildDebounceConfig(): ClawdbotConfig {
         enabled: true,
       },
     },
-  } as ClawdbotConfig;
+  } as OriroConfig;
 }
 
 function buildDebounceAccount(): ResolvedFeishuAccount {
@@ -332,7 +332,7 @@ describe("resolveReactionSyntheticEvent", () => {
             reactionNotifications: "off",
           },
         },
-      } as ClawdbotConfig,
+      } as OriroConfig,
       accountId: "default",
       event,
       botOpenId: "ou_bot",
@@ -361,7 +361,7 @@ describe("resolveReactionSyntheticEvent", () => {
             reactionNotifications: "all",
           },
         },
-      } as ClawdbotConfig,
+      } as OriroConfig,
       uuid: () => "fixed-uuid",
     });
     expect(result?.message.message_id).toBe("om_msg1:reaction:THUMBSUP:fixed-uuid");

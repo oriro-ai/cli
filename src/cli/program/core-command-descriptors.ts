@@ -27,14 +27,14 @@ const coreCliCommandCatalog = defineCommandDescriptorCatalog([
     hasSubcommands: false,
   },
   {
-    name: "avatar",
-    description: "Pick an avatar that floats in your terminal and speaks replies",
-    hasSubcommands: false,
-  },
-  {
     name: "guardian",
     description: "Guardian V3 security — status, MCP setup, and server trust",
     hasSubcommands: true,
+  },
+  {
+    name: "avatar",
+    description: "Pick an avatar that floats in your terminal and speaks replies",
+    hasSubcommands: false,
   },
   {
     name: "head",
@@ -65,7 +65,7 @@ const coreCliCommandCatalog = defineCommandDescriptorCatalog([
   },
   {
     name: "backup",
-    description: "Create and verify local backup archives for Oriro state",
+    description: "Create and verify local backup archives for ORIRO state",
     hasSubcommands: true,
   },
   {
@@ -100,7 +100,7 @@ const coreCliCommandCatalog = defineCommandDescriptorCatalog([
   },
   {
     name: "mcp",
-    description: "Manage Oriro MCP config and channel bridge",
+    description: "Manage ORIRO MCP config and channel bridge",
     hasSubcommands: true,
     parentDefaultHelp: true,
   },

@@ -173,7 +173,7 @@ struct AppStateRemoteConfigTests {
                     "mode": "remote",
                     "remote": [
                         "url": "ws://127.0.0.1:18789",
-                        "sshTarget": "steipete@192.168.0.202",
+                        "sshTarget": "oriro@192.168.0.202",
                     ],
                 ],
             ])

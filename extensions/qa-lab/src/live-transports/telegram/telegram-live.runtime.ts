@@ -311,13 +311,13 @@ const TELEGRAM_QA_SCENARIOS: TelegramQaScenarioDefinition[] = [
     id: "telegram-status-command",
     title: "Telegram status command reply",
     rationale: "Recent Telegram group regressions broke /status while normal chat still worked.",
-    regressionRefs: ["oriro-ai/cli#74698"],
+    regressionRefs: ["oriro/oriro#74698"],
     timeoutMs: 45_000,
     buildRun: (sutUsername) =>
       telegramQaStepRun({
         expectReply: true,
         input: `/status@${sutUsername}`,
-        expectedTextIncludes: ["Oriro", "Model:", "Session:", "Activation:"],
+        expectedTextIncludes: ["ORIRO", "Model:", "Session:", "Activation:"],
       }),
   },
   {
@@ -338,7 +338,7 @@ const TELEGRAM_QA_SCENARIOS: TelegramQaScenarioDefinition[] = [
           driverGroupAuthorization: "allow",
           expectReply: true,
           input: `/status@${sutUsername}`,
-          expectedTextIncludes: ["Oriro", "Session:"],
+          expectedTextIncludes: ["ORIRO", "Session:"],
         },
         {
           expectReply: true,
@@ -399,7 +399,7 @@ const TELEGRAM_QA_SCENARIOS: TelegramQaScenarioDefinition[] = [
     defaultEnabled: false,
     rationale:
       "Opt-in real Telegram proof that /usage tokens decorates message-tool-only visible replies.",
-    regressionRefs: ["oriro-ai/cli#87392"],
+    regressionRefs: ["oriro/oriro#87392"],
     timeoutMs: 90_000,
     buildRun: (sutUsername) => {
       const marker = `QA-TELEGRAM-USAGE-FOOTER-${randomUUID().slice(0, 8).toUpperCase()}`;
@@ -471,7 +471,7 @@ const TELEGRAM_QA_SCENARIOS: TelegramQaScenarioDefinition[] = [
     defaultEnabled: false,
     defaultProviderModes: ["mock-openai"],
     rationale: "Opt-in regression guard for duplicate final replies from Telegram streaming paths.",
-    regressionRefs: ["oriro-ai/cli#39905"],
+    regressionRefs: ["oriro/oriro#39905"],
     timeoutMs: 75_000,
     buildRun: (sutUsername) =>
       telegramQaStepRun({
@@ -489,7 +489,7 @@ const TELEGRAM_QA_SCENARIOS: TelegramQaScenarioDefinition[] = [
     title: "Telegram long final reuses the preview message",
     defaultProviderModes: ["mock-openai"],
     rationale: "Regression guard for long streamed finals leaving stale preview messages behind.",
-    regressionRefs: ["oriro-ai/cli#39905"],
+    regressionRefs: ["oriro/oriro#39905"],
     timeoutMs: 60_000,
     buildRun: (sutUsername) =>
       telegramQaStepRun({
@@ -508,7 +508,7 @@ const TELEGRAM_QA_SCENARIOS: TelegramQaScenarioDefinition[] = [
     title: "Telegram three-chunk final keeps only final chunks",
     defaultEnabled: false,
     rationale: "Opt-in stress probe for Telegram long final chunk accounting.",
-    regressionRefs: ["oriro-ai/cli#39905"],
+    regressionRefs: ["oriro/oriro#39905"],
     timeoutMs: 60_000,
     buildRun: (sutUsername) =>
       telegramQaStepRun({

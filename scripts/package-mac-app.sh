@@ -8,7 +8,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT_DIR/scripts/lib/plistbuddy.sh"
 APP_ROOT="$ROOT_DIR/dist/Oriro.app"
 BUILD_ROOT="$ROOT_DIR/apps/macos/.build"
-PRODUCT="Oriro"
+PRODUCT="ORIRO"
 MLX_TTS_HELPER_PRODUCT="oriro-mlx-tts"
 MLX_TTS_HELPER_ROOT="$ROOT_DIR/apps/macos-mlx-tts"
 MLX_TTS_HELPER_BUILD_ROOT="$MLX_TTS_HELPER_ROOT/.build"
@@ -68,13 +68,13 @@ sparkle_framework_for_arch() {
 PNPM_CMD=()
 
 resolve_pnpm_cmd() {
-  if command -v pnpm >/dev/null 2>&1; then
-    PNPM_CMD=(pnpm)
+  if command -v corepack >/dev/null 2>&1 && (cd "$ROOT_DIR" && corepack pnpm --version >/dev/null 2>&1); then
+    PNPM_CMD=(corepack pnpm)
     return 0
   fi
 
-  if command -v corepack >/dev/null 2>&1 && (cd "$ROOT_DIR" && corepack pnpm --version >/dev/null 2>&1); then
-    PNPM_CMD=(corepack pnpm)
+  if command -v pnpm >/dev/null 2>&1; then
+    PNPM_CMD=(pnpm)
     return 0
   fi
 
@@ -360,7 +360,7 @@ stop_packaged_app_if_running() {
     return 0
   fi
 
-  echo "⏹  Stopping packaged Oriro bundle (${pids[*]})"
+  echo "⏹  Stopping packaged ORIRO bundle (${pids[*]})"
   kill "${pids[@]}" 2>/dev/null || true
   for _ in $(seq 1 40); do
     local alive=0
@@ -383,7 +383,7 @@ stop_packaged_app_if_running() {
     [[ "$alive" == "0" ]] && return 0
     sleep 0.1
   done
-  echo "ERROR: Packaged Oriro bundle did not exit: ${pids[*]}" >&2
+  echo "ERROR: Packaged ORIRO bundle did not exit: ${pids[*]}" >&2
   return 1
 }
 

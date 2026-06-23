@@ -2714,7 +2714,7 @@ describe("control UI credential redaction (issue #72283)", () => {
         type: "tool_execution_start",
         toolName: "exec",
         toolCallId: "tool-exec-secret",
-        args: { command: "cat ~/.oriro-ai/cli.json" },
+        args: { command: "cat ~/.oriro/oriro.json" },
       } as never,
     );
 

@@ -1,7 +1,11 @@
 // Resolves npm commands from the active Node toolchain, especially on Windows.
 import fs from "node:fs";
 import path from "node:path";
-import { buildCmdExeCommandLine, resolvePathEnvKey } from "./windows-cmd-helpers.mjs";
+import {
+  buildCmdExeCommandLine,
+  resolvePathEnvKey,
+  resolveWindowsCmdExePath,
+} from "./windows-cmd-helpers.mjs";
 
 function resolveToolchainNpmRunner(params) {
   const npmCliCandidates = [
@@ -48,7 +52,7 @@ export function resolveNpmRunner(params = {}) {
   const existsSync = params.existsSync ?? fs.existsSync;
   const env = params.env ?? process.env;
   const platform = params.platform ?? process.platform;
-  const comSpec = params.comSpec ?? env.ComSpec ?? "cmd.exe";
+  const comSpec = params.comSpec ?? (platform === "win32" ? resolveWindowsCmdExePath(env) : "");
   const pathImpl = platform === "win32" ? path.win32 : path.posix;
   const nodeDir = pathImpl.dirname(execPath);
   const npmToolchain = resolveToolchainNpmRunner({
@@ -73,7 +77,7 @@ export function resolveNpmRunner(params = {}) {
     throw new Error(
       `failed to resolve a toolchain-local npm next to ${execPath}. ` +
         `Checked: ${expectedPaths.join(", ")}. ` +
-        "Oriro refuses to shell out to bare npm on Windows; install a Node.js toolchain that bundles npm or run with a matching Node installation.",
+        "ORIRO refuses to shell out to bare npm on Windows; install a Node.js toolchain that bundles npm or run with a matching Node installation.",
     );
   }
   const pathKey = resolvePathEnvKey(env);

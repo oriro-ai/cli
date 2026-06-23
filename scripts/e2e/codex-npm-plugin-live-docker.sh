@@ -309,11 +309,11 @@ echo "codex_cli_prompt: Reply exactly: ${SUCCESS_MARKER}-PREFLIGHT"
 node scripts/e2e/lib/codex-npm-plugin-live/assertions.mjs assert-preflight "${SUCCESS_MARKER}-PREFLIGHT"
 echo "codex_cli_reply: ${SUCCESS_MARKER}-PREFLIGHT"
 
-echo "Running Oriro local agent turns through npm-installed Codex plugin..."
+echo "Running ORIRO local agent turns through npm-installed Codex plugin..."
 run_agent_turn \
   "turn1" \
   "${SUCCESS_MARKER}-TURN-1" \
-  "Reply in one short sentence. Include token ${SUCCESS_MARKER}-TURN-1 and say hello from the Oriro Codex plugin." \
+  "Reply in one short sentence. Include token ${SUCCESS_MARKER}-TURN-1 and say hello from the ORIRO Codex plugin." \
   /tmp/oriro-codex-agent-turn1.json \
   /tmp/oriro-codex-agent-turn1.err
 run_agent_turn \
@@ -345,7 +345,7 @@ if oriro agent --local \
   --thinking low \
   --timeout 120 \
   --json >/tmp/oriro-codex-agent-after-uninstall.json 2>/tmp/oriro-codex-agent-after-uninstall.err; then
-  echo "Expected Oriro agent to fail after Codex uninstall, got status 0" >&2
+  echo "Expected ORIRO agent to fail after Codex uninstall, got status 0" >&2
   exit 1
 fi
 if ! grep -Fq 'Requested agent harness "codex" is not registered' /tmp/oriro-codex-agent-after-uninstall.err &&

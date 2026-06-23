@@ -479,7 +479,7 @@ describe("resolveIMessageInboundDecision echo detection", () => {
         reaction_emoji: "👎",
         reaction_type: "dislike",
         is_reaction_add: true,
-        associated_message_guid: "p:0/oriro-reply-guid",
+        associated_message_guid: "p:0/lobster-reply-guid",
         associated_message_type: 2000,
         text: "Disliked “tapback target”",
         chat_id: 3,
@@ -491,7 +491,7 @@ describe("resolveIMessageInboundDecision echo detection", () => {
       echoCache: { has: () => false },
       isKnownFromMeMessageId: (messageId, { accountId, chatId, chatGuid, chatIdentifier }) => {
         expect({ messageId, accountId, chatId, chatGuid, chatIdentifier }).toEqual({
-          messageId: "oriro-reply-guid",
+          messageId: "lobster-reply-guid",
           accountId: "default",
           chatId: 3,
           chatGuid: "any;-;+15555550123",
@@ -506,11 +506,11 @@ describe("resolveIMessageInboundDecision echo detection", () => {
       throw new Error("expected reaction decision");
     }
     expect(decision.text).toBe(
-      "iMessage reaction added: 👎 by +15555550123 on msg oriro-reply-guid",
+      "iMessage reaction added: 👎 by +15555550123 on msg lobster-reply-guid",
     );
     expect(decision.route.sessionKey).toBe("agent:main:main");
     expect(decision.contextKey).toBe(
-      "imessage:reaction:added:3:oriro-reply-guid:+15555550123:👎",
+      "imessage:reaction:added:3:lobster-reply-guid:+15555550123:👎",
     );
   });
 
@@ -984,7 +984,7 @@ describe("buildIMessageInboundContext MessageSid handling (rowid-leak regression
   function buildParams(messageOverrides: Partial<{ id: number; guid: string }>) {
     const decision = {
       kind: "dispatch" as const,
-      route: { accountId: "default", agentId: "oriro", sessionKey: "k", mainSessionKey: "mk" },
+      route: { accountId: "default", agentId: "lobster", sessionKey: "k", mainSessionKey: "mk" },
       isGroup: false,
       sender: "+15555550123",
       senderId: "+15555550123",

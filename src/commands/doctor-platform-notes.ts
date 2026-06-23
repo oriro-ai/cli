@@ -71,7 +71,7 @@ export async function collectMacStaleOriroUpdateLaunchdJobsWarning(deps?: {
   }
 
   return [
-    "- Stale Oriro updater launchd job(s) detected.",
+    "- Stale ORIRO updater launchd job(s) detected.",
     ...jobs.map((job) => {
       const exitStatus =
         job.lastExitStatus !== undefined ? `, last exit ${job.lastExitStatus}` : "";

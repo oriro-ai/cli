@@ -1,8 +1,8 @@
 {
   "name": "@oriro/vercel-ai-gateway-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Vercel AI Gateway provider plugin",
+  "description": "ORIRO Vercel AI Gateway provider plugin",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*"

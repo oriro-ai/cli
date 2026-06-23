@@ -1,10 +1,10 @@
 {
   "name": "@oriro/msteams",
-  "version": "2026.6.8",
-  "description": "Oriro Microsoft Teams channel plugin for bot conversations.",
+  "version": "2026.6.9",
+  "description": "ORIRO Microsoft Teams channel plugin for bot conversations.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -17,10 +17,10 @@
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*",
     "jose": "6.2.3",
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.6.8"
+    "oriro": "workspace:*"
   },
   "peerDependenciesMeta": {
     "oriro": {
@@ -56,10 +56,10 @@
       "minHostVersion": ">=2026.4.10"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8"
+      "oriroVersion": "2026.6.9"
     },
     "release": {
       "publishToOriroHub": true,

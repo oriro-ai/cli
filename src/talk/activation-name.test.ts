@@ -19,11 +19,11 @@ describe("realtime voice activation names", () => {
   });
 
   it("matches and strips leading exact activation names", () => {
-    expect(matchRealtimeVoiceActivationName("Hey, Oriro, ship it", ["oriro"])).toEqual({
+    expect(matchRealtimeVoiceActivationName("Hey, Molty, ship it", ["molty"])).toEqual({
       allowed: true,
-      activationName: "oriro",
+      activationName: "molty",
       edge: "leading",
-      heardName: "oriro",
+      heardName: "molty",
       match: "exact",
       text: "ship it",
     });
@@ -41,25 +41,25 @@ describe("realtime voice activation names", () => {
   });
 
   it("accepts bounded fuzzy matches at the transcript edge", () => {
-    expect(matchRealtimeVoiceActivationName("Malty, what changed?", ["oriro"])).toMatchObject({
+    expect(matchRealtimeVoiceActivationName("Malty, what changed?", ["molty"])).toMatchObject({
       allowed: true,
-      activationName: "oriro",
+      activationName: "molty",
       edge: "leading",
       heardName: "malty",
       match: "fuzzy",
       text: "what changed?",
     });
-    expect(matchRealtimeVoiceActivationName("what changed, Malty?", ["oriro"])).toMatchObject({
+    expect(matchRealtimeVoiceActivationName("what changed, Malty?", ["molty"])).toMatchObject({
       allowed: true,
-      activationName: "oriro",
+      activationName: "molty",
       edge: "trailing",
       heardName: "malty",
       match: "fuzzy",
       text: "what changed",
     });
-    expect(matchRealtimeVoiceActivationName("what changed, Marty?", ["oriro"])).toMatchObject({
+    expect(matchRealtimeVoiceActivationName("what changed, Marty?", ["molty"])).toMatchObject({
       allowed: true,
-      activationName: "oriro",
+      activationName: "molty",
       edge: "trailing",
       heardName: "marty",
       match: "fuzzy",
@@ -70,17 +70,17 @@ describe("realtime voice activation names", () => {
   it("does not accept fuzzy trailing matches in ambient speech", () => {
     expect(
       matchRealtimeVoiceActivationName("I miss the nonsensical German ranting from Multy.", [
-        "oriro",
+        "molty",
       ]),
     ).toBeUndefined();
-    expect(matchRealtimeVoiceActivationName("I agree, mostly.", ["oriro"])).toBeUndefined();
-    expect(matchRealtimeVoiceActivationName("the room is damp, moldy.", ["oriro"])).toBeUndefined();
-    expect(matchRealtimeVoiceActivationName("the room is damp, moldy?", ["oriro"])).toBeUndefined();
-    expect(matchRealtimeVoiceActivationName("what changed, Malty.", ["oriro"])).toBeUndefined();
+    expect(matchRealtimeVoiceActivationName("I agree, mostly.", ["molty"])).toBeUndefined();
+    expect(matchRealtimeVoiceActivationName("the room is damp, moldy.", ["molty"])).toBeUndefined();
+    expect(matchRealtimeVoiceActivationName("the room is damp, moldy?", ["molty"])).toBeUndefined();
+    expect(matchRealtimeVoiceActivationName("what changed, Malty.", ["molty"])).toBeUndefined();
   });
 
   it("does not fuzzy match inside a larger phrase without an edge boundary", () => {
-    expect(matchRealtimeVoiceActivationName("maltiness is not a wake name", ["oriro"])).toBe(
+    expect(matchRealtimeVoiceActivationName("maltiness is not a wake name", ["molty"])).toBe(
       undefined,
     );
   });

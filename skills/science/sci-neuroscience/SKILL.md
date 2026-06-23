@@ -1,4 +1,6 @@
 ---
+watermark: ORIRO
+disable-model-invocation: true
 name: sci-neuroscience
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

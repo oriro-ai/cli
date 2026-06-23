@@ -179,7 +179,7 @@ describe("embedded acpx plugin config", () => {
   it("injects the built-in Oriro tools MCP server only when explicitly enabled", () => {
     const resolved = resolveAcpxPluginConfig({
       rawConfig: {
-        oriroToolsMcpBridge: true,
+        openOriroToolsMcpBridge: true,
       },
       workspaceDir: "/tmp/oriro-acpx",
     });
@@ -230,7 +230,7 @@ describe("embedded acpx plugin config", () => {
         pluginToolsMcpBridge: {
           type: "boolean",
         },
-        oriroToolsMcpBridge: {
+        openOriroToolsMcpBridge: {
           type: "boolean",
         },
         strictWindowsCmdWrapper: {

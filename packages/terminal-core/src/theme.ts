@@ -1,6 +1,6 @@
 // Terminal Core module implements theme behavior.
 import chalk, { Chalk } from "chalk";
-import { ORIRO_PALETTE } from "./palette.js";
+import { LOBSTER_PALETTE } from "./palette.js";
 
 // Shared terminal color theme that respects NO_COLOR and FORCE_COLOR.
 
@@ -15,17 +15,17 @@ const hex = (value: string) => baseChalk.hex(value);
 
 /** Shared terminal theme color functions. */
 export const theme = {
-  accent: hex(ORIRO_PALETTE.accent),
-  accentBright: hex(ORIRO_PALETTE.accentBright),
-  accentDim: hex(ORIRO_PALETTE.accentDim),
-  info: hex(ORIRO_PALETTE.info),
-  success: hex(ORIRO_PALETTE.success),
-  warn: hex(ORIRO_PALETTE.warn),
-  error: hex(ORIRO_PALETTE.error),
-  muted: hex(ORIRO_PALETTE.muted),
-  heading: baseChalk.bold.hex(ORIRO_PALETTE.accent),
-  command: hex(ORIRO_PALETTE.accentBright),
-  option: hex(ORIRO_PALETTE.warn),
+  accent: hex(LOBSTER_PALETTE.accent),
+  accentBright: hex(LOBSTER_PALETTE.accentBright),
+  accentDim: hex(LOBSTER_PALETTE.accentDim),
+  info: hex(LOBSTER_PALETTE.info),
+  success: hex(LOBSTER_PALETTE.success),
+  warn: hex(LOBSTER_PALETTE.warn),
+  error: hex(LOBSTER_PALETTE.error),
+  muted: hex(LOBSTER_PALETTE.muted),
+  heading: baseChalk.bold.hex(LOBSTER_PALETTE.accent),
+  command: hex(LOBSTER_PALETTE.accentBright),
+  option: hex(LOBSTER_PALETTE.warn),
 } as const;
 
 /** Return true when color styling is active. */

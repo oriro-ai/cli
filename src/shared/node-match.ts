@@ -65,9 +65,9 @@ function isCurrentOriroClient(clientId: string | undefined): boolean {
   return normalized.startsWith("oriro-");
 }
 
-function isLegacyClawdbotClient(clientId: string | undefined): boolean {
+function isLegacyOriroClient(clientId: string | undefined): boolean {
   const normalized = normalizeOptionalLowercaseString(clientId) ?? "";
-  return normalized.startsWith("clawdbot-") || normalized.startsWith("moldbot-");
+  return normalized.startsWith("oriro-") || normalized.startsWith("moldbot-");
 }
 
 function pickPreferredLegacyMigrationMatch(
@@ -77,11 +77,11 @@ function pickPreferredLegacyMigrationMatch(
   if (current.length !== 1) {
     return undefined;
   }
-  const legacyCount = matches.filter((match) => isLegacyClawdbotClient(match.clientId)).length;
+  const legacyCount = matches.filter((match) => isLegacyOriroClient(match.clientId)).length;
   if (legacyCount === 0 || current.length + legacyCount !== matches.length) {
     return undefined;
   }
-  // During Clawdbot -> Oriro migration, a unique current client should win only
+  // During Oriro -> Oriro migration, a unique current client should win only
   // when every other tie is a known legacy client for the same human-facing node.
   return current[0];
 }
@@ -115,7 +115,7 @@ function scoreNodeCandidate(node: NodeMatchCandidate, matchScore: number): numbe
   }
   if (isCurrentOriroClient(node.clientId)) {
     score += 10;
-  } else if (isLegacyClawdbotClient(node.clientId)) {
+  } else if (isLegacyOriroClient(node.clientId)) {
     score -= 10;
   }
   return score;

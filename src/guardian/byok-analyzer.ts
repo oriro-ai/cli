@@ -3,7 +3,7 @@
 // The deterministic gate flags ambiguous calls ("ask"): a novel command, an untrusted
 // MCP payload. This analyzer escalates those to the user's CONFIGURED model (their BYOK
 // key — the same model the CLI already uses, so no extra key, no extra cost, and on a
-// local model nothing leaves the device). It returns a refined verdict. The TranzGuard
+// local model nothing leaves the device). It returns a refined verdict. The bundled
 // Guardian V3 Lite model is a drop-in replacement for the client at graduation.
 //
 // Guardian stays decoupled from the heavy provider stack: it depends only on a tiny
@@ -11,8 +11,8 @@
 // registerByokAnalyzer() — one line, exactly like Step 1's registerTranslator() seam.
 
 import type { GuardianAnalyzer } from "./analyzer.js";
-import type { GuardianCall, GuardianSeverity, GuardianVerdict } from "./types.js";
 import { registerGuardianAnalyzer } from "./analyzer.js";
+import type { GuardianCall, GuardianSeverity, GuardianVerdict } from "./types.js";
 
 /** The minimal model handle Guardian needs — satisfied by any BYOK provider or V3 Lite. */
 export interface GuardianModelClient {
@@ -40,7 +40,11 @@ function buildUserPrompt(call: GuardianCall, ruleVerdict: GuardianVerdict): stri
   return lines.filter(Boolean).join("\n");
 }
 
-const SEV: Record<GuardianVerdict["decision"], GuardianSeverity> = { allow: "info", ask: "warning", block: "critical" };
+const SEV: Record<GuardianVerdict["decision"], GuardianSeverity> = {
+  allow: "info",
+  ask: "warning",
+  block: "critical",
+};
 
 /** Parse the model's line into a verdict; on anything unparseable, keep the rule's verdict. */
 export function parseModelVerdict(text: string, fallback: GuardianVerdict): GuardianVerdict {
@@ -53,7 +57,10 @@ export function parseModelVerdict(text: string, fallback: GuardianVerdict): Guar
 }
 
 /** Build a GuardianAnalyzer backed by a BYOK model client (or Guardian V3 Lite). */
-export function createByokAnalyzer(client: GuardianModelClient, opts?: { id?: string }): GuardianAnalyzer {
+export function createByokAnalyzer(
+  client: GuardianModelClient,
+  opts?: { id?: string },
+): GuardianAnalyzer {
   return {
     id: opts?.id ?? "byok",
     ready: () => true,

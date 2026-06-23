@@ -1,6 +1,6 @@
-// Oriro palette tokens for CLI/UI theming. Use this palette for all CLI color output.
+// Lobster palette tokens for CLI/UI theming. Use this palette for all CLI color output.
 // Keep in sync with docs/cli/index.md (CLI palette section).
-export const ORIRO_PALETTE = {
+export const LOBSTER_PALETTE = {
   accent: "#FF5A2D",
   accentBright: "#FF7A3D",
   accentDim: "#D14A22",

@@ -1,8 +1,8 @@
 {
   "name": "@oriro/llm-task",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro JSON-only LLM task plugin",
+  "description": "ORIRO JSON-only LLM task plugin",
   "type": "module",
   "dependencies": {
     "typebox": "1.1.39"

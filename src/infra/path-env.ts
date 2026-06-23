@@ -50,7 +50,9 @@ function isKnownPathDir(existingPathParts: ReadonlySet<string>, dirPath: string)
 }
 
 function isLinuxbrewPath(dirPath: string): boolean {
-  return dirPath.split(path.sep).includes(".linuxbrew");
+  // Linuxbrew candidates are POSIX paths ("/home/linuxbrew/.linuxbrew/bin") even when the
+  // host separator is "\\" — so detect the ".linuxbrew" segment separator-agnostically.
+  return dirPath.split(/[/\\]/).includes(".linuxbrew");
 }
 
 function resolvePathBootstrapBrewDirs(params: {

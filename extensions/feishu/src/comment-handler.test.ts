@@ -1,7 +1,7 @@
 // Feishu tests cover comment handler plugin behavior.
 import type { PreparedInboundReply } from "oriro/plugin-sdk/channel-inbound";
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
-import type { ClawdbotConfig, PluginRuntime } from "../runtime-api.js";
+import type { OriroConfig, PluginRuntime } from "../runtime-api.js";
 import { handleFeishuCommentEvent } from "./comment-handler.js";
 import { setFeishuRuntime } from "./runtime.js";
 
@@ -40,7 +40,7 @@ async function raceWithNextMacrotask<T>(promise: Promise<T>): Promise<T | "pendi
   ]);
 }
 
-function buildConfig(overrides?: Partial<ClawdbotConfig>): ClawdbotConfig {
+function buildConfig(overrides?: Partial<OriroConfig>): OriroConfig {
   return {
     channels: {
       feishu: {
@@ -50,7 +50,7 @@ function buildConfig(overrides?: Partial<ClawdbotConfig>): ClawdbotConfig {
       },
     },
     ...overrides,
-  } as ClawdbotConfig;
+  } as OriroConfig;
 }
 
 let currentRuntimeConfig = buildConfig();
@@ -79,7 +79,7 @@ function mockCallArg(mockFn: ReturnType<typeof vi.fn>, label: string, callIndex 
 }
 
 function createTestRuntime(overrides?: {
-  currentCfg?: ClawdbotConfig;
+  currentCfg?: OriroConfig;
   readAllowFromStore?: () => Promise<unknown[]>;
   upsertPairingRequest?: () => Promise<{ code: string; created: boolean }>;
   resolveAgentRoute?: () => ReturnType<typeof buildResolvedRoute>;

@@ -115,13 +115,13 @@ function trimTrailingSlashes(url: string): string {
   return url.replace(/\/+$/, "");
 }
 
-function resolveKimiBaseUrl(kimi?: KimiConfig, oriroConfig?: OriroConfig): string {
+function resolveKimiBaseUrl(kimi?: KimiConfig, openOriroConfig?: OriroConfig): string {
   const explicitBaseUrl = normalizeOptionalString(kimi?.baseUrl) ?? "";
   if (explicitBaseUrl) {
     return trimTrailingSlashes(explicitBaseUrl) || DEFAULT_KIMI_BASE_URL;
   }
 
-  const moonshotBaseUrl = oriroConfig?.models?.providers?.moonshot?.baseUrl;
+  const moonshotBaseUrl = openOriroConfig?.models?.providers?.moonshot?.baseUrl;
   if (typeof moonshotBaseUrl === "string") {
     const normalizedMoonshotBaseUrl = trimTrailingSlashes(moonshotBaseUrl.trim());
     if (normalizedMoonshotBaseUrl && isNativeMoonshotBaseUrl(normalizedMoonshotBaseUrl)) {

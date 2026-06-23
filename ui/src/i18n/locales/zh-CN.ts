@@ -199,6 +199,7 @@ export const zh_CN: TranslationMap = {
     inherit: "继承",
     defaultOption: "默认（{value}）",
     offExplicit: "关闭（显式）",
+    auto: "auto",
     on: "开启",
     off: "关闭",
     full: "完整",
@@ -1274,7 +1275,7 @@ export const zh_CN: TranslationMap = {
         stepDashboard:
           "使用 oriro dashboard 重新打开提供的 dashboard，确保 UI 和 Gateway 来自同一安装。",
         stepDevUi: "如果使用 pnpm ui:dev，请基于当前 checkout 重新构建或重启开发 UI。",
-        stepRestart: "更新 Oriro 后重启 Gateway，使其提供当前协议。",
+        stepRestart: "更新 ORIRO 后重启 Gateway，使其提供当前协议。",
       },
       network: {
         title: "无法连接",
@@ -1580,6 +1581,7 @@ export const zh_CN: TranslationMap = {
       nextHeartbeat: "下次心跳",
       wakeModeHelp: "立即模式立即触发。下次心跳等待下一个周期。",
       payloadKind: "执行内容",
+      command: "Command",
       systemEvent: "发布消息到主时间线",
       agentTurn: "运行助手任务（隔离）",
       systemEventHelp: "将文本发送到网关主时间线（适用于提醒/触发）。",

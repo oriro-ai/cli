@@ -544,7 +544,7 @@ export async function runSearchSetupFlow(
     await prompter.note(
       [
         `${entry.label} works without an API key.`,
-        "Oriro will enable the plugin and use it as your web_search provider.",
+        "ORIRO will enable the plugin and use it as your web_search provider.",
         `Docs: ${entry.docsUrl ?? "https://docs.oriro.ai/tools/web"}`,
       ].join("\n"),
       "Web search",
@@ -618,7 +618,7 @@ export async function runSearchSetupFlow(
     const ref = buildSearchEnvRef(config, choice);
     await prompter.note(
       [
-        "Secret references enabled — Oriro will store a reference instead of the API key.",
+        "Secret references enabled — ORIRO will store a reference instead of the API key.",
         `Env var: ${ref.id}${envAvailable ? " (detected)" : ""}.`,
         ...(envAvailable ? [] : [`Set ${ref.id} in the Gateway environment.`]),
         "Docs: https://docs.oriro.ai/tools/web",

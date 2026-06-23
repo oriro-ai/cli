@@ -9,7 +9,7 @@ Goal: brabble-style always-on voice hook for macOS 26 using Apple Speech.framewo
 - `SwabbleKit` target (multi-platform) providing wake-word gating helpers that can use speech segment timing to require a post-trigger gap.
 - Hook execution with cooldown, min_chars, timeout, prefix, env vars.
 - Simple config at `~/.config/swabble/config.json` (JSON, Codable) — no TOML.
-- CLI implemented with Commander (SwiftPM package `steipete/Commander`); core types are available via the SwiftPM library product `Swabble` for embedding.
+- CLI implemented with Commander (SwiftPM package `oriro/Commander`); core types are available via the SwiftPM library product `Swabble` for embedding.
 - Foreground `serve`; later launchd helper for start/stop/restart.
 - File transcription command emitting txt or srt.
 - Basic status/health surfaces and mic selection stubs.

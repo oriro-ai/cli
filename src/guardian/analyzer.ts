@@ -8,7 +8,7 @@
 // The analyzer is pluggable (registerGuardianAnalyzer), exactly like the translator.
 // Two implementations slot in here with NO change to the gate:
 //   • a BYOK analyzer — reuses the user's own session model ($0 extra, ships today);
-//   • Guardian V3 Lite — Vinay's TranzGuard threat model, auto-downloaded at onboarding.
+//   • Guardian V3 Lite — the bundled local threat model, auto-downloaded at onboarding.
 // Until one is registered the gate runs rules-only (still fully protective).
 
 import type { GuardianCall, GuardianVerdict } from "./types.js";
@@ -42,13 +42,18 @@ export function activeAnalyzerId(): string | null {
  * (we never spend a model call on a clean "allow", and never downgrade a hard "block"
  * below "ask" — the model can confirm/raise, not silently clear a critical block).
  */
-export async function analyze(call: GuardianCall, ruleVerdict: GuardianVerdict): Promise<GuardianVerdict> {
+export async function analyze(
+  call: GuardianCall,
+  ruleVerdict: GuardianVerdict,
+): Promise<GuardianVerdict> {
   if (!active || !active.ready() || ruleVerdict.decision === "allow") return ruleVerdict;
   try {
     const refined = await active.analyze(call, ruleVerdict);
     if (ruleVerdict.decision === "block" && refined.decision !== "block") {
       // Model may explain a block but cannot clear a critical one to "allow".
-      return refined.decision === "allow" ? { ...ruleVerdict, reason: `${ruleVerdict.reason} · ${refined.reason}` } : refined;
+      return refined.decision === "allow"
+        ? { ...ruleVerdict, reason: `${ruleVerdict.reason} · ${refined.reason}` }
+        : refined;
     }
     return refined;
   } catch {

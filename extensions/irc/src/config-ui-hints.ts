@@ -4,7 +4,7 @@ import type { ChannelConfigUiHint } from "oriro/plugin-sdk/core";
 export const ircChannelConfigUiHints = {
   "": {
     label: "IRC",
-    help: "IRC channel provider configuration and compatibility settings for classic IRC transport workflows. Use this section when bridging legacy chat infrastructure into Oriro.",
+    help: "IRC channel provider configuration and compatibility settings for classic IRC transport workflows. Use this section when bridging legacy chat infrastructure into ORIRO.",
   },
   dmPolicy: {
     label: "IRC DM Policy",

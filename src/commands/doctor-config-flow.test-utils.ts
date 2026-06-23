@@ -143,7 +143,7 @@ export async function runDoctorConfigWithInput<T>(params: {
   setDoctorConfigInputForTest({
     config: structuredClone(params.config),
     exists: true,
-    path: "/virtual/.oriro-ai/cli.json",
+    path: "/virtual/.oriro/oriro.json",
     preflightMode: params.preflightMode ?? inferredPreflightMode,
   });
   try {

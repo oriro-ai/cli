@@ -11,7 +11,7 @@ function usage(): string {
   return [
     "Usage: node --import tsx scripts/test-force.ts",
     "",
-    "Clears the configured Oriro gateway port, then runs the local test suite.",
+    "Clears the configured ORIRO gateway port, then runs the local test suite.",
     "",
     "Options:",
     "  -h, --help    Show this help.",

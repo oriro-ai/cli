@@ -103,7 +103,7 @@ function chunkedResponse(chunks: Uint8Array[]) {
 describe("real-behavior-proof-policy", () => {
   it.each([
     "![after](https://github.com/user-attachments/assets/abc123)",
-    "Linked artifact: https://github.com/oriro-ai/cli/actions/runs/123456789/artifacts/987654321",
+    "Linked artifact: https://github.com/oriro/oriro/actions/runs/123456789/artifacts/987654321",
     "Redacted runtime log: gateway connected Discord channel and delivered the reply.",
     ["Terminal transcript:", "```text", "$ oriro gateway status", "discord ready", "```"].join(
       "\n",

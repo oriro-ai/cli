@@ -7,7 +7,7 @@ import type { Model } from "../../../llm/types.js";
 import {
   collectEntriesForBranchSummaryFromBranches,
   generateBranchSummary as generateBranchSummaryCore,
-  oriroAgentCoreRuntime,
+  openOriroAgentCoreRuntime,
   prepareBranchEntries,
   type BranchPreparation,
   type BranchSummaryDetails,
@@ -62,7 +62,7 @@ export async function generateBranchSummary(
   options: GenerateBranchSummaryOptions,
 ): Promise<BranchSummaryResult> {
   const result = await generateBranchSummaryCore(entries, {
-    runtime: oriroAgentCoreRuntime,
+    runtime: openOriroAgentCoreRuntime,
     ...options,
   });
   if (result.ok) {

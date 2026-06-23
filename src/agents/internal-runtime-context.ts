@@ -16,14 +16,14 @@ export const ORIRO_RUNTIME_CONTEXT_NOTICE =
   "This context is runtime-generated, not user-authored. Keep internal details private.";
 /** Header for context attached to the immediately preceding user message. */
 export const ORIRO_NEXT_TURN_RUNTIME_CONTEXT_HEADER =
-  "Oriro runtime context for the immediately preceding user message.";
+  "ORIRO runtime context for the immediately preceding user message.";
 /** Header for runtime events passed as prompt context. */
-export const ORIRO_RUNTIME_EVENT_HEADER = "Oriro runtime event.";
+export const ORIRO_RUNTIME_EVENT_HEADER = "ORIRO runtime event.";
 /** Custom message type used for structured runtime-context messages. */
 export const ORIRO_RUNTIME_CONTEXT_CUSTOM_TYPE = "oriro.runtime-context";
 
 const LEGACY_INTERNAL_CONTEXT_HEADER =
-  ["Oriro runtime context (internal):", ORIRO_RUNTIME_CONTEXT_NOTICE, ""].join("\n") + "\n";
+  ["ORIRO runtime context (internal):", ORIRO_RUNTIME_CONTEXT_NOTICE, ""].join("\n") + "\n";
 
 const LEGACY_INTERNAL_EVENT_MARKER = "[Internal task completion event]";
 const LEGACY_INTERNAL_EVENT_SEPARATOR = "\n\n---\n\n";

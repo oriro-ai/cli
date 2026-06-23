@@ -149,7 +149,7 @@ function collectGatewayServiceStartRepairIssues(
     // reinstall/repair before pretending restart succeeded.
     issues.push({
       code: "version-mismatch",
-      message: `service was installed by Oriro ${serviceVersion}, current CLI is ${VERSION}`,
+      message: `service was installed by ORIRO ${serviceVersion}, current CLI is ${VERSION}`,
     });
   }
   for (const candidate of command.programArguments.slice(0, 2)) {

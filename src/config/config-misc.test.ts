@@ -493,7 +493,7 @@ describe("ui.seamColor", () => {
   });
 
   it("rejects non-hex colors", () => {
-    const res = validateConfigObject({ ui: { seamColor: "oriro" } });
+    const res = validateConfigObject({ ui: { seamColor: "lobster" } });
     expect(res.ok).toBe(false);
   });
 
@@ -972,8 +972,8 @@ describe("config identity/materialization regressions", () => {
             id: "main",
             identity: {
               name: "Samantha Sloth",
-              theme: "space oriro",
-              emoji: "ORIRO",
+              theme: "space lobster",
+              emoji: "🦞",
             },
             groupChat: { mentionPatterns: ["@oriro"] },
           },

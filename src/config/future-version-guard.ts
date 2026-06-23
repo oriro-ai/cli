@@ -58,7 +58,7 @@ export function resolveFutureConfigActionBlock(
     action: params.action,
     currentVersion,
     touchedVersion,
-    message: `Refusing to ${params.action} because this Oriro binary (${currentVersion}) is older than the config last written by Oriro ${touchedVersion}.`,
+    message: `Refusing to ${params.action} because this ORIRO binary (${currentVersion}) is older than the config last written by ORIRO ${touchedVersion}.`,
     hints: [
       "Run the newer oriro binary on PATH, or reinstall the intended gateway service from the newer install.",
       `Set ${ALLOW_OLDER_BINARY_DESTRUCTIVE_ACTIONS_ENV}=1 only for an intentional downgrade or recovery action.`,

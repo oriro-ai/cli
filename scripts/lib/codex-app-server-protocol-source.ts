@@ -42,18 +42,13 @@ type ResolvePnpmCommandOptions = {
   platform?: NodeJS.Platform;
 };
 
-function resolveEnvValue(env: NodeJS.ProcessEnv, name: string): string | undefined {
-  const key = Object.keys(env).find((candidate) => candidate.toLowerCase() === name.toLowerCase());
-  return key === undefined ? undefined : env[key];
-}
-
 export function resolveCodexProtocolPnpmCommand(
   args: string[],
   options: ResolvePnpmCommandOptions = {},
 ): PnpmCommand {
   const env = options.env ?? process.env;
   const command = resolvePnpmRunner({
-    comSpec: options.comSpec ?? resolveEnvValue(env, "ComSpec"),
+    comSpec: options.comSpec,
     env,
     npmExecPath: options.npmExecPath ?? env.npm_execpath,
     nodeExecPath: options.execPath ?? process.execPath,
@@ -153,7 +148,7 @@ export async function resolveCodexAppServerProtocolSource(repoRoot: string): Pro
   throw new Error(
     [
       "Codex app-server protocol schema not found.",
-      "Set ORIRO_CODEX_REPO to a checkout of openai/codex, or keep a sibling `codex` checkout next to the primary Oriro checkout.",
+      "Set ORIRO_CODEX_REPO to a checkout of openai/codex, or keep a sibling `codex` checkout next to the primary ORIRO checkout.",
       `Checked: ${checked.join(", ") || "<none>"}`,
     ].join("\n"),
   );

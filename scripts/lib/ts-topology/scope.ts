@@ -128,7 +128,7 @@ export function createPluginSdkScope(_repoRoot: string): TopologyScope {
     importSpecifier:
       entrypoint === "index" ? "oriro/plugin-sdk" : `oriro/plugin-sdk/${entrypoint}`,
   }));
-  return buildScopeFromEntrypoints("plugin-sdk", "Oriro plugin-sdk public surface", entrypoints);
+  return buildScopeFromEntrypoints("plugin-sdk", "ORIRO plugin-sdk public surface", entrypoints);
 }
 
 export function createFilesystemPublicSurfaceScope(

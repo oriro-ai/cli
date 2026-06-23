@@ -51,7 +51,7 @@ export async function writeGatewayScript(
     [
       "@echo off",
       `set "ORIRO_GATEWAY_PORT=${port}"`,
-      `"C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\steipete\\AppData\\Roaming\\npm\\node_modules\\oriro\\dist\\index.js" gateway --port ${port}`,
+      `"C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\oriro\\AppData\\Roaming\\npm\\node_modules\\oriro\\dist\\index.js" gateway --port ${port}`,
       "",
     ].join("\r\n"),
     "utf8",

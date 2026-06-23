@@ -6,7 +6,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vites
 // Mock the plugin-sdk runtime-config surface so we can drive the policy
 // reader from the test without booting a gateway. mutateConfigFile is also
 // mocked so persistAllowAlways tests can assert what would have been written
-// without touching ~/.oriro-ai/cli.json.
+// without touching ~/.oriro/oriro.json.
 const getRuntimeConfigMock = vi.fn();
 const mutateConfigFileMock = vi.fn();
 
@@ -368,12 +368,12 @@ describe("evaluateFilePolicy — ask modes", () => {
 describe("evaluateFilePolicy — node-id resolution", () => {
   it("resolves by displayName when nodeId has no entry", () => {
     withConfig({
-      "Oriro MacBook": { allowReadPaths: ["/tmp/**"] },
+      "Lobster MacBook": { allowReadPaths: ["/tmp/**"] },
     });
     expectResultFields(
       evaluateFilePolicy({
         nodeId: "node-abc-123",
-        nodeDisplayName: "Oriro MacBook",
+        nodeDisplayName: "Lobster MacBook",
         kind: "read",
         path: "/tmp/x",
       }),
@@ -445,7 +445,7 @@ describe("persistAllowAlways", () => {
 
     await persistAllowAlways({
       nodeId: "n1",
-      nodeDisplayName: "Oriro",
+      nodeDisplayName: "Lobster",
       kind: "write",
       path: "/srv/out.txt",
     });
@@ -459,7 +459,7 @@ describe("persistAllowAlways", () => {
         };
       };
     };
-    expect(root.plugins.entries["file-transfer"].config.nodes["Oriro"].allowWritePaths).toContain(
+    expect(root.plugins.entries["file-transfer"].config.nodes["Lobster"].allowWritePaths).toContain(
       "/srv/out.txt",
     );
   });
@@ -484,7 +484,7 @@ describe("persistAllowAlways", () => {
 
     await persistAllowAlways({
       nodeId: "n1",
-      nodeDisplayName: "Oriro",
+      nodeDisplayName: "Lobster",
       kind: "read",
       path: "/srv/added.png",
     });
@@ -503,7 +503,7 @@ describe("persistAllowAlways", () => {
       "/var/log/**",
     ]);
     // A new entry keyed by displayName (not "*") must hold the new path.
-    expect(root.plugins.entries["file-transfer"].config.nodes["Oriro"].allowReadPaths).toEqual([
+    expect(root.plugins.entries["file-transfer"].config.nodes["Lobster"].allowReadPaths).toEqual([
       "/srv/added.png",
     ]);
   });

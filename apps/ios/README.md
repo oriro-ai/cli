@@ -29,11 +29,11 @@ pnpm install
 ./scripts/ios-configure-signing.sh
 cd apps/ios
 xcodegen generate
-open Oriro.xcodeproj
+open ORIRO.xcodeproj
 ```
 
 3. In Xcode:
-   - Scheme: `Oriro`
+   - Scheme: `ORIRO`
    - Destination: connected iPhone (recommended for real behavior)
    - Build configuration: `Debug`
    - Run (`Product` -> `Run`)
@@ -186,7 +186,7 @@ pnpm ios:release:upload
    - generates deterministic App Store screenshots
    - uploads release notes and screenshots to the editable App Store version
    - generates `apps/ios/build/AppStoreRelease.xcconfig`
-   - archives `Oriro`
+   - archives `ORIRO`
    - uploads the IPA to App Store Connect for TestFlight/App Review use
    - leaves App Review submission for a maintainer to complete manually
 

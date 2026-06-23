@@ -1,15 +1,15 @@
 {
   "name": "@oriro/migrate-claude",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Claude to Oriro migration provider",
+  "description": "Claude to ORIRO migration provider",
   "type": "module",
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*",
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.6.8"
+    "oriro": "workspace:*"
   },
   "peerDependenciesMeta": {
     "oriro": {

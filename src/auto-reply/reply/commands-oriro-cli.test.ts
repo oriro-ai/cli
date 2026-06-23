@@ -35,12 +35,12 @@ describe("buildCurrentOriroCliArgv", () => {
   });
 
   it("preserves a real Oriro launcher entry", () => {
-    setArgv1("/opt/oriro-ai/cli.mjs");
+    setArgv1("/opt/oriro/oriro.mjs");
 
     expect(buildCurrentOriroCliArgv(["sessions", "export-trajectory"])).toEqual([
       process.execPath,
       ...process.execArgv,
-      "/opt/oriro-ai/cli.mjs",
+      "/opt/oriro/oriro.mjs",
       "sessions",
       "export-trajectory",
     ]);

@@ -1,10 +1,10 @@
 {
   "name": "@oriro/openshell-sandbox",
-  "version": "2026.6.8",
-  "description": "Oriro sandbox backend for the NVIDIA OpenShell CLI with mirrored local workspaces and SSH command execution.",
+  "version": "2026.6.9",
+  "description": "ORIRO sandbox backend for the NVIDIA OpenShell CLI with mirrored local workspaces and SSH command execution.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -23,10 +23,10 @@
       "minHostVersion": ">=2026.5.12-beta.1"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8",
+      "oriroVersion": "2026.6.9",
       "bundledDist": false
     },
     "release": {

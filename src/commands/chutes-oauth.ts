@@ -118,7 +118,7 @@ async function waitForLocalCallback(params: {
             "<!doctype html>",
             "<html><head><meta charset='utf-8' /></head>",
             "<body><h2>Chutes OAuth complete</h2>",
-            "<p>You can close this window and return to Oriro.</p></body></html>",
+            "<p>You can close this window and return to ORIRO.</p></body></html>",
           ].join(""),
         );
         if (timeout) {

@@ -8,7 +8,6 @@ import { pathToFileURL } from "node:url";
 import { parseStrictIntegerOption } from "./lib/dev-tooling-safety.ts";
 import { delay, stopChild } from "./lib/gateway-bench-child.ts";
 import {
-  classifyProbeErrorKind,
   getFreePort,
   parseProcessRssKb,
   readProcessRssMb,
@@ -312,7 +311,7 @@ function parseOptions(argv: string[] = process.argv.slice(2)): CliOptions {
 }
 
 function printUsage(): void {
-  console.log(`Oriro Gateway startup benchmark
+  console.log(`ORIRO Gateway startup benchmark
 
 Usage:
   pnpm test:startup:gateway -- [options]
@@ -984,7 +983,6 @@ async function main() {
 
 export const testing = {
   classifyGatewayReadyLog,
-  classifyProbeErrorKind,
   collectResultFailures,
   collectStartupTrace,
   parseOptions,

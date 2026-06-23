@@ -49,7 +49,7 @@ describe("release-beta-smoke", () => {
   it("parses workflow run urls when gh includes them in dispatch output", () => {
     expect(
       parseWorkflowRunIdFromOutput(
-        "Dispatched: https://github.com/oriro-ai/cli/actions/runs/1234567890",
+        "Dispatched: https://github.com/oriro/oriro/actions/runs/1234567890",
       ),
     ).toBe("1234567890");
   });
@@ -77,7 +77,7 @@ describe("release-beta-smoke", () => {
 
     const merged = mergeTelegramProofIntoReleaseBody(
       body,
-      "- npm Telegram beta E2E: https://github.com/oriro-ai/cli/actions/runs/123",
+      "- npm Telegram beta E2E: https://github.com/oriro/oriro/actions/runs/123",
     );
 
     expect(merged).toContain("actions/runs/123");
@@ -101,7 +101,7 @@ describe("release-beta-smoke", () => {
 
     const merged = mergeTelegramProofIntoReleaseBody(
       body,
-      "- npm Telegram beta E2E: https://github.com/oriro-ai/cli/actions/runs/123",
+      "- npm Telegram beta E2E: https://github.com/oriro/oriro/actions/runs/123",
     );
 
     expect(merged.indexOf("actions/runs/123")).toBeLessThan(merged.indexOf("### Assets"));
@@ -134,12 +134,12 @@ describe("release-beta-smoke", () => {
     const sleeps: number[] = [];
 
     await expect(
-      pollRun("oriro-ai/cli", "123", {
+      pollRun("oriro/oriro", "123", {
         now: () => now,
         pollIntervalMs: 400,
         readRun: () => ({
           conclusion: null,
-          html_url: "https://github.com/oriro-ai/cli/actions/runs/123",
+          html_url: "https://github.com/oriro/oriro/actions/runs/123",
           status: "queued",
           updated_at: "2026-05-28T12:00:00Z",
         }),
@@ -155,10 +155,10 @@ describe("release-beta-smoke", () => {
 
   it("returns when the Telegram workflow succeeds", async () => {
     await expect(
-      pollRun("oriro-ai/cli", "123", {
+      pollRun("oriro/oriro", "123", {
         readRun: () => ({
           conclusion: "success",
-          html_url: "https://github.com/oriro-ai/cli/actions/runs/123",
+          html_url: "https://github.com/oriro/oriro/actions/runs/123",
           status: "completed",
           updated_at: "2026-05-28T12:00:00Z",
         }),

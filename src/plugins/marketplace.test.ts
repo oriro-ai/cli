@@ -442,9 +442,9 @@ describe("marketplace plugins", () => {
 
   it("resolves Claude-style plugin@marketplace shortcuts from known_marketplaces.json", async () => {
     await withTempDir("oriro-marketplace-test-", async (homeDir) => {
-      const oriroHome = path.join(homeDir, "oriro-home");
+      const openOriroHome = path.join(homeDir, "oriro-home");
       await fs.mkdir(path.join(homeDir, ".claude", "plugins"), { recursive: true });
-      await fs.mkdir(oriroHome, { recursive: true });
+      await fs.mkdir(openOriroHome, { recursive: true });
       await fs.writeFile(
         path.join(homeDir, ".claude", "plugins", "known_marketplaces.json"),
         JSON.stringify({
@@ -459,7 +459,7 @@ describe("marketplace plugins", () => {
       );
 
       const shortcut = await withEnvAsync(
-        { HOME: homeDir, ORIRO_HOME: oriroHome },
+        { HOME: homeDir, ORIRO_HOME: openOriroHome },
         async () => await resolveMarketplaceInstallShortcut("superpowers@claude-plugins-official"),
       );
 

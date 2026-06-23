@@ -148,7 +148,7 @@ async function processGoogleChatEvent(event: GoogleChatEvent, target: WebhookTar
  * Resolve bot display name with fallback chain:
  * 1. Account config name
  * 2. Agent name from config
- * 3. "Oriro" as generic fallback
+ * 3. "ORIRO" as generic fallback
  */
 function resolveBotDisplayName(params: {
   accountName?: string;
@@ -163,7 +163,7 @@ function resolveBotDisplayName(params: {
   if (agent?.name?.trim()) {
     return agent.name.trim();
   }
-  return "Oriro";
+  return "ORIRO";
 }
 
 async function processMessageWithPipeline(params: {

@@ -1,17 +1,17 @@
 {
   "name": "@oriro/tokenjuice",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "@oriro/tokenjuice",
-      "version": "2026.6.8",
+      "version": "2026.6.9",
       "dependencies": {
         "tokenjuice": "0.8.1"
       },
       "peerDependencies": {
-        "oriro": ">=2026.6.8"
+        "oriro": ">=2026.6.9"
       },
       "peerDependenciesMeta": {
         "oriro": {
@@ -32,7 +32,7 @@
       },
       "funding": {
         "type": "github",
-        "url": "https://github.com/sponsors/vincentkoc"
+        "url": "https://github.com/sponsors/oriro"
       }
     }
   }

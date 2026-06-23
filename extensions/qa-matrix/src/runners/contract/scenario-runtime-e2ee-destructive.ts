@@ -172,7 +172,7 @@ async function registerMatrixQaDestructiveOwner(
     .replace(/^-+|-+$/g, "")
     .slice(0, 24);
   const account = await createMatrixQaClient({ baseUrl: context.baseUrl }).registerWithToken({
-    deviceName: "Oriro Matrix QA Destructive Owner",
+    deviceName: "ORIRO Matrix QA Destructive Owner",
     localpart: `qa-destructive-${localpartSuffix}-${randomUUID().replaceAll("-", "").slice(0, 8)}`,
     password: `matrix-qa-${randomUUID()}`,
     registrationToken: requireMatrixQaRegistrationToken(context),
@@ -654,7 +654,7 @@ export async function runMatrixQaE2eeStateLossExternalRecoveryKeyScenario(
   const { cli, device } = await runMatrixQaExternalKeyRestore({
     accountId: "external-key",
     context,
-    deviceName: "Oriro Matrix QA External Key Restore",
+    deviceName: "ORIRO Matrix QA External Key Restore",
     label: "state-loss-external-recovery-key",
     password: setup.ownerPassword,
     userId: setup.ownerUserId,
@@ -708,7 +708,7 @@ export async function runMatrixQaE2eeStateLossExternalRecoveryKeyScenario(
         verificationExitCode: diagnostics.result.exitCode,
       },
       details: [
-        "deleted Matrix state simulated with a fresh Oriro CLI state root",
+        "deleted Matrix state simulated with a fresh ORIRO CLI state root",
         `encrypted room id: ${setup.roomId}`,
         `seeded encrypted event: ${setup.seededEventId}`,
         `recovery device: ${device.deviceId}`,
@@ -741,7 +741,7 @@ export async function runMatrixQaE2eeStateLossStoredRecoveryKeyScenario(
   const { cli, device } = await runMatrixQaExternalKeyRestore({
     accountId: "stored-key",
     context,
-    deviceName: "Oriro Matrix QA Stored Key Restore",
+    deviceName: "ORIRO Matrix QA Stored Key Restore",
     label: "state-loss-stored-recovery-key",
     password: setup.ownerPassword,
     userId: setup.ownerUserId,
@@ -820,7 +820,7 @@ export async function runMatrixQaE2eeStateLossNoRecoveryKeyScenario(
   const { cli, device } = await runMatrixQaExternalKeyRestore({
     accountId: "no-key",
     context,
-    deviceName: "Oriro Matrix QA No Key Restore",
+    deviceName: "ORIRO Matrix QA No Key Restore",
     label: "state-loss-no-recovery-key",
     password: setup.ownerPassword,
     userId: setup.ownerUserId,
@@ -877,7 +877,7 @@ export async function runMatrixQaE2eeStaleRecoveryKeyAfterBackupResetScenario(
   const { cli, device } = await runMatrixQaExternalKeyRestore({
     accountId: "stale-key",
     context,
-    deviceName: "Oriro Matrix QA Stale Key Restore",
+    deviceName: "ORIRO Matrix QA Stale Key Restore",
     label: "stale-recovery-key-after-backup-reset",
     password: setup.ownerPassword,
     userId: setup.ownerUserId,
@@ -1021,7 +1021,7 @@ export async function runMatrixQaE2eeServerBackupDeletedLocalReuploadRestoresSce
   const { cli, device } = await runMatrixQaExternalKeyRestore({
     accountId: "backup-reupload",
     context,
-    deviceName: "Oriro Matrix QA Backup Reupload Restore",
+    deviceName: "ORIRO Matrix QA Backup Reupload Restore",
     label: "server-backup-deleted-local-reupload-restores",
     password: setup.ownerPassword,
     userId: setup.ownerUserId,
@@ -1095,7 +1095,7 @@ export async function runMatrixQaE2eeCorruptCryptoIdbSnapshotScenario(
   const { cli, device } = await runMatrixQaExternalKeyRestore({
     accountId: "corrupt-idb",
     context,
-    deviceName: "Oriro Matrix QA Corrupt IDB Restore",
+    deviceName: "ORIRO Matrix QA Corrupt IDB Restore",
     label: "corrupt-crypto-idb-snapshot",
     password: setup.ownerPassword,
     userId: setup.ownerUserId,
@@ -1169,7 +1169,7 @@ export async function runMatrixQaE2eeServerDeviceDeletedLocalStateIntactScenario
   const { cli, device } = await runMatrixQaExternalKeyRestore({
     accountId: "deleted-device",
     context,
-    deviceName: "Oriro Matrix QA Deleted Device",
+    deviceName: "ORIRO Matrix QA Deleted Device",
     label: "server-device-deleted-local-state-intact",
     password: setup.ownerPassword,
     userId: setup.ownerUserId,
@@ -1265,7 +1265,7 @@ export async function runMatrixQaE2eeServerDeviceDeletedReloginRecoversScenario(
   const deleted = await runMatrixQaExternalKeyRestore({
     accountId: "deleted-device-recovery",
     context,
-    deviceName: "Oriro Matrix QA Deleted Device Recovery Source",
+    deviceName: "ORIRO Matrix QA Deleted Device Recovery Source",
     label: "server-device-deleted-relogin-source",
     password: setup.ownerPassword,
     userId: setup.ownerUserId,
@@ -1313,7 +1313,7 @@ export async function runMatrixQaE2eeServerDeviceDeletedReloginRecoversScenario(
     replacement = await runMatrixQaExternalKeyRestore({
       accountId: "deleted-device-recovery-relogin",
       context,
-      deviceName: "Oriro Matrix QA Deleted Device Recovery Relogin",
+      deviceName: "ORIRO Matrix QA Deleted Device Recovery Relogin",
       label: "server-device-deleted-relogin-recovery",
       password: setup.ownerPassword,
       userId: setup.ownerUserId,
@@ -1576,7 +1576,7 @@ export async function runMatrixQaE2eeWrongAccountRecoveryKeyScenario(
     try {
       device = await loginMatrixQaRecoveryDevice({
         context,
-        deviceName: "Oriro Matrix QA Wrong Account Key",
+        deviceName: "ORIRO Matrix QA Wrong Account Key",
         password: observerPassword,
         userId: context.observerUserId,
       });
@@ -1652,7 +1652,7 @@ export async function runMatrixQaE2eeHistoryExistsBackupEmptyScenario(
   const { cli, device } = await runMatrixQaExternalKeyRestore({
     accountId: "empty-backup",
     context,
-    deviceName: "Oriro Matrix QA Empty Backup",
+    deviceName: "ORIRO Matrix QA Empty Backup",
     label: "history-exists-backup-empty",
     password: setup.ownerPassword,
     userId: setup.ownerUserId,

@@ -1,12 +1,12 @@
 {
   "name": "@oriro/anthropic-vertex-provider",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "@oriro/anthropic-vertex-provider",
-      "version": "2026.6.8",
+      "version": "2026.6.9",
       "dependencies": {
         "@anthropic-ai/vertex-sdk": "0.16.1"
       }

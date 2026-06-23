@@ -18,17 +18,17 @@ Use this skill for maintainer-facing GitHub workflow, not for ordinary code chan
 Common read-only path:
 
 ```bash
-gitcrawl threads oriro-ai/cli --numbers <issue-or-pr-number> --include-closed --json
-gitcrawl neighbors oriro-ai/cli --number <issue-or-pr-number> --limit 12 --json
-gitcrawl search oriro-ai/cli --query "<scope or title keywords>" --mode hybrid --json
-gitcrawl cluster-detail oriro-ai/cli --id <cluster-id> --member-limit 20 --body-chars 280 --json
+gitcrawl threads oriro/oriro --numbers <issue-or-pr-number> --include-closed --json
+gitcrawl neighbors oriro/oriro --number <issue-or-pr-number> --limit 12 --json
+gitcrawl search oriro/oriro --query "<scope or title keywords>" --mode hybrid --json
+gitcrawl cluster-detail oriro/oriro --id <cluster-id> --member-limit 20 --body-chars 280 --json
 ```
 
 ## Claim specific review targets
 
 When a maintainer asks Codex to review, triage, fix, or land a specific Oriro issue/PR, check assignment before deep work.
 
-- Identify the requesting maintainer's GitHub login. In this environment, default Peter to `steipete`; if another maintainer is clearly the requester, use that maintainer's bare login.
+- Identify the requesting maintainer's GitHub login. In this environment, default Peter to `oriro`; if another maintainer is clearly the requester, use that maintainer's bare login.
 - Read current assignees with live `gh issue view` / `gh pr view`; `gitcrawl` is not enough for assignment state.
 - If unassigned, assign the requester before deep review. This is allowed for specific requested targets; do not auto-assign broad discovery candidates or shortlists.
 - If assigned to someone else, say so clearly before analysis and include assignment age:
@@ -41,7 +41,7 @@ When a maintainer asks Codex to review, triage, fix, or land a specific Oriro is
 Assignment time proof:
 
 ```bash
-gh api "repos/oriro-ai/cli/issues/<number>/timeline" --paginate \
+gh api "repos/oriro/oriro/issues/<number>/timeline" --paginate \
   -H "Accept: application/vnd.github+json" \
   --jq '[.[] | select(.event=="assigned") | {assignee:.assignee.login, assigner:.assigner.login, actor:.actor.login, created_at}]'
 ```
@@ -51,7 +51,7 @@ Use the newest `assigned` event for each current assignee. Issue timeline events
 Claim command for issues or PRs:
 
 ```bash
-gh api -X POST "repos/oriro-ai/cli/issues/<number>/assignees" -f 'assignees[]=<login>' >/dev/null
+gh api -X POST "repos/oriro/oriro/issues/<number>/assignees" -f 'assignees[]=<login>' >/dev/null
 ```
 
 ## Surface opener identity
@@ -59,7 +59,7 @@ gh api -X POST "repos/oriro-ai/cli/issues/<number>/assignees" -f 'assignees[]=<l
 - For every reviewed, triaged, closed, or landed issue/PR, show the opener's human name when available, GitHub login, and account age.
 - Get the login from `gh issue view` / `gh pr view` (`author.login`), then fetch profile metadata once with `gh api users/<login> --jq '{login,name,created_at,type}'`.
 - Report opener identity as one compact line:
-  `By: Jane Doe (@jane, acct 2021-04-03) | Oriro: 4 PRs, 2 issues, 11 commits/12mo | GitHub: 9 repos, 86 commits, 9 PRs, 3 issues, 12 reviews`
+  `By: Jane Doe (@jane, acct 2021-04-03) | ORIRO: 4 PRs, 2 issues, 11 commits/12mo | GitHub: 9 repos, 86 commits, 9 PRs, 3 issues, 12 reviews`
 - Always show recent activity in two lanes: Oriro-local PRs, issues, and commits in the last 12 months; and general public GitHub activity over the same window. For linked issue-fixing PRs, include both the PR author and issue opener when they differ.
 - Prefer the bundled helper for activity lookups:
 
@@ -72,7 +72,7 @@ gh api -X POST "repos/oriro-ai/cli/issues/<number>/assignees" -f 'assignees[]=<l
 - If the global contribution graph reports zero or looks inconsistent with visible public activity, sanity-check with `gh api users/<login>`, `gh api 'users/<login>/events/public?per_page=100'`, and recent public repo commits before calling the account inactive.
 - The helper is intentionally cache-friendly for gitcrawl-backed `gh`: it rounds repo-local windows to the UTC day, rounds global contribution windows to the UTC hour, and counts PRs/issues from one paginated issues response before fetching commits separately. Prefer reusing the helper instead of hand-rolling several `gh api` loops.
 - If the contribution graph is misleading or zero but public events/repos show activity, keep it one line, for example:
-  `By: pickaxe (@ProspectOre, acct 2019-08-24) | Oriro: 5 PRs, 0 issues, 5 commits/12mo | GitHub: 5 repos, 29 recent events, 100 public own-repo commits; graph=0`
+  `By: pickaxe (@ProspectOre, acct 2019-08-24) | ORIRO: 5 PRs, 0 issues, 5 commits/12mo | GitHub: 5 repos, 29 recent events, 100 public own-repo commits; graph=0`
 - If `name` is empty, use the login only. If profile lookup is rate-limited or unavailable, say `account age unknown` rather than omitting the opener.
 - Use identity and activity as triage signal, not proof by itself: new, low-activity, or bot-like accounts can raise review caution, but code, repro, and CI evidence still decide.
 
@@ -82,13 +82,13 @@ When asked for issue triage, hot issues, pressing bugs, Discord-correlated issue
 
 Suppress by default when the opener/author is one of:
 
-- `@vincentkoc`
+- `@oriro`
 - `@Takhoffman`
 - `@gumadeiras`
 - `@obviyus`
 - `@shakkernerd`
 - `@mbelinky`
-- `@joshavant`
+- `@oriro`
 - `@ngutman`
 - `@vignesh07`
 - `@huntharo`
@@ -263,16 +263,16 @@ If the best-fix answer is only "maybe", keep reading or state the missing eviden
 ## Search broadly before deciding
 
 - Prefer `gitcrawl` first. Then use targeted GitHub keyword search to verify gaps, live status, comments, and candidates not present in the local store.
-- Use `--repo oriro-ai/cli` with `--match title,body` first when using `gh search`.
+- Use `--repo oriro/oriro` with `--match title,body` first when using `gh search`.
 - Add `--match comments` when triaging follow-up discussion or closed-as-duplicate chains.
 - Do not stop at the first 500 results when the task requires a full search.
 
 Examples:
 
 ```bash
-gh search prs --repo oriro-ai/cli --match title,body --limit 50 -- "auto-update"
-gh search issues --repo oriro-ai/cli --match title,body --limit 50 -- "auto-update"
-gh search issues --repo oriro-ai/cli --match title,body --limit 50 \
+gh search prs --repo oriro/oriro --match title,body --limit 50 -- "auto-update"
+gh search issues --repo oriro/oriro --match title,body --limit 50 -- "auto-update"
+gh search issues --repo oriro/oriro --match title,body --limit 50 \
   --json number,title,state,url,updatedAt -- "auto update" \
   --jq '.[] | "\(.number) | \(.state) | \(.title) | \(.url)"'
 ```

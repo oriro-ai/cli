@@ -19,13 +19,13 @@ export class NixModeConfigMutationError extends Error {
 /** Build the operator-facing immutable-config message for Nix-managed installs. */
 export function formatNixModeConfigMutationMessage(params: { configPath?: string } = {}): string {
   return [
-    "Config is managed by Nix (`ORIRO_NIX_MODE=1`), so Oriro treats oriro.json as immutable.",
+    "Config is managed by Nix (`ORIRO_NIX_MODE=1`), so ORIRO treats oriro.json as immutable.",
     "This usually means nix-oriro, the first-party Nix distribution, or another Nix-managed package set this mode.",
     ...(params.configPath ? [`Config path: ${params.configPath}`] : []),
     "Do not run setup, onboarding, oriro update, plugin install/update/uninstall/enable, doctor repair/token-generation, or config set against this file.",
     "Edit the Nix source for this install instead. For nix-oriro, edit `programs.oriro.config` or `instances.<name>.config`, then rebuild with Home Manager or NixOS.",
     `Agent-first Nix setup: ${NIX_ORIRO_AGENT_FIRST_URL}`,
-    `Oriro Nix overview: ${ORIRO_NIX_OVERVIEW_URL}`,
+    `ORIRO Nix overview: ${ORIRO_NIX_OVERVIEW_URL}`,
   ].join("\n");
 }
 

@@ -371,7 +371,7 @@ describe("collectPluginOriroHubReleasePlan", () => {
           status: 200,
           body: {
             trustedPublisher: {
-              repository: "oriro-ai/cli",
+              repository: "oriro/oriro",
               workflowFilename: "plugin-orirohub-release.yml",
             },
           },
@@ -421,7 +421,7 @@ describe("collectPluginOriroHubReleasePlan", () => {
         return new Response(
           JSON.stringify({
             trustedPublisher: {
-              repository: "oriro-ai/cli",
+              repository: "oriro/oriro",
               workflowFilename: "plugin-orirohub-release.yml",
             },
           }),
@@ -482,7 +482,7 @@ describe("collectPluginOriroHubReleasePlan", () => {
         return new Response(
           JSON.stringify({
             trustedPublisher: {
-              repository: "oriro-ai/cli",
+              repository: "oriro/oriro",
               workflowFilename: "plugin-orirohub-release.yml",
             },
           }),
@@ -534,7 +534,7 @@ describe("collectPluginOriroHubReleasePlan", () => {
         return new Response(
           JSON.stringify({
             trustedPublisher: {
-              repository: "oriro-ai/cli",
+              repository: "oriro/oriro",
               workflowFilename: "plugin-orirohub-release.yml",
             },
           }),
@@ -586,7 +586,7 @@ describe("collectPluginOriroHubReleasePlan", () => {
         return new Response(
           JSON.stringify({
             trustedPublisher: {
-              repository: "oriro-ai/cli",
+              repository: "oriro/oriro",
               workflowFilename: "plugin-orirohub-release.yml",
             },
           }),
@@ -730,7 +730,7 @@ describe("collectPluginOriroHubReleasePlan", () => {
           status: 200,
           body: {
             trustedPublisher: {
-              repository: "oriro-ai/cli",
+              repository: "oriro/oriro",
               workflowFilename: "plugin-orirohub-release.yml",
               environment: "orirohub-plugin-release",
             },
@@ -852,7 +852,7 @@ describe("collectPluginOriroHubReleasePlan", () => {
             status: 200,
             body: {
               trustedPublisher: {
-                repository: "oriro-ai/cli",
+                repository: "oriro/oriro",
                 workflowFilename: "plugin-orirohub-release.yml",
               },
             },
@@ -902,7 +902,7 @@ describe("buildOriroReleaseOriroHubPlan", () => {
           status: 200,
           body: {
             trustedPublisher: {
-              repository: "oriro-ai/cli",
+              repository: "oriro/oriro",
               workflowFilename: "plugin-orirohub-release.yml",
             },
           },
@@ -1056,7 +1056,7 @@ describe("buildOriroReleaseOriroHubPlan", () => {
 describe("buildOriroReleaseOriroHubRuntimeState", () => {
   it("includes the normal OriroHub run in verifier args when the release waits for it", () => {
     const state = buildOriroReleaseOriroHubRuntimeState({
-      repository: "oriro-ai/cli",
+      repository: "oriro/oriro",
       waitForOriroHub: true,
       forceSkipOriroHub: false,
       normalRunId: "111",
@@ -1066,14 +1066,14 @@ describe("buildOriroReleaseOriroHubRuntimeState", () => {
 
     expect(state.verifierArgs).toEqual(["--plugin-orirohub-run", "111"]);
     expect(state.proofLines.normal).toBe(
-      "- plugin OriroHub publish: https://github.com/oriro-ai/cli/actions/runs/111",
+      "- plugin OriroHub publish: https://github.com/oriro/oriro/actions/runs/111",
     );
     expect(state.proofLines.bootstrap).toBe("- plugin OriroHub bootstrap: not needed");
   });
 
   it("includes a completed bootstrap run even when there is no normal OriroHub run", () => {
     const state = buildOriroReleaseOriroHubRuntimeState({
-      repository: "oriro-ai/cli",
+      repository: "oriro/oriro",
       waitForOriroHub: false,
       forceSkipOriroHub: false,
       normalRunId: "",
@@ -1084,13 +1084,13 @@ describe("buildOriroReleaseOriroHubRuntimeState", () => {
     expect(state.verifierArgs).toEqual(["--plugin-orirohub-bootstrap-run", "222"]);
     expect(state.proofLines.normal).toBe("- plugin OriroHub publish: no normal OIDC candidates");
     expect(state.proofLines.bootstrap).toBe(
-      "- plugin OriroHub bootstrap: https://github.com/oriro-ai/cli/actions/runs/222",
+      "- plugin OriroHub bootstrap: https://github.com/oriro/oriro/actions/runs/222",
     );
   });
 
   it("skips OriroHub verification for non-awaited incomplete runs while keeping proof links", () => {
     const state = buildOriroReleaseOriroHubRuntimeState({
-      repository: "oriro-ai/cli",
+      repository: "oriro/oriro",
       waitForOriroHub: false,
       forceSkipOriroHub: false,
       normalRunId: "111",
@@ -1100,16 +1100,16 @@ describe("buildOriroReleaseOriroHubRuntimeState", () => {
 
     expect(state.verifierArgs).toEqual(["--skip-orirohub"]);
     expect(state.proofLines.normal).toBe(
-      "- plugin OriroHub publish: dispatched separately, not awaited by this proof: https://github.com/oriro-ai/cli/actions/runs/111",
+      "- plugin OriroHub publish: dispatched separately, not awaited by this proof: https://github.com/oriro/oriro/actions/runs/111",
     );
     expect(state.proofLines.bootstrap).toBe(
-      "- plugin OriroHub bootstrap: dispatched separately, not awaited by this proof: https://github.com/oriro-ai/cli/actions/runs/222",
+      "- plugin OriroHub bootstrap: dispatched separately, not awaited by this proof: https://github.com/oriro/oriro/actions/runs/222",
     );
   });
 
   it("keeps completed bootstrap run evidence when the normal OriroHub run is not awaited", () => {
     const state = buildOriroReleaseOriroHubRuntimeState({
-      repository: "oriro-ai/cli",
+      repository: "oriro/oriro",
       waitForOriroHub: false,
       forceSkipOriroHub: false,
       normalRunId: "111",
@@ -1119,16 +1119,16 @@ describe("buildOriroReleaseOriroHubRuntimeState", () => {
 
     expect(state.verifierArgs).toEqual(["--skip-orirohub", "--plugin-orirohub-bootstrap-run", "222"]);
     expect(state.proofLines.normal).toBe(
-      "- plugin OriroHub publish: dispatched separately, not awaited by this proof: https://github.com/oriro-ai/cli/actions/runs/111",
+      "- plugin OriroHub publish: dispatched separately, not awaited by this proof: https://github.com/oriro/oriro/actions/runs/111",
     );
     expect(state.proofLines.bootstrap).toBe(
-      "- plugin OriroHub bootstrap: https://github.com/oriro-ai/cli/actions/runs/222",
+      "- plugin OriroHub bootstrap: https://github.com/oriro/oriro/actions/runs/222",
     );
   });
 
   it("forces skip-orirohub after a failed child run even if OriroHub runs completed", () => {
     const state = buildOriroReleaseOriroHubRuntimeState({
-      repository: "oriro-ai/cli",
+      repository: "oriro/oriro",
       waitForOriroHub: true,
       forceSkipOriroHub: true,
       normalRunId: "111",
@@ -1138,10 +1138,10 @@ describe("buildOriroReleaseOriroHubRuntimeState", () => {
 
     expect(state.verifierArgs).toEqual(["--skip-orirohub"]);
     expect(state.proofLines.normal).toBe(
-      "- plugin OriroHub publish: https://github.com/oriro-ai/cli/actions/runs/111",
+      "- plugin OriroHub publish: https://github.com/oriro/oriro/actions/runs/111",
     );
     expect(state.proofLines.bootstrap).toBe(
-      "- plugin OriroHub bootstrap: https://github.com/oriro-ai/cli/actions/runs/222",
+      "- plugin OriroHub bootstrap: https://github.com/oriro/oriro/actions/runs/222",
     );
   });
 });

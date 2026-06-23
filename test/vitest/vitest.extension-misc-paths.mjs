@@ -11,7 +11,7 @@ export const miscExtensionTestRoots = [
   "extensions/kilocode",
   "extensions/litellm",
   "extensions/llm-task",
-  "extensions/oriro",
+  "extensions/lobster",
   "extensions/opencode",
   "extensions/opencode-go",
   "extensions/openshell",

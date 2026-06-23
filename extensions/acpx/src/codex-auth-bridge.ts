@@ -241,7 +241,7 @@ ${params.envSetup}
 const stderrLogFileNamePrefix = ${params.stderrLogFileNamePrefix ? JSON.stringify(params.stderrLogFileNamePrefix) : "undefined"};
 const stderrLogMaxChars = 256 * 1024;
 
-const oriroWrapperArgs = new Set([
+const openOriroWrapperArgs = new Set([
   ${quoteCommandPart(ORIRO_ACPX_LEASE_ID_ARG)},
   ${quoteCommandPart(ORIRO_GATEWAY_INSTANCE_ID_ARG)},
 ]);
@@ -370,7 +370,7 @@ function stripOriroWrapperArgs(args) {
   const stripped = [];
   for (let index = 0; index < args.length; index += 1) {
     const value = args[index];
-    if (oriroWrapperArgs.has(value)) {
+    if (openOriroWrapperArgs.has(value)) {
       index += 1;
       continue;
     }

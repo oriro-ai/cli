@@ -46,7 +46,7 @@ async function withManagedMediaRoot<T>(run: (ctx: { stateDir: string }) => Promi
 
 async function withOutsideHardlinkInOriroTmp<T>(
   params: {
-    oriroTmpDir: string;
+    openOriroTmpDir: string;
     hardlinkPrefix: string;
     symlinkPrefix?: string;
   },
@@ -55,16 +55,16 @@ async function withOutsideHardlinkInOriroTmp<T>(
   // Hardlinks in allowed temp roots must still be rejected when inode points outside.
   const outsideDir = await fs.mkdtemp(path.join(process.cwd(), "sandbox-media-hardlink-outside-"));
   const outsideFile = path.join(outsideDir, "outside-secret.txt");
-  const hardlinkPath = path.join(params.oriroTmpDir, makeTmpProbePath(params.hardlinkPrefix));
+  const hardlinkPath = path.join(params.openOriroTmpDir, makeTmpProbePath(params.hardlinkPrefix));
   const symlinkPath = params.symlinkPrefix
-    ? path.join(params.oriroTmpDir, makeTmpProbePath(params.symlinkPrefix))
+    ? path.join(params.openOriroTmpDir, makeTmpProbePath(params.symlinkPrefix))
     : undefined;
   try {
-    if (isPathInside(params.oriroTmpDir, outsideFile)) {
+    if (isPathInside(params.openOriroTmpDir, outsideFile)) {
       return;
     }
     await fs.writeFile(outsideFile, "secret", "utf8");
-    await fs.mkdir(params.oriroTmpDir, { recursive: true });
+    await fs.mkdir(params.openOriroTmpDir, { recursive: true });
     try {
       await fs.link(outsideFile, hardlinkPath);
     } catch (err) {
@@ -87,24 +87,24 @@ async function withOutsideHardlinkInOriroTmp<T>(
 }
 
 describe("resolveSandboxedMediaSource", () => {
-  const oriroTmpDir = resolvePreferredOriroTmpDir();
+  const openOriroTmpDir = resolvePreferredOriroTmpDir();
 
   // Group 1: /tmp paths (the bug fix)
   it.each([
     {
       name: "absolute paths under preferred Oriro tmp root",
-      media: path.join(oriroTmpDir, "image.png"),
-      expected: path.join(oriroTmpDir, "image.png"),
+      media: path.join(openOriroTmpDir, "image.png"),
+      expected: path.join(openOriroTmpDir, "image.png"),
     },
     {
       name: "file:// URLs pointing to preferred Oriro tmp root",
-      media: pathToFileURL(path.join(oriroTmpDir, "photo.png")).href,
-      expected: path.join(oriroTmpDir, "photo.png"),
+      media: pathToFileURL(path.join(openOriroTmpDir, "photo.png")).href,
+      expected: path.join(openOriroTmpDir, "photo.png"),
     },
     {
       name: "nested paths under preferred Oriro tmp root",
-      media: path.join(oriroTmpDir, "subdir", "deep", "file.png"),
-      expected: path.join(oriroTmpDir, "subdir", "deep", "file.png"),
+      media: path.join(openOriroTmpDir, "subdir", "deep", "file.png"),
+      expected: path.join(openOriroTmpDir, "subdir", "deep", "file.png"),
     },
   ])("allows $name", async ({ media, expected }) => {
     await withSandboxRoot(async (sandboxDir) => {
@@ -225,7 +225,7 @@ describe("resolveSandboxedMediaSource", () => {
     },
     {
       name: "path traversal through tmpdir",
-      media: path.join(oriroTmpDir, "..", "etc", "passwd"),
+      media: path.join(openOriroTmpDir, "..", "etc", "passwd"),
       expected: /sandbox/i,
     },
     {
@@ -279,14 +279,14 @@ describe("resolveSandboxedMediaSource", () => {
       return;
     }
     const outsideTmpTarget = path.resolve(process.cwd(), "package.json");
-    if (isPathInside(oriroTmpDir, outsideTmpTarget)) {
+    if (isPathInside(openOriroTmpDir, outsideTmpTarget)) {
       return;
     }
 
     await withSandboxRoot(async (sandboxDir) => {
       await fs.access(outsideTmpTarget);
-      await fs.mkdir(oriroTmpDir, { recursive: true });
-      const symlinkPath = path.join(oriroTmpDir, `tmp-link-escape-${process.pid}`);
+      await fs.mkdir(openOriroTmpDir, { recursive: true });
+      const symlinkPath = path.join(openOriroTmpDir, `tmp-link-escape-${process.pid}`);
       await fs.symlink(outsideTmpTarget, symlinkPath);
       try {
         await expectSandboxRejection(symlinkPath, sandboxDir, /symlink|sandbox/i);
@@ -322,7 +322,7 @@ describe("resolveSandboxedMediaSource", () => {
     }
     await withOutsideHardlinkInOriroTmp(
       {
-        oriroTmpDir,
+        openOriroTmpDir,
         hardlinkPrefix: "sandbox-media-hardlink",
       },
       async ({ hardlinkPath }) => {
@@ -339,7 +339,7 @@ describe("resolveSandboxedMediaSource", () => {
     }
     await withOutsideHardlinkInOriroTmp(
       {
-        oriroTmpDir,
+        openOriroTmpDir,
         hardlinkPrefix: "sandbox-media-hardlink-target",
         symlinkPrefix: "sandbox-media-hardlink-symlink",
       },

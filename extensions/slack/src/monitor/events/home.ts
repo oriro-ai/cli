@@ -15,7 +15,7 @@ export function buildSlackHomeView(): HomeView {
         type: "header",
         text: {
           type: "plain_text",
-          text: "Oriro",
+          text: "ORIRO",
         },
       },
       {

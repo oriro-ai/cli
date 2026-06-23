@@ -349,7 +349,7 @@ describe("installPluginFromOriroHub", () => {
         updatedAt: 0,
         verification: {
           tier: "source-linked",
-          sourceRepo: "oriro-ai/cli",
+          sourceRepo: "oriro/oriro",
         },
       },
     });

@@ -109,15 +109,29 @@ export async function videoToCode(
 
 export const REVERSE_PROMPT =
   `You are an expert front-end engineer. Below is the captured RENDERED HTML of a live web ` +
-  `page (optionally with a description of its appearance). REVERSE-ENGINEER it into CLEAN, ` +
-  `complete, working, self-contained code that reproduces the page's structure, content, ` +
-  `copy, layout and visual design. Strip tracking/ads/analytics/3rd-party cruft and dead ` +
-  `markup; keep the meaningful sections, components, text and styling. No placeholders, no ` +
-  `TODOs. Return ONLY the code.`;
+  `page (optionally with visual notes from a screenshot). REVERSE-ENGINEER it into CLEAN, ` +
+  `COMPLETE, PRODUCTION-QUALITY, RUNNABLE code that a developer can PASTE AND BUILD with no ` +
+  `edits.\n\nRequirements:\n` +
+  `• Reproduce the page EXACTLY: every meaningful section/component in order, the real text/` +
+  `copy, layout, and visual design — colors as hex, typography (family/weight/size), spacing, ` +
+  `radius, shadows, borders.\n` +
+  `• Strip tracking/ads/analytics/third-party cruft and dead markup; keep the real content.\n` +
+  `• Output COMPLETE file(s) for the target stack: include EVERY import, the entry/mount point ` +
+  `(e.g. ReactDOM render / index), all components, and all styles. If multiple files are needed, ` +
+  `emit each prefixed with a "// FILE: <path>" header so it can be split out.\n` +
+  `• Use the REAL extracted content/data (titles, labels, links, values) — never lorem ipsum or ` +
+  `dummy data.\n` +
+  `• NO placeholders, NO TODOs, NO "...", NO truncation, NO commentary or explanation. Every ` +
+  `component fully implemented and wired.\n` +
+  `• It must be immediately runnable and visually faithful.\n` +
+  `Return ONLY the code.`;
 
 const SCREENSHOT_DESC_PROMPT =
-  `Describe this screenshot of a web page for faithful reconstruction: layout, sections, ` +
-  `colors, typography, spacing and any notable components. Be concrete and brief.`;
+  `Describe this screenshot of a web page for FAITHFUL pixel-level reconstruction. Be concrete ` +
+  `and exhaustive: overall layout & grid, each section top→bottom, every component, exact colors ` +
+  `(hex if discernible), typography (family/weight/size/line-height), spacing/padding/margins, ` +
+  `border radius, shadows, alignment, and any icons/imagery. This description will be used to ` +
+  `rebuild the page, so omit nothing visually significant.`;
 
 export interface HtmlToCodeInput {
   /** The captured (rendered) HTML to reverse-engineer. */
@@ -186,6 +200,80 @@ export async function urlToCode(url: string, models: HtmlToCodeModels, opts: Url
     models,
   );
   return { url, html: cap.html, screenshot: cap.png, code };
+}
+
+// ── URL → YAML SPEC (the coder-grade reverse-engineering artifact) ────────────
+// A one-shot code dump isn't enough to rebuild a page properly. This produces a
+// precise, stack-agnostic YAML SPECIFICATION another engineer can build from:
+// design tokens, layout regions, the component tree, the data model, interactions
+// and build notes. Same capture pipeline; the model emits structured YAML, not code.
+
+export const SPEC_YAML_PROMPT =
+  `You are a senior front-end engineer reverse-engineering a live web page so ANOTHER ` +
+  `engineer can rebuild it from your spec ALONE. Below is the page's captured RENDERED HTML ` +
+  `(optionally with visual notes from a screenshot). Strip tracking/ads/analytics/dead ` +
+  `markup; keep the meaningful structure. Output a precise, exhaustive, build-ready spec as ` +
+  `VALID YAML ONLY — no prose, no markdown, no code fences. Use exactly this top-level schema:\n` +
+  `page:            # url, title, purpose (one line: what this page is for)\n` +
+  `design_tokens:   # colors: {name: hex}; typography: {fontFamily, weights, scale}; spacing; radius; shadows\n` +
+  `layout:          # ordered list of regions top→bottom; each: {region, role, components: [names]}\n` +
+  `components:      # reusable components; each: {name, description, structure (element tree), styling (key css/classes), content_example}\n` +
+  `data_model:      # entities the page renders; each: {entity, fields: [..]}\n` +
+  `interactions:    # list of {trigger, effect}\n` +
+  `responsive:      # notable breakpoints/behavior\n` +
+  `build_notes:     # how to assemble it, stack-agnostic\n` +
+  `Be concrete (real colors as hex, real copy, real fields). Output ONLY YAML.`;
+
+/** Reverse-engineer captured HTML (+ optional screenshot) into a YAML build spec. */
+export async function htmlToSpec(
+  input: HtmlToCodeInput,
+  models: HtmlToCodeModels,
+): Promise<{ spec: string; visualNotes?: string }> {
+  if (!input.html || !input.html.trim()) throw new Error("htmlToSpec needs input.html.");
+  let visualNotes = "";
+  if (input.screenshot && models.watch) {
+    visualNotes = (
+      await models.watch({ frames: [input.screenshot], mimeType: "image/png", prompt: SCREENSHOT_DESC_PROMPT })
+    ).trim();
+  }
+  const prompt =
+    `${SPEC_YAML_PROMPT}` +
+    `${input.goal ? `\nGoal: ${input.goal}` : ""}` +
+    `${visualNotes ? `\n\n=== VISUAL (from screenshot) ===\n${visualNotes}` : ""}` +
+    `\n\n=== CAPTURED HTML ===\n${input.html}`;
+  let spec = (await models.code(prompt)).trim();
+  // strip an accidental ```yaml fence if the model adds one
+  spec = spec.replace(/^```ya?ml\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+  return { spec, visualNotes: visualNotes || undefined };
+}
+
+export interface UrlToSpecResult {
+  url: string;
+  /** The captured RENDERED HTML — "what the head saw". */
+  html: string;
+  /** Full-page screenshot bytes (PNG), or null. */
+  screenshot: Uint8Array | null;
+  /** The reverse-engineered YAML build spec. */
+  spec: string;
+}
+
+/** Go to a URL → capture screenshot + HTML → reverse-engineer into a YAML build spec. */
+export async function urlToSpec(
+  url: string,
+  models: HtmlToCodeModels,
+  opts: UrlToCodeOptions = {},
+): Promise<UrlToSpecResult> {
+  const { captureScreens } = await import("./screenshot-flow.js");
+  const caps = await captureScreens([url], { viewport: opts.viewport });
+  const cap = caps[0];
+  if (!cap || !cap.ok || !cap.html) {
+    throw new Error(`urlToSpec: could not capture ${url}${cap?.note ? ` (${cap.note})` : ""}.`);
+  }
+  const { spec } = await htmlToSpec(
+    { html: cap.html, screenshot: cap.png ?? undefined, goal: opts.goal },
+    models,
+  );
+  return { url, html: cap.html, screenshot: cap.png, spec };
 }
 
 // ── Optional frame extractor (Node-only; for image-only vision models) ───────

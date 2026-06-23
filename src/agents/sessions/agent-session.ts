@@ -3178,7 +3178,7 @@ export class AgentSession {
    */
   async exportToHtml(_outputPath?: string): Promise<string> {
     throw new Error(
-      "AgentSession.exportToHtml is deprecated; use the Oriro session export command.",
+      "AgentSession.exportToHtml is deprecated; use the ORIRO session export command.",
     );
   }
 

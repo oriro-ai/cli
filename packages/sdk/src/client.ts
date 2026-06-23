@@ -184,7 +184,7 @@ function assertNoUnsupportedRunOptions(params: AgentRunParams): void {
     return;
   }
   throw new Error(
-    `Oriro Gateway does not support per-run SDK option${
+    `ORIRO Gateway does not support per-run SDK option${
       unsupported.length === 1 ? "" : "s"
     } yet: ${unsupported.join(", ")}`,
   );
@@ -211,7 +211,7 @@ function buildAgentParams(params: AgentRunParams): Record<string, unknown> {
 }
 
 function unsupportedGatewayApi(api: string): never {
-  throw new Error(`${api} is not supported by the current Oriro Gateway yet`);
+  throw new Error(`${api} is not supported by the current ORIRO Gateway yet`);
 }
 
 type ChatProjectionState = "delta" | "final";
@@ -439,7 +439,7 @@ export class Oriro {
 
   private assertOpen(): void {
     if (this.closed) {
-      throw new Error("Oriro SDK client is closed");
+      throw new Error("ORIRO SDK client is closed");
     }
   }
 
@@ -790,9 +790,11 @@ export class RunsNamespace {
   constructor(private readonly client: Oriro) {}
 
   async create(params: RunCreateParams): Promise<Run> {
-    const raw = await this.client.request("agent", buildAgentParams(params), {
+    const timeoutMs = normalizeTimeoutMs(params.timeoutMs);
+    const normalizedParams = timeoutMs !== undefined ? { ...params, timeoutMs } : params;
+    const raw = await this.client.request("agent", buildAgentParams(normalizedParams), {
       expectFinal: false,
-      timeoutMs: params.timeoutMs,
+      ...(timeoutMs !== undefined ? { timeoutMs: timeoutMs === 0 ? null : timeoutMs } : {}),
     });
     const record = asRecord(raw);
     const runId = readOptionalString(record.runId);

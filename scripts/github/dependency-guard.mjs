@@ -285,7 +285,7 @@ export function renderAuthorizedDependencyComment(override) {
     "",
     "### Dependency graph change authorized",
     "",
-    "This PR includes dependency graph changes. A repository admin or member of `@oriro-ai/cli-secops` authorized this exact head SHA with `/allow-dependencies-change`.",
+    "This PR includes dependency graph changes. A repository admin or member of `@oriro/oriro-secops` authorized this exact head SHA with `/allow-dependencies-change`.",
     "",
     `- Approved SHA: ${markdownCode(override.sha)}`,
     `- Approved by: @${sanitizeDisplayValue(override.login)}`,
@@ -303,7 +303,7 @@ export function renderTrustedDependencyComment({ actor, headSha }) {
     "",
     "### Dependency graph changes noted",
     "",
-    "This PR includes dependency graph changes. The dependency guard is informational because the PR author is a repository admin or a member of `@oriro-ai/cli-secops`.",
+    "This PR includes dependency graph changes. The dependency guard is informational because the PR author is a repository admin or a member of `@oriro/oriro-secops`.",
     "",
     `- Current SHA: ${markdownCode(headSha ?? "<head-sha>")}`,
     `- Trusted actor: @${sanitizeDisplayValue(actor.login)}`,
@@ -320,7 +320,7 @@ export function renderAutoscrubbedDependencyComment({ baseBranch, lockfileChange
 
 ### Dependency lockfile changes were removed
 
-Oriro does not accept package lockfile changes through PRs. This PR did not change dependency graph fields in package manifests, so the workflow restored the lockfile residue from the target branch automatically.
+ORIRO does not accept package lockfile changes through PRs. This PR did not change dependency graph fields in package manifests, so the workflow restored the lockfile residue from the target branch automatically.
 
 Restored lockfiles:
 ${fileLines.join("\n")}
@@ -385,14 +385,14 @@ export function renderBlockedDependencyComment({
     "",
     "### Dependency graph changes are blocked",
     "",
-    "Oriro does not accept dependency graph changes through PRs unless a repository admin or security explicitly authorizes the current head SHA. Dependency updates are generated internally by maintainers so external PRs cannot change the resolved graph.",
+    "ORIRO does not accept dependency graph changes through PRs unless a repository admin or security explicitly authorizes the current head SHA. Dependency updates are generated internally by maintainers so external PRs cannot change the resolved graph.",
     "",
     "Detected dependency graph changes:",
     ...reasons,
     ...autoscrubLines,
     ...removalSteps,
     "",
-    "If this PR intentionally needs a dependency graph change, ask a repository admin or member of `@oriro-ai/cli-secops` to comment:",
+    "If this PR intentionally needs a dependency graph change, ask a repository admin or member of `@oriro/oriro-secops` to comment:",
     "",
     "```text",
     allowDependenciesCommand,

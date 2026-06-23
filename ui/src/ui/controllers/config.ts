@@ -199,7 +199,7 @@ function resolveUpdateStatusBanner(params: { status?: string; reason?: string })
       "not-git-install":
         "Not a git checkout. Run `oriro update` from the CLI for a global reinstall.",
       "not-oriro-root":
-        "Run the update from an Oriro checkout or use the CLI global reinstall path.",
+        "Run the update from an ORIRO checkout or use the CLI global reinstall path.",
       "deps-install-failed": "Dependency install failed. Fix the install error and retry.",
       "build-failed": "Build failed. Fix the build error and retry.",
       "ui-build-failed": "The control UI rebuild failed. Fix the UI build error and retry.",

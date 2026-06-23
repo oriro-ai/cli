@@ -630,7 +630,7 @@ export async function runMatrixQaLive(params: {
   const scenarios = findMatrixQaScenarios(params.scenarioIds, params.profile);
   const runSuffix = randomUUID().slice(0, 8);
   const topology = buildMatrixQaTopologyForScenarios({
-    defaultRoomName: `Oriro Matrix QA ${runSuffix}`,
+    defaultRoomName: `ORIRO Matrix QA ${runSuffix}`,
     scenarios,
   });
   const observedEvents: MatrixQaObservedEvent[] = [];
@@ -663,7 +663,7 @@ export async function runMatrixQaLive(params: {
             driverLocalpart: `qa-driver-${runSuffix}`,
             observerLocalpart: `qa-observer-${runSuffix}`,
             registrationToken: harness.registrationToken,
-            roomName: `Oriro Matrix QA ${runSuffix}`,
+            roomName: `ORIRO Matrix QA ${runSuffix}`,
             sutLocalpart: `qa-sut-${runSuffix}`,
             topology,
           }),

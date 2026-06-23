@@ -13,7 +13,7 @@ import { getIMessageRuntime } from "../runtime.js";
 // `dispatch` callback so `evaluateIMessageInbound` + `dispatchInboundMessage`
 // runs unchanged on replayed rows.
 //
-// See https://github.com/oriro-ai/cli/issues/78649 for design discussion.
+// See https://github.com/oriro/oriro/issues/78649 for design discussion.
 
 const DEFAULT_MAX_AGE_MINUTES = 120;
 const MAX_MAX_AGE_MINUTES = 12 * 60;

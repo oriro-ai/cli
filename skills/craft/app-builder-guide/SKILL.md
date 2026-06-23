@@ -1,4 +1,5 @@
 ---
+watermark: ORIRO
 name: app-builder-guide
 provider: ORIRO.ai
 copyright: Copyright (c) 2026 ORIRO.ai

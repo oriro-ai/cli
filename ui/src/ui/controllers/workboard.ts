@@ -3685,7 +3685,7 @@ export async function dispatchWorkboard(params: {
 }
 
 function buildCardPrompt(card: WorkboardCard): string {
-  const lines = [`Work on this Oriro Workboard card: ${card.title}`];
+  const lines = [`Work on this ORIRO Workboard card: ${card.title}`];
   if (card.notes?.trim()) {
     lines.push("", card.notes.trim());
   }

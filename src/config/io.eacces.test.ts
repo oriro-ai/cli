@@ -25,7 +25,7 @@ function makeEaccesFs(configPath: string) {
 
 describe("config io EACCES handling", () => {
   it("returns a helpful error message when config file is not readable (EACCES)", async () => {
-    const configPath = "/data/.oriro-ai/cli.json";
+    const configPath = "/data/.oriro/oriro.json";
     const errors: string[] = [];
     const io = createConfigIO({
       configPath,
@@ -47,7 +47,7 @@ describe("config io EACCES handling", () => {
   });
 
   it("includes configPath in the chown hint for the correct remediation command", async () => {
-    const configPath = "/home/myuser/.oriro-ai/cli.json";
+    const configPath = "/home/myuser/.oriro/oriro.json";
     const io = createConfigIO({
       configPath,
       fs: makeEaccesFs(configPath),

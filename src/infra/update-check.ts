@@ -538,9 +538,9 @@ export async function resolveNpmChannelTag(params: {
 
 export function compareSemverStrings(a: string | null, b: string | null): number | null {
   if (a && b) {
-    const oriroReleaseCmp = compareOriroReleaseVersions(a, b);
-    if (oriroReleaseCmp != null) {
-      return oriroReleaseCmp;
+    const openOriroReleaseCmp = compareOriroReleaseVersions(a, b);
+    if (openOriroReleaseCmp != null) {
+      return openOriroReleaseCmp;
     }
   }
   return compareComparableSemver(

@@ -10,33 +10,28 @@ import {
 import type { SessionEntry } from "../config/sessions/types.js";
 import * as jsonFiles from "../infra/json-files.js";
 import { resolvePreferredOriroTmpDir } from "../infra/tmp-oriro-dir.js";
+import { captureEnv, setTestEnvValue } from "../test-utils/env.js";
 import { runPluginHostCleanup } from "./host-hook-cleanup.js";
 import { createEmptyPluginRegistry } from "./registry-empty.js";
 
 describe("plugin host cleanup session stores", () => {
   let stateDir: string | undefined;
-  let previousStateDir: string | undefined;
+  const envSnapshot = captureEnv(["ORIRO_STATE_DIR"]);
 
   afterEach(async () => {
     clearSessionStoreCacheForTest();
-    if (previousStateDir === undefined) {
-      delete process.env.ORIRO_STATE_DIR;
-    } else {
-      process.env.ORIRO_STATE_DIR = previousStateDir;
-    }
+    envSnapshot.restore();
     if (stateDir) {
       await fs.rm(stateDir, { recursive: true, force: true });
     }
     stateDir = undefined;
-    previousStateDir = undefined;
   });
 
   it("does not rewrite session stores when cleanup scans find no plugin-owned state", async () => {
     stateDir = await fs.mkdtemp(
       path.join(resolvePreferredOriroTmpDir(), "oriro-host-cleanup-noop-"),
     );
-    previousStateDir = process.env.ORIRO_STATE_DIR;
-    process.env.ORIRO_STATE_DIR = stateDir;
+    setTestEnvValue("ORIRO_STATE_DIR", stateDir);
     const storePath = path.join(stateDir, "sessions.json");
     await saveSessionStore(
       storePath,
@@ -65,8 +60,7 @@ describe("plugin host cleanup session stores", () => {
     stateDir = await fs.mkdtemp(
       path.join(resolvePreferredOriroTmpDir(), "oriro-host-cleanup-deferred-"),
     );
-    previousStateDir = process.env.ORIRO_STATE_DIR;
-    process.env.ORIRO_STATE_DIR = stateDir;
+    setTestEnvValue("ORIRO_STATE_DIR", stateDir);
     const storePath = path.join(stateDir, "sessions.json");
     await saveSessionStore(
       storePath,
@@ -106,8 +100,7 @@ describe("plugin host cleanup session stores", () => {
     stateDir = await fs.mkdtemp(
       path.join(resolvePreferredOriroTmpDir(), "oriro-host-cleanup-multistore-"),
     );
-    previousStateDir = process.env.ORIRO_STATE_DIR;
-    process.env.ORIRO_STATE_DIR = stateDir;
+    setTestEnvValue("ORIRO_STATE_DIR", stateDir);
     const firstStorePath = path.join(stateDir, "agent-a", "sessions.json");
     const secondStorePath = path.join(stateDir, "agent-b", "sessions.json");
     const beforeUpdatedAt = 100;

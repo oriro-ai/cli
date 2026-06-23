@@ -9,7 +9,7 @@ import { runCommandWithRuntime } from "./cli-utils.js";
 export function registerDocsCli(program: Command) {
   program
     .command("docs")
-    .description("Search the live Oriro docs")
+    .description("Search the live ORIRO docs")
     .argument("[query...]", "Search query")
     .addHelpText(
       "after",

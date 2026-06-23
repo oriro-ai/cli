@@ -501,7 +501,7 @@ describe("plugin-sdk subpath exports", () => {
     for (const deniedSubpath of [
       "acpx",
       "device-pair",
-      "oriro",
+      "lobster",
       "pairing-access",
       "provider-model-definitions",
       "qa-channel",

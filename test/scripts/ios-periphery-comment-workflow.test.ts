@@ -193,7 +193,7 @@ async function runCommenter(
           pullGetCount += 1;
           return {
             data: {
-              base: { repo: { full_name: "oriro-ai/cli" } },
+              base: { repo: { full_name: "oriro/oriro" } },
               head: {
                 sha:
                   pullGetCount > 1
@@ -252,7 +252,7 @@ async function runCommenter(
         id: 12345,
         name: "iOS Periphery Dead Code",
         pull_requests: [{ number: 123 }],
-        repository: { full_name: "oriro-ai/cli" },
+        repository: { full_name: "oriro/oriro" },
         run_attempt: options.runAttempt ?? 2,
         run_number: 8,
         workflow_id: 999,

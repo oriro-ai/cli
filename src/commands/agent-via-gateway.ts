@@ -35,7 +35,6 @@ import {
   scopeLegacySessionKeyToAgent,
 } from "../routing/session-key.js";
 import { type RuntimeEnv, writeRuntimeJson } from "../runtime.js";
-import { translateIncoming, translateOutgoing } from "../language/gateway.js";
 import { normalizeMessageChannel } from "../utils/message-channel-normalize.js";
 
 type AgentGatewayResult = {
@@ -217,9 +216,7 @@ async function formatPayloadForLog(payload: {
   });
   const lines: string[] = [];
   if (parts.text) {
-    // ORIRO reply-out seam: render the coder's English reply in the user's language
-    // (passthrough for English). Only the reply text — never attachment URLs.
-    lines.push((await translateOutgoing(parts.text)).trimEnd());
+    lines.push(parts.text.trimEnd());
   }
   for (const url of parts.mediaUrls) {
     lines.push(`Attachment: ${url}`);
@@ -627,10 +624,7 @@ async function agentViaGatewayCommand(
   signalBridge: ReturnType<typeof createAgentCliSignalBridge>,
 ) {
   protectJsonStdout(opts);
-  // ORIRO message-in seam: the user's typed message → English for the coder
-  // (passthrough for English / slash-commands / unconfigured). The coder always
-  // receives English; the reply is rendered back in the user's language on output.
-  const body = await translateIncoming((opts.message ?? "").trim());
+  const body = (opts.message ?? "").trim();
   const explicitSessionKey = opts.sessionKey?.trim();
   if (!body) {
     throw new Error(

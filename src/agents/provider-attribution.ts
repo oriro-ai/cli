@@ -140,7 +140,7 @@ function readCompatBoolean(
   return asBoolean((compat as Record<string, unknown>)[key]);
 }
 
-const ORIRO_ATTRIBUTION_PRODUCT = "Oriro";
+const ORIRO_ATTRIBUTION_PRODUCT = "ORIRO";
 const ORIRO_ATTRIBUTION_ORIGINATOR = "oriro";
 const OPENROUTER_ATTRIBUTION_CATEGORIES =
   "cli-agent,cloud-agent,programming-app,creative-writing,writing-assistant,general-chat,personal-agent";
@@ -483,7 +483,7 @@ function buildOpenRouterAttributionPolicy(
     verification: "vendor-documented",
     hook: "request-headers",
     docsUrl: "https://openrouter.ai/docs/app-attribution",
-    reviewNote: "Documented app attribution headers. Verified in Oriro runtime wrapper.",
+    reviewNote: "Documented app attribution headers. Verified in ORIRO runtime wrapper.",
     ...identity,
     headers: {
       "HTTP-Referer": "https://oriro.ai",

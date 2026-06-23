@@ -3,7 +3,7 @@
 Adds an **optional** agent tool `llm-task` for running **JSON-only** LLM tasks
 (drafting, summarizing, classifying) with optional JSON Schema validation.
 
-Designed to be called from workflow engines (for example, Oriro via
+Designed to be called from workflow engines (for example, Lobster via
 `oriro.invoke --each`) without adding new Oriro code per workflow.
 
 ## Enable
@@ -86,12 +86,12 @@ Returns `details.json` containing the parsed JSON (and validates against
   (no code fences, no commentary).
 - No tools are exposed to the model for this run.
 - Side effects should be handled outside this tool (for example, approvals in
-  Oriro) before calling tools that send messages/emails.
+  Lobster) before calling tools that send messages/emails.
 
 ## Bundled extension note
 
 This extension depends on Oriro internal modules (the embedded agent runner).
-It is intended to ship as a **bundled** Oriro extension (like `oriro`) and
+It is intended to ship as a **bundled** Oriro extension (like `lobster`) and
 be enabled via `plugins.entries` + tool allowlists.
 
 It is **not** currently designed to be copied into

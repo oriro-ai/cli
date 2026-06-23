@@ -53,7 +53,7 @@ describe("config io paths", () => {
     whatsappSharedAccessDefaults = migrated.config.channels?.whatsapp?.accounts?.default;
   });
 
-  it("uses ~/.oriro-ai/cli.json when config exists", async () => {
+  it("uses ~/.oriro/oriro.json when config exists", async () => {
     await withTempHome(async (home) => {
       const configPath = await writeConfig(home, ".oriro", 19001);
       const io = createIoForHome(home);
@@ -61,7 +61,7 @@ describe("config io paths", () => {
     });
   });
 
-  it("defaults to ~/.oriro-ai/cli.json when config is missing", async () => {
+  it("defaults to ~/.oriro/oriro.json when config is missing", async () => {
     await withTempHome(async (home) => {
       const io = createIoForHome(home);
       expect(io.configPath).toBe(path.join(home, ".oriro", "oriro.json"));

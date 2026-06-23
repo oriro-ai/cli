@@ -102,8 +102,8 @@ const mockFsPromisesModule = () => {
 };
 
 vi.mock("./oriro-root.fs.runtime.js", () => ({
-  oriroRootFsSync: mockFsModule(),
-  oriroRootFs: mockFsPromisesModule(),
+  openOriroRootFsSync: mockFsModule(),
+  openOriroRootFs: mockFsPromisesModule(),
 }));
 
 describe("resolveOriroPackageRoot", () => {

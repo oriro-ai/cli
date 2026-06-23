@@ -83,14 +83,14 @@ describe("scripts/mantis/build-telegram-desktop-proof-evidence", () => {
     expect(manifest.artifacts.map((artifact) => artifact.targetPath)).toContain(
       "candidate/telegram-desktop-proof.gif",
     );
-    const artifactUrl = "https://github.com/oriro-ai/cli/actions/runs/1/artifacts/2";
+    const artifactUrl = "https://github.com/oriro/oriro/actions/runs/1/artifacts/2";
     const body = renderEvidenceComment({
       artifactUrl,
       manifest,
       marker: "<!-- mantis-telegram-desktop-proof -->",
       rawBase: "https://qa.oriro.ai/mantis/telegram-desktop/pr-1/run-1",
       requestSource: "workflow_dispatch",
-      runUrl: "https://github.com/oriro-ai/cli/actions/runs/1",
+      runUrl: "https://github.com/oriro/oriro/actions/runs/1",
       treeUrl: "https://qa.oriro.ai/mantis/telegram-desktop/pr-1/run-1/index.json",
     });
 

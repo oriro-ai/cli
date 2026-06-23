@@ -25,10 +25,10 @@ function resolveTranscriptMessageId(message: Record<string, unknown>): string | 
   if (typeof message.messageId === "string" && message.messageId.trim()) {
     return message.messageId;
   }
-  const oriroMeta = message["__oriro"];
+  const openOriroMeta = message["__oriro"];
   const transcriptMeta =
-    oriroMeta && typeof oriroMeta === "object" && !Array.isArray(oriroMeta)
-      ? (oriroMeta as Record<string, unknown>)
+    openOriroMeta && typeof openOriroMeta === "object" && !Array.isArray(openOriroMeta)
+      ? (openOriroMeta as Record<string, unknown>)
       : null;
   return typeof transcriptMeta?.id === "string" && transcriptMeta.id.trim()
     ? transcriptMeta.id

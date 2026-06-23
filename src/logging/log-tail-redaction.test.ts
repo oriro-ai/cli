@@ -28,7 +28,7 @@ describe("readConfiguredLogTail redaction", () => {
     const logFile = path.join(dir, "oriro.log");
     const configFile = path.join(dir, "oriro.json");
     const basicSecret = "c2VjcmV0OnBhc3M=";
-    const oriroToken = "supersecretgatewaytoken1234567890";
+    const openOriroToken = "supersecretgatewaytoken1234567890";
     const pomeriumJwt = "eyJheaderabcd.eyJpayloadabcd.signatureabcd123456";
 
     await fs.writeFile(
@@ -40,7 +40,7 @@ describe("readConfiguredLogTail redaction", () => {
       logFile,
       [
         `Authorization: Basic ${basicSecret}`,
-        `X-Oriro-Token: ${oriroToken}`,
+        `X-Oriro-Token: ${openOriroToken}`,
         `x-pomerium-jwt-assertion: ${pomeriumJwt}`,
         "normal diagnostic line",
       ].join("\n"),
@@ -59,7 +59,7 @@ describe("readConfiguredLogTail redaction", () => {
     expect(text).toContain("x-pomerium-jwt-assertion: eyJhea…3456");
     expect(text).toContain("normal diagnostic line");
     expect(text).not.toContain(basicSecret);
-    expect(text).not.toContain(oriroToken);
+    expect(text).not.toContain(openOriroToken);
     expect(text).not.toContain(pomeriumJwt);
   });
 });

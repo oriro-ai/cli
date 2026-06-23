@@ -92,7 +92,7 @@ export const discordChannelConfigUiHints = {
   },
   "streaming.progress.labels": {
     label: "Discord Progress Label Pool",
-    help: 'Candidate labels for streaming.progress.label="auto". Leave unset to use Oriro built-in progress labels.',
+    help: 'Candidate labels for streaming.progress.label="auto". Leave unset to use ORIRO built-in progress labels.',
   },
   "streaming.progress.maxLines": {
     label: "Discord Progress Max Lines",
@@ -144,7 +144,7 @@ export const discordChannelConfigUiHints = {
   },
   "eventQueue.listenerTimeout": {
     label: "Discord EventQueue Listener Timeout (ms)",
-    help: "Canonical Discord listener timeout control in ms for gateway normalization/enqueue handlers. Default is 120000 in Oriro; set per account via channels.discord.accounts.<id>.eventQueue.listenerTimeout.",
+    help: "Canonical Discord listener timeout control in ms for gateway normalization/enqueue handlers. Default is 120000 in ORIRO; set per account via channels.discord.accounts.<id>.eventQueue.listenerTimeout.",
   },
   "eventQueue.maxQueueSize": {
     label: "Discord EventQueue Max Queue Size",
@@ -216,11 +216,11 @@ export const discordChannelConfigUiHints = {
   },
   "voice.mode": {
     label: "Discord Voice Mode",
-    help: "Conversation mode: agent-proxy (default) uses realtime voice as the microphone/speaker for the routed Oriro agent, stt-tts uses batch speech-to-text plus TTS, and bidi lets the realtime provider converse directly with the Oriro consult tool.",
+    help: "Conversation mode: agent-proxy (default) uses realtime voice as the microphone/speaker for the routed ORIRO agent, stt-tts uses batch speech-to-text plus TTS, and bidi lets the realtime provider converse directly with the ORIRO consult tool.",
   },
   "voice.agentSession": {
     label: "Discord Voice Agent Session",
-    help: 'Controls which Oriro conversation receives voice turns. Leave unset for the voice channel session, or set mode="target" with a Discord target such as channel:123 to make voice an extension of an existing text channel session.',
+    help: 'Controls which ORIRO conversation receives voice turns. Leave unset for the voice channel session, or set mode="target" with a Discord target such as channel:123 to make voice an extension of an existing text channel session.',
   },
   "voice.agentSession.target": {
     label: "Discord Voice Agent Session Target",
@@ -240,7 +240,7 @@ export const discordChannelConfigUiHints = {
   },
   "voice.realtime.model": {
     label: "Discord Realtime Model",
-    help: "Provider realtime session model, such as gpt-realtime-2. This is separate from voice.model, which remains the Oriro agent brain model.",
+    help: "Provider realtime session model, such as gpt-realtime-2. This is separate from voice.model, which remains the ORIRO agent brain model.",
   },
   "voice.realtime.speakerVoice": {
     label: "Discord Realtime Speaker Voice",
@@ -256,11 +256,11 @@ export const discordChannelConfigUiHints = {
   },
   "voice.realtime.toolPolicy": {
     label: "Discord Realtime Tool Policy",
-    help: "Tool policy for the Oriro agent consult tool in realtime voice modes: safe-read-only, owner, or none. Default is owner for agent-proxy and safe-read-only for bidi.",
+    help: "Tool policy for the ORIRO agent consult tool in realtime voice modes: safe-read-only, owner, or none. Default is owner for agent-proxy and safe-read-only for bidi.",
   },
   "voice.realtime.consultPolicy": {
     label: "Discord Realtime Consult Policy",
-    help: "Use always to strongly prefer the Oriro agent brain for substantive realtime turns. agent-proxy defaults to always.",
+    help: "Use always to strongly prefer the ORIRO agent brain for substantive realtime turns. agent-proxy defaults to always.",
   },
   "voice.realtime.requireWakeName": {
     label: "Discord Realtime Require Wake Name",
@@ -309,11 +309,11 @@ export const discordChannelConfigUiHints = {
   },
   "voice.reconnectGraceMs": {
     label: "Discord Voice Reconnect Grace (ms)",
-    help: "Grace period for a disconnected Discord voice session to enter Signalling or Connecting before Oriro destroys it. Default: 15000.",
+    help: "Grace period for a disconnected Discord voice session to enter Signalling or Connecting before ORIRO destroys it. Default: 15000.",
   },
   "voice.captureSilenceGraceMs": {
     label: "Discord Voice Capture Silence Grace (ms)",
-    help: "Silence window after Discord reports a speaker ended before Oriro finalizes the audio segment for transcription. Default: 2000.",
+    help: "Silence window after Discord reports a speaker ended before ORIRO finalizes the audio segment for transcription. Default: 2000.",
   },
   "voice.tts": {
     label: "Discord Voice Text-to-Speech",

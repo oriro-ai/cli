@@ -625,7 +625,7 @@ describe("bundled plugin postinstall", () => {
     const stateOverride = path.join(home, "custom-state");
     const systemState = path.join(home, "system-state");
     const defaultLegacyRoot = path.join(home, ".oriro", "plugin-runtime-deps");
-    const oldBrandLegacyRoot = path.join(home, ".clawdbot", "plugin-runtime-deps");
+    const oldBrandLegacyRoot = path.join(home, ".oriro", "plugin-runtime-deps");
     const overrideLegacyRoot = path.join(stateOverride, "plugin-runtime-deps");
     const systemLegacyRoot = path.join(systemState, "plugin-runtime-deps");
     const thirdPartyNodeModules = path.join(
@@ -747,7 +747,7 @@ describe("bundled plugin postinstall", () => {
     expect(warn).toHaveBeenCalledTimes(2);
     expect(warn).toHaveBeenNthCalledWith(
       1,
-      "[postinstall] could not prune legacy plugin runtime deps /home/alice/.clawdbot/plugin-runtime-deps: Error: locked",
+      "[postinstall] could not prune legacy plugin runtime deps /home/alice/.oriro/plugin-runtime-deps: Error: locked",
     );
     expect(warn).toHaveBeenNthCalledWith(
       2,
@@ -768,7 +768,7 @@ describe("bundled plugin postinstall", () => {
         homedir: () => "/users/alice",
       }),
     ).toEqual([
-      "/srv/oriro-home/.clawdbot/plugin-runtime-deps",
+      "/srv/oriro-home/.oriro/plugin-runtime-deps",
       "/srv/oriro-home/.oriro/plugin-runtime-deps",
       "/srv/oriro-home/profile/plugin-runtime-deps",
       "/srv/oriro-home/state/plugin-runtime-deps",

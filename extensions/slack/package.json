@@ -1,10 +1,10 @@
 {
   "name": "@oriro/slack",
-  "version": "2026.6.8",
-  "description": "Oriro Slack channel plugin for channels, DMs, commands, and app events.",
+  "version": "2026.6.9",
+  "description": "ORIRO Slack channel plugin for channels, DMs, commands, and app events.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -12,14 +12,15 @@
     "@slack/types": "2.21.1",
     "@slack/web-api": "7.16.0",
     "typebox": "1.1.39",
+    "ws": "8.21.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "@oriro/plugin-sdk": "workspace:*",
-    "openclaw": "2026.5.28"
+    "oriro": "workspace:*"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.6.8"
+    "oriro": "workspace:*"
   },
   "peerDependenciesMeta": {
     "oriro": {
@@ -64,13 +65,13 @@
       "allowInvalidConfigRecovery": true
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "startup": {
       "deferConfiguredChannelFullLoadUntilAfterListen": true
     },
     "build": {
-      "oriroVersion": "2026.6.8",
+      "oriroVersion": "2026.6.9",
       "bundledDist": false
     },
     "release": {

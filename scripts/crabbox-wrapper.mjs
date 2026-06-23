@@ -19,7 +19,7 @@ import {
 import { homedir, tmpdir } from "node:os";
 import { delimiter, dirname, extname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolvePathEnvKey } from "./windows-cmd-helpers.mjs";
+import { resolvePathEnvKey, resolveWindowsCmdExePath } from "./windows-cmd-helpers.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const ignoreRepoBinary = process.env.ORIRO_CRABBOX_WRAPPER_IGNORE_REPO_BINARY === "1";
@@ -119,7 +119,7 @@ function spawnInvocation(command, commandArgs, env, platform) {
   const extension = extname(command).toLowerCase();
   if (platform === "win32" && (extension === ".cmd" || extension === ".bat")) {
     return {
-      command: env.ComSpec ?? "cmd.exe",
+      command: resolveWindowsCmdExePath(env),
       args: ["/d", "/s", "/c", buildBatchCommandLine(command, commandArgs)],
       windowsVerbatimArguments: true,
     };
@@ -621,7 +621,7 @@ function enforceBrokeredAws(commandArgs, providerName) {
   }
   console.error(
     [
-      "[crabbox] provider=aws requires a configured Crabbox broker for Oriro proof.",
+      "[crabbox] provider=aws requires a configured Crabbox broker for ORIRO proof.",
       "[crabbox] run `crabbox login --url https://crabbox.oriro.ai --provider aws`, then retry.",
       "[crabbox] for intentional direct AWS provider debugging, set ORIRO_CRABBOX_ALLOW_DIRECT_AWS=1.",
     ].join("\n"),
@@ -1705,7 +1705,7 @@ function remoteGitBootstrapForChangedGate(changedGateBase) {
     'if ! git status --short >/dev/null 2>&1 || [ "$oriro_changed_gate_remote_base" != "$oriro_changed_gate_base" ]; then',
     "rm -rf .git;",
     "git init -q;",
-    "git remote add origin https://github.com/oriro-ai/cli.git 2>/dev/null || git remote set-url origin https://github.com/oriro-ai/cli.git;",
+    "git remote add origin https://github.com/oriro/oriro.git 2>/dev/null || git remote set-url origin https://github.com/oriro/oriro.git;",
     'git fetch -q --depth=1 origin "$oriro_changed_gate_base:refs/remotes/origin/main";',
     "git reset --mixed --quiet refs/remotes/origin/main;",
     "git add -A;",

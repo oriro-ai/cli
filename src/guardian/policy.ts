@@ -29,10 +29,22 @@ function haystack(call: GuardianCall): string {
     .toLowerCase();
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Match an allow/deny entry against the haystack on WORD BOUNDARIES, not raw
+ * substrings. Substring matching let `allow:['git']` match "digital" and
+ * `allow:['rm']` match unrelated tokens — a real Guardian bypass. A token is
+ * bounded by anything that is not [a-z0-9_-].
+ */
 function listMatches(list: readonly string[], hay: string): string | null {
   for (const entry of list) {
     const e = entry.trim().toLowerCase();
-    if (e && hay.includes(e)) return entry;
+    if (!e) continue;
+    const re = new RegExp(`(?:^|[^a-z0-9_-])${escapeRegExp(e)}(?:$|[^a-z0-9_-])`);
+    if (re.test(hay)) return entry;
   }
   return null;
 }
@@ -44,10 +56,13 @@ function escalate(v: GuardianVerdict): GuardianVerdict {
 }
 
 /**
- * Evaluate one call. Order: user denylist → user allowlist → rules → MCP-trust → allow.
- * The most severe verdict among rule matches wins. Mode adjusts the final decision:
- *   passive — never blocks (downgrades to allow, but the verdict's severity is preserved
- *             so the audit log still records the threat for review);
+ * Evaluate one call. Order: user denylist → rules + MCP-trust → user allowlist → mode.
+ * The most severe verdict among rule matches wins. The CRITICAL FLOOR is absolute:
+ * a critical-severity threat can never be downgraded by the user allowlist or by
+ * passive mode — it always blocks (ORIRO cardinal rule: the Guardian floor must
+ * never be bypassed by posture/mode).
+ * Mode adjusts only non-critical verdicts:
+ *   passive — downgrades non-critical blocks to allow (severity preserved for audit);
  *   active  — enforce as written (the default);
  *   strict  — escalate flags to blocks and block untrusted MCP servers.
  */
@@ -58,11 +73,8 @@ export function evaluate(call: GuardianCall, policy: GuardianPolicy): GuardianVe
   const denied = listMatches(policy.deny, hay);
   if (denied) return finalize({ decision: "block", severity: "warning", rule: "denylist", reason: `Matches your denylist: "${denied}"` }, policy.mode);
 
-  // 2) User allowlist short-circuits the rules (trusted by the operator).
-  const allowed = listMatches(policy.allow, hay);
-  if (allowed) return { decision: "allow", severity: "info", rule: "allowlist", reason: `Matches your allowlist: "${allowed}"` };
-
-  // 3) Default + custom rules — keep the most severe verdict.
+  // 2) Default + custom rules — keep the most severe verdict. Evaluated BEFORE the
+  // allowlist so the allowlist can never short-circuit a critical threat.
   const rules = policy.rules ?? DEFAULT_RULES;
   let worst: GuardianVerdict = ALLOW;
   for (const rule of rules) {
@@ -75,10 +87,17 @@ export function evaluate(call: GuardianCall, policy: GuardianPolicy): GuardianVe
     if (v && isWorse(v, worst)) worst = v;
   }
 
-  // 4) MCP trust: a call from an unlisted server is at least "ask".
+  // 3) MCP trust: a call from an unlisted server is at least "ask".
   if (call.kind === "mcp" && call.mcpServer && !policy.trustedServers.some((s) => s.toLowerCase() === call.mcpServer!.toLowerCase())) {
     const mcp: GuardianVerdict = { decision: "ask", severity: "warning", rule: "mcp-untrusted", reason: `Call from untrusted MCP server "${call.mcpServer}"` };
     if (isWorse(mcp, worst)) worst = mcp;
+  }
+
+  // 4) User allowlist short-circuits NON-critical rules only. A critical threat is
+  // the floor and cannot be allowlisted away.
+  if (worst.severity !== "critical") {
+    const allowed = listMatches(policy.allow, hay);
+    if (allowed) return { decision: "allow", severity: "info", rule: "allowlist", reason: `Matches your allowlist: "${allowed}"` };
   }
 
   return finalize(worst, policy.mode);
@@ -91,6 +110,11 @@ function isWorse(a: GuardianVerdict, b: GuardianVerdict): boolean {
 
 function finalize(v: GuardianVerdict, mode: GuardianMode): GuardianVerdict {
   if (v.decision === "allow") return v;
+  // CRITICAL FLOOR: critical-severity threats block in EVERY mode. Neither passive
+  // mode nor strict can move them off "block" — this is the unbypassable floor.
+  if (v.severity === "critical") {
+    return v.decision === "block" ? v : { ...v, decision: "block", reason: `${v.reason} (critical floor)` };
+  }
   if (mode === "passive") return { ...v, decision: "allow", rule: `${v.rule}:passive`, reason: `[passive] ${v.reason}` };
   if (mode === "strict") return escalate(v);
   return v; // active

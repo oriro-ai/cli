@@ -210,7 +210,7 @@ export function formatDiskSpaceErrorCopy(raw: string): string | undefined {
     lower.includes("disk full")
   ) {
     return (
-      "Oriro could not write local session data because the disk is full. " +
+      "ORIRO could not write local session data because the disk is full. " +
       "Free some disk space and try again."
     );
   }

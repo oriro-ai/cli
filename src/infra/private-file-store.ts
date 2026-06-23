@@ -5,7 +5,7 @@ import {
   fileStoreSync,
   type FileStore,
   type FileStoreSync,
-} from "@oriro/fs-safe/store";
+} from "@openclaw/fs-safe/store";
 
 // Private stores create owner-only files under a caller-provided root.
 export type PrivateFileStore = FileStore;

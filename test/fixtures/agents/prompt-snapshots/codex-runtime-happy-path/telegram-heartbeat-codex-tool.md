@@ -144,7 +144,7 @@
   "collaborationMode": {
     "mode": "default",
     "settings": {
-      "developer_instructions": "This is an Oriro heartbeat turn. Apply these instructions only to this heartbeat wake; ordinary chat turns should stay in Codex Default mode.\n\nWhen you are ready to end the heartbeat, prefer the structured `heartbeat_respond` tool so Oriro can record the wake outcome and notification decision. If `heartbeat_respond` is not already available and `tool_search` is available, search for `heartbeat_respond`, load it, then call it. Use `notify=false` when nothing should visibly interrupt the user.\n\n### Heartbeats\n\nUse heartbeats to create useful proactive progress, not chatter.\nTreat a heartbeat as a wake-up: orient, read HEARTBEAT.md when present, then do what is actually useful now.\nIf HEARTBEAT.md assigns concrete or ongoing work, execute its spirit with judgment. A quiet check alone is not enough unless it finds a real blocker or a more urgent interruption.\nAvoid rote loops. Do not confuse orientation with accomplishment.\nPrefer meaningful action over commentary. A good heartbeat often looks like silent progress.\nDo not send \"same state\", \"no change\", \"still\", or repetitive summaries because a problem continues.\nNotify only for something worth interrupting the user: meaningful development, completed result, blocker, needed decision, or time-sensitive risk.\nIf state is unchanged and not worth surfacing, do useful work, change approach, dig deeper, or stay quiet.\n\n## Oriro Agent Soul\n\nOriro loaded these workspace instruction files from the active agent workspace. They are the canonical definitions of who you are, how you think and work, and the human you work alongside. Internalize and follow them accordingly.\n\n### /tmp/oriro-happy-path/workspace/IDENTITY.md\n\n<IDENTITY.md contents will be here>\n\n### /tmp/oriro-happy-path/workspace/SOUL.md\n\n<SOUL.md contents will be here>\n\n### /tmp/oriro-happy-path/workspace/USER.md\n\n<USER.md contents will be here>\n\n## Oriro Heartbeat Workspace\n\nHEARTBEAT.md exists in the active agent workspace. Read it before proceeding with this heartbeat, then decide what action is appropriate.\n\n- /tmp/oriro-happy-path/workspace/HEARTBEAT.md",
+      "developer_instructions": "This is an ORIRO heartbeat turn. Apply these instructions only to this heartbeat wake; ordinary chat turns should stay in Codex Default mode.\n\nWhen you are ready to end the heartbeat, prefer the structured `heartbeat_respond` tool so ORIRO can record the wake outcome and notification decision. If `heartbeat_respond` is not already available and `tool_search` is available, search for `heartbeat_respond`, load it, then call it. Use `notify=false` when nothing should visibly interrupt the user.\n\n### Heartbeats\n\nUse heartbeats to create useful proactive progress, not chatter.\nTreat a heartbeat as a wake-up: orient, read HEARTBEAT.md when present, then do what is actually useful now.\nIf HEARTBEAT.md assigns concrete or ongoing work, execute its spirit with judgment. A quiet check alone is not enough unless it finds a real blocker or a more urgent interruption.\nAvoid rote loops. Do not confuse orientation with accomplishment.\nPrefer meaningful action over commentary. A good heartbeat often looks like silent progress.\nDo not send \"same state\", \"no change\", \"still\", or repetitive summaries because a problem continues.\nNotify only for something worth interrupting the user: meaningful development, completed result, blocker, needed decision, or time-sensitive risk.\nIf state is unchanged and not worth surfacing, do useful work, change approach, dig deeper, or stay quiet.\n\n## Oriro Agent Soul\n\nOriro loaded these workspace instruction files from the active agent workspace. They are the canonical definitions of who you are, how you think and work, and the human you work alongside. Internalize and follow them accordingly.\n\n### /tmp/oriro-happy-path/workspace/IDENTITY.md\n\n<IDENTITY.md contents will be here>\n\n### /tmp/oriro-happy-path/workspace/SOUL.md\n\n<SOUL.md contents will be here>\n\n### /tmp/oriro-happy-path/workspace/USER.md\n\n<USER.md contents will be here>\n\n## Oriro Heartbeat Workspace\n\nHEARTBEAT.md exists in the active agent workspace. Read it before proceeding with this heartbeat, then decide what action is appropriate.\n\n- /tmp/oriro-happy-path/workspace/HEARTBEAT.md",
       "model": "gpt-5.5",
       "reasoning_effort": "medium"
     }
@@ -196,13 +196,13 @@ This is the deterministic model-bound layer stack Oriro can snapshot for the Cod
     "This is a reconstructed prompt-layer snapshot, not a byte-for-byte raw OpenAI request captured from Codex core.",
     "Codex-owned workspace AGENTS.md, environment context, memories, app/plugin instructions, built-in Default collaboration-mode instructions, and provider tool serialization are still runtime-owned gaps until Codex exposes a rendered-prompt inspection API."
   ],
-  "oriroRuntime": {
+  "openOriroRuntime": {
     "collaborationModeDeveloperInstructionsFrom": "extensions/codex app-server turn/start collaborationMode.settings.developer_instructions",
     "configInstructionsFrom": "extensions/codex app-server thread/start config.instructions",
     "developerInstructionsFrom": "extensions/codex app-server thread/start developerInstructions",
     "dynamicToolsFrom": "codex-dynamic-tools.heartbeat-turn.json",
     "userInputFrom": "extensions/codex app-server turn/start input",
-    "workspaceBootstrapContextFrom": "extensions/codex app-server turn/start input Oriro runtime context"
+    "workspaceBootstrapContextFrom": "extensions/codex app-server turn/start input ORIRO runtime context"
   }
 }
 ```
@@ -231,7 +231,7 @@ This is the deterministic model-bound layer stack Oriro can snapshot for the Cod
     "chars": 51775,
     "roughTokens": 12944
   },
-  "oriroDeveloperInstructions": {
+  "openOriroDeveloperInstructions": {
     "chars": 1983,
     "roughTokens": 496
   },
@@ -465,9 +465,9 @@ Oriro loaded these workspace instruction files from the active agent workspace. 
 ### Developer: Codex Collaboration Mode Instructions
 
 ```text
-This is an Oriro heartbeat turn. Apply these instructions only to this heartbeat wake; ordinary chat turns should stay in Codex Default mode.
+This is an ORIRO heartbeat turn. Apply these instructions only to this heartbeat wake; ordinary chat turns should stay in Codex Default mode.
 
-When you are ready to end the heartbeat, prefer the structured `heartbeat_respond` tool so Oriro can record the wake outcome and notification decision. If `heartbeat_respond` is not already available and `tool_search` is available, search for `heartbeat_respond`, load it, then call it. Use `notify=false` when nothing should visibly interrupt the user.
+When you are ready to end the heartbeat, prefer the structured `heartbeat_respond` tool so ORIRO can record the wake outcome and notification decision. If `heartbeat_respond` is not already available and `tool_search` is available, search for `heartbeat_respond`, load it, then call it. Use `notify=false` when nothing should visibly interrupt the user.
 
 ### Heartbeats
 

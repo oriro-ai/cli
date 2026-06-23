@@ -642,11 +642,11 @@ const codexSessionRoutesCheck: HealthCheck = {
         fixHint: issue.blockedOutsideEntry
           ? [
               "Enable plugin loading and remove codex from plugins.deny,",
-              "or set the affected OpenAI models to an Oriro runtime policy.",
+              "or set the affected OpenAI models to an ORIRO runtime policy.",
             ].join(" ")
           : [
               "Run `oriro doctor --fix`: it enables plugins.entries.codex,",
-              "or set the affected OpenAI models to an Oriro runtime policy.",
+              "or set the affected OpenAI models to an ORIRO runtime policy.",
             ].join(" "),
       }),
     );
@@ -681,33 +681,6 @@ const browserCheck: HealthCheck = {
     const collector = createNoteCollector("core/doctor/browser");
     await noteChromeMcpBrowserReadiness(ctx.cfg, { noteFn: collector.noteFn });
     return collector.findings;
-  },
-};
-
-const workspaceStatusCheck: HealthCheck = {
-  id: "core/doctor/workspace-status",
-  kind: "core",
-  description: "Workspace directory exists and has no legacy duplicates.",
-  source: "doctor",
-  async detect(ctx) {
-    const { detectLegacyWorkspaceDirs } = await loadDoctorWorkspaceModule();
-    const workspaceDir = resolveAgentWorkspaceDir(ctx.cfg, resolveDefaultAgentId(ctx.cfg));
-    const legacy = detectLegacyWorkspaceDirs({ workspaceDir });
-    if (legacy.legacyDirs.length === 0) {
-      return [];
-    }
-    return [
-      {
-        checkId: "core/doctor/workspace-status",
-        severity: "info",
-        message: `Detected ${legacy.legacyDirs.length} legacy workspace director${
-          legacy.legacyDirs.length === 1 ? "y" : "ies"
-        } alongside the active workspace.`,
-        path: workspaceDir,
-        fixHint:
-          "Inspect the legacy directories and migrate or remove them; see `oriro doctor` for the detailed migration prompt.",
-      },
-    ];
   },
 };
 
@@ -803,7 +776,7 @@ const browserOrirodProfileResidueCheck: HealthCheck = {
   id: BROWSER_ORIROD_PROFILE_RESIDUE_CHECK_ID,
   kind: "core",
   description:
-    "Legacy orirod managed browser profile residue has been archived after the Oriro rename.",
+    "Legacy orirod managed browser profile residue has been archived after the ORIRO rename.",
   source: "doctor",
   async detect(ctx, scope) {
     const residue = await detectLegacyOrirodBrowserProfileResidue(ctx.cfg, browserResidueDeps(ctx));
@@ -989,7 +962,6 @@ export function createCoreHealthChecks(
     gatewayConfigCheck,
     ...createConvertedWorkflowChecks(deps),
     commandOwnerCheck,
-    workspaceStatusCheck,
     createSkillsReadinessCheck(deps),
     browserOrirodProfileResidueCheck,
     finalConfigValidationCheck,

@@ -25,19 +25,19 @@ gitcrawl doctor --json
 Find candidates:
 
 ```bash
-gitcrawl threads oriro-ai/cli --numbers <issue-or-pr-number> --include-closed --json
-gitcrawl neighbors oriro-ai/cli --number <issue-or-pr-number> --limit 12 --json
-gitcrawl search issues "query" -R oriro-ai/cli --state open --json number,title,url
-gitcrawl clusters oriro-ai/cli --sort size --min-size 5
-gitcrawl cluster-detail oriro-ai/cli --id <cluster-id>
+gitcrawl threads oriro/oriro --numbers <issue-or-pr-number> --include-closed --json
+gitcrawl neighbors oriro/oriro --number <issue-or-pr-number> --limit 12 --json
+gitcrawl search issues "query" -R oriro/oriro --state open --json number,title,url
+gitcrawl clusters oriro/oriro --sort size --min-size 5
+gitcrawl cluster-detail oriro/oriro --id <cluster-id>
 ```
 
 For PR triage, start cached and go live only before mutation/merge decisions:
 
 ```bash
-gitcrawl gh pr status <number-or-url> -R oriro-ai/cli --compact
-gitcrawl gh pr view <number-or-url> -R oriro-ai/cli --json number,title,state,url,isDraft,headRef,headSha
-gitcrawl gh --live pr status <number-or-url> -R oriro-ai/cli --compact
+gitcrawl gh pr status <number-or-url> -R oriro/oriro --compact
+gitcrawl gh pr view <number-or-url> -R oriro/oriro --json number,title,state,url,isDraft,headRef,headSha
+gitcrawl gh --live pr status <number-or-url> -R oriro/oriro --compact
 ```
 
 Use live `gh` plus checkout proof before commenting, labeling, closing, reopening, merging, or filing a PR review:

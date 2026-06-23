@@ -271,7 +271,7 @@ function resolveArg(flag: string, argv: string[]): string | undefined {
     return undefined;
   }
   const value = argv[idx + 1];
-  if (!value || value.startsWith("--")) {
+  if (!value || value.startsWith("-")) {
     throw new CliArgumentError(`${flag} requires a value`);
   }
   return value;
@@ -327,7 +327,7 @@ function usage(): string {
     "Usage: bun scripts/dev/discord-acp-plain-language-smoke.ts " +
     "--channel <discord-channel-id> [--token <driver-token> | --driver webhook --bot-token <bot-token> | --driver oriro] [options]\n\n" +
     "Manual live smoke only (not CI). Sends a plain-language instruction in Discord and verifies:\n" +
-    "1) Oriro spawned an ACP thread binding\n" +
+    "1) ORIRO spawned an ACP thread binding\n" +
     "2) agent replied in that bound thread with the expected ACK token\n\n" +
     "Options:\n" +
     "  --channel <id>               Parent Discord channel id (required)\n" +
@@ -341,8 +341,8 @@ function usage(): string {
     "  --instruction <text>         Custom instruction template (optional)\n" +
     "  --timeout-ms <n>             Total timeout in ms (default: 240000)\n" +
     "  --poll-ms <n>                Poll interval in ms (default: 1500)\n" +
-    "  --state-dir <p>              Override Oriro state dir for plugin-state polling\n" +
-    "  --oriro-bin <path>        Oriro CLI binary for driver=oriro (default: oriro)\n" +
+    "  --state-dir <p>              Override ORIRO state dir for plugin-state polling\n" +
+    "  --oriro-bin <path>        ORIRO CLI binary for driver=oriro (default: oriro)\n" +
     "  --json                       Emit JSON output\n" +
     "\n" +
     "Environment fallbacks:\n" +
@@ -1047,7 +1047,7 @@ async function run(argv = process.argv.slice(2)): Promise<SuccessResult | Failur
         ok: false,
         stage: "wait-ack",
         smokeId,
-        error: `Thread bound (${threadId}) but timed out waiting for ACK token "${ackToken}" from Oriro.`,
+        error: `Thread bound (${threadId}) but timed out waiting for ACK token "${ackToken}" from ORIRO.`,
         diagnostics: {
           bindingCandidates: [
             {

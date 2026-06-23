@@ -440,7 +440,7 @@ describe("fal video generation provider", () => {
     const result = await provider.generateVideo({
       provider: "fal",
       model: "bytedance/seedance-2.0/fast/text-to-video",
-      prompt: "A chrome oriro drives a tiny kart across a neon pier",
+      prompt: "A chrome lobster drives a tiny kart across a neon pier",
       durationSeconds: 7,
       aspectRatio: "16:9",
       resolution: "720P",
@@ -452,7 +452,7 @@ describe("fal video generation provider", () => {
       "https://queue.fal.run/bytedance/seedance-2.0/fast/text-to-video",
     );
     expect(getSubmitBody()).toEqual({
-      prompt: "A chrome oriro drives a tiny kart across a neon pier",
+      prompt: "A chrome lobster drives a tiny kart across a neon pier",
       aspect_ratio: "16:9",
       resolution: "720p",
       duration: "7",
@@ -480,7 +480,7 @@ describe("fal video generation provider", () => {
     await provider.generateVideo({
       provider: "fal",
       model: "bytedance/seedance-2.0/fast/text-to-video",
-      prompt: "A chrome oriro drives a tiny kart across a neon pier",
+      prompt: "A chrome lobster drives a tiny kart across a neon pier",
       durationSeconds: 99,
       cfg: {},
     });

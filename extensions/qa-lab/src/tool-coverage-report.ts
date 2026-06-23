@@ -304,7 +304,7 @@ export function buildQaToolCoverageReport(params: {
 
 export function renderQaToolCoverageMarkdownReport(report: QaToolCoverageReport): string {
   const lines = [
-    `# Oriro Runtime Tool Coverage — ${report.runtimePair[0]} vs ${report.runtimePair[1]}`,
+    `# ORIRO Runtime Tool Coverage — ${report.runtimePair[0]} vs ${report.runtimePair[1]}`,
     "",
     `- Generated at: ${report.generatedAt}`,
     `- Mode: ${report.evaluated ? "runtime summary" : "catalog inventory"}`,
@@ -313,21 +313,34 @@ export function renderQaToolCoverageMarkdownReport(report: QaToolCoverageReport)
     `- Report-only tools: ${report.reportOnlyTools}`,
     `- Tracked issue rows: ${report.trackedTools}`,
     `- Codex-native workspace tools: ${report.nativeWorkspaceTools}`,
-    `- Oriro dynamic integration tools: ${report.dynamicIntegrationTools}`,
+    `- ORIRO dynamic integration tools: ${report.dynamicIntegrationTools}`,
     `- Searchable/deferred dynamic tools: ${report.searchableDynamicTools}`,
     `- Optional/profile/plugin-dependent tools: ${report.optionalTools}`,
     `- Passing tools: ${report.passingTools}`,
     `- Failing tools: ${report.failingTools}`,
     `- Verdict: ${report.pass ? "pass" : "fail"}`,
     "",
-    "| Tool | Bucket | Expected layer | Capability layer | Required | Fixtures | Oriro | Codex | Drift | Codex default impact | QA impact | Action | Tracking |",
+    "| Tool | Bucket | Expected layer | Capability layer | Required | Fixtures | ORIRO | Codex | Drift | Codex default impact | QA impact | Action | Tracking |",
     "| --- | --- | --- | --- | --- | ---: | --- | --- | --- | --- | --- | --- | --- |",
   ];
 
   for (const row of report.rows) {
-    lines.push(
-      `| ${row.tool} | ${row.bucket} | ${row.expectedLayer} | ${row.capabilityLayer} | ${row.required ? "yes" : "no"} | ${row.fixtureCount} | ${row.oriro} | ${row.codex} | ${row.drift} | ${row.codexDefaultImpact ?? ""} | ${row.qaImpact ?? ""} | ${row.action ?? ""} | ${row.tracking ?? ""} |`,
-    );
+    const cells = [
+      row.tool,
+      row.bucket,
+      row.expectedLayer,
+      row.capabilityLayer,
+      row.required ? "yes" : "no",
+      row.fixtureCount.toString(),
+      row.oriro,
+      row.codex,
+      row.drift,
+      row.codexDefaultImpact ?? "",
+      row.qaImpact ?? "",
+      row.action ?? "",
+      row.tracking ?? "",
+    ].map(escapeTableCell);
+    lines.push(`| ${cells.join(" | ")} |`);
   }
 
   if (report.failures.length > 0) {
@@ -343,4 +356,8 @@ export function renderQaToolCoverageMarkdownReport(report: QaToolCoverageReport)
   }
 
   return `${lines.join("\n").trimEnd()}\n`;
+}
+
+function escapeTableCell(value: string): string {
+  return value.replace(/\|/gu, "\\|").replace(/\s+/gu, " ").trim();
 }

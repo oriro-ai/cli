@@ -253,11 +253,11 @@ describe("redactSensitiveText", () => {
   });
 
   it("masks named Gateway security headers", () => {
-    const oriroToken = "supersecretgatewaytoken1234567890";
+    const openOriroToken = "supersecretgatewaytoken1234567890";
     const pomeriumJwt = "eyJheaderabcd.eyJpayloadabcd.signatureabcd123456";
     const apiKey = "shortsecret";
     const input = [
-      `X-Oriro-Token: ${oriroToken}`,
+      `X-Oriro-Token: ${openOriroToken}`,
       `x-pomerium-jwt-assertion: ${pomeriumJwt}`,
       `X-Api-Key=${apiKey}`,
     ].join("\n");
@@ -266,7 +266,7 @@ describe("redactSensitiveText", () => {
     expect(output).toContain("X-Oriro-Token: supers…7890");
     expect(output).toContain("x-pomerium-jwt-assertion: eyJhea…3456");
     expect(output).toContain("X-Api-Key=***");
-    expect(output).not.toContain(oriroToken);
+    expect(output).not.toContain(openOriroToken);
     expect(output).not.toContain(pomeriumJwt);
     expect(output).not.toContain(apiKey);
   });

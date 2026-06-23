@@ -312,8 +312,8 @@ describe("sanitizeUserFacingText", () => {
     const input = [
       "Visible intro.",
       "⚠️ 🛠️ `run oriro definitely-not-a-real-subcommand (agent)` failed",
-      "⚠️ 🛠️ gh search issues --repo oriro-ai/cli --state open --no-search-pages.jsonl /tmp/oriro_open_unlabeled_current.json (agent) failed",
-      "⚠️ 🛠️ gh search issues --repo oriro-ai/cli --state open (agent) failed: command timed out",
+      "⚠️ 🛠️ gh search issues --repo oriro/oriro --state open --no-search-pages.jsonl /tmp/oriro_open_unlabeled_current.json (agent) failed",
+      "⚠️ 🛠️ gh search issues --repo oriro/oriro --state open (agent) failed: command timed out",
       "🛠️ run git status",
       "📖 Read: lines 1-40 from secret.md",
       "Visible outro.",

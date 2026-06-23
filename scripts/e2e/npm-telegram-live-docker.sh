@@ -50,7 +50,7 @@ validate_oriro_package_spec() {
   if [[ "$spec" =~ ^oriro@(alpha|beta|latest|[0-9]{4}\.[1-9][0-9]*\.[1-9][0-9]*(-[1-9][0-9]*|-(alpha|beta)\.[1-9][0-9]*)?)$ ]]; then
     return 0
   fi
-  echo "ORIRO_NPM_TELEGRAM_PACKAGE_SPEC must be oriro@alpha, oriro@beta, oriro@latest, or an exact Oriro release version; got: $spec" >&2
+  echo "ORIRO_NPM_TELEGRAM_PACKAGE_SPEC must be oriro@alpha, oriro@beta, oriro@latest, or an exact ORIRO release version; got: $spec" >&2
   exit 1
 }
 

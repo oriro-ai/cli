@@ -99,7 +99,7 @@ pack:
     Important expectations:
 
     - Check both DM and channel behavior.
-    - Include a Oriro Invaders build task.
+    - Include a Lobster Invaders build task.
     - Include a cron reminder about one minute in the future.
     - Read docs and source before proposing extra QA scenarios.
     - Keep your tone in the configured dev C-3PO personality.

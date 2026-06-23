@@ -645,7 +645,7 @@ async function sendQrPngToSupportedChannel(params: {
 export default definePluginEntry({
   id: "device-pair",
   name: "Device Pair",
-  description: "QR/bootstrap pairing helpers for Oriro devices",
+  description: "QR/bootstrap pairing helpers for ORIRO devices",
   register(api: OriroPluginApi) {
     let notifierService: ReturnType<NotifyModule["createPairingNotifierService"]> | undefined;
     api.registerService({
@@ -802,7 +802,7 @@ export default definePluginEntry({
                 api,
                 ctx,
                 target,
-                caption: ["Scan this QR code with the Oriro iOS app:", "", ...infoLines].join(
+                caption: ["Scan this QR code with the ORIRO iOS app:", "", ...infoLines].join(
                   "\n",
                 ),
                 qrFilePath,
@@ -853,7 +853,7 @@ export default definePluginEntry({
             }
             return {
               text: [
-                "Scan this QR code with the Oriro iOS app:",
+                "Scan this QR code with the ORIRO iOS app:",
                 "",
                 formatQrInfoMarkdown({
                   payload,

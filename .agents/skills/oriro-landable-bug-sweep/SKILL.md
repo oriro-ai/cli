@@ -1,6 +1,6 @@
 ---
 name: oriro-landable-bug-sweep
-description: "Find or repair small high-confidence non-SDK-boundary Oriro bugfix PRs until five are landable."
+description: "Find or repair small high-confidence non-SDK-boundary ORIRO bugfix PRs until five are landable."
 ---
 
 # Oriro Landable Bug Sweep

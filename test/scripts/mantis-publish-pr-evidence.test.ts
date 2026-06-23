@@ -82,12 +82,12 @@ describe("scripts/mantis/publish-pr-evidence", () => {
   it("renders a manifest-driven PR comment with inline screenshots and video links", () => {
     const manifest = loadEvidenceManifest(writeFixtureManifest());
     const body = renderEvidenceComment({
-      artifactUrl: "https://github.com/oriro-ai/cli/actions/runs/1/artifacts/2",
+      artifactUrl: "https://github.com/oriro/oriro/actions/runs/1/artifacts/2",
       manifest,
       marker: "<!-- mantis-discord-status-reactions -->",
       rawBase: "https://qa.oriro.ai/mantis/discord/pr-1/run-1",
       requestSource: "workflow_dispatch",
-      runUrl: "https://github.com/oriro-ai/cli/actions/runs/1",
+      runUrl: "https://github.com/oriro/oriro/actions/runs/1",
       treeUrl: "https://qa.oriro.ai/mantis/discord/pr-1/run-1",
     });
 
@@ -219,12 +219,12 @@ describe("scripts/mantis/publish-pr-evidence", () => {
       "mantis-evidence.json",
     ]);
     const body = renderEvidenceComment({
-      artifactUrl: "https://github.com/oriro-ai/cli/actions/runs/1/artifacts/2",
+      artifactUrl: "https://github.com/oriro/oriro/actions/runs/1/artifacts/2",
       manifest,
       marker: "<!-- mantis-slack-desktop-smoke -->",
       rawBase: "https://qa.oriro.ai/mantis/slack/pr-1/run-1",
       requestSource: "workflow_dispatch",
-      runUrl: "https://github.com/oriro-ai/cli/actions/runs/1",
+      runUrl: "https://github.com/oriro/oriro/actions/runs/1",
       treeUrl: "https://qa.oriro.ai/mantis/slack/pr-1/run-1",
     });
 
@@ -267,11 +267,11 @@ describe("scripts/mantis/publish-pr-evidence", () => {
       manifest,
       marker: "<!-- mantis-telegram-desktop-proof -->",
       rawBase:
-        "https://raw.githubusercontent.com/oriro-ai/cli/qa-artifacts/mantis/telegram-desktop/pr-1/run-1",
+        "https://raw.githubusercontent.com/oriro/oriro/qa-artifacts/mantis/telegram-desktop/pr-1/run-1",
       requestSource: "issue_comment",
-      runUrl: "https://github.com/oriro-ai/cli/actions/runs/1",
+      runUrl: "https://github.com/oriro/oriro/actions/runs/1",
       treeUrl:
-        "https://github.com/oriro-ai/cli/tree/qa-artifacts/mantis/telegram-desktop/pr-1/run-1",
+        "https://github.com/oriro/oriro/tree/qa-artifacts/mantis/telegram-desktop/pr-1/run-1",
     });
 
     expect(manifest.artifacts.map((artifact) => artifact.targetPath)).toEqual([
@@ -321,7 +321,7 @@ describe("scripts/mantis/publish-pr-evidence", () => {
       marker: "<!-- mantis-telegram-desktop-proof -->",
       rawBase: "https://artifacts.oriro.ai/mantis/telegram-desktop/pr-1/run-1",
       requestSource: "pull_request_target",
-      runUrl: "https://github.com/oriro-ai/cli/actions/runs/1",
+      runUrl: "https://github.com/oriro/oriro/actions/runs/1",
       treeUrl: "https://artifacts.oriro.ai/mantis/telegram-desktop/pr-1/run-1/index.json",
     });
 

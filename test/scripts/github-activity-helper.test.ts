@@ -76,7 +76,7 @@ describe("oriro-pr-maintainer github activity helper", () => {
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
     expect(result.stdout).toContain("Kevin Lin (@kevinslin, User, account created 2010-09-21");
-    expect(result.stdout).toContain("oriro-ai/cli last 1mo: 2 PRs, 1 issues, 2 commits");
+    expect(result.stdout).toContain("oriro/oriro last 1mo: 2 PRs, 1 issues, 2 commits");
     expect(log.match(/repos\/oriro\/oriro\/issues/g)).toHaveLength(1);
     expect(log.match(/repos\/oriro\/oriro\/commits/g)).toHaveLength(1);
     expect(log).toMatch(/since=\d{4}-\d{2}-\d{2}T00:00:00Z/);

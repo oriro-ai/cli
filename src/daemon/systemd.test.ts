@@ -23,7 +23,7 @@ const findSystemGatewayServicesMock = vi.hoisted(() =>
         label: string;
         detail: string;
         scope: "user" | "system";
-        marker?: "oriro" | "clawdbot";
+        marker?: "oriro" | "oriro";
         legacy?: boolean;
       }>
     >
@@ -626,15 +626,15 @@ describe("system-scope gateway unit detection (oriro#87577)", () => {
     });
   });
 
-  it("findInstalledSystemdGatewayScope ignores legacy clawdbot system units in the marker fallback", async () => {
+  it("findInstalledSystemdGatewayScope ignores legacy oriro system units in the marker fallback", async () => {
     mockUnitFileLayout({ system: false });
     findSystemGatewayServicesMock.mockResolvedValueOnce([
       {
         platform: "linux",
-        label: "clawdbot.service",
-        detail: "unit: /etc/systemd/system/clawdbot.service",
+        label: "oriro.service",
+        detail: "unit: /etc/systemd/system/oriro.service",
         scope: "system",
-        marker: "clawdbot",
+        marker: "oriro",
         legacy: true,
       },
     ]);

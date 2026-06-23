@@ -5,7 +5,7 @@ import { buildHermesMigrationProvider } from "./provider.js";
 export default definePluginEntry({
   id: "migrate-hermes",
   name: "Hermes Migration",
-  description: "Imports Hermes state into Oriro.",
+  description: "Imports Hermes state into ORIRO.",
   register(api) {
     api.registerMigrationProvider(buildHermesMigrationProvider({ runtime: api.runtime }));
   },

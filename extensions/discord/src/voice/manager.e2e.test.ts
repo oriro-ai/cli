@@ -2958,7 +2958,7 @@ describe("DiscordVoiceManager", () => {
       undefined,
       {
         agents: {
-          list: [{ id: "agent-1", identity: { name: "Oriro" } }],
+          list: [{ id: "agent-1", identity: { name: "Molty" } }],
         },
       },
     );
@@ -3001,14 +3001,14 @@ describe("DiscordVoiceManager", () => {
       "u-owner",
     );
     ownerTurn?.sendInputAudio(Buffer.alloc(8));
-    await emitFinalRealtimeUserTranscript(bridgeParams, "Hey, Oriro, how is it going");
+    await emitFinalRealtimeUserTranscript(bridgeParams, "Hey, Molty, how is it going");
 
     expect(controlRealtimeVoiceAgentRunMock).toHaveBeenCalledWith({
       sessionKey: "discord:g1:c1",
       text: "how is it going",
     });
     expect(lastAgentCommandArgs().message).toContain("how is it going");
-    expect(lastAgentCommandArgs().message).not.toContain("Oriro");
+    expect(lastAgentCommandArgs().message).not.toContain("Molty");
     expect(lastAgentCommandArgs().message).not.toContain("Hey");
   });
 
@@ -3026,7 +3026,7 @@ describe("DiscordVoiceManager", () => {
       undefined,
       {
         agents: {
-          list: [{ id: "agent-1", identity: { name: "Oriro" } }],
+          list: [{ id: "agent-1", identity: { name: "Molty" } }],
         },
       },
     );
@@ -3053,14 +3053,14 @@ describe("DiscordVoiceManager", () => {
     );
     ownerTurn?.sendInputAudio(Buffer.alloc(8));
     bridgeParams?.onEvent?.({ direction: "server", type: "input_audio_buffer.speech_started" });
-    bridgeParams?.onTranscript?.("user", "Hey, Oriro", false);
+    bridgeParams?.onTranscript?.("user", "Hey, Molty", false);
 
     expectUserMessageIncludes('Answer: "Yeah."');
     expect(controlRealtimeVoiceAgentRunMock).not.toHaveBeenCalled();
     expect(agentCommandMock).not.toHaveBeenCalled();
 
     bridgeParams?.onEvent?.({ direction: "server", type: "response.done" });
-    await emitFinalRealtimeUserTranscript(bridgeParams, "Hey, Oriro, how is it going");
+    await emitFinalRealtimeUserTranscript(bridgeParams, "Hey, Molty, how is it going");
 
     expect(controlRealtimeVoiceAgentRunMock).toHaveBeenCalledWith({
       sessionKey: "discord:g1:c1",
@@ -3085,7 +3085,7 @@ describe("DiscordVoiceManager", () => {
       undefined,
       {
         agents: {
-          list: [{ id: "agent-1", identity: { name: "Oriro" } }],
+          list: [{ id: "agent-1", identity: { name: "Molty" } }],
         },
       },
     );
@@ -3157,7 +3157,7 @@ describe("DiscordVoiceManager", () => {
       undefined,
       {
         agents: {
-          list: [{ id: "agent-1", identity: { name: "Oriro" } }],
+          list: [{ id: "agent-1", identity: { name: "Molty" } }],
         },
       },
     );
@@ -3185,7 +3185,7 @@ describe("DiscordVoiceManager", () => {
 
     await flushRealtimeForcedConsultTimers(() => {
       bridgeParams?.onTranscript?.("user", "room noise", true);
-      bridgeParams?.onTranscript?.("user", "Oriro, so", true);
+      bridgeParams?.onTranscript?.("user", "Molty, so", true);
       bridgeParams?.onTranscript?.("user", "Malty, what do you have to say?", true);
     });
 
@@ -3210,7 +3210,7 @@ describe("DiscordVoiceManager", () => {
       undefined,
       {
         agents: {
-          list: [{ id: "agent-1", identity: { name: "Oriro" } }],
+          list: [{ id: "agent-1", identity: { name: "Molty" } }],
         },
       },
     );
@@ -3314,7 +3314,7 @@ describe("DiscordVoiceManager", () => {
       undefined,
       {
         agents: {
-          list: [{ id: "agent-1", identity: { name: "Oriro" } }],
+          list: [{ id: "agent-1", identity: { name: "Molty" } }],
         },
       },
     );
@@ -3377,11 +3377,11 @@ describe("DiscordVoiceManager", () => {
     expect(agentCommandArgsAt(3).message).toContain("can you hear me?");
     expect(agentCommandArgsAt(3).message).not.toContain("Marty");
 
-    const oriroTurn = entry.realtime?.beginSpeakerTurn(
+    const openOriroTurn = entry.realtime?.beginSpeakerTurn(
       { extraSystemPrompt: undefined, senderIsOwner: true, speakerLabel: "Owner" },
       "u-owner",
     );
-    oriroTurn?.sendInputAudio(Buffer.alloc(8));
+    openOriroTurn?.sendInputAudio(Buffer.alloc(8));
     await emitFinalRealtimeUserTranscript(bridgeParams, "Open oriro can you still hear me?");
 
     expect(agentCommandArgsAt(4).message).toContain("can you still hear me?");
@@ -3407,15 +3407,15 @@ describe("DiscordVoiceManager", () => {
     expect(agentCommandArgsAt(6).message).toContain("can you hear me too?");
     expect(agentCommandArgsAt(6).message).not.toContain("Open Cloud");
 
-    const trailingOriroTurn = entry.realtime?.beginSpeakerTurn(
+    const trailingMoltyTurn = entry.realtime?.beginSpeakerTurn(
       { extraSystemPrompt: undefined, senderIsOwner: true, speakerLabel: "Owner" },
       "u-owner",
     );
-    trailingOriroTurn?.sendInputAudio(Buffer.alloc(8));
-    await emitFinalRealtimeUserTranscript(bridgeParams, "Can you still hear trailing, Oriro.");
+    trailingMoltyTurn?.sendInputAudio(Buffer.alloc(8));
+    await emitFinalRealtimeUserTranscript(bridgeParams, "Can you still hear trailing, Molty.");
 
     expect(agentCommandArgsAt(7).message).toContain("Can you still hear trailing");
-    expect(agentCommandArgsAt(7).message).not.toContain("Oriro");
+    expect(agentCommandArgsAt(7).message).not.toContain("Molty");
 
     const trailingMaltyTurn = entry.realtime?.beginSpeakerTurn(
       { extraSystemPrompt: undefined, senderIsOwner: true, speakerLabel: "Owner" },
@@ -3450,7 +3450,7 @@ describe("DiscordVoiceManager", () => {
       undefined,
       {
         agents: {
-          list: [{ id: "agent-1", identity: { name: "Oriro" } }],
+          list: [{ id: "agent-1", identity: { name: "Molty" } }],
         },
       },
     );

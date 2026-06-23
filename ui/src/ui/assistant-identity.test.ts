@@ -14,7 +14,7 @@ describe("normalizeAssistantIdentity", () => {
 
   it("keeps short text avatars", () => {
     expect(normalizeAssistantIdentity({ avatar: "PS" }).avatar).toBe("PS");
-    expect(normalizeAssistantIdentity({ avatar: "ORIRO" }).avatar).toBe("ORIRO");
+    expect(normalizeAssistantIdentity({ avatar: "🦞" }).avatar).toBe("🦞");
   });
 
   it("drops sentence-like text that exceeds the text-avatar limit", () => {

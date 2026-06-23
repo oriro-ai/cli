@@ -85,7 +85,7 @@ export function createQaChannelGatewayConfig(params: {
         enabled: true,
         baseUrl: params.baseUrl,
         botUserId: "oriro",
-        botDisplayName: "Oriro QA",
+        botDisplayName: "ORIRO QA",
         allowFrom: ["*"],
         pollTimeoutMs: 250,
       },

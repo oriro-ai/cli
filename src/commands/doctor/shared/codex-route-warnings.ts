@@ -2640,7 +2640,7 @@ function formatUnsupportedCompactionWarning(params: {
   fixHint: string;
 }): string {
   return [
-    "- Codex runtime uses native server-side compaction and ignores Oriro compaction summarizer overrides.",
+    "- Codex runtime uses native server-side compaction and ignores ORIRO compaction summarizer overrides.",
     ...params.hits.map(
       (hit) => `- ${hit.path}: ${hit.value} is ignored while this agent uses Codex runtime.`,
     ),
@@ -2681,8 +2681,8 @@ function formatDisabledCodexPluginWarning(params: {
   blockedOutsideEntry: boolean;
 }): string {
   const fixHint = params.blockedOutsideEntry
-    ? "- Enable plugin loading and remove `codex` from plugins.deny, or set the affected OpenAI models to an Oriro runtime policy."
-    : "- Run `oriro doctor --fix`: it enables plugins.entries.codex, or set the affected OpenAI models to an Oriro runtime policy.";
+    ? "- Enable plugin loading and remove `codex` from plugins.deny, or set the affected OpenAI models to an ORIRO runtime policy."
+    : "- Run `oriro doctor --fix`: it enables plugins.entries.codex, or set the affected OpenAI models to an ORIRO runtime policy.";
   return [
     "- Codex runtime is selected, but the Codex plugin is disabled.",
     ...params.hits.map(

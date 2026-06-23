@@ -209,7 +209,7 @@ describe("ssh sandbox backend", () => {
     expect(sessionSettings.target).toBe("peter@example.com:2222");
     expect(sessionSettings.workspaceRoot).toBe("/remote/oriro");
     const commandParams = requireSshRunCommandParams();
-    expect(commandParams.remoteCommand).toContain("/remote/oriro-ai/cli-ssh-agent-worker");
+    expect(commandParams.remoteCommand).toContain("/remote/oriro/oriro-ssh-agent-worker");
   });
 
   it("removes runtimes by deleting the remote scope root", async () => {
@@ -313,7 +313,7 @@ describe("ssh sandbox backend", () => {
       "-T",
       createSession().host,
     ]);
-    expect(execSpec.argv.at(-1)).toContain("/remote/oriro-ai/cli-ssh-agent-worker");
+    expect(execSpec.argv.at(-1)).toContain("/remote/oriro/oriro-ssh-agent-worker");
     expect(sshMocks.uploadDirectoryToSshTarget).toHaveBeenCalledTimes(3);
     const workspaceUploadParams = requireSshUploadParams(0, "workspace upload params");
     expect(workspaceUploadParams.localDir).toBe("/tmp/workspace");

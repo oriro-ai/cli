@@ -20,7 +20,7 @@ type UsageFieldMap = {
 };
 
 // Upstream agent runtimes should normalize Anthropic zero-token empty `stop`
-// turns before Oriro sees them. Downstream: oriro-ai/cli#71880.
+// turns before Oriro sees them. Downstream: oriro/oriro#71880.
 function readFiniteTokenCount(value: unknown): number | undefined {
   return asFiniteNumber(value);
 }

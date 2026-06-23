@@ -49,7 +49,7 @@ function readNonEmptyEnv(name) {
 
 function readRequiredPathOption(argv, index, flag) {
   const value = argv[index + 1];
-  if (!value || value.startsWith("--")) {
+  if (!value || value.startsWith("-")) {
     throw new Error(`${flag} requires a path`);
   }
   return value;
@@ -140,7 +140,7 @@ function formatFixGuidance(testCase, details) {
     "2. If this is an RSS overage, compare the startup import graph against the last passing commit and look for newly eager imports, bootstrap side effects, or plugin loading on the command path.",
     "3. If this is a non-zero exit, inspect the first transitive import/config error in stderr and fix that root cause before re-checking memory.",
     "LLM prompt:",
-    `"Oriro startup-memory CI failed for '${testCase.label}'. Analyze this failure, identify the first runtime/import side effect that makes startup heavier or broken, and propose the smallest safe patch. Failure output:\n${details}"`,
+    `"ORIRO startup-memory CI failed for '${testCase.label}'. Analyze this failure, identify the first runtime/import side effect that makes startup heavier or broken, and propose the smallest safe patch. Failure output:\n${details}"`,
   ];
   return `${guidance.join("\n")}\n`;
 }
@@ -299,7 +299,7 @@ function writeReport(options, results) {
     results: results.map(({ failureMessage: _failureMessage, ...result }) => result),
   };
   const lines = [
-    "# Oriro Startup Memory",
+    "# ORIRO Startup Memory",
     "",
     `Generated: ${report.generatedAt}`,
     "",

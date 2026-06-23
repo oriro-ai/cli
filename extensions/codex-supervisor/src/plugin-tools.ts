@@ -141,7 +141,7 @@ export function createCodexSupervisorTools({
     {
       name: "codex_sessions_list",
       label: "Codex Sessions List",
-      description: "List Codex sessions visible to the Oriro supervisor.",
+      description: "List Codex sessions visible to the ORIRO supervisor.",
       parameters: SessionsListParamsSchema,
       execute: async (_toolCallId, rawParams) => {
         const params = asRecord(rawParams);

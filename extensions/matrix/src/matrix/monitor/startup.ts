@@ -122,7 +122,7 @@ export async function runMatrixStartupMaintenance(
     );
     if (deviceHealth.staleOriroDevices.length > 0) {
       params.logger.warn(
-        `matrix: stale Oriro devices detected for ${params.auth.userId}: ${deviceHealth.staleOriroDevices.map((device) => device.deviceId).join(", ")}. Run 'oriro matrix devices prune-stale --account ${params.effectiveAccountId}' to keep encrypted-room trust healthy.`,
+        `matrix: stale ORIRO devices detected for ${params.auth.userId}: ${deviceHealth.staleOriroDevices.map((device) => device.deviceId).join(", ")}. Run 'oriro matrix devices prune-stale --account ${params.effectiveAccountId}' to keep encrypted-room trust healthy.`,
       );
     }
   } catch (err) {

@@ -277,7 +277,7 @@ export function buildCodexNativeHookRelayConfig(params: {
             command,
             timeout,
             async: false,
-            statusMessage: "Oriro native hook relay",
+            statusMessage: "ORIRO native hook relay",
           },
         ],
       },
@@ -288,7 +288,7 @@ export function buildCodexNativeHookRelayConfig(params: {
         event,
         command,
         timeout,
-        statusMessage: "Oriro native hook relay",
+        statusMessage: "ORIRO native hook relay",
       }),
     };
     for (const sourcePath of CODEX_SESSION_FLAGS_HOOK_SOURCE_PATHS) {

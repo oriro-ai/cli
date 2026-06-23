@@ -75,7 +75,7 @@ function normalizeString(value: string | undefined): string | undefined {
 function throwUnsupportedGeminiCredential(credential: GeminiAuthProfileCredential): never {
   if (credential.provider === VERCEL_AI_GATEWAY_PROVIDER_ID) {
     throw new Error(
-      "Gemini CLI execution cannot use a vercel-ai-gateway auth profile. Use the Oriro vercel-ai-gateway provider instead.",
+      "Gemini CLI execution cannot use a vercel-ai-gateway auth profile. Use the ORIRO vercel-ai-gateway provider instead.",
     );
   }
   throw new Error("Gemini CLI execution requires a google-gemini-cli auth profile.");
@@ -243,7 +243,7 @@ async function buildGeminiCliSystemSettings(
   );
   if (enforcedType && enforcedType !== selectedType) {
     throw new Error(
-      `Gemini CLI system settings enforce ${enforcedType} auth, but the selected Oriro profile requires ${selectedType}.`,
+      `Gemini CLI system settings enforce ${enforcedType} auth, but the selected ORIRO profile requires ${selectedType}.`,
     );
   }
   security.auth = { ...auth, selectedType };

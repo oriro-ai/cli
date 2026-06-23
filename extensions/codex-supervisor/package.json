@@ -1,8 +1,8 @@
 {
   "name": "@oriro/codex-supervisor",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "private": true,
-  "description": "Oriro Codex app-server fleet supervision plugin.",
+  "description": "ORIRO Codex app-server fleet supervision plugin.",
   "type": "module",
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.29.0",

@@ -1,19 +1,19 @@
 {
   "name": "@oriro/googlechat",
-  "version": "2026.6.8",
+  "version": "2026.6.9",
   "lockfileVersion": 3,
   "requires": true,
   "packages": {
     "": {
       "name": "@oriro/googlechat",
-      "version": "2026.6.8",
+      "version": "2026.6.9",
       "dependencies": {
         "gaxios": "7.1.4",
         "google-auth-library": "10.6.2",
         "zod": "4.4.3"
       },
       "peerDependencies": {
-        "oriro": ">=2026.6.8"
+        "oriro": ">=2026.6.9"
       },
       "peerDependenciesMeta": {
         "oriro": {

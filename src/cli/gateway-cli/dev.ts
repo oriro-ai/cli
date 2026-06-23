@@ -74,7 +74,7 @@ async function ensureDevWorkspace(dir: string) {
   const [agents, soul, tools, identity, user] = await Promise.all([
     loadDevTemplate(
       "AGENTS.dev.md",
-      `# AGENTS.md - Oriro Dev Workspace\n\nDefault dev workspace for oriro gateway --dev.\n`,
+      `# AGENTS.md - ORIRO Dev Workspace\n\nDefault dev workspace for oriro gateway --dev.\n`,
     ),
     loadDevTemplate(
       "SOUL.dev.md",

@@ -1,10 +1,10 @@
 {
   "name": "@oriro/anthropic-vertex-provider",
-  "version": "2026.6.8",
-  "description": "Oriro Anthropic Vertex provider plugin for Claude models on Google Vertex AI.",
+  "version": "2026.6.9",
+  "description": "ORIRO Anthropic Vertex provider plugin for Claude models on Google Vertex AI.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/oriro-ai/cli"
+    "url": "https://github.com/oriro/oriro"
   },
   "type": "module",
   "dependencies": {
@@ -23,10 +23,10 @@
       "minHostVersion": ">=2026.5.12-beta.1"
     },
     "compat": {
-      "pluginApi": ">=2026.6.8"
+      "pluginApi": ">=2026.6.9"
     },
     "build": {
-      "oriroVersion": "2026.6.8",
+      "oriroVersion": "2026.6.9",
       "bundledDist": false
     },
     "release": {

@@ -1,7 +1,7 @@
 {
   "id": "twitch",
   "name": "Twitch",
-  "description": "Oriro Twitch channel plugin for chat and moderation workflows.",
+  "description": "ORIRO Twitch channel plugin for chat and moderation workflows.",
   "activation": {
     "onStartup": false
   },

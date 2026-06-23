@@ -37,7 +37,7 @@ export async function ensureDebugProxyCa(certDir: string): Promise<{
     "-out",
     certPath,
     "-subj",
-    "/CN=Oriro Debug Proxy",
+    "/CN=ORIRO Debug Proxy",
   ]);
   return { certPath, keyPath };
 }
