@@ -24,7 +24,12 @@ export async function runRepl(): Promise<void> {
   const rl = createInterface({ input: stdin, output: stdout });
   try {
     for (;;) {
-      const line = (await rl.question("› ")).trim();
+      let line: string;
+      try {
+        line = (await rl.question("› ")).trim();
+      } catch {
+        break; // stdin closed (Ctrl-D or piped-input EOF) → exit cleanly, not a crash
+      }
       if (!line) continue;
       if (line === "/exit" || line === "/quit") break;
 
