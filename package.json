@@ -30,6 +30,7 @@
     "@earendil-works/pi-tui": "0.79.10",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^12.1.0",
+    "discord.js": "^14.26.4",
     "grammy": "^1.44.0",
     "typebox": "^1.1.38"
   },
@@ -50,5 +51,9 @@
     "tsup": "^8",
     "tsx": "^4",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@whiskeysockets/baileys": "^7.0.0-rc13",
+    "qrcode-terminal": "^0.12.0"
   }
 }

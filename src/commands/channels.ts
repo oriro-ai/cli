@@ -1,39 +1,55 @@
-// `oriro channels` — drive ORIRO from a chat channel using YOUR OWN bot credentials (never ORIRO's).
-//   add <kind> <token>  → validate + store the user's bot token (telegram validated live)
-//   list                → configured channels
-//   start <kind>        → run the always-on host for that channel (telegram only in v1)
-//   remove <kind>       → drop it
-// Discord/WhatsApp adapters are not built yet — start prints a clear "not yet available".
+// `oriro channels` — drive ORIRO from a chat channel using YOUR OWN credentials (never ORIRO's).
+//   add <kind> <token>          → validate + store a bot token (telegram/discord validated live)
+//   list                        → configured channels
+//   start <kind> [--accept-risk]→ run the always-on host for that channel
+//   remove <kind>               → drop it
+// Telegram + Discord use official bot APIs (token). WhatsApp pairs a REAL account via Baileys QR and
+// carries ToS/ban risk → gated behind --accept-risk. Each adapter: inbound msg → ORIRO host → reply.
 import type { Command } from "commander";
 import { readChannels, saveChannel, removeChannel, type ChannelKind } from "../channels/config.js";
-import { startTelegram, validateTelegramToken } from "../channels/telegram.js";
+import { startTelegram, validateTelegramToken, type RunningChannel } from "../channels/telegram.js";
+import { startDiscord, validateDiscordToken } from "../channels/discord.js";
+import { startWhatsApp } from "../channels/whatsapp.js";
 import { ok, info, heading, fail, die } from "./ui.js";
 import { accent, dim } from "../ui/theme.js";
 
 const KINDS: ChannelKind[] = ["telegram", "discord", "whatsapp"];
 const isKind = (s: string): s is ChannelKind => (KINDS as string[]).includes(s);
 
+/** Keep the process alive for a running channel; stop cleanly on Ctrl-C. */
+function hold(name: string, running: RunningChannel): void {
+  ok(`${name} host running — message it to talk to ORIRO. Ctrl-C to stop.`);
+  const shutdown = (): void => void running.stop().finally(() => process.exit(0));
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+}
+
 export function registerChannelsCommand(program: Command): void {
   const channels = program.command("channels").description("run ORIRO from Telegram/Discord/WhatsApp with your own bot");
 
   channels
     .command("add <kind> <token>")
-    .description("store your own bot token for a channel (telegram is validated live)")
+    .description("store your own bot token (telegram/discord validated live; whatsapp pairs at start)")
     .action(async (kind: string, token: string) => {
       if (!isKind(kind)) die(`unknown channel '${kind}' — one of: ${KINDS.join(", ")}`);
-      if (kind === "telegram") {
-        try {
+      try {
+        if (kind === "telegram") {
           const me = await validateTelegramToken(token);
           saveChannel({ kind, token, enabled: true });
           ok(`telegram added — bot @${me} (your token, stored locally at ~/.oriro/channels.json)`);
-        } catch (e) {
-          die(`telegram token rejected: ${e instanceof Error ? e.message : String(e)}`);
+          return;
         }
-        return;
+        if (kind === "discord") {
+          const me = await validateDiscordToken(token);
+          saveChannel({ kind, token, enabled: true });
+          ok(`discord added — bot ${me} (your token, stored locally). Enable the MESSAGE CONTENT intent in the Dev Portal.`);
+          return;
+        }
+        // whatsapp: no token — it pairs by QR at start time
+        info("WhatsApp has no token — it pairs by QR. Run: `oriro channels start whatsapp --accept-risk`");
+      } catch (e) {
+        die(`${kind} token rejected: ${e instanceof Error ? e.message : String(e)}`);
       }
-      saveChannel({ kind, token, enabled: true });
-      ok(`${kind} credentials stored`);
-      info(dim(`note: the ${kind} adapter is not built yet — start support is coming`));
     });
 
   channels
@@ -53,20 +69,28 @@ export function registerChannelsCommand(program: Command): void {
 
   channels
     .command("start <kind>")
-    .description("run the always-on host for a channel (telegram only in v1)")
-    .action(async (kind: string) => {
+    .description("run the always-on host for a channel")
+    .option("--accept-risk", "WhatsApp only: acknowledge the ToS/ban risk of using Baileys")
+    .action(async (kind: string, opts: { acceptRisk?: boolean }) => {
       if (!isKind(kind)) die(`unknown channel '${kind}' — one of: ${KINDS.join(", ")}`);
-      if (kind !== "telegram") {
-        fail(`the ${kind} adapter is not yet available — Telegram is the only channel in v1.`);
-        return; // exit 0: not an error, just unimplemented
+
+      if (kind === "whatsapp") {
+        if (!opts.acceptRisk) {
+          fail("WhatsApp uses Baileys, which pairs a REAL WhatsApp account and may violate WhatsApp's ToS (ban risk).");
+          info("If you accept that risk, re-run: `oriro channels start whatsapp --accept-risk`");
+          return; // exit 0 — refused, not an error
+        }
+        try {
+          hold("whatsapp", await startWhatsApp());
+        } catch (e) {
+          die(e instanceof Error ? e.message : String(e)); // e.g. Baileys not installed
+        }
+        return;
       }
-      const cfg = readChannels().find((c) => c.kind === "telegram");
-      if (!cfg) die("no telegram bot configured — run `oriro channels add telegram <token>` first");
-      const running = await startTelegram(cfg.token);
-      ok("telegram host running — message your bot to talk to ORIRO. Ctrl-C to stop.");
-      const shutdown = (): void => void running.stop().finally(() => process.exit(0));
-      process.on("SIGINT", shutdown);
-      process.on("SIGTERM", shutdown);
+
+      const cfg = readChannels().find((c) => c.kind === kind);
+      if (!cfg) die(`no ${kind} bot configured — run \`oriro channels add ${kind} <token>\` first`);
+      hold(kind, kind === "discord" ? await startDiscord(cfg.token) : await startTelegram(cfg.token));
     });
 
   channels

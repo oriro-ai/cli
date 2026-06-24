@@ -29,7 +29,9 @@ run(["scribe", "status"], { contains: "Scriber" });
 run(["connectors", "list"], { contains: "59 connectors" });
 run(["routers", "list"], { contains: "active pool" });
 run(["routers", "add", "oriro-gauss"], { expectExit: 1, contains: "coming soon" });
-run(["channels", "start", "discord"], { expectExit: 0, contains: "not yet available" });
+run(["channels", "add", "discord", "not-a-token"], { expectExit: 1, contains: "rejected" }); // bad token refused
+run(["channels", "start", "discord"], { expectExit: 1, contains: "no discord bot configured" });
+run(["channels", "start", "whatsapp"], { expectExit: 0, contains: "ToS" }); // refused without --accept-risk
 run(["bogus"], { expectExit: 1, contains: "unknown command" }); // must NOT fall through to the REPL
 run(["--help"], { contains: "routers" });
 
