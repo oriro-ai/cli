@@ -11,16 +11,20 @@
     "node": ">=20"
   },
   "files": [
-    "dist/",
+    "dist/cli.js",
     "skills/",
     "README.md",
     "ATTRIBUTION.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "tsx src/cli.ts",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "smoke": "npm run build && node scripts/smoke.mjs",
+    "prepublishOnly": "npm run build && node scripts/smoke.mjs && node scripts/prepublish-check.mjs",
     "start": "node dist/cli.js"
   },
   "dependencies": {
