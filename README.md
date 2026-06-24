@@ -19,8 +19,20 @@ Your language, your machine, no paid keys required.
 - **Channels** — drive ORIRO from Telegram/Discord/WhatsApp with your own bot.
 
 ## Install
+
+Run it instantly — no install, works on any OS with Node ≥ 20:
+```bash
+npx @oriro/orirocli
+```
+
+Or install the `oriro` command globally:
 ```bash
 npm i -g @oriro/orirocli   # then: oriro
+```
+
+Straight from GitHub (prebuilt — no build step needed):
+```bash
+npm i -g github:oriro-ai/cli   # then: oriro
 ```
 
 > Built on [Pi](https://github.com/earendil-works/pi) (MIT). See `ATTRIBUTION.md` for full provenance.
