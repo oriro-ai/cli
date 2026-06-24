@@ -28,6 +28,7 @@
     "@earendil-works/pi-coding-agent": "0.79.10",
     "@earendil-works/pi-tui": "0.79.10",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "commander": "^12.1.0",
     "grammy": "^1.44.0",
     "typebox": "^1.1.38"
   },
@@ -36,8 +37,12 @@
     "playwright": "*"
   },
   "peerDependenciesMeta": {
-    "@huggingface/transformers": { "optional": true },
-    "playwright": { "optional": true }
+    "@huggingface/transformers": {
+      "optional": true
+    },
+    "playwright": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^22",
