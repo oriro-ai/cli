@@ -5,13 +5,28 @@
 // No custom registry — the donor's OpenClaw-coupled skills loader is NOT folded. Zero footprint.
 import { loadSkills, formatSkillsForPrompt } from "@earendil-works/pi-coding-agent";
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-/** Absolute path to the bundled skill library (override with ORIRO_SKILLS_DIR). */
+/** Walk up from `start` to the package root (the dir holding package.json). */
+function packageRoot(start: string): string {
+  let dir = start;
+  for (let i = 0; i < 10; i++) {
+    if (existsSync(join(dir, "package.json"))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return start;
+}
+
+/** Absolute path to the bundled skill library (override with ORIRO_SKILLS_DIR).
+ *  Anchored to the package root so it resolves identically whether running from source
+ *  (src/skills/loader.ts, 2 levels deep) or the flat bundle (dist/cli.js, 1 level deep) —
+ *  a fixed "../../" relative depth breaks one of those two layouts. */
 export function skillsDir(): string {
   if (process.env.ORIRO_SKILLS_DIR) return process.env.ORIRO_SKILLS_DIR;
-  // src/skills/loader.ts (or dist/skills/loader.js) → ../../skills at the package root.
-  return join(dirname(fileURLToPath(import.meta.url)), "..", "..", "skills");
+  return join(packageRoot(dirname(fileURLToPath(import.meta.url))), "skills");
 }
 
 export interface LoadedSkill {

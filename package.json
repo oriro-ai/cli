@@ -20,6 +20,7 @@
     "dev": "tsx src/cli.ts",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
+    "smoke": "npm run build && node scripts/smoke.mjs",
     "start": "node dist/cli.js"
   },
   "dependencies": {

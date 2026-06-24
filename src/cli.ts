@@ -19,7 +19,15 @@ program
   .name("oriro")
   .description("ORIRO — a free, on-device-friendly terminal AI agent.")
   .version(version, "-v, --version")
-  .action(runRepl); // no subcommand → onboarding + chat REPL
+  // no subcommand → onboarding + chat REPL; an UNKNOWN command must error (not silently open the REPL).
+  .action(async (_options: unknown, command: Command) => {
+    if (command.args.length > 0) {
+      process.stderr.write(`error: unknown command '${command.args[0]}'\nRun 'oriro --help' to see available commands.\n`);
+      process.exitCode = 1;
+      return;
+    }
+    await runRepl();
+  });
 
 registerRoutersCommand(program);
 registerScribeCommand(program);
