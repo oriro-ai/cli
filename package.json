@@ -22,7 +22,6 @@
     "dev": "tsx src/cli.ts",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "prepare": "npm run build",
     "smoke": "npm run build && node scripts/smoke.mjs",
     "prepublishOnly": "npm run build && node scripts/smoke.mjs && node scripts/prepublish-check.mjs",
     "start": "node dist/cli.js"
