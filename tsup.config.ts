@@ -25,5 +25,8 @@ export default defineConfig({
     "@huggingface/transformers",
     "playwright",
     "typebox",
+    "discord.js",
+    "@whiskeysockets/baileys",
+    "qrcode-terminal",
   ],
 });

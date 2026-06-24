@@ -10,3 +10,5 @@ dist/
 # scratch / local
 tmp/
 *.local
+# seam/regression spikes — kept locally as contract tests, excluded from the published tree
+src/spike-*.ts

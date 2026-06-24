@@ -11,6 +11,14 @@ export interface RunningChannel {
 
 const TELEGRAM_TOKEN = /^\d{6,}:[A-Za-z0-9_-]{20,}$/;
 
+/** Validate a Telegram bot token at add-time: shape-check, then a single getMe() (no polling).
+ *  Returns the bot username on success; throws (so the caller refuses to persist) on failure. */
+export async function validateTelegramToken(token: string): Promise<string> {
+  if (!TELEGRAM_TOKEN.test(token)) throw new Error("malformed token (get one from @BotFather)");
+  const me = await new Bot(token).api.getMe();
+  return me.username;
+}
+
 /** Start a Telegram bot on the user's own token. Each text message → ORIRO → reply. */
 export async function startTelegram(token: string): Promise<RunningChannel> {
   if (!TELEGRAM_TOKEN.test(token)) throw new Error("invalid Telegram bot token (get one from @BotFather)");

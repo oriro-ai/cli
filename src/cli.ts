@@ -1,59 +1,41 @@
-#!/usr/bin/env node
-// ORIRO CLI — entry point. First run → the ORIRO onboarding journey; then assemble the full
-// keyless session (Mux + Guardian + Head + Scriber + Orchestrator + skills) and run a language-
-// wrapped REPL. Built on Pi as a library; zero OpenClaw footprint.
-//   (v1 REPL is a clean readline loop with the language seam; swapping in Pi's rich pi-tui
-//    InteractiveMode — editor / @files / !bash — is a flagged polish follow-up.)
-import { createInterface } from "node:readline/promises";
-import { stdin, stdout } from "node:process";
-import { banner } from "./ui/banner.js";
-import { isFirstRun, runOnboarding } from "./onboarding/wrapper.js";
-import { assembleOriroSession } from "./onboarding/assemble.js";
-import { getTerminalLanguage, translateForCoder, translateForUser } from "./language/index.js";
-import { setupNllbTranslator } from "./language/nllb-translator.js";
-import { dim } from "./ui/theme.js";
+// ORIRO CLI — entry point. A thin command dispatcher built on commander:
+//   • `oriro` (no subcommand) → the first-run onboarding journey, then the assembled keyless chat REPL
+//   • `oriro routers|scribe|connectors|channels|skills <verb>` → manage the built-in capabilities
+// All heavy lifting lives in the modules; this file only wires them to the command line.
+// Built on Pi as a library; zero OpenClaw footprint.
+import { createRequire } from "node:module";
+import { Command } from "commander";
+import { runRepl } from "./repl.js";
+import { registerRoutersCommand } from "./commands/routers.js";
+import { registerScribeCommand } from "./commands/scribe.js";
+import { registerConnectorsCommand } from "./commands/connectors.js";
+import { registerChannelsCommand } from "./commands/channels.js";
+import { registerSkillsCommand } from "./commands/skills.js";
 
-async function main(): Promise<void> {
-  if (isFirstRun()) await runOnboarding();
-  else stdout.write(banner());
+const version = (createRequire(import.meta.url)("../package.json") as { version: string }).version;
 
-  const lang = getTerminalLanguage().code;
-  const isEnglish = lang.toLowerCase().startsWith("en");
-  if (!isEnglish) setupNllbTranslator(); // wire the on-device translator (passthrough if unavailable)
-
-  const { session } = await assembleOriroSession();
-  const rl = createInterface({ input: stdin, output: stdout });
-  try {
-    for (;;) {
-      const line = (await rl.question("› ")).trim();
-      if (!line) continue;
-      if (line === "/exit" || line === "/quit") break;
-
-      const english = await translateForCoder(line, lang); // user's language → English for the model
-      let out = "";
-      const unsub = session.subscribe((e: { type: string; assistantMessageEvent?: { type: string; delta?: string } }) => {
-        if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
-          const d = e.assistantMessageEvent.delta ?? "";
-          out += d;
-          if (isEnglish) stdout.write(d); // stream live for English; non-English buffers to translate
-        }
-      });
-      try {
-        await session.prompt(english);
-      } finally {
-        unsub();
-      }
-      if (isEnglish) stdout.write("\n\n");
-      else stdout.write(`${await translateForUser(out.trim(), lang)}\n\n`); // English reply → user's language
+const program = new Command();
+program
+  .name("oriro")
+  .description("ORIRO — a free, on-device-friendly terminal AI agent.")
+  .version(version, "-v, --version")
+  // no subcommand → onboarding + chat REPL; an UNKNOWN command must error (not silently open the REPL).
+  .action(async (_options: unknown, command: Command) => {
+    if (command.args.length > 0) {
+      process.stderr.write(`error: unknown command '${command.args[0]}'\nRun 'oriro --help' to see available commands.\n`);
+      process.exitCode = 1;
+      return;
     }
-  } finally {
-    rl.close();
-    session.dispose();
-    stdout.write(dim("\nBye.\n"));
-  }
-}
+    await runRepl();
+  });
 
-main().catch((e: unknown) => {
+registerRoutersCommand(program);
+registerScribeCommand(program);
+registerConnectorsCommand(program);
+registerChannelsCommand(program);
+registerSkillsCommand(program);
+
+program.parseAsync().catch((e: unknown) => {
   process.stderr.write(`\nORIRO error: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}\n`);
   process.exitCode = 1;
 });

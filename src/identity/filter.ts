@@ -19,6 +19,10 @@ const BANNED_REPLACE = new RegExp(BANNED_TEST.source, "gi");
 // First-person / origin markers that signal the sentence is about the model itself.
 const SELF_REF =
   /\b(i am|i'm|i was|based on|powered by|my name|my model|my architecture|trained|created by|made by|built (?:on|by)|developed by)\b/i;
+// A self-introduction ("I am a/an … assistant/AI/model") — used to GUARANTEE the ORIRO name when
+// a weak free model describes itself generically without naming itself (and without any leak).
+const SELF_INTRO = /\b(i am|i'm)\s+(a|an)\b/i;
+const AI_NOUN = /\b(assistant|ai|model|language model|bot|agent|chatbot)\b/i;
 
 /** Prepend ORIRO identity to the system prompt — the primary identity defense. */
 export function applyIdentity(context: Context): Context {
@@ -26,13 +30,18 @@ export function applyIdentity(context: Context): Context {
   return { ...context, systemPrompt: sys };
 }
 
-/** Backstop: neutralize base-model self-identification in assistant text, sentence by sentence. */
+/** Backstop, per sentence: (1) neutralize any base-model self-identification (replace the banned
+ *  name with ORIRO), and (2) GUARANTEE positive identity — if the sentence introduces itself as an
+ *  AI/assistant ("I am a coding assistant") without naming ORIRO, insert the name. Together these
+ *  ensure the assistant never leaks a base model AND always identifies as ORIRO. */
 export function scrubIdentity(text: string): string {
-  return text.replace(/[^.?!\n]+[.?!]?/g, (sentence) =>
-    SELF_REF.test(sentence) && BANNED_TEST.test(sentence)
-      ? sentence.replace(BANNED_REPLACE, "ORIRO")
-      : sentence,
-  );
+  return text.replace(/[^.?!\n]+[.?!]?/g, (sentence) => {
+    let s = SELF_REF.test(sentence) && BANNED_TEST.test(sentence) ? sentence.replace(BANNED_REPLACE, "ORIRO") : sentence;
+    if (!/\boriro\b/i.test(s) && SELF_INTRO.test(s) && AI_NOUN.test(s)) {
+      s = s.replace(SELF_INTRO, "I am ORIRO, $2");
+    }
+    return s;
+  });
 }
 
 /** Apply the scrub to the text content of a final assistant message. */
