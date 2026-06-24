@@ -41,8 +41,11 @@ check(skillCount === 323, `skills shipping: ${skillCount}`, `skills count = ${sk
 // 4. The packed file list is EXACTLY the allowed set — the real guarantee of what reaches users.
 const ALLOWED = (p) => p === "package.json" || p === "README.md" || p === "ATTRIBUTION.md" || p === "dist/cli.js" || p.startsWith("skills/");
 try {
-  const out = execFileSync("npm", ["pack", "--dry-run", "--json"], { cwd: root, encoding: "utf8", shell: process.platform === "win32" });
-  const files = (JSON.parse(out)[0]?.files ?? []).map((f) => f.path.replace(/\\/g, "/"));
+  // --ignore-scripts so the `prepare` build doesn't print into the --json output; slice from the
+  // first "[" to drop any leading npm notice noise before parsing.
+  const out = execFileSync("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], { cwd: root, encoding: "utf8", shell: process.platform === "win32" });
+  const json = out.slice(out.indexOf("["));
+  const files = (JSON.parse(json)[0]?.files ?? []).map((f) => f.path.replace(/\\/g, "/"));
   const stray = files.filter((f) => !ALLOWED(f));
   check(stray.length === 0, `tarball file list clean (${files.length} files, all whitelisted)`, `tarball would ship disallowed files: ${stray.slice(0, 10).join(", ")}`);
 } catch (e) {
