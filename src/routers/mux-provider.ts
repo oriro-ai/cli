@@ -18,6 +18,7 @@ import { RouterMux, type CallError } from "./mux.js";
 import { KEYLESS_FLOOR, routerModel, type KeylessRouter } from "./floor.js";
 import { resolvePool } from "./router-pool.js";
 import { applyIdentity, scrubMessageIdentity } from "../identity/filter.js";
+import { sanitizeMessageToolCalls, sanitizeEventToolCalls } from "./tool-sanitize.js";
 
 export const MUX_PROVIDER = "oriro-mux";
 export const MUX_MODEL = "oriro-free";
@@ -76,18 +77,20 @@ async function driveMux(
         committed = true;
         if (ev.type === "done") {
           mux.recordSuccess(id, Date.now() - t0);
-          const clean = scrubMessageIdentity(ev.message);
+          // Identity scrub + tool-name sanitize: free endpoints can leak Harmony control
+          // tokens into tool names (`bash<|channel|>commentary`) — normalize before dispatch.
+          const clean = sanitizeMessageToolCalls(scrubMessageIdentity(ev.message));
           out.push({ type: "done", reason: ev.reason, message: clean });
           out.end(clean);
           return;
         }
         lastPartial = ev.partial; // remaining event types all carry a partial
-        out.push(ev); // live stream (system-prompt identity is the live defense)
+        out.push(sanitizeEventToolCalls(ev)); // live stream + tool-name sanitize on partials/toolcall_end
       }
       if (failedBeforeContent) continue; // try next router
       // committed but stream ended without an explicit done — close with last known message
       mux.recordSuccess(id, Date.now() - t0);
-      out.end(lastPartial ? scrubMessageIdentity(lastPartial) : undefined);
+      out.end(lastPartial ? sanitizeMessageToolCalls(scrubMessageIdentity(lastPartial)) : undefined);
       return;
     } catch (e) {
       mux.recordFailure(id, e as CallError);

@@ -1527,6 +1527,48 @@ function scrubMessageIdentity(msg) {
   };
 }
 
+// src/routers/tool-sanitize.ts
+var CONTROL_TOKEN = /<\|[^|]*\|>/g;
+var RECIPIENT_PREFIX = /^(?:to=)?(?:functions?|tools?|recipient)[.=]/i;
+var RECIPIENT = /(?:to=)?(?:functions?|tools?|recipient)[.=]([A-Za-z0-9_.:-]+)/i;
+var CLEAN_NAME = /^[A-Za-z0-9_.:-]+$/;
+function sanitizeToolName(raw) {
+  if (!raw) return raw;
+  if (!raw.includes("<|") && !RECIPIENT_PREFIX.test(raw)) return raw;
+  const base = (raw.split("<|")[0] ?? "").replace(RECIPIENT_PREFIX, "").trim();
+  if (base && CLEAN_NAME.test(base)) return base;
+  const recip = raw.match(RECIPIENT);
+  if (recip?.[1]) return recip[1];
+  const m = raw.replace(CONTROL_TOKEN, " ").match(/[A-Za-z_][A-Za-z0-9_.:-]*/);
+  return m ? m[0] : raw;
+}
+function sanitizeMessageToolCalls(msg) {
+  let changed = false;
+  const content = msg.content.map((c) => {
+    if (c.type === "toolCall") {
+      const name = sanitizeToolName(c.name);
+      if (name !== c.name) {
+        changed = true;
+        return { ...c, name };
+      }
+    }
+    return c;
+  });
+  return changed ? { ...msg, content } : msg;
+}
+function sanitizeEventToolCalls(ev) {
+  let next = ev;
+  if ("partial" in next && next.partial) {
+    const partial = sanitizeMessageToolCalls(next.partial);
+    if (partial !== next.partial) next = { ...next, partial };
+  }
+  if (next.type === "toolcall_end" && next.toolCall) {
+    const name = sanitizeToolName(next.toolCall.name);
+    if (name !== next.toolCall.name) next = { ...next, toolCall: { ...next.toolCall, name } };
+  }
+  return next;
+}
+
 // src/routers/mux-provider.ts
 var MUX_PROVIDER = "oriro-mux";
 var MUX_MODEL = "oriro-free";
@@ -1576,17 +1618,17 @@ async function driveMux(out, mux, byId, context, options) {
         committed = true;
         if (ev.type === "done") {
           mux.recordSuccess(id, Date.now() - t0);
-          const clean = scrubMessageIdentity(ev.message);
+          const clean = sanitizeMessageToolCalls(scrubMessageIdentity(ev.message));
           out.push({ type: "done", reason: ev.reason, message: clean });
           out.end(clean);
           return;
         }
         lastPartial = ev.partial;
-        out.push(ev);
+        out.push(sanitizeEventToolCalls(ev));
       }
       if (failedBeforeContent) continue;
       mux.recordSuccess(id, Date.now() - t0);
-      out.end(lastPartial ? scrubMessageIdentity(lastPartial) : void 0);
+      out.end(lastPartial ? sanitizeMessageToolCalls(scrubMessageIdentity(lastPartial)) : void 0);
       return;
     } catch (e) {
       mux.recordFailure(id, e);
