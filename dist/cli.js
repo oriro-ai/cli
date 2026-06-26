@@ -6,7 +6,7 @@ import { Command } from "commander";
 
 // src/repl.ts
 import { createInterface as createInterface4 } from "readline/promises";
-import { stdin as stdin4, stdout as stdout4 } from "process";
+import { stdin as stdin4, stdout as stdout5 } from "process";
 
 // src/ui/theme.ts
 var PALETTE = {
@@ -72,7 +72,7 @@ ${tagline}
 
 // src/onboarding/wrapper.ts
 import { createInterface as createInterface3 } from "readline/promises";
-import { stdin as stdin3, stdout as stdout3 } from "process";
+import { stdin as stdin3, stdout as stdout4 } from "process";
 
 // src/language/languages.ts
 var LANGUAGES = [
@@ -268,7 +268,24 @@ async function translateForUser(english, toLang) {
 
 // src/language/onboarding.ts
 import { createInterface } from "readline/promises";
-import { stdin, stdout } from "process";
+import { stdin, stdout as stdout2 } from "process";
+
+// src/onboarding/prompt.ts
+import { stdout } from "process";
+async function ask(rl, question) {
+  try {
+    return await rl.question(question);
+  } catch {
+    try {
+      rl.close();
+    } catch {
+    }
+    stdout.write(dim("\nBye.\n"));
+    process.exit(0);
+  }
+}
+
+// src/language/onboarding.ts
 var C = {
   teal: "\x1B[38;2;45;212;191m",
   purple: "\x1B[38;2;128;96;222m",
@@ -277,12 +294,12 @@ var C = {
   reset: "\x1B[0m"
 };
 function header() {
-  stdout.write(`
+  stdout2.write(`
   ${C.teal}\u25EF${C.reset} ${C.bold}ORIRO${C.reset} ${C.dim}\u2014 your terminal, your language${C.reset}
 `);
-  stdout.write(`  ${C.dim}You type and read in your language; the AI works in English for you.${C.reset}
+  stdout2.write(`  ${C.dim}You type and read in your language; the AI works in English for you.${C.reset}
 `);
-  stdout.write(`  ${C.dim}${LANGUAGES.length} languages \xB7 ${NEURAL_VOICE_COUNT} with a built-in voice (${C.purple}\u2605${C.dim}).${C.reset}
+  stdout2.write(`  ${C.dim}${LANGUAGES.length} languages \xB7 ${NEURAL_VOICE_COUNT} with a built-in voice (${C.purple}\u2605${C.dim}).${C.reset}
 
 `);
 }
@@ -290,38 +307,39 @@ function renderList(list) {
   const shown = list.slice(0, 15);
   shown.forEach((l, i) => {
     const star = l.neuralVoice ? `${C.purple}\u2605${C.reset}` : " ";
-    stdout.write(`  ${C.teal}${String(i + 1).padStart(2)}${C.reset}  ${star} ${l.name} ${C.dim}(${l.code})${C.reset}
+    stdout2.write(`  ${C.teal}${String(i + 1).padStart(2)}${C.reset}  ${star} ${l.name} ${C.dim}(${l.code})${C.reset}
 `);
   });
   if (list.length > shown.length) {
-    stdout.write(`  ${C.dim}\u2026 ${list.length - shown.length} more \u2014 keep typing to narrow.${C.reset}
+    stdout2.write(`  ${C.dim}\u2026 ${list.length - shown.length} more \u2014 keep typing to narrow.${C.reset}
 `);
   }
 }
 async function selectLanguageInteractive() {
   header();
-  const rl = createInterface({ input: stdin, output: stdout });
+  const rl = createInterface({ input: stdin, output: stdout2 });
   try {
     let list = searchLanguages("");
     renderList(list);
     for (; ; ) {
-      const ans = (await rl.question(`
+      const ans = (await ask(rl, `
   ${C.teal}\u203A${C.reset} Type a language, or a number to pick: `)).trim();
       const n = Number(ans);
-      const byNumber = ans && Number.isInteger(n) && n >= 1 && n <= list.length ? list[n - 1] : void 0;
+      const shown = Math.min(15, list.length);
+      const byNumber = ans && Number.isInteger(n) && n >= 1 && n <= shown ? list[n - 1] : void 0;
       if (byNumber) return byNumber;
       const direct = languageByCode(ans);
       if (direct) return direct;
       list = searchLanguages(ans);
       if (list.length === 0) {
-        stdout.write(`  ${C.dim}No match \u2014 try the English name or ISO code.${C.reset}
+        stdout2.write(`  ${C.dim}No match \u2014 try the English name or ISO code.${C.reset}
 `);
         list = searchLanguages("");
       } else {
         const only = list.length === 1 ? list[0] : void 0;
         if (only) return only;
       }
-      stdout.write("\n");
+      stdout2.write("\n");
       renderList(list);
     }
   } finally {
@@ -336,7 +354,7 @@ async function runLanguageOnboarding() {
   }
   const lang = await selectLanguageInteractive();
   setTerminalLanguage(lang);
-  stdout.write(
+  stdout2.write(
     `
   ${C.teal}\u25EF${C.reset} ${C.bold}${lang.name}${C.reset} is now your terminal language. ${C.dim}Change it anytime with ${C.reset}${C.teal}oriro language${C.reset}
 
@@ -418,7 +436,7 @@ var block = (rule, reason, severity = "critical") => ({
   rule,
   reason
 });
-var ask = (rule, reason, severity = "warning") => ({
+var ask2 = (rule, reason, severity = "warning") => ({
   decision: "ask",
   severity,
   rule,
@@ -468,7 +486,7 @@ function rmVerdict(stmt) {
   if (noPreserve) return block("fs-destruction", "Recursive force-delete with --no-preserve-root");
   const targets = w.slice(1).filter((x) => !x.startsWith("-")).map(classifyRmTarget);
   if (targets.includes("danger")) return block("fs-destruction", "Recursive force-delete of root/home/cwd/system path");
-  if (targets.includes("system-sub")) return ask("fs-destruction", "Recursive force-delete inside a system directory");
+  if (targets.includes("system-sub")) return ask2("fs-destruction", "Recursive force-delete inside a system directory");
   return null;
 }
 var DISK = "(sd|nvme|disk|hd|vd|xvd|mmcblk|loop)";
@@ -624,7 +642,7 @@ var DEFAULT_RULES = [
     match: (c) => {
       const cmd = norm(cmdOf(c));
       if (/>>?[^\n]*\.ssh[\\/]authorized_keys/i.test(cmd)) return block("persistence", "Implanting an SSH key (backdoor)");
-      return anyMatch(PERSISTENCE, cmd) ? ask("persistence", "Installing a persistent foothold (cron/startup/service)") : null;
+      return anyMatch(PERSISTENCE, cmd) ? ask2("persistence", "Installing a persistent foothold (cron/startup/service)") : null;
     }
   },
   {
@@ -639,7 +657,7 @@ var DEFAULT_RULES = [
   {
     id: "security-tamper",
     description: "Flag disabling firewall/Defender or wiping history.",
-    match: (c) => anyMatch(TAMPER, norm(cmdOf(c))) ? ask("security-tamper", "Disabling security controls or covering tracks") : null
+    match: (c) => anyMatch(TAMPER, norm(cmdOf(c))) ? ask2("security-tamper", "Disabling security controls or covering tracks") : null
   },
   {
     id: "malware-signature",
@@ -663,7 +681,7 @@ ${c.command ?? ""}`);
       const hit = c.paths.find(
         (p) => SECRET_PATHS.test(p) || /[\\/]\.ssh[\\/]/i.test(p) || /[\\/](etc|boot|sys|windows[\\/]system32)[\\/]/i.test(p)
       );
-      return hit ? ask("sensitive-path-write", `Writing to a sensitive location: ${hit}`) : null;
+      return hit ? ask2("sensitive-path-write", `Writing to a sensitive location: ${hit}`) : null;
     }
   }
 ];
@@ -1110,7 +1128,7 @@ async function speak(text, opts = {}) {
 }
 
 // src/avatar/onboarding.ts
-import { stdin as stdin2, stdout as stdout2 } from "process";
+import { stdin as stdin2, stdout as stdout3 } from "process";
 import { createInterface as createInterface2 } from "readline/promises";
 
 // src/avatar/system-voice.ts
@@ -1184,7 +1202,7 @@ var C3 = {
   reset: "\x1B[0m"
 };
 async function previewAvatar(avatar) {
-  stdout2.write(
+  stdout3.write(
     `
   ${C3.teal}\u25EF${C3.reset} ${C3.bold}${avatar.slug}${C3.reset} is now your terminal face. ${C3.dim}Change anytime with ${C3.reset}${C3.teal}oriro avatar${C3.reset}
 `
@@ -1195,19 +1213,19 @@ async function previewAvatar(avatar) {
     png = readCachedAvatar(avatar.slug);
   } catch {
   }
-  stdout2.write("\n" + renderAvatar(avatar, png) + "\n");
+  stdout3.write("\n" + renderAvatar(avatar, png) + "\n");
   setupSystemVoice();
   const spoke = await speak(`Hi, I'm ${avatar.slug}, your ORIRO terminal face. I'll speak your replies.`, {
     voiceId: avatar.slug,
     lang: "en-US"
   });
-  if (spoke) stdout2.write(`  ${C3.dim}(spoken aloud in your terminal's voice)${C3.reset}
+  if (spoke) stdout3.write(`  ${C3.dim}(spoken aloud in your terminal's voice)${C3.reset}
 `);
 }
 async function selectAvatarInteractive() {
-  const rl = createInterface2({ input: stdin2, output: stdout2 });
+  const rl = createInterface2({ input: stdin2, output: stdout3 });
   try {
-    stdout2.write(
+    stdout3.write(
       `
   ${C3.teal}\u25EF${C3.reset} ${C3.bold}Choose your ORIRO avatar${C3.reset} ${C3.dim}\u2014 ${AVATAR_COUNT} faces, it floats in your terminal and speaks.${C3.reset}
 
@@ -1215,33 +1233,33 @@ async function selectAvatarInteractive() {
     );
     const cats = avatarCategories();
     cats.forEach(
-      (cat2, i) => stdout2.write(
+      (cat2, i) => stdout3.write(
         `  ${C3.teal}${String(i + 1).padStart(2)}${C3.reset}  ${cat2} ${C3.dim}(${avatarsInCategory(cat2).length})${C3.reset}
 `
       )
     );
     const cn = Number(
-      (await rl.question(`
+      (await ask(rl, `
   ${C3.teal}\u203A${C3.reset} Pick a category number: `)).trim()
     );
     const cat = cats[cn - 1];
     if (!cat) {
-      stdout2.write("  No category chosen.\n");
+      stdout3.write("  No category chosen.\n");
       return null;
     }
     const list = avatarsInCategory(cat);
-    stdout2.write("\n");
+    stdout3.write("\n");
     list.forEach(
-      (a, i) => stdout2.write(`  ${C3.teal}${String(i + 1).padStart(2)}${C3.reset}  ${a.slug}
+      (a, i) => stdout3.write(`  ${C3.teal}${String(i + 1).padStart(2)}${C3.reset}  ${a.slug}
 `)
     );
     const an = Number(
-      (await rl.question(`
+      (await ask(rl, `
   ${C3.teal}\u203A${C3.reset} Pick an avatar number: `)).trim()
     );
     const chosen = list[an - 1];
     if (!chosen) {
-      stdout2.write("  No avatar chosen.\n");
+      stdout3.write("  No avatar chosen.\n");
       return null;
     }
     return chosen;
@@ -1301,22 +1319,22 @@ function hasScribeChoice() {
 
 // src/onboarding/wrapper.ts
 function isFirstRun() {
-  return !isLanguageConfigured();
+  return !isLanguageConfigured() || !hasScribeChoice();
 }
 async function askYesNo(question) {
-  const rl = createInterface3({ input: stdin3, output: stdout3 });
+  const rl = createInterface3({ input: stdin3, output: stdout4 });
   try {
-    const a = (await rl.question(`${question} ${dim("[Y/n]")} `)).trim().toLowerCase();
+    const a = (await ask(rl, `${question} ${dim("[Y/n]")} `)).trim().toLowerCase();
     return a === "" || a === "y" || a === "yes";
   } finally {
     rl.close();
   }
 }
 async function runOnboarding() {
-  stdout3.write(banner());
+  stdout4.write(banner());
   await runLanguageOnboarding();
   await activateGuardian();
-  stdout3.write(`  ${accent("\u{1F6E1} Guardian V3")} is on by default. ${accent("\u{1F9ED} Head")} is ready.
+  stdout4.write(`  ${accent("\u{1F6E1} Guardian V3")} is on by default. ${accent("\u{1F9ED} Head")} is ready.
 
 `);
   if (!isAvatarConfigured()) await runAvatarOnboarding();
@@ -1325,11 +1343,11 @@ async function runOnboarding() {
       "Remember with me? The Scriber keeps your work in context on THIS machine only \u2014 it never leaves it."
     );
     setScribeConsent(yes);
-    stdout3.write(yes ? `  ${accent("\u{1F4D3} Scriber")} on.
+    stdout4.write(yes ? `  ${accent("\u{1F4D3} Scriber")} on.
 ` : `  ${dim("Scriber off \u2014 `oriro scribe on` anytime.")}
 `);
   }
-  stdout3.write(`
+  stdout4.write(`
   ${accent("ORIRO is ready.")} ${dim("Type to chat \xB7 /exit to leave")}
 
 `);
@@ -1548,6 +1566,9 @@ async function addRouter(entry, opts) {
   if (entry.comingSoon) {
     return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: "coming soon" } };
   }
+  if (entry.kind && entry.kind !== "chat") {
+    return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: `'${entry.id}' is a ${entry.kind} router, not a chat router` } };
+  }
   const key = opts?.key ?? (entry.keyless ? KEYLESS_SENTINEL : void 0);
   const v = await validateRouter(entry, key, opts?.modelId);
   if (!v.ok) return { ok: false, validation: v };
@@ -1565,7 +1586,11 @@ async function addRouter(entry, opts) {
   return { ok: true, validation: v };
 }
 function useRouters(ids) {
-  savePool(oriroDir(), ids);
+  const reg = readReg();
+  const applied = ids.filter((id) => reg[id]);
+  const unknown = ids.filter((id) => !reg[id]);
+  savePool(oriroDir(), applied);
+  return { applied, unknown };
 }
 function resolvePool() {
   const reg = readReg();
@@ -2264,6 +2289,11 @@ async function driveMux(out, mux, byId, context, options) {
         out.push(sanitizeEventToolCalls(ev));
       }
       if (failedBeforeContent) continue;
+      if (!committed) {
+        mux.recordFailure(id, {});
+        lastError ??= buildErrorMessage("Router returned no output.");
+        continue;
+      }
       mux.recordSuccess(id, Date.now() - t0);
       out.end(lastPartial ? sanitizeMessageToolCalls(scrubMessageIdentity(lastPartial)) : void 0);
       return;
@@ -2968,12 +2998,12 @@ function replHelp() {
 }
 async function runRepl() {
   if (isFirstRun()) await runOnboarding();
-  else stdout4.write(banner());
+  else stdout5.write(banner());
   const lang = getTerminalLanguage().code;
   const isEnglish2 = lang.toLowerCase().startsWith("en");
   if (!isEnglish2) setupNllbTranslator();
   const { session } = await assembleOriroSession();
-  const rl = createInterface4({ input: stdin4, output: stdout4 });
+  const rl = createInterface4({ input: stdin4, output: stdout5 });
   try {
     for (; ; ) {
       let line;
@@ -2985,7 +3015,7 @@ async function runRepl() {
       if (!line) continue;
       if (line === "/exit" || line === "/quit") break;
       if (line === "/help" || line === "/?") {
-        stdout4.write(replHelp());
+        stdout5.write(replHelp());
         continue;
       }
       const english = await translateForCoder(line, lang);
@@ -2995,7 +3025,7 @@ async function runRepl() {
         if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
           const d = e.assistantMessageEvent.delta ?? "";
           out += d;
-          if (isEnglish2) stdout4.write(d);
+          if (isEnglish2) stdout5.write(d);
         }
       });
       try {
@@ -3003,15 +3033,15 @@ async function runRepl() {
       } finally {
         unsub();
       }
-      if (isEnglish2) stdout4.write("\n\n");
-      else stdout4.write(`${await translateForUser(out.trim(), lang)}
+      if (isEnglish2) stdout5.write("\n\n");
+      else stdout5.write(`${await translateForUser(out.trim(), lang)}
 
 `);
     }
   } finally {
     rl.close();
     session.dispose();
-    stdout4.write(dim("\nBye.\n"));
+    stdout5.write(dim("\nBye.\n"));
   }
 }
 
@@ -3412,11 +3442,12 @@ function registerRoutersCommand(program2) {
     ok(`added ${accent(slug)} (${res.validation.latencyMs}ms, model ${res.validation.model}) \u2192 active pool`);
   });
   routers.command("use <slugs...>").description("set the active router pool (ids must be added first)").action((slugs) => {
-    useRouters(slugs);
-    const pool = resolvePool();
-    const missing = slugs.filter((s) => !pool.some((p) => p.id === s));
-    ok(`pool set: ${pool.map((p) => p.id).join(", ") || "(empty)"}`);
-    if (missing.length) info(`not yet added (run \`oriro routers add\`): ${missing.join(", ")}`);
+    const { applied, unknown } = useRouters(slugs);
+    if (!applied.length) {
+      die(`none of those are added yet: ${unknown.join(", ")} \u2014 run \`oriro routers add <slug>\` first`);
+    }
+    ok(`pool set: ${applied.join(", ")}`);
+    if (unknown.length) info(`skipped (not added yet \u2014 run \`oriro routers add\`): ${unknown.join(", ")}`);
   });
 }
 
@@ -4448,6 +4479,9 @@ function listConnectors(category) {
 function connectorCategories() {
   return [...new Set(CONNECTOR_CATALOG.map((c) => c.category))].sort();
 }
+function isConnectorAdded(slug) {
+  return readAdded().includes(slug);
+}
 function addConnector(slug) {
   const entry = connectorBySlug(slug);
   if (!entry) return { ok: false, error: `unknown connector '${slug}' \u2014 run \`oriro connectors list\`` };
@@ -4472,23 +4506,30 @@ function registerConnectorsCommand(program2) {
   const connectors = program2.command("connectors").description("MCP connectors \u2014 add external tools/services (inert until used)");
   connectors.command("list [category]").description("list the connector catalog (optionally filtered by category)").action((category) => {
     if (category && !connectorCategories().includes(category)) {
-      info(`unknown category '${category}' \u2014 categories: ${connectorCategories().join(", ")}`);
-      return;
+      die(`unknown category '${category}' \u2014 categories: ${connectorCategories().join(", ")}`);
     }
     const entries = listConnectors(category);
     const added = new Set(addedConnectors().map((c) => c.slug));
     heading(category ? `Connectors \xB7 ${category}` : "Connectors");
+    let addable = 0;
     for (const c of entries) {
-      const mark = added.has(c.slug) ? accent("\u25CF") : dim("\u25CB");
-      process.stdout.write(`  ${mark} ${accent(c.slug.padEnd(20))} ${c.name.padEnd(22)} ${dim(c.category)}
+      const canAdd = !!c.mcpUrl;
+      if (canAdd) addable++;
+      const mark = !canAdd ? dim("\xB7") : added.has(c.slug) ? accent("\u25CF") : dim("\u25CB");
+      const name = canAdd ? c.name.padEnd(22) : dim(`${c.name} (coming soon)`.padEnd(22));
+      process.stdout.write(`  ${mark} ${(canAdd ? accent : dim)(c.slug.padEnd(20))} ${name} ${dim(c.category)}
 `);
     }
-    info(`${entries.length} connectors${category ? ` in '${category}'` : ""} \xB7 ${added.size} added`);
+    info(`${addable} addable${category ? ` in '${category}'` : ""} \xB7 ${added.size} added \xB7 ${entries.length - addable} coming soon`);
   });
   connectors.command("add <slug>").description("add a connector (validate + record; connects only when used)").action((slug) => {
+    if (isConnectorAdded(slug)) {
+      info(`${slug} is already added`);
+      return;
+    }
     const res = addConnector(slug);
     if (!res.ok) die(res.error ?? `could not add '${slug}'`);
-    ok(`added ${accent(slug)} \u2014 inert until a session uses it`);
+    ok(`added ${accent(slug)} \u2014 recorded locally`);
   });
   connectors.command("remove <slug>").description("remove a connector").action((slug) => {
     if (removeConnector(slug)) ok(`removed ${accent(slug)}`);
@@ -4726,7 +4767,7 @@ function registerChannelsCommand(program2) {
     if (!isKind(kind)) die(`unknown channel '${kind}' \u2014 one of: ${KINDS.join(", ")}`);
     if (kind === "whatsapp") {
       if (!opts.acceptRisk) {
-        fail("WhatsApp uses Baileys, which pairs a REAL WhatsApp account and may violate WhatsApp's ToS (ban risk).");
+        info("WhatsApp uses Baileys, which pairs a REAL WhatsApp account and may violate WhatsApp's ToS (ban risk).");
         info("If you accept that risk, re-run: `oriro channels start whatsapp --accept-risk`");
         return;
       }
@@ -4844,7 +4885,12 @@ var version = createRequire(import.meta.url)("../package.json").version;
 var program = new Command();
 program.name("oriro").description("ORIRO \u2014 a free, on-device-friendly terminal AI agent.").version(version, "-v, --version").action(async (_options, command) => {
   if (command.args.length > 0) {
-    process.stderr.write(`error: unknown command '${command.args[0]}'
+    const arg = command.args[0];
+    if (arg === "help") {
+      command.outputHelp();
+      return;
+    }
+    process.stderr.write(`error: unknown command '${arg}'
 Run 'oriro --help' to see available commands.
 `);
     process.exitCode = 1;

@@ -10,7 +10,7 @@ import { readChannels, saveChannel, removeChannel, type ChannelKind } from "../c
 import { startTelegram, validateTelegramToken, type RunningChannel } from "../channels/telegram.js";
 import { startDiscord, validateDiscordToken } from "../channels/discord.js";
 import { startWhatsApp } from "../channels/whatsapp.js";
-import { ok, info, heading, fail, die } from "./ui.js";
+import { ok, info, heading, die } from "./ui.js";
 import { accent, dim } from "../ui/theme.js";
 
 const KINDS: ChannelKind[] = ["telegram", "discord", "whatsapp"];
@@ -76,7 +76,9 @@ export function registerChannelsCommand(program: Command): void {
 
       if (kind === "whatsapp") {
         if (!opts.acceptRisk) {
-          fail("WhatsApp uses Baileys, which pairs a REAL WhatsApp account and may violate WhatsApp's ToS (ban risk).");
+          // A deliberate refusal (exit 0) — use a neutral glyph, not the ✗ error glyph, so the
+          // displayed status agrees with the exit code.
+          info("WhatsApp uses Baileys, which pairs a REAL WhatsApp account and may violate WhatsApp's ToS (ban risk).");
           info("If you accept that risk, re-run: `oriro channels start whatsapp --accept-risk`");
           return; // exit 0 — refused, not an error
         }

@@ -6,6 +6,7 @@ import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { LANGUAGES, searchLanguages, NEURAL_VOICE_COUNT, languageByCode, type OriroLanguage } from './languages.js';
 import { readLanguageConfig, setTerminalLanguage } from './config.js';
+import { ask } from '../onboarding/prompt.js';
 
 // ORIRO brand palette (teal → violet, matching ui/theme.ts). Inline raw codes here because
 // this readline picker streams to stdout directly; the full pi-tui screen lands in the wrapper.
@@ -42,9 +43,12 @@ export async function selectLanguageInteractive(): Promise<OriroLanguage> {
     let list = searchLanguages('');
     renderList(list);
     for (;;) {
-      const ans = (await rl.question(`\n  ${C.teal}›${C.reset} Type a language, or a number to pick: `)).trim();
+      const ans = (await ask(rl, `\n  ${C.teal}›${C.reset} Type a language, or a number to pick: `)).trim();
       const n = Number(ans);
-      const byNumber = ans && Number.isInteger(n) && n >= 1 && n <= list.length ? list[n - 1] : undefined;
+      // Only the rows actually shown (first 15) are selectable by number — picking 16–99 used to
+      // silently select an off-screen language the user never saw.
+      const shown = Math.min(15, list.length);
+      const byNumber = ans && Number.isInteger(n) && n >= 1 && n <= shown ? list[n - 1] : undefined;
       if (byNumber) return byNumber;
       const direct = languageByCode(ans);
       if (direct) return direct;

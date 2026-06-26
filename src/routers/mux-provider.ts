@@ -89,6 +89,13 @@ async function driveMux(
         out.push(sanitizeEventToolCalls(ev)); // live stream + tool-name sanitize on partials/toolcall_end
       }
       if (failedBeforeContent) continue; // try next router
+      if (!committed) {
+        // The stream ended with NO events at all (e.g. an endpoint returns 200 with an empty body):
+        // that's not a success — record a failure and fail over instead of surfacing an empty reply.
+        mux.recordFailure(id, {});
+        lastError ??= buildErrorMessage("Router returned no output.");
+        continue;
+      }
       // committed but stream ended without an explicit done — close with last known message
       mux.recordSuccess(id, Date.now() - t0);
       out.end(lastPartial ? sanitizeMessageToolCalls(scrubMessageIdentity(lastPartial)) : undefined);

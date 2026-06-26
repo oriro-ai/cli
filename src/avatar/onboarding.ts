@@ -11,6 +11,7 @@ import { AVATAR_COUNT, avatarCategories, avatarsInCategory, type AvatarEntry } f
 import { renderAvatar } from "./render.js";
 import { setupSystemVoice } from "./system-voice.js";
 import { speak } from "./voice.js";
+import { ask } from "../onboarding/prompt.js";
 
 // ORIRO palette (teal → purple, matching the logo gradient).
 const C = {
@@ -58,7 +59,7 @@ export async function selectAvatarInteractive(): Promise<AvatarEntry | null> {
       ),
     );
     const cn = Number(
-      (await rl.question(`\n  ${C.teal}›${C.reset} Pick a category number: `)).trim(),
+      (await ask(rl, `\n  ${C.teal}›${C.reset} Pick a category number: `)).trim(),
     );
     const cat = cats[cn - 1];
     if (!cat) {
@@ -71,7 +72,7 @@ export async function selectAvatarInteractive(): Promise<AvatarEntry | null> {
       stdout.write(`  ${C.teal}${String(i + 1).padStart(2)}${C.reset}  ${a.slug}\n`),
     );
     const an = Number(
-      (await rl.question(`\n  ${C.teal}›${C.reset} Pick an avatar number: `)).trim(),
+      (await ask(rl, `\n  ${C.teal}›${C.reset} Pick an avatar number: `)).trim(),
     );
     const chosen = list[an - 1];
     if (!chosen) {

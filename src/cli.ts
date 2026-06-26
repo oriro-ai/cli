@@ -25,7 +25,9 @@ program
   // no subcommand → onboarding + chat REPL; an UNKNOWN command must error (not silently open the REPL).
   .action(async (_options: unknown, command: Command) => {
     if (command.args.length > 0) {
-      process.stderr.write(`error: unknown command '${command.args[0]}'\nRun 'oriro --help' to see available commands.\n`);
+      const arg = command.args[0];
+      if (arg === "help") { command.outputHelp(); return; } // `oriro help` → top-level help (exit 0)
+      process.stderr.write(`error: unknown command '${arg}'\nRun 'oriro --help' to see available commands.\n`);
       process.exitCode = 1;
       return;
     }

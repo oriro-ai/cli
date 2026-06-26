@@ -10,16 +10,19 @@ import { activateGuardian } from "../guardian/index.js";
 import { isAvatarConfigured, runAvatarOnboarding } from "../avatar/index.js";
 import { hasScribeChoice, setScribeConsent } from "../scribe/consent.js";
 import { dim, accent } from "../ui/theme.js";
+import { ask } from "./prompt.js";
 
-/** First run = the terminal language hasn't been chosen yet. */
+/** First run = a required onboarding step is still unsettled. Keying only on language meant an
+ *  interrupted onboarding (quit after language) stranded the Scriber-consent step forever; now the
+ *  remaining steps are re-offered until both language AND the Scriber Yes/No are settled. */
 export function isFirstRun(): boolean {
-  return !isLanguageConfigured();
+  return !isLanguageConfigured() || !hasScribeChoice();
 }
 
 async function askYesNo(question: string): Promise<boolean> {
   const rl = createInterface({ input: stdin, output: stdout });
   try {
-    const a = (await rl.question(`${question} ${dim("[Y/n]")} `)).trim().toLowerCase();
+    const a = (await ask(rl, `${question} ${dim("[Y/n]")} `)).trim().toLowerCase();
     return a === "" || a === "y" || a === "yes";
   } finally {
     rl.close();

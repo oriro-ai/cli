@@ -27,7 +27,7 @@ function run(args, { expectExit = 0, contains } = {}) {
 run(["--version"], { contains: version }); // read from package.json — never drifts on a version bump
 run(["skills", "list"], { contains: "323 loaded" }); // bundle path must resolve the skills dir
 run(["scribe", "status"], { contains: "Scriber" });
-run(["connectors", "list"], { contains: "59 connectors" });
+run(["connectors", "list"], { contains: "addable" }); // summary: N addable · M added · K coming soon
 run(["routers", "list"], { contains: "active pool" });
 run(["routers", "add", "oriro-gauss"], { expectExit: 1, contains: "coming soon" });
 run(["channels", "add", "discord", "not-a-token"], { expectExit: 1, contains: "rejected" }); // bad token refused
@@ -40,8 +40,10 @@ run(["language", "--all"], { expectExit: 0, contains: "Languages" });
 run(["language", "zzz"], { expectExit: 1, contains: "unknown language" });
 run(["avatar", "--list"], { expectExit: 0, contains: "" }); // onboarding hints `oriro avatar` — must exist
 run(["avatar", "not-a-real-avatar"], { expectExit: 1, contains: "unknown avatar" });
-run(["connectors", "list", "ZzzNotACategory"], { expectExit: 0, contains: "unknown category" }); // category validated
+run(["connectors", "list", "ZzzNotACategory"], { expectExit: 1, contains: "unknown category" }); // bad input → exit 1
 run(["connectors", "remove", "never-added-xyz"], { expectExit: 0, contains: "nothing to remove" }); // no false-positive remove
+run(["routers", "use", "neveradded-xyz"], { expectExit: 1, contains: "none of those" }); // no false success on unregistered ids
+run(["help"], { expectExit: 0, contains: "routers" }); // `oriro help` prints top-level help
 run(["--help"], { contains: "routers" });
 
 process.stdout.write(`\nSMOKE: ${fails === 0 ? "PASS ✅" : `FAIL ❌ (${fails})`}\n`);

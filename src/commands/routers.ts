@@ -45,10 +45,11 @@ export function registerRoutersCommand(program: Command): void {
     .command("use <slugs...>")
     .description("set the active router pool (ids must be added first)")
     .action((slugs: string[]) => {
-      useRouters(slugs);
-      const pool = resolvePool();
-      const missing = slugs.filter((s) => !pool.some((p) => p.id === s));
-      ok(`pool set: ${pool.map((p) => p.id).join(", ") || "(empty)"}`);
-      if (missing.length) info(`not yet added (run \`oriro routers add\`): ${missing.join(", ")}`);
+      const { applied, unknown } = useRouters(slugs);
+      if (!applied.length) {
+        die(`none of those are added yet: ${unknown.join(", ")} — run \`oriro routers add <slug>\` first`);
+      }
+      ok(`pool set: ${applied.join(", ")}`);
+      if (unknown.length) info(`skipped (not added yet — run \`oriro routers add\`): ${unknown.join(", ")}`);
     });
 }

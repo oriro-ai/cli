@@ -39,6 +39,11 @@ export async function addRouter(entry: RouterEntry, opts?: { key?: string; model
   if (entry.comingSoon) {
     return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: "coming soon" } };
   }
+  // Only chat routers belong in the model pool — an image/speech endpoint that happened to answer
+  // /chat/completions must not be admitted as the agent's brain.
+  if (entry.kind && entry.kind !== "chat") {
+    return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: `'${entry.id}' is a ${entry.kind} router, not a chat router` } };
+  }
   const key = opts?.key ?? (entry.keyless ? KEYLESS_SENTINEL : undefined);
   const v = await validateRouter(entry, key, opts?.modelId);
   if (!v.ok) return { ok: false, validation: v }; // nothing fake/broken gets in
@@ -57,9 +62,14 @@ export async function addRouter(entry: RouterEntry, opts?: { key?: string; model
   return { ok: true, validation: v };
 }
 
-/** Multi-select: set the active router pool (ids must already be registered to take effect). */
-export function useRouters(ids: string[]): void {
-  savePool(oriroDir(), ids);
+/** Multi-select: set the active router pool. Only ids that are actually registered are persisted —
+ *  dangling/garbage ids are dropped (and reported) instead of being silently written to disk. */
+export function useRouters(ids: string[]): { applied: string[]; unknown: string[] } {
+  const reg = readReg();
+  const applied = ids.filter((id) => reg[id]);
+  const unknown = ids.filter((id) => !reg[id]);
+  savePool(oriroDir(), applied);
+  return { applied, unknown };
 }
 
 /** The user's selected pool resolved to KeylessRouter[] for the Mux (empty → caller uses the floor). */
