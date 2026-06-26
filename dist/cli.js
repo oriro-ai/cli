@@ -458,8 +458,10 @@ var REMOTE_EXEC = [
   // bash <(curl …)
   /\beval\b[^\n]*\$\(\s*(curl|wget|fetch)\b/i,
   // eval "$(curl …)"
-  /\bpython\d?\s+-c\b[^\n]*urllib|requests\.get[^\n]*exec\(/i
+  /\bpython\d?\s+-c\b[^\n]*urllib|requests\.get[^\n]*exec\(/i,
   // python one-liner fetch+exec
+  /\b(base64\s+(-d|--decode)|xxd\s+-r|openssl\s+enc\s+-d)\b[^\n|]*\|\s*(sudo\s+)?(sh|bash|zsh|python\d?|node|perl|ruby)\b/i
+  // decode-then-exec (obfuscated loader)
 ];
 var REVERSE_SHELL = [
   /\bnc\b\s+(-[a-z]*e|.*-e\s+\/bin\/(sh|bash))/i,
@@ -477,7 +479,13 @@ var SECRET_PATHS = /(\.ssh\/id_|\.ssh\/.*_rsa|\.aws\/credentials|\.oriro\/creden
 var NET_SINK = /\b(curl|wget|nc|ncat|socat|scp|rsync|ftp|tftp|invoke-webrequest|invoke-restmethod)\b/i;
 var ENV_EXFIL = [
   /\$\(\s*(printenv|env)\b/i,
+  // $(printenv X) / $(env) substitution
+  /\bprintenv\b/i,
+  // printenv … (env dump — paired with a net sink below = exfil)
+  /\benv\s*\|/i,
+  // env | … (piping the whole environment)
   /\$\(\s*cat\b[^)]*(\.ssh|\.aws|\.env|\.netrc|credential|secret|token|id_rsa|id_ed25519)/i
+  // $(cat <secret>)
 ];
 var PERSISTENCE = [
   /\bcrontab\b\s+(-|\S+)/i,
@@ -1581,462 +1589,9 @@ function sanitizeEventToolCalls(ev) {
   return next;
 }
 
-// src/routers/mux-provider.ts
-var MUX_PROVIDER = "oriro-mux";
-var MUX_MODEL = "oriro-free";
-function errToCallError(msg) {
-  const text = msg.errorMessage ?? "";
-  return /\b429\b|rate.?limit|too many requests/i.test(text) ? { status: 429 } : {};
-}
-function buildErrorMessage(message) {
-  return {
-    role: "assistant",
-    content: [],
-    api: "openai-completions",
-    provider: MUX_PROVIDER,
-    model: MUX_MODEL,
-    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
-    stopReason: "error",
-    timestamp: Date.now(),
-    errorMessage: message
-  };
-}
-async function driveMux(out, mux, byId, context, options) {
-  let lastError;
-  for (const id of mux.ranked()) {
-    const router = byId.get(id);
-    if (!router) continue;
-    const t0 = Date.now();
-    let committed = false;
-    let lastPartial;
-    try {
-      const inner = piStreamSimple(routerModel(router), context, {
-        ...options ?? {},
-        apiKey: router.apiKey
-      });
-      let failedBeforeContent = false;
-      for await (const ev of inner) {
-        if (ev.type === "error") {
-          mux.recordFailure(id, errToCallError(ev.error));
-          if (!committed) {
-            lastError = ev.error;
-            failedBeforeContent = true;
-            break;
-          }
-          out.push(ev);
-          out.end(ev.error);
-          return;
-        }
-        committed = true;
-        if (ev.type === "done") {
-          mux.recordSuccess(id, Date.now() - t0);
-          const clean = sanitizeMessageToolCalls(scrubMessageIdentity(ev.message));
-          out.push({ type: "done", reason: ev.reason, message: clean });
-          out.end(clean);
-          return;
-        }
-        lastPartial = ev.partial;
-        out.push(sanitizeEventToolCalls(ev));
-      }
-      if (failedBeforeContent) continue;
-      mux.recordSuccess(id, Date.now() - t0);
-      out.end(lastPartial ? sanitizeMessageToolCalls(scrubMessageIdentity(lastPartial)) : void 0);
-      return;
-    } catch (e) {
-      mux.recordFailure(id, e);
-    }
-  }
-  const msg = lastError ?? buildErrorMessage(
-    "All keyless routers are unavailable. Add a BYOK key, select more free routers, or retry shortly."
-  );
-  out.push({ type: "error", reason: "error", error: msg });
-  out.end(msg);
-}
-function registerOriroMux(registry, opts = {}) {
-  registerOpenAICompletions();
-  const pooled = resolvePool();
-  const routers = opts.routers ?? (pooled.length > 0 ? pooled : KEYLESS_FLOOR);
-  const byId = new Map(routers.map((r) => [r.id, r]));
-  const mux = new RouterMux(routers.map((r) => r.id));
-  registry.registerProvider(MUX_PROVIDER, {
-    name: "ORIRO Free (keyless Mux)",
-    api: "openai-completions",
-    apiKey: "oriro-keyless",
-    // Placeholder — required by registry validation but never used: our custom streamSimple
-    // routes to the real keyless floor endpoints itself (see driveMux).
-    baseUrl: "http://oriro-mux.local",
-    models: [
-      {
-        id: MUX_MODEL,
-        name: "ORIRO Free (best-router)",
-        api: "openai-completions",
-        baseUrl: "http://oriro-mux.local",
-        reasoning: false,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 128e3,
-        maxTokens: 4096
-      }
-    ],
-    streamSimple: (_model, context, options) => {
-      const out = createAssistantMessageEventStream();
-      void driveMux(out, mux, byId, applyIdentity(context), options);
-      return out;
-    }
-  });
-  return registry.find(MUX_PROVIDER, MUX_MODEL);
-}
-
-// src/head/pi-tool.ts
-import { Type } from "typebox";
-
-// src/head/comparison-engine.ts
-var SECTION_RULES = [
-  {
-    type: "hero",
-    label: "Hero",
-    priority: "CRITICAL",
-    markup: [/<h1[\s>]/],
-    recommend: "Add a clear above-the-fold hero \u2014 one headline that states the value + one primary CTA."
-  },
-  {
-    type: "navigation",
-    label: "Navigation",
-    priority: "CRITICAL",
-    markup: [/<nav[\s>]/, /role=["']navigation["']/],
-    recommend: "Add a top navigation so visitors can reach key sections."
-  },
-  {
-    type: "features",
-    label: "Features",
-    priority: "CRITICAL",
-    text: [/\bfeatures?\b/, /\bwhat you (?:can|get)\b/, /\bcapabilit/],
-    recommend: "Add a features section that spells out concrete capabilities, not adjectives."
-  },
-  {
-    type: "pricing",
-    label: "Pricing",
-    priority: "CRITICAL",
-    text: [/\bpricing\b/, /\bper month\b/, /\b\/mo\b/, /\bfree plan\b/, /\$\d/, /₹\d/, /€\d/],
-    recommend: 'Add transparent pricing \u2014 a critical conversion element; even a single "Free" tier helps.'
-  },
-  {
-    type: "cta",
-    label: "Call-to-Action",
-    priority: "CRITICAL",
-    text: [/\bget started\b/, /\bsign up\b/, /\bstart (?:free|now|building)\b/, /\btry (?:it|now|free)\b/, /\bbook a demo\b/, /\bget a demo\b/],
-    recommend: 'Add a strong, repeated primary CTA ("Get started") so the next step is obvious.'
-  },
-  {
-    type: "testimonials",
-    label: "Testimonials",
-    priority: "HIGH",
-    text: [/\btestimonial/, /\bwhat (?:our )?(?:customers|users) say\b/, /\bloved by\b/, /\breview(?:s|ed)\b/],
-    recommend: "Add 2\u20133 customer testimonials with names/photos to build trust."
-  },
-  {
-    type: "stats",
-    label: "Stats / Metrics",
-    priority: "HIGH",
-    text: [/\b\d[\d,.]*\s*[kkmm]\+?\s*(?:users|customers|developers|downloads|teams)\b/, /\b9\d(?:\.\d+)?%\b/, /\buptime\b/],
-    recommend: 'Add impressive metrics ("10K+ users", "99.9% uptime") as social proof.'
-  },
-  {
-    type: "video",
-    label: "Video",
-    priority: "HIGH",
-    markup: [/<video[\s>]/, /youtube\.com\/embed/, /player\.vimeo\.com/, /<iframe[^>]+(?:youtube|vimeo)/],
-    text: [/\bwatch the (?:video|demo)\b/],
-    recommend: "Add a short explainer/demo video \u2014 it lifts conversion on landing pages."
-  },
-  {
-    type: "demo",
-    label: "Live Demo",
-    priority: "HIGH",
-    text: [/\btry it (?:now|live|free)\b/, /\bplayground\b/, /\binteractive demo\b/, /\blive demo\b/],
-    recommend: 'Add a "try it" live demo or playground so visitors experience the product immediately.'
-  },
-  {
-    type: "socialProof",
-    label: "Social Proof",
-    priority: "HIGH",
-    text: [/\btrusted by\b/, /\bbacked by\b/, /\bused by\b/, /\bas seen (?:in|on)\b/, /\bcustomers include\b/],
-    recommend: 'Add social proof (customer/investor logos, "trusted by \u2026") near the hero.'
-  },
-  {
-    type: "faq",
-    label: "FAQ",
-    priority: "MEDIUM",
-    text: [/\bfaq\b/, /\bfrequently asked\b/],
-    markup: [/<details[\s>]/],
-    recommend: "Add an FAQ that answers the top objections before they become exits."
-  },
-  {
-    type: "integrations",
-    label: "Integrations",
-    priority: "MEDIUM",
-    text: [/\bintegrations?\b/, /\bworks with\b/, /\bconnect your\b/],
-    recommend: "Add an integrations section showing what the product connects to."
-  },
-  {
-    type: "newsletter",
-    label: "Newsletter / Capture",
-    priority: "MEDIUM",
-    text: [/\bsubscribe\b/, /\bnewsletter\b/, /\bjoin (?:the )?waitlist\b/],
-    markup: [/type=["']email["']/],
-    recommend: "Add an email capture (newsletter/waitlist) so non-converting visitors are not lost."
-  },
-  {
-    type: "comparison",
-    label: "Comparison",
-    priority: "MEDIUM",
-    text: [/\bcompare\b/, /\bcomparison\b/, /\b vs\.? \b/, /\bwhy choose\b/],
-    recommend: 'Add a comparison ("us vs alternatives") to win evaluators who are shopping around.'
-  },
-  {
-    type: "team",
-    label: "Team / About",
-    priority: "LOW",
-    text: [/\bour team\b/, /\bmeet the team\b/, /\bfounders?\b/, /\babout us\b/],
-    recommend: "Add a brief team/about section to humanize the brand."
-  }
-];
-var PRIORITY_RANK = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-var PRIORITY_EFFORT = { CRITICAL: "L", HIGH: "M", MEDIUM: "M", LOW: "S" };
-var FETCH_TIMEOUT_MS = 12e3;
-var UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 ORIRO-Inspector";
-async function fetchPage(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  const start = Date.now();
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: { "user-agent": UA, accept: "text/html,application/xhtml+xml" }
-    });
-    const html = await res.text();
-    return { html, ms: Date.now() - start, status: res.status, ok: res.ok, error: "" };
-  } catch (err) {
-    return { html: "", ms: Date.now() - start, status: 0, ok: false, error: err instanceof Error ? err.message : "fetch failed" };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-function toText(html) {
-  return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").toLowerCase().trim();
-}
-function firstMatch(re, hay) {
-  const m = re.exec(hay);
-  if (!m) return "";
-  const slice = (m[0] ?? "").trim();
-  return slice.length > 80 ? `${slice.slice(0, 77)}\u2026` : slice;
-}
-function detectSections(rawHtmlLower, text) {
-  const found = [];
-  for (const rule of SECTION_RULES) {
-    let evidence = "";
-    for (const re of rule.markup ?? []) {
-      const hit = firstMatch(re, rawHtmlLower);
-      if (hit) {
-        evidence = hit;
-        break;
-      }
-    }
-    if (!evidence) {
-      for (const re of rule.text ?? []) {
-        const hit = firstMatch(re, text);
-        if (hit) {
-          evidence = hit;
-          break;
-        }
-      }
-    }
-    if (evidence) found.push({ type: rule.type, label: rule.label, priority: rule.priority, evidence });
-  }
-  return found;
-}
-function extractMatches(re, html, max) {
-  const out = [];
-  for (const m of html.matchAll(re)) {
-    const inner = (m[1] ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    if (inner && !out.includes(inner)) out.push(inner);
-    if (out.length >= max) break;
-  }
-  return out;
-}
-var CTA_WORDS = /\b(get started|sign up|start free|start now|start building|try (?:it|now|free)|book a demo|get a demo|request access|join (?:the )?waitlist|download)\b/i;
-function extractStructure(url, fr) {
-  const html = fr.html;
-  const lowerHtml = html.toLowerCase();
-  const text = toText(html);
-  const titleM = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
-  const title = (titleM?.[1] ?? "").replace(/\s+/g, " ").trim();
-  const descM = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i.exec(html) ?? /<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i.exec(html);
-  const description = (descM?.[1] ?? "").replace(/\s+/g, " ").trim();
-  const headings = extractMatches(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi, html, 12);
-  const ctaAll = extractMatches(/<(?:a|button)[^>]*>([\s\S]*?)<\/(?:a|button)>/gi, html, 80);
-  const ctas = [];
-  for (const c of ctaAll) {
-    if (CTA_WORDS.test(c) && !ctas.includes(c)) ctas.push(c);
-    if (ctas.length >= 10) break;
-  }
-  const forms = (lowerHtml.match(/<form[\s>]/g) ?? []).length;
-  const links = (lowerHtml.match(/<a[\s>]/g) ?? []).length;
-  const images = (lowerHtml.match(/<img[\s>]/g) ?? []).length;
-  const hasVideo = /<video[\s>]/.test(lowerHtml) || /(?:youtube\.com\/embed|player\.vimeo\.com)/.test(lowerHtml);
-  const domNodes = (html.match(/<[a-z!\/]/gi) ?? []).length;
-  let note = "";
-  if (fr.ok && text.length < 400 && domNodes < 60) {
-    note = "Sparse HTML \u2014 likely a client-rendered (SPA) page; structure may be under-detected without a JS render.";
-  }
-  return {
-    url,
-    title,
-    description,
-    sections: detectSections(lowerHtml, text),
-    headings,
-    ctas,
-    forms,
-    links,
-    images,
-    hasVideo,
-    metrics: { htmlBytes: html.length, domNodes, fetchMs: fr.ms, status: fr.status },
-    ok: fr.ok && html.length > 0,
-    note: fr.ok ? note : `Could not load: ${fr.error || `HTTP ${fr.status}`}`
-  };
-}
-function ruleFor(type) {
-  return SECTION_RULES.find((r) => r.type === type) ?? SECTION_RULES[0];
-}
-function analyzeGaps(target, competitors) {
-  const targetTypes = new Set(target.sections.map((s) => s.type));
-  const compPresence = /* @__PURE__ */ new Map();
-  for (const comp of competitors) {
-    if (!comp.ok) continue;
-    for (const s of comp.sections) {
-      const list = compPresence.get(s.type) ?? [];
-      if (!list.includes(comp.url)) list.push(comp.url);
-      compPresence.set(s.type, list);
-    }
-  }
-  const missing = [];
-  const parity = [];
-  for (const [type, presentOn] of compPresence) {
-    if (targetTypes.has(type)) {
-      parity.push(type);
-    } else {
-      const rule = ruleFor(type);
-      missing.push({ section: type, label: rule.label, priority: rule.priority, presentOn, recommendation: rule.recommend });
-    }
-  }
-  missing.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || b.presentOn.length - a.presentOn.length);
-  const advantages = target.sections.filter((s) => !compPresence.has(s.type));
-  return { missing, advantages, parity };
-}
-function generateActionItems(missing) {
-  return missing.map((g) => ({
-    title: `Add a ${g.label} section`,
-    priority: g.priority,
-    effort: PRIORITY_EFFORT[g.priority],
-    rationale: `${g.presentOn.length} of the compared page(s) have it; you don't. ${g.recommendation}`
-  }));
-}
-function hostOf(url) {
-  try {
-    return new URL(url).host.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
-}
-function generateSummary(target, competitors, gaps) {
-  const okComps = competitors.filter((c) => c.ok);
-  const tName = hostOf(target.url);
-  if (!target.ok) return `Could not load ${tName} (${target.note}). Nothing to compare against yet.`;
-  if (okComps.length === 0) return `Loaded ${tName} (${target.sections.length} sections) but none of the comparison URLs could be loaded.`;
-  const crit = gaps.missing.filter((m) => m.priority === "CRITICAL").map((m) => m.label);
-  const high = gaps.missing.filter((m) => m.priority === "HIGH").map((m) => m.label);
-  const parts = [];
-  parts.push(`${tName} has ${target.sections.length} detectable sections; compared against ${okComps.length} page(s).`);
-  if (gaps.missing.length === 0) {
-    parts.push("No structural gaps found \u2014 you cover everything they do.");
-  } else {
-    parts.push(`${gaps.missing.length} gap(s) found.`);
-    if (crit.length) parts.push(`Critical: ${crit.join(", ")}.`);
-    if (high.length) parts.push(`High: ${high.join(", ")}.`);
-  }
-  if (gaps.advantages.length) parts.push(`Your edge: ${gaps.advantages.map((a) => a.label).join(", ")}.`);
-  return parts.join(" ");
-}
-function normalizeUrl(u) {
-  const t = (u || "").trim();
-  if (!t) return t;
-  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
-}
-async function comparePages(opts) {
-  const targetUrl = normalizeUrl(opts.targetUrl);
-  const competitorUrls = (opts.competitorUrls ?? []).map(normalizeUrl).filter((u) => u.length > 0).slice(0, 30);
-  const [targetFetch, ...compFetches] = await Promise.all([
-    fetchPage(targetUrl),
-    ...competitorUrls.map((u) => fetchPage(u))
-  ]);
-  const target = extractStructure(targetUrl, targetFetch ?? { html: "", ms: 0, status: 0, ok: false, error: "no fetch" });
-  const competitors = competitorUrls.map(
-    (u, i) => extractStructure(u, compFetches[i] ?? { html: "", ms: 0, status: 0, ok: false, error: "no fetch" })
-  );
-  const gaps = analyzeGaps(target, competitors);
-  return {
-    target,
-    competitors,
-    missing: gaps.missing,
-    advantages: gaps.advantages,
-    parity: gaps.parity,
-    actionItems: generateActionItems(gaps.missing),
-    summary: generateSummary(target, competitors, gaps)
-  };
-}
-
-// src/head/pi-tool.ts
-function summarizeForCoder(report) {
-  const lines = [report.summary];
-  const page = (p) => `  \u2022 ${p.url} \u2014 ${p.ok ? `${p.sections.length} sections: ${p.sections.map((s) => s.type).join(", ")}` : `not readable (${p.note})`}`;
-  lines.push("Pages seen:");
-  lines.push(page(report.target));
-  for (const c of report.competitors) if (c.url !== report.target.url) lines.push(page(c));
-  if (report.missing.length) {
-    lines.push("Missing on the target (gaps to build):");
-    for (const g of report.missing.slice(0, 12)) lines.push(`  \u2022 ${g.label} (${g.priority}) \u2014 ${g.recommendation}`);
-  }
-  if (report.actionItems.length) {
-    lines.push("Suggested action items:");
-    for (const a of report.actionItems.slice(0, 12)) lines.push(`  \u2192 ${a.title} [${a.priority}/${a.effort}] \u2014 ${a.rationale}`);
-  }
-  return lines.join("\n");
-}
-var InspectSiteParams = Type.Object({
-  url: Type.String({ description: "The target website URL to inspect or rebuild from." }),
-  competitors: Type.Optional(
-    Type.Array(Type.String(), { description: "Optional competitor/reference URLs to compare the target against." })
-  )
-});
-function registerHead(pi) {
-  pi.registerTool({
-    name: "inspect_site",
-    label: "ORIRO Head",
-    description: "Go out to a live website and SEE it: its sections, CTAs, structure, and any gaps versus competitor URLs. Returns a structured report to build from. Call this whenever the user wants to look at, compare against, or rebuild a website/page.",
-    parameters: InspectSiteParams,
-    async execute(_toolCallId, params) {
-      const target = params.url;
-      const competitors = params.competitors?.length ? params.competitors : [target];
-      const report = await comparePages({ targetUrl: target, competitorUrls: competitors });
-      return { content: [{ type: "text", text: summarizeForCoder(report) }], details: report };
-    }
-  });
-}
-
 // src/scribe/scribe-pi.ts
 import { existsSync as existsSync9, readFileSync as readFileSync16 } from "fs";
-import { Type as Type2 } from "typebox";
+import { Type } from "typebox";
 
 // src/scribe/capture.ts
 import { closeSync as closeSync2, fsyncSync as fsyncSync2, mkdirSync as mkdirSync10, openSync as openSync2, writeSync as writeSync2 } from "fs";
@@ -2115,6 +1670,9 @@ function updateTimeline(date, topic) {
   writeFileSync10(timelineFile(), `${header2}
 ${body.join("\n")}
 `, "utf8");
+}
+function readDigest() {
+  return read(digestFile());
 }
 
 // src/scribe/journal.ts
@@ -2490,14 +2048,43 @@ function scribeTurn(input) {
   const ts = (/* @__PURE__ */ new Date()).toISOString();
   supervisedCapture({ ts, date: ts.slice(0, 10), ...input });
 }
+var pendingUserInput = "";
+function noteUserInput(text) {
+  pendingUserInput = text;
+}
+function takePendingUserInput() {
+  const u = pendingUserInput;
+  pendingUserInput = "";
+  return u;
+}
+function buildScribeContext() {
+  if (!isScribeEnabled()) return "";
+  const parts = [];
+  try {
+    const t = timelineFile();
+    if (existsSync9(t)) parts.push(`# Work history \u2014 every day so far
+${readFileSync16(t, "utf8").trim()}`);
+  } catch {
+  }
+  try {
+    const d = readDigest();
+    if (d?.trim()) parts.push(`# Current context (recent)
+${d.trim()}`);
+  } catch {
+  }
+  if (!parts.length) return "";
+  return `${parts.join("\n\n")}
+
+(Call scribe_recall to fetch the full text of any past day or topic.)`;
+}
 function registerScribe(pi) {
   pi.registerTool({
     name: "scribe_recall",
     label: "ORIRO Scribe",
     description: "Recall the user's past work from the on-device journal: search by keyword, or read a specific day (YYYY-MM-DD). Use to recover decisions, code, files, and context from earlier sessions.",
-    parameters: Type2.Object({
-      query: Type2.Optional(Type2.String({ description: "Keyword/topic to search across all journals." })),
-      day: Type2.Optional(Type2.String({ description: "A specific day YYYY-MM-DD to read in full." }))
+    parameters: Type.Object({
+      query: Type.Optional(Type.String({ description: "Keyword/topic to search across all journals." })),
+      day: Type.Optional(Type.String({ description: "A specific day YYYY-MM-DD to read in full." }))
     }),
     async execute(_id, params) {
       let text;
@@ -2526,10 +2113,469 @@ function attachScribe(session) {
     if (e?.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") assistant += e.assistantMessageEvent.delta ?? "";
     if ((e?.type === "tool_call" || e?.type === "tool_execution_start") && e.toolName) tools.add(String(e.toolName));
     if (e?.type === "agent_end") {
-      scribeTurn({ user: user || void 0, router: "oriro-free", tools: [...tools], note: assistant.slice(0, 4e3) || void 0 });
+      const userText = takePendingUserInput() || user;
+      scribeTurn({ user: userText || void 0, router: "oriro-free", tools: [...tools], note: assistant.slice(0, 4e3) || void 0 });
       user = "";
       assistant = "";
       tools.clear();
+    }
+  });
+}
+
+// src/routers/mux-provider.ts
+var MUX_PROVIDER = "oriro-mux";
+var MUX_MODEL = "oriro-free";
+function errToCallError(msg) {
+  const text = msg.errorMessage ?? "";
+  return /\b429\b|rate.?limit|too many requests/i.test(text) ? { status: 429 } : {};
+}
+function buildErrorMessage(message) {
+  return {
+    role: "assistant",
+    content: [],
+    api: "openai-completions",
+    provider: MUX_PROVIDER,
+    model: MUX_MODEL,
+    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
+    stopReason: "error",
+    timestamp: Date.now(),
+    errorMessage: message
+  };
+}
+async function driveMux(out, mux, byId, context, options) {
+  let lastError;
+  for (const id of mux.ranked()) {
+    const router = byId.get(id);
+    if (!router) continue;
+    const t0 = Date.now();
+    let committed = false;
+    let lastPartial;
+    try {
+      const inner = piStreamSimple(routerModel(router), context, {
+        ...options ?? {},
+        apiKey: router.apiKey
+      });
+      let failedBeforeContent = false;
+      for await (const ev of inner) {
+        if (ev.type === "error") {
+          mux.recordFailure(id, errToCallError(ev.error));
+          if (!committed) {
+            lastError = ev.error;
+            failedBeforeContent = true;
+            break;
+          }
+          out.push(ev);
+          out.end(ev.error);
+          return;
+        }
+        committed = true;
+        if (ev.type === "done") {
+          mux.recordSuccess(id, Date.now() - t0);
+          const clean = sanitizeMessageToolCalls(scrubMessageIdentity(ev.message));
+          out.push({ type: "done", reason: ev.reason, message: clean });
+          out.end(clean);
+          return;
+        }
+        lastPartial = ev.partial;
+        out.push(sanitizeEventToolCalls(ev));
+      }
+      if (failedBeforeContent) continue;
+      mux.recordSuccess(id, Date.now() - t0);
+      out.end(lastPartial ? sanitizeMessageToolCalls(scrubMessageIdentity(lastPartial)) : void 0);
+      return;
+    } catch (e) {
+      mux.recordFailure(id, e);
+    }
+  }
+  const msg = lastError ?? buildErrorMessage(
+    "All keyless routers are unavailable. Add a BYOK key, select more free routers, or retry shortly."
+  );
+  out.push({ type: "error", reason: "error", error: msg });
+  out.end(msg);
+}
+function registerOriroMux(registry, opts = {}) {
+  registerOpenAICompletions();
+  const pooled = resolvePool();
+  const routers = opts.routers ?? (pooled.length > 0 ? pooled : KEYLESS_FLOOR);
+  const byId = new Map(routers.map((r) => [r.id, r]));
+  const mux = new RouterMux(routers.map((r) => r.id));
+  registry.registerProvider(MUX_PROVIDER, {
+    name: "ORIRO Free (keyless Mux)",
+    api: "openai-completions",
+    apiKey: "oriro-keyless",
+    // Placeholder — required by registry validation but never used: our custom streamSimple
+    // routes to the real keyless floor endpoints itself (see driveMux).
+    baseUrl: "http://oriro-mux.local",
+    models: [
+      {
+        id: MUX_MODEL,
+        name: "ORIRO Free (best-router)",
+        api: "openai-completions",
+        baseUrl: "http://oriro-mux.local",
+        reasoning: false,
+        input: ["text"],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 128e3,
+        maxTokens: 4096
+      }
+    ],
+    streamSimple: (_model, context, options) => {
+      const out = createAssistantMessageEventStream();
+      const ctx = applyIdentity(context);
+      const memory = buildScribeContext();
+      const withMemory = memory ? { ...ctx, systemPrompt: `${ctx.systemPrompt}
+
+${memory}` } : ctx;
+      void driveMux(out, mux, byId, withMemory, options);
+      return out;
+    }
+  });
+  return registry.find(MUX_PROVIDER, MUX_MODEL);
+}
+
+// src/head/pi-tool.ts
+import { Type as Type2 } from "typebox";
+
+// src/head/comparison-engine.ts
+var SECTION_RULES = [
+  {
+    type: "hero",
+    label: "Hero",
+    priority: "CRITICAL",
+    markup: [/<h1[\s>]/],
+    recommend: "Add a clear above-the-fold hero \u2014 one headline that states the value + one primary CTA."
+  },
+  {
+    type: "navigation",
+    label: "Navigation",
+    priority: "CRITICAL",
+    markup: [/<nav[\s>]/, /role=["']navigation["']/],
+    recommend: "Add a top navigation so visitors can reach key sections."
+  },
+  {
+    type: "features",
+    label: "Features",
+    priority: "CRITICAL",
+    text: [/\bfeatures?\b/, /\bwhat you (?:can|get)\b/, /\bcapabilit/],
+    recommend: "Add a features section that spells out concrete capabilities, not adjectives."
+  },
+  {
+    type: "pricing",
+    label: "Pricing",
+    priority: "CRITICAL",
+    text: [/\bpricing\b/, /\bper month\b/, /\b\/mo\b/, /\bfree plan\b/, /\$\d/, /₹\d/, /€\d/],
+    recommend: 'Add transparent pricing \u2014 a critical conversion element; even a single "Free" tier helps.'
+  },
+  {
+    type: "cta",
+    label: "Call-to-Action",
+    priority: "CRITICAL",
+    text: [/\bget started\b/, /\bsign up\b/, /\bstart (?:free|now|building)\b/, /\btry (?:it|now|free)\b/, /\bbook a demo\b/, /\bget a demo\b/],
+    recommend: 'Add a strong, repeated primary CTA ("Get started") so the next step is obvious.'
+  },
+  {
+    type: "testimonials",
+    label: "Testimonials",
+    priority: "HIGH",
+    text: [/\btestimonial/, /\bwhat (?:our )?(?:customers|users) say\b/, /\bloved by\b/, /\breview(?:s|ed)\b/],
+    recommend: "Add 2\u20133 customer testimonials with names/photos to build trust."
+  },
+  {
+    type: "stats",
+    label: "Stats / Metrics",
+    priority: "HIGH",
+    text: [/\b\d[\d,.]*\s*[kkmm]\+?\s*(?:users|customers|developers|downloads|teams)\b/, /\b9\d(?:\.\d+)?%\b/, /\buptime\b/],
+    recommend: 'Add impressive metrics ("10K+ users", "99.9% uptime") as social proof.'
+  },
+  {
+    type: "video",
+    label: "Video",
+    priority: "HIGH",
+    markup: [/<video[\s>]/, /youtube\.com\/embed/, /player\.vimeo\.com/, /<iframe[^>]+(?:youtube|vimeo)/],
+    text: [/\bwatch the (?:video|demo)\b/],
+    recommend: "Add a short explainer/demo video \u2014 it lifts conversion on landing pages."
+  },
+  {
+    type: "demo",
+    label: "Live Demo",
+    priority: "HIGH",
+    text: [/\btry it (?:now|live|free)\b/, /\bplayground\b/, /\binteractive demo\b/, /\blive demo\b/],
+    recommend: 'Add a "try it" live demo or playground so visitors experience the product immediately.'
+  },
+  {
+    type: "socialProof",
+    label: "Social Proof",
+    priority: "HIGH",
+    text: [/\btrusted by\b/, /\bbacked by\b/, /\bused by\b/, /\bas seen (?:in|on)\b/, /\bcustomers include\b/],
+    recommend: 'Add social proof (customer/investor logos, "trusted by \u2026") near the hero.'
+  },
+  {
+    type: "faq",
+    label: "FAQ",
+    priority: "MEDIUM",
+    text: [/\bfaq\b/, /\bfrequently asked\b/],
+    markup: [/<details[\s>]/],
+    recommend: "Add an FAQ that answers the top objections before they become exits."
+  },
+  {
+    type: "integrations",
+    label: "Integrations",
+    priority: "MEDIUM",
+    text: [/\bintegrations?\b/, /\bworks with\b/, /\bconnect your\b/],
+    recommend: "Add an integrations section showing what the product connects to."
+  },
+  {
+    type: "newsletter",
+    label: "Newsletter / Capture",
+    priority: "MEDIUM",
+    text: [/\bsubscribe\b/, /\bnewsletter\b/, /\bjoin (?:the )?waitlist\b/],
+    markup: [/type=["']email["']/],
+    recommend: "Add an email capture (newsletter/waitlist) so non-converting visitors are not lost."
+  },
+  {
+    type: "comparison",
+    label: "Comparison",
+    priority: "MEDIUM",
+    text: [/\bcompare\b/, /\bcomparison\b/, /\b vs\.? \b/, /\bwhy choose\b/],
+    recommend: 'Add a comparison ("us vs alternatives") to win evaluators who are shopping around.'
+  },
+  {
+    type: "team",
+    label: "Team / About",
+    priority: "LOW",
+    text: [/\bour team\b/, /\bmeet the team\b/, /\bfounders?\b/, /\babout us\b/],
+    recommend: "Add a brief team/about section to humanize the brand."
+  }
+];
+var PRIORITY_RANK = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+var PRIORITY_EFFORT = { CRITICAL: "L", HIGH: "M", MEDIUM: "M", LOW: "S" };
+var FETCH_TIMEOUT_MS = 12e3;
+var UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 ORIRO-Inspector";
+async function fetchPage(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const start = Date.now();
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: { "user-agent": UA, accept: "text/html,application/xhtml+xml" }
+    });
+    const html = await res.text();
+    return { html, ms: Date.now() - start, status: res.status, ok: res.ok, error: "" };
+  } catch (err) {
+    return { html: "", ms: Date.now() - start, status: 0, ok: false, error: err instanceof Error ? err.message : "fetch failed" };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+function toText(html) {
+  return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").toLowerCase().trim();
+}
+function firstMatch(re, hay) {
+  const m = re.exec(hay);
+  if (!m) return "";
+  const slice = (m[0] ?? "").trim();
+  return slice.length > 80 ? `${slice.slice(0, 77)}\u2026` : slice;
+}
+function detectSections(rawHtmlLower, text) {
+  const found = [];
+  for (const rule of SECTION_RULES) {
+    let evidence = "";
+    for (const re of rule.markup ?? []) {
+      const hit = firstMatch(re, rawHtmlLower);
+      if (hit) {
+        evidence = hit;
+        break;
+      }
+    }
+    if (!evidence) {
+      for (const re of rule.text ?? []) {
+        const hit = firstMatch(re, text);
+        if (hit) {
+          evidence = hit;
+          break;
+        }
+      }
+    }
+    if (evidence) found.push({ type: rule.type, label: rule.label, priority: rule.priority, evidence });
+  }
+  return found;
+}
+function extractMatches(re, html, max) {
+  const out = [];
+  for (const m of html.matchAll(re)) {
+    const inner = (m[1] ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (inner && !out.includes(inner)) out.push(inner);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+var CTA_WORDS = /\b(get started|sign up|start free|start now|start building|try (?:it|now|free)|book a demo|get a demo|request access|join (?:the )?waitlist|download)\b/i;
+function extractStructure(url, fr) {
+  const html = fr.html;
+  const lowerHtml = html.toLowerCase();
+  const text = toText(html);
+  const titleM = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
+  const title = (titleM?.[1] ?? "").replace(/\s+/g, " ").trim();
+  const descM = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i.exec(html) ?? /<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i.exec(html);
+  const description = (descM?.[1] ?? "").replace(/\s+/g, " ").trim();
+  const headings = extractMatches(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi, html, 12);
+  const ctaAll = extractMatches(/<(?:a|button)[^>]*>([\s\S]*?)<\/(?:a|button)>/gi, html, 80);
+  const ctas = [];
+  for (const c of ctaAll) {
+    if (CTA_WORDS.test(c) && !ctas.includes(c)) ctas.push(c);
+    if (ctas.length >= 10) break;
+  }
+  const forms = (lowerHtml.match(/<form[\s>]/g) ?? []).length;
+  const links = (lowerHtml.match(/<a[\s>]/g) ?? []).length;
+  const images = (lowerHtml.match(/<img[\s>]/g) ?? []).length;
+  const hasVideo = /<video[\s>]/.test(lowerHtml) || /(?:youtube\.com\/embed|player\.vimeo\.com)/.test(lowerHtml);
+  const domNodes = (html.match(/<[a-z!\/]/gi) ?? []).length;
+  let note = "";
+  if (fr.ok && text.length < 400 && domNodes < 60) {
+    note = "Sparse HTML \u2014 likely a client-rendered (SPA) page; structure may be under-detected without a JS render.";
+  }
+  return {
+    url,
+    title,
+    description,
+    sections: detectSections(lowerHtml, text),
+    headings,
+    ctas,
+    forms,
+    links,
+    images,
+    hasVideo,
+    metrics: { htmlBytes: html.length, domNodes, fetchMs: fr.ms, status: fr.status },
+    ok: fr.ok && html.length > 0,
+    note: fr.ok ? note : `Could not load: ${fr.error || `HTTP ${fr.status}`}`
+  };
+}
+function ruleFor(type) {
+  return SECTION_RULES.find((r) => r.type === type) ?? SECTION_RULES[0];
+}
+function analyzeGaps(target, competitors) {
+  const targetTypes = new Set(target.sections.map((s) => s.type));
+  const compPresence = /* @__PURE__ */ new Map();
+  for (const comp of competitors) {
+    if (!comp.ok) continue;
+    for (const s of comp.sections) {
+      const list = compPresence.get(s.type) ?? [];
+      if (!list.includes(comp.url)) list.push(comp.url);
+      compPresence.set(s.type, list);
+    }
+  }
+  const missing = [];
+  const parity = [];
+  for (const [type, presentOn] of compPresence) {
+    if (targetTypes.has(type)) {
+      parity.push(type);
+    } else {
+      const rule = ruleFor(type);
+      missing.push({ section: type, label: rule.label, priority: rule.priority, presentOn, recommendation: rule.recommend });
+    }
+  }
+  missing.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || b.presentOn.length - a.presentOn.length);
+  const advantages = target.sections.filter((s) => !compPresence.has(s.type));
+  return { missing, advantages, parity };
+}
+function generateActionItems(missing) {
+  return missing.map((g) => ({
+    title: `Add a ${g.label} section`,
+    priority: g.priority,
+    effort: PRIORITY_EFFORT[g.priority],
+    rationale: `${g.presentOn.length} of the compared page(s) have it; you don't. ${g.recommendation}`
+  }));
+}
+function hostOf(url) {
+  try {
+    return new URL(url).host.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+function generateSummary(target, competitors, gaps) {
+  const okComps = competitors.filter((c) => c.ok);
+  const tName = hostOf(target.url);
+  if (!target.ok) return `Could not load ${tName} (${target.note}). Nothing to compare against yet.`;
+  if (okComps.length === 0) return `Loaded ${tName} (${target.sections.length} sections) but none of the comparison URLs could be loaded.`;
+  const crit = gaps.missing.filter((m) => m.priority === "CRITICAL").map((m) => m.label);
+  const high = gaps.missing.filter((m) => m.priority === "HIGH").map((m) => m.label);
+  const parts = [];
+  parts.push(`${tName} has ${target.sections.length} detectable sections; compared against ${okComps.length} page(s).`);
+  if (gaps.missing.length === 0) {
+    parts.push("No structural gaps found \u2014 you cover everything they do.");
+  } else {
+    parts.push(`${gaps.missing.length} gap(s) found.`);
+    if (crit.length) parts.push(`Critical: ${crit.join(", ")}.`);
+    if (high.length) parts.push(`High: ${high.join(", ")}.`);
+  }
+  if (gaps.advantages.length) parts.push(`Your edge: ${gaps.advantages.map((a) => a.label).join(", ")}.`);
+  return parts.join(" ");
+}
+function normalizeUrl(u) {
+  const t = (u || "").trim();
+  if (!t) return t;
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+}
+async function comparePages(opts) {
+  const targetUrl = normalizeUrl(opts.targetUrl);
+  const competitorUrls = (opts.competitorUrls ?? []).map(normalizeUrl).filter((u) => u.length > 0).slice(0, 30);
+  const [targetFetch, ...compFetches] = await Promise.all([
+    fetchPage(targetUrl),
+    ...competitorUrls.map((u) => fetchPage(u))
+  ]);
+  const target = extractStructure(targetUrl, targetFetch ?? { html: "", ms: 0, status: 0, ok: false, error: "no fetch" });
+  const competitors = competitorUrls.map(
+    (u, i) => extractStructure(u, compFetches[i] ?? { html: "", ms: 0, status: 0, ok: false, error: "no fetch" })
+  );
+  const gaps = analyzeGaps(target, competitors);
+  return {
+    target,
+    competitors,
+    missing: gaps.missing,
+    advantages: gaps.advantages,
+    parity: gaps.parity,
+    actionItems: generateActionItems(gaps.missing),
+    summary: generateSummary(target, competitors, gaps)
+  };
+}
+
+// src/head/pi-tool.ts
+function summarizeForCoder(report) {
+  const lines = [report.summary];
+  const page = (p) => `  \u2022 ${p.url} \u2014 ${p.ok ? `${p.sections.length} sections: ${p.sections.map((s) => s.type).join(", ")}` : `not readable (${p.note})`}`;
+  lines.push("Pages seen:");
+  lines.push(page(report.target));
+  for (const c of report.competitors) if (c.url !== report.target.url) lines.push(page(c));
+  if (report.missing.length) {
+    lines.push("Missing on the target (gaps to build):");
+    for (const g of report.missing.slice(0, 12)) lines.push(`  \u2022 ${g.label} (${g.priority}) \u2014 ${g.recommendation}`);
+  }
+  if (report.actionItems.length) {
+    lines.push("Suggested action items:");
+    for (const a of report.actionItems.slice(0, 12)) lines.push(`  \u2192 ${a.title} [${a.priority}/${a.effort}] \u2014 ${a.rationale}`);
+  }
+  return lines.join("\n");
+}
+var InspectSiteParams = Type2.Object({
+  url: Type2.String({ description: "The target website URL to inspect or rebuild from." }),
+  competitors: Type2.Optional(
+    Type2.Array(Type2.String(), { description: "Optional competitor/reference URLs to compare the target against." })
+  )
+});
+function registerHead(pi) {
+  pi.registerTool({
+    name: "inspect_site",
+    label: "ORIRO Head",
+    description: "Go out to a live website and SEE it: its sections, CTAs, structure, and any gaps versus competitor URLs. Returns a structured report to build from. Call this whenever the user wants to look at, compare against, or rebuild a website/page.",
+    parameters: InspectSiteParams,
+    async execute(_toolCallId, params) {
+      const target = params.url;
+      const competitors = params.competitors?.length ? params.competitors : [target];
+      const report = await comparePages({ targetUrl: target, competitorUrls: competitors });
+      return { content: [{ type: "text", text: summarizeForCoder(report) }], details: report };
     }
   });
 }
@@ -2859,6 +2905,7 @@ async function runRepl() {
         continue;
       }
       const english = await translateForCoder(line, lang);
+      noteUserInput(line);
       let out = "";
       const unsub = session.subscribe((e) => {
         if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
@@ -3247,9 +3294,12 @@ var heading = (s) => {
 ${bold(accent(s))}
 `);
 };
+var DieError = class extends Error {
+};
 function die(msg) {
   fail(msg);
-  process.exit(1);
+  process.exitCode = 1;
+  throw new DieError(msg);
 }
 
 // src/commands/routers.ts
@@ -4411,6 +4461,7 @@ var OriroChannelHost = class {
         if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") out += e.assistantMessageEvent.delta ?? "";
       });
       try {
+        noteUserInput(text);
         await session.prompt(text);
       } finally {
         unsub();
@@ -4725,6 +4776,7 @@ registerSkillsCommand(program);
 registerLanguageCommand(program);
 registerAvatarCommand(program);
 program.parseAsync().catch((e) => {
+  if (e instanceof DieError) return;
   process.stderr.write(`
 ORIRO error: ${e instanceof Error ? e.stack ?? e.message : String(e)}
 `);

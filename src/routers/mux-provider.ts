@@ -19,6 +19,7 @@ import { KEYLESS_FLOOR, routerModel, type KeylessRouter } from "./floor.js";
 import { resolvePool } from "./router-pool.js";
 import { applyIdentity, scrubMessageIdentity } from "../identity/filter.js";
 import { sanitizeMessageToolCalls, sanitizeEventToolCalls } from "./tool-sanitize.js";
+import { buildScribeContext } from "../scribe/scribe-pi.js";
 
 export const MUX_PROVIDER = "oriro-mux";
 export const MUX_MODEL = "oriro-free";
@@ -147,7 +148,13 @@ export function registerOriroMux(
     ],
     streamSimple: (_model, context, options) => {
       const out = createAssistantMessageEventStream();
-      void driveMux(out, mux, byId, applyIdentity(context), options);
+      // Harness-layer context: ORIRO identity + (if Scriber is on) the cross-session work history,
+      // injected into the system prompt so recall works inline — not dependent on the model
+      // choosing to call scribe_recall (weak free models often don't). Empty when Scriber is off.
+      const ctx = applyIdentity(context);
+      const memory = buildScribeContext();
+      const withMemory = memory ? { ...ctx, systemPrompt: `${ctx.systemPrompt}\n\n${memory}` } : ctx;
+      void driveMux(out, mux, byId, withMemory, options);
       return out;
     },
   });

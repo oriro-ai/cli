@@ -6,6 +6,7 @@
 import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { assembleOriroSession } from "../onboarding/assemble.js";
 import { scrubIdentity } from "../identity/filter.js";
+import { noteUserInput } from "../scribe/scribe-pi.js";
 
 export class OriroChannelHost {
   private session: AgentSession | null = null;
@@ -31,6 +32,7 @@ export class OriroChannelHost {
         if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") out += e.assistantMessageEvent.delta ?? "";
       });
       try {
+        noteUserInput(text); // journal the inbound message so the Scriber recalls it across sessions
         await session.prompt(text);
       } finally {
         unsub();

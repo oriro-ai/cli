@@ -8,6 +8,7 @@ import { stdin, stdout } from "node:process";
 import { banner } from "./ui/banner.js";
 import { isFirstRun, runOnboarding } from "./onboarding/wrapper.js";
 import { assembleOriroSession } from "./onboarding/assemble.js";
+import { noteUserInput } from "./scribe/scribe-pi.js";
 import { getTerminalLanguage, translateForCoder, translateForUser } from "./language/index.js";
 import { setupNllbTranslator } from "./language/nllb-translator.js";
 import { dim, accent } from "./ui/theme.js";
@@ -46,6 +47,7 @@ export async function runRepl(): Promise<void> {
       if (line === "/help" || line === "/?") { stdout.write(replHelp()); continue; }
 
       const english = await translateForCoder(line, lang); // user's language → English for the model
+      noteUserInput(line); // record the user's exact words so the Scriber journals them (recall across sessions)
       let out = "";
       const unsub = session.subscribe((e: { type: string; assistantMessageEvent?: { type: string; delta?: string } }) => {
         if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {

@@ -29,6 +29,20 @@ export function scribeTurn(input: ScribeTurnInput): void {
   supervisedCapture({ ts, date: ts.slice(0, 10), ...input });
 }
 
+// The caller (REPL / channel host) knows the user's exact input — Pi's session events don't
+// reliably surface it — so it records it here just before prompting; attachScribe pairs it with
+// the assistant reply on agent_end. Without this the journal/digest captured only the AI's reply,
+// so user-stated facts were never recalled across sessions.
+let pendingUserInput = "";
+export function noteUserInput(text: string): void {
+  pendingUserInput = text;
+}
+function takePendingUserInput(): string {
+  const u = pendingUserInput;
+  pendingUserInput = "";
+  return u;
+}
+
 /** No-fail injection: full-history timeline + rolling digest, read straight off disk
  *  (decoupled from writer health). Empty string when consent is off. */
 export function buildScribeContext(): string {
@@ -93,7 +107,8 @@ export function attachScribe(session: { subscribe: (l: (e: any) => void) => unkn
     if (e?.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") assistant += e.assistantMessageEvent.delta ?? "";
     if ((e?.type === "tool_call" || e?.type === "tool_execution_start") && e.toolName) tools.add(String(e.toolName));
     if (e?.type === "agent_end") {
-      scribeTurn({ user: user || undefined, router: "oriro-free", tools: [...tools], note: assistant.slice(0, 4000) || undefined });
+      const userText = takePendingUserInput() || user; // caller-supplied is authoritative; fall back to sniffed
+      scribeTurn({ user: userText || undefined, router: "oriro-free", tools: [...tools], note: assistant.slice(0, 4000) || undefined });
       user = "";
       assistant = "";
       tools.clear();
