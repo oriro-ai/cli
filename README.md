@@ -46,3 +46,36 @@ npm install && npm run build   # then: node dist/cli.js
 </details>
 
 > Built on [Pi](https://github.com/earendil-works/pi) (MIT). See `ATTRIBUTION.md` for full provenance.
+
+**ORIRO-Head:**
+
+Always in context; never forgets anything; scribes everything for you locally and present the router “REAL-TIME FOREVER”. 
+Goes to the URL → crawls it in a real browser (Playwright).
+Captures → full-page screenshot + the rendered HTML (page.content () the post-JS DOM, "what it saw").
+Reverse-engineers → feeds that HTML (+ the screenshot for visual context) to the coder model → clean, working code.
+Returns BOTH → {html: <what it saw>, screenshot, code: <clean reproduction>}.
+
+**Multi-Lingual** (99 Global Languages): 
+You can use your native language in terminal and it will explain in the default language to AI router in your terminal to build and work along with/for you in ORIRO-Terminal. 
+TWO-WAY VOICE LOOP LIVE.  (TTS) and hears (STT, with the free translate → English path for the coder).
+
+**Guardian V3** Security: Talk-to-setup MCP (Guardian companion)
+By TranzGuard.com, Financial Industry grade Live agentic threat analysis anomalous MCP payloads, crawler/Trojan/spam/3rd-party injection, behavioral detection.   
+Guardian V3 Lite is pure deterministic TypeScript regex injection patterns + IOC signatures + hidden- unicode ranges + heuristics. No weights, no tokenizer, no download. It's default-on by construction and it’s a Guardian, as deterministic detectors, not a downloadable model. Speed: Agentic, Deep.
+
+ORIRO MCP setup — guided Q&A, no JSON: it asks name, command/URL, args, env; builds the config for you.
+Guardian vets every server before it's saved (proven 5/5): blocks a malicious launch (curl | sh, obfuscated loader, env →URL exfil), asks-to-trust a new clean server, allows an already-trusted one — and remembers your "trust" so it won't re-ask.
+Type-check clean.
+As forward integration to base CLI Terminal of pi-mono foundation; we used same foundation and carry forwarded instead of backward efforts to build it backward bottom up. Thanks to the foundation work by pi-mono foundation, @Claude @KIMI and all other contributors. 
+
+We also added a fun factor in work for you: AVATAR you chose of your own in Terminal.
+A genuinely cool stack, a terminal coder that sees the web (ORIRO-Head: Crawl → Screenshot + HTML → Reverse-engineered code), Speaks/listens in 99 languages, guards itself (Guardian V3 Lite), and can wear a floating avatar that talks back in its own voice. All on-device.
+
+Permission cycle / Safety │ ✅ 4 modes: Shift+Tab → │ Postures │ Manual / Accept_Edits / Auto / Plan  
+Thinking-cycle → alt+shift+t
+
+**Safety - ORIRO floor baked in: Even Auto can't run what Guardian blocks (wipes/exfil/curl|sh)**
+
+"Auto" = don't-ask-for-low-risk, never run-anything; Plan = read-only
+“Indicators” ● Manual · ✎ Accept Edits · ⏵⏵Auto · ▢ Plan │ Type-check clean
+
