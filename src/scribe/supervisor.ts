@@ -5,7 +5,7 @@
 //              and (since each entry stays in the WAL until committed) recovers across
 //              crashes/restarts — no human, no LLM.
 // It NEVER throws to the caller: a scribe failure can never break the user's turn.
-import { captureTurn, type CaptureResult, type TurnRecord } from "./capture.js";
+import { captureTurn, redactRecord, type CaptureResult, type TurnRecord } from "./capture.js";
 import { recordFault, recordHealth } from "./health.js";
 import { walAppend, walCommit, walCompact, walPending } from "./wal.js";
 
@@ -42,17 +42,23 @@ export function supervisedCapture(rec: TurnRecord): CaptureResult | null {
   try {
     drainBacklog();
     const id = uid(rec.ts);
-    walAppend(id, rec);
+    // Redact BEFORE the WAL append — the WAL must never hold raw secrets (it persists the record
+    // for crash replay). Redaction is idempotent, so captureTurn re-redacting the same record is a
+    // no-op; replay stays correct.
+    const safe = redactRecord(rec).rec;
+    walAppend(id, safe);
     try {
-      const res = captureTurn(rec); // Primary
+      const res = captureTurn(safe); // Primary
       walCommit(id);
+      walCompact(); // prune the just-committed entry so the WAL never grows into a plaintext transcript
       recordHealth();
       return res;
     } catch (primaryErr) {
       recordFault("primary", primaryErr);
       try {
-        const res = captureTurn(rec); // Standby retry
+        const res = captureTurn(safe); // Standby retry
         walCommit(id);
+        walCompact();
         recordHealth();
         return res;
       } catch (standbyErr) {

@@ -73,21 +73,44 @@ function oneLineSummary(rec: TurnRecord): string {
   return bits.join(" · ") || "(activity)";
 }
 
+/** Redact EVERY raw field of a turn record ONCE, up front — BEFORE any truncation/summarization.
+ *  (Truncating/whitespace-collapsing first defeated the multiline private-key and long-token
+ *  patterns and leaked real key material into the digest/timeline/WAL.) Idempotent: re-redacting
+ *  an already-redacted record is a no-op, so the WAL can safely store the redacted form. */
+export function redactRecord(rec: TurnRecord): { rec: TurnRecord; redactions: RedactionSummary[] } {
+  const tally = new Map<string, number>();
+  const rd = (s: string | undefined): string | undefined => {
+    if (!s) return s;
+    const r = redact(s);
+    for (const x of r.redactions) tally.set(x.label, (tally.get(x.label) ?? 0) + x.count);
+    return r.text;
+  };
+  const safeRec: TurnRecord = {
+    ...rec,
+    user: rd(rec.user),
+    note: rd(rec.note),
+    router: rd(rec.router),
+    context: rd(rec.context),
+    files: rec.files?.map((f) => rd(f) ?? f),
+  };
+  return { rec: safeRec, redactions: [...tally.entries()].map(([label, count]) => ({ label, count })) };
+}
+
 /** Capture one turn into the journal + digest + timeline. Synchronous and durable. */
 export function captureTurn(rec: TurnRecord): CaptureResult {
-  const safe = redact(renderTurn(rec));
-  appendJournal(rec.date, `${safe.text}\n`);
+  const { rec: safeRec, redactions } = redactRecord(rec);
 
-  const summary = redact(`${rec.ts} · ${oneLineSummary(rec)}`).text;
-  updateDigest(summary, rec.context ? redact(rec.context).text : undefined);
-  updateTimeline(rec.date, redact(oneLineSummary(rec)).text);
+  const journal = renderTurn(safeRec);
+  appendJournal(rec.date, `${journal}\n`);
+  updateDigest(`${safeRec.ts} · ${oneLineSummary(safeRec)}`, safeRec.context);
+  updateTimeline(safeRec.date, oneLineSummary(safeRec));
 
-  // Self-audit: re-scan what we just wrote; flag (don't crash) if anything slipped.
-  const auditClean = !containsSecret(readJournal(rec.date));
+  // Self-audit across the stores we just wrote (journal AND digest), not just the journal.
+  const auditClean = !containsSecret(readJournal(rec.date)) && !containsSecret(readDigest() ?? "");
   return {
     journalDate: rec.date,
-    redactions: safe.redactions,
-    bytes: Buffer.byteLength(safe.text, "utf8"),
+    redactions,
+    bytes: Buffer.byteLength(journal, "utf8"),
     auditClean,
   };
 }

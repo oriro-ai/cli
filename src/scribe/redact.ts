@@ -39,6 +39,13 @@ const RULES: Rule[] = [
   { label: "aws-key", re: /AKIA[0-9A-Z]{16}/g },
   { label: "jwt", re: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{6,}/g },
   { label: "telegram-token", re: /\b\d{8,10}:[A-Za-z0-9_-]{30,}\b/g },
+  // Auth headers / inline credentials (any provider) — the audit found these leaked.
+  { label: "bearer-token", re: /\bbearer\s+[A-Za-z0-9._~+/=-]{12,}/gi },
+  { label: "basic-auth", re: /\bbasic\s+[A-Za-z0-9+/=]{12,}/gi },
+  // key: value / key=value secrets (password, token, secret, api_key, access_key, …).
+  { label: "secret-kv", re: /\b(?:pass(?:word|wd)?|pwd|secret|token|api[_-]?key|access[_-]?key|auth)\s*[:=]\s*\S{3,}/gi },
+  // Credentials embedded in a URL: scheme://user:PASSWORD@host  → redact the password.
+  { label: "url-credential", re: /\b([a-z][a-z0-9+.-]*:\/\/[^/\s:@]+:)[^/\s@]+(@)/gi },
   { label: "email", re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g },
   { label: "phone", re: /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}/g },
 ];
@@ -63,7 +70,7 @@ function entropy(s: string): number {
 // mixed-charset tokens. Excludes pure-hex (git SHAs/hashes are useful, not secret)
 // and anything already containing a redaction marker.
 function looksLikeUnknownSecret(token: string): boolean {
-  if (token.length < 40) return false;
+  if (token.length < 32) return false; // real bearer/session tokens are frequently 32–39 chars
   if (token.includes("⟨REDACTED:")) return false;
   if (/^[0-9a-f]+$/i.test(token)) return false; // hex hashes/SHAs — not secrets
   // Need ≥2 distinct charset classes — catches all-UPPERCASE+digit tokens (e.g. some API/bot

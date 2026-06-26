@@ -404,6 +404,12 @@ ${typeof params === "string" ? params : JSON.stringify(params ?? "")}`;
   if (hasHiddenUnicode(blob)) return { safe: false, threat: "hidden_unicode" };
   return { safe: true };
 }
+function scanExecCommand(text) {
+  const ioc = firstIOC(text);
+  if (ioc) return { safe: false, threat: ioc };
+  if (hasHiddenUnicode(text)) return { safe: false, threat: "hidden_unicode" };
+  return { safe: true };
+}
 
 // src/guardian/rules.ts
 var block = (rule, reason, severity = "critical") => ({
@@ -420,163 +426,213 @@ var ask = (rule, reason, severity = "warning") => ({
 });
 var cmdOf = (c) => (c.command ?? "").toLowerCase();
 var norm = (s) => s.replace(/\s+/g, " ").trim();
-function isDangerousRm(cmd) {
-  if (!/\brm\b/i.test(cmd)) return false;
-  const hasRecursive = /(?:^|\s)-[a-z]*r/i.test(cmd) || /--recursive\b/i.test(cmd);
-  const hasForce = /(?:^|\s)-[a-z]*f/i.test(cmd) || /--force\b/i.test(cmd);
-  if (!hasRecursive || !hasForce) return false;
-  if (/--no-preserve-root\b/i.test(cmd)) return true;
-  if (/(?:\s|^)(\/|~|\.|\*|\$home)(?:\s|$)/i.test(cmd)) return true;
-  return /(?:\s|^)\/(etc|usr|bin|sbin|var|boot|lib|lib64|sys|proc|dev|root|home|opt|windows|system32)(?:[\\/]|\s|$)/i.test(
-    cmd
-  );
+var anyMatch = (patterns, text) => patterns.some((re) => re.test(text));
+var stripQuotes = (t) => t.replace(/^['"]+/, "").replace(/['"]+$/, "");
+function statements(cmd) {
+  return cmd.split(/(?:&&|\|\||[;|&\n])+/g).map((s) => s.trim()).filter(Boolean);
 }
+function words(stmt) {
+  return stmt.split(/\s+/).map(stripQuotes).filter(Boolean);
+}
+function commandWord(stmt) {
+  const w = words(stmt);
+  let i = 0;
+  while (i < w.length && /^(sudo|nohup|nice|time|exec|command|builtin|then|do|else)$/i.test(w[i] ?? "")) i++;
+  if (i < w.length && /^env$/i.test(w[i] ?? "")) {
+    i++;
+    while (i < w.length && /^[\w.]+=/.test(w[i] ?? "")) i++;
+  }
+  while (i < w.length && /^[\w.]+=/.test(w[i] ?? "")) i++;
+  return (w[i] ?? "").replace(/^.*[\\/]/, "").toLowerCase();
+}
+var SYS_DIR = "(etc|usr|bin|sbin|var|boot|lib|lib64|sys|proc|dev|root|opt|windows|system32|library|applications)";
+function classifyRmTarget(raw) {
+  let t = stripQuotes(raw).trim();
+  if (!t || t.startsWith("-")) return "safe";
+  t = t.replace(/\$\{?home\}?/gi, "~");
+  if (/^(\/|\/\*|~|~\/|~\/\*|\.|\.\/|\.\/\*|\*|\.\*)$/.test(t)) return "danger";
+  if (new RegExp(`^/${SYS_DIR}(/\\*?)?$`, "i").test(t)) return "danger";
+  if (/^\/home(\/[^/]+)?\/?\*?$/i.test(t)) return "danger";
+  if (new RegExp(`^/${SYS_DIR}/.+`, "i").test(t)) return "system-sub";
+  return "safe";
+}
+function rmVerdict(stmt) {
+  const cw = commandWord(stmt);
+  if (cw !== "rm") return null;
+  const w = words(stmt);
+  const flags = w.filter((x) => x.startsWith("-")).join(" ");
+  const recursive = /(^|[^-])-[a-z]*r/i.test(" " + flags) || /--recursive\b/i.test(flags);
+  const force = /(^|[^-])-[a-z]*f/i.test(" " + flags) || /--force\b/i.test(flags);
+  const noPreserve = /--no-preserve-root\b/i.test(flags);
+  if (!recursive || !force) return null;
+  if (noPreserve) return block("fs-destruction", "Recursive force-delete with --no-preserve-root");
+  const targets = w.slice(1).filter((x) => !x.startsWith("-")).map(classifyRmTarget);
+  if (targets.includes("danger")) return block("fs-destruction", "Recursive force-delete of root/home/cwd/system path");
+  if (targets.includes("system-sub")) return ask("fs-destruction", "Recursive force-delete inside a system directory");
+  return null;
+}
+var DISK = "(sd|nvme|disk|hd|vd|xvd|mmcblk|loop)";
 var FS_DESTRUCTION = [
-  /\bmkfs\.?\w*\s+\/dev\//i,
+  new RegExp(`\\bmkfs\\.?\\w*\\s+/dev/${DISK}`, "i"),
   // reformat a disk
-  /\bdd\s+.*\bof=\/dev\/(sd|nvme|disk|hd)/i,
+  new RegExp(`\\bdd\\b[^\\n]*\\bof=/dev/${DISK}`, "i"),
   // overwrite raw disk
-  /\b(shutdown|reboot|halt|poweroff)\b/i,
-  // host disruption
+  new RegExp(`>\\s*/dev/${DISK}\\w`, "i"),
+  // redirect over raw disk
   /:\s*\(\s*\)\s*\{\s*:\s*\|\s*:\s*&\s*\}\s*;\s*:/,
-  // fork bomb :(){ :|:& };:
-  /\bremove-item\b.*-recurse.*-force.*[\\\/](windows|system32|users)\b/i,
+  // fork bomb
+  /\bremove-item\b.*-recurse.*-force.*[\\/](windows|system32|users)\b/i,
   // PS recursive wipe
   /\b(format|cipher\s+\/w)\b.*[a-z]:\\?/i,
   // windows format / wipe-free-space
-  />\s*\/dev\/(sd|nvme|disk|hd)\w/i
-  // redirect over raw disk
+  /\bfind\b[^\n]*\s(-delete\b|-exec\s+rm\b)/i,
+  // find … -delete / -exec rm
+  /\bshred\b\s+(-|\S*\/dev\/)/i,
+  // shred a device/file destructively
+  new RegExp(`\\btruncate\\b[^\\n]*\\s/dev/${DISK}`, "i"),
+  // truncate a device
+  /\bmv\b[^\n]*\s\/dev\/null\b/i,
+  // mv important → /dev/null
+  /\bchmod\b\s+-[a-z]*r[a-z]*\s+0{3,4}\b/i,
+  // chmod -R 000 (strip all perms recursively)
+  /\bwipefs\b/i
 ];
+var HOST_DISRUPT = /* @__PURE__ */ new Set(["shutdown", "reboot", "halt", "poweroff"]);
+var FETCH = "(curl|wget|fetch|httpie)";
+var SHELL = "(sh|bash|zsh|dash|ksh|sudo\\s+sh|sudo\\s+bash|python\\d?|node|perl|ruby|php)";
 var REMOTE_EXEC = [
-  /\b(curl|wget|fetch)\b[^\n|]*\|\s*(sudo\s+)?(sh|bash|zsh|python\d?|node|perl|ruby)\b/i,
+  new RegExp(`\\b${FETCH}\\b[^\\n|]*\\|\\s*(sudo\\s+)?${SHELL}\\b`, "i"),
   // curl … | sh
+  new RegExp(`(?:^|[\\s;&|(])(bash|sh|zsh|ksh|source|\\.)\\s+<\\s*\\(\\s*${FETCH}`, "i"),
+  // sh <(curl) / . <(curl)
+  new RegExp(`\\b(bash|sh|zsh|ksh|eval)\\b[^\\n]*\\$\\(\\s*${FETCH}\\b`, "i"),
+  // bash -c "$(curl)"
+  new RegExp(`\\$\\(\\s*${FETCH}\\b[^)]*\\)`, "i"),
+  // bare $(curl …) substitution
+  /`\s*(curl|wget|fetch)\b/i,
+  // backtick `curl`
   /\b(irm|iwr|invoke-webrequest|invoke-restmethod)\b[^\n|]*\|\s*(iex|invoke-expression)/i,
   // PS download|iex
   /\biex\b\s*\(\s*(new-object\s+net\.webclient|.*downloadstring)/i,
   // iex(New-Object Net.WebClient…)
-  /\bbash\s+<\s*\(\s*(curl|wget)/i,
-  // bash <(curl …)
-  /\beval\b[^\n]*\$\(\s*(curl|wget|fetch)\b/i,
-  // eval "$(curl …)"
-  /\bpython\d?\s+-c\b[^\n]*urllib|requests\.get[^\n]*exec\(/i,
-  // python one-liner fetch+exec
-  /\b(base64\s+(-d|--decode)|xxd\s+-r|openssl\s+enc\s+-d)\b[^\n|]*\|\s*(sudo\s+)?(sh|bash|zsh|python\d?|node|perl|ruby)\b/i
-  // decode-then-exec (obfuscated loader)
+  /\bpython\d?\s+-c\b[^\n]*(urllib|requests|httpx|socket|os\.system|subprocess|exec\(|eval\()/i,
+  // python -c fetch/exec
+  /\b(perl|ruby|node|php)\s+-(e|r)\b[^\n]*(http|socket|system|exec|eval|fsockopen|downloadstring)/i,
+  // perl/ruby/node/php -e RCE
+  /\b(base64\s+(-d|--decode)|xxd\s+-r|openssl\s+enc\s+-d)\b[^\n|]*\|\s*(sudo\s+)?(sh|bash|zsh|python\d?|node|perl|ruby)\b/i,
+  // decode|sh
+  new RegExp(`\\b${FETCH}\\b[^\\n]*\\s-[a-z]*[oO]\\b[^\\n]*&&[^\\n]*(chmod\\s+\\+x|\\./|\\bsh\\b|\\bbash\\b)`, "i")
+  // download then exec
 ];
 var REVERSE_SHELL = [
-  /\bnc\b\s+(-[a-z]*e|.*-e\s+\/bin\/(sh|bash))/i,
-  // nc -e /bin/sh
+  /\b(nc|ncat|netcat)\b[^\n]*\s-[a-z]*e\b/i,
+  // nc/ncat -e
   /\b(ncat|socat)\b[^\n]*exec[: ]/i,
   // socat … exec:
-  /\b(bash|sh)\s+-i\b[^\n]*>&?\s*\/dev\/tcp\//i,
+  /\bsocat\b[^\n]*tcp[:-][^\n]*exec/i,
+  // socat tcp … exec
+  /\b(bash|sh|zsh)\s+-i\b[^\n]*>&?\s*\/dev\/tcp\//i,
   // bash -i >& /dev/tcp/…
-  /\/dev\/(tcp|udp)\/\d{1,3}(\.\d{1,3}){3}\//,
-  // /dev/tcp/<ip>/
-  /\bpython\d?\b[^\n]*socket\.socket[^\n]*subprocess|pty\.spawn/i
+  /\/dev\/(tcp|udp)\/[\w.\-]+\/\d+/i,
+  // /dev/tcp/<host-or-ip>/<port>
+  /\bpython\d?\b[^\n]*socket\.socket[^\n]*(subprocess|pty\.spawn|exec)/i,
   // python reverse shell
+  /\b(perl|php|ruby)\b[^\n]*(fsockopen|socket)[^\n]*(exec|system|\/bin\/(sh|bash))/i,
+  // perl/php/ruby reverse shell
+  /\bmkfifo\b[^\n]*(\bnc\b|\bncat\b)/i
+  // mkfifo backpipe
 ];
-var SECRET_PATHS = /(\.ssh\/id_|\.ssh\/.*_rsa|\.aws\/credentials|\.oriro\/credentials|\.config\/gcloud|\.env(\.|\b)|\.netrc|id_ed25519|\.kube\/config|wallet\.dat|\.gnupg\/)/i;
-var NET_SINK = /\b(curl|wget|nc|ncat|socat|scp|rsync|ftp|tftp|invoke-webrequest|invoke-restmethod)\b/i;
+var SECRET_PATHS = /(\.ssh(\/|\b)|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws[\\/]|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker[\\/]config|\.git-credentials|\.kube[\\/]config|wallet\.dat|\.gnupg[\\/]|cookies(\.sqlite)?|login\s*data)/i;
+var NET_SINK = /\b(curl|wget|nc|ncat|netcat|socat|scp|rsync|ftp|tftp|invoke-webrequest|invoke-restmethod)\b/i;
 var ENV_EXFIL = [
   /\$\(\s*(printenv|env)\b/i,
-  // $(printenv X) / $(env) substitution
+  // $(printenv X) / $(env)
   /\bprintenv\b/i,
-  // printenv … (env dump — paired with a net sink below = exfil)
+  // printenv … (paired with a net sink below = exfil)
   /\benv\s*\|/i,
-  // env | … (piping the whole environment)
+  // env | …
   /\$\(\s*cat\b[^)]*(\.ssh|\.aws|\.env|\.netrc|credential|secret|token|id_rsa|id_ed25519)/i
   // $(cat <secret>)
 ];
+var ENV_VAR_IN_BODY = /\s--?(d|data|data-binary|data-raw|form|post|body|upload-file)\b[^\n]*\$\{?\w*(secret|token|api[_-]?key|password|passwd|credential|aws_)\w*\}?/i;
 var PERSISTENCE = [
   /\bcrontab\b\s+(-|\S+)/i,
-  // crontab install
   />>?\s*~?\/?\.(bashrc|zshrc|bash_profile|profile|zprofile)\b/i,
-  // append to shell rc
+  />>?[^\n]*\.ssh[\\/]authorized_keys/i,
+  // implant an SSH key (backdoor)
   /\b(launchctl\s+load|systemctl\s+enable|sc\s+create|new-service)\b/i,
-  // service install
   /\bregistry::|reg\s+add\b.*\\run\b/i,
-  // windows Run key persistence
-  /[\\\/]start menu[\\\/]programs[\\\/]startup[\\\/]/i,
-  // windows startup folder
+  /[\\/]start menu[\\/]programs[\\/]startup[\\/]/i,
   /\bschtasks\b\s+\/create/i
-  // scheduled task
 ];
 var GUARDIAN_TAMPER = [
   /\boriro\b.*\bguardian\b.*\b(disable|off|stop|uninstall)\b/i,
-  // disable Guardian via command
-  /[\\\/]\.oriro[\\\/]guardian/i
-  // direct write to Guardian's own config/state
+  /[\\/]\.oriro[\\/]guardian/i,
+  // direct path to Guardian's config/state
+  /\bguardian\.json\b/i
+  // any write referencing guardian.json (cd … && > guardian.json)
 ];
 var TAMPER = [
   /\bchmod\s+-?\s*0?777\b/i,
-  // world-writable
   /\b(ufw|firewall-cmd|iptables)\b.*\b(disable|stop|flush|-f)\b/i,
-  // firewall down
   /\bset-mppreference\b.*-disable/i,
-  // disable Defender
   /\bhistory\s+-c\b|\bunset\s+histfile\b|>\s*~?\/?\.bash_history/i
-  // wipe history
 ];
 var MALWARE = [
   /\b(xmrig|minerd|cgminer|cpuminer|stratum\+tcp)\b/i,
   /\b(nanopool|minexmr|supportxmr|pool\.minexmr)\b/i
 ];
-function anyMatch(patterns, text) {
-  return patterns.some((re) => re.test(text));
-}
 var DEFAULT_RULES = [
   {
     id: "fs-destruction",
-    description: "Block recursive deletes of root/home, disk reformats, fork bombs, host shutdown.",
+    description: "Block recursive deletes of root/home/system paths, disk reformats, fork bombs, host shutdown.",
     match: (c) => {
-      const cmd = norm(cmdOf(c));
-      return isDangerousRm(cmd) || anyMatch(FS_DESTRUCTION, cmd) ? block("fs-destruction", "Destructive filesystem/system operation") : null;
+      const raw = cmdOf(c);
+      const cmd = norm(raw);
+      for (const stmt of statements(cmd)) {
+        const v = rmVerdict(stmt);
+        if (v) return v;
+        if (HOST_DISRUPT.has(commandWord(stmt))) return block("fs-destruction", "Host shutdown/reboot");
+      }
+      return anyMatch(FS_DESTRUCTION, cmd) ? block("fs-destruction", "Destructive filesystem/system operation") : null;
     }
   },
   {
     id: "remote-code-exec",
-    description: "Block pull-and-run of remote code (curl|sh, iex(downloadString), bash <(curl)).",
+    description: "Block pull-and-run of remote code (curl|sh, $(curl), sh <(curl), bash -c $(curl), decode|sh).",
     match: (c) => anyMatch(REMOTE_EXEC, norm(cmdOf(c))) ? block("remote-code-exec", "Downloading and executing remote code") : null
   },
   {
     id: "reverse-shell",
-    description: "Block reverse shells / remote backdoors (nc -e, /dev/tcp, socat exec).",
+    description: "Block reverse shells / remote backdoors (nc -e, /dev/tcp/<host>, socat exec, mkfifo backpipe).",
     match: (c) => anyMatch(REVERSE_SHELL, norm(cmdOf(c))) ? block("reverse-shell", "Opening a reverse shell / remote backdoor") : null
   },
   {
     id: "secret-exfiltration",
-    description: "Block reading a credential/key file and piping it off the machine.",
+    description: "Block reading a credential/key file or env secret and sending it off the machine.",
     match: (c) => {
       const cmd = norm(cmdOf(c));
-      if (cmd && SECRET_PATHS.test(cmd) && NET_SINK.test(cmd)) {
-        return block("secret-exfiltration", "Reading secrets and sending them off the machine");
-      }
+      if (!cmd || !NET_SINK.test(cmd)) return null;
+      if (SECRET_PATHS.test(cmd)) return block("secret-exfiltration", "Reading secrets and sending them off the machine");
+      if (anyMatch(ENV_EXFIL, cmd) || ENV_VAR_IN_BODY.test(cmd)) return block("secret-exfiltration", "Sending environment variables / secrets off the machine");
       return null;
     }
   },
   {
-    id: "env-exfiltration",
-    description: "Block dumping env vars / secret files into a network request (curl \u2026$(printenv SECRET)).",
+    id: "persistence",
+    description: "Block SSH-key implants; flag cron/rc/startup/service edits used for Trojan persistence.",
     match: (c) => {
       const cmd = norm(cmdOf(c));
-      return cmd && NET_SINK.test(cmd) && anyMatch(ENV_EXFIL, cmd) ? block("env-exfiltration", "Sending environment variables / secret files off the machine") : null;
+      if (/>>?[^\n]*\.ssh[\\/]authorized_keys/i.test(cmd)) return block("persistence", "Implanting an SSH key (backdoor)");
+      return anyMatch(PERSISTENCE, cmd) ? ask("persistence", "Installing a persistent foothold (cron/startup/service)") : null;
     }
-  },
-  {
-    id: "persistence",
-    description: "Flag cron/rc/startup/service edits used for Trojan persistence.",
-    match: (c) => anyMatch(PERSISTENCE, norm(cmdOf(c))) ? ask("persistence", "Installing a persistent foothold (cron/startup/service)") : null
   },
   {
     id: "guardian-self-defense",
     description: "Block any attempt to disable, uninstall, or rewrite Guardian's own config/state.",
     match: (c) => {
-      if (anyMatch(GUARDIAN_TAMPER, norm(cmdOf(c)))) {
-        return block("guardian-self-defense", "Attempt to disable or tamper with Guardian itself");
-      }
-      if (c.paths?.some((p) => /[\\/]\.oriro[\\/]guardian/i.test(p))) {
-        return block("guardian-self-defense", "Direct write to Guardian's own config/state");
-      }
+      if (anyMatch(GUARDIAN_TAMPER, norm(cmdOf(c)))) return block("guardian-self-defense", "Attempt to disable or tamper with Guardian itself");
+      if (c.paths?.some((p) => /[\\/]\.oriro[\\/]guardian/i.test(p))) return block("guardian-self-defense", "Direct write to Guardian's own config/state");
       return null;
     }
   },
@@ -592,9 +648,10 @@ var DEFAULT_RULES = [
   },
   {
     id: "v3lite",
-    description: "Guardian V3 Lite: prompt-injection + IOC catalog (exfil/dropper/obfuscated-loader/RCE-pipe) + hidden-unicode scan on the tool call.",
+    description: "Guardian V3 Lite on the tool call: IOC catalog + hidden-unicode (exec); + injection scan for untrusted MCP params.",
     match: (c) => {
-      const r = scanToolCall(c.toolName, c.command ?? "", c.params);
+      const r = c.kind === "mcp" ? scanToolCall(c.toolName, c.command ?? "", c.params) : scanExecCommand(`${c.toolName}
+${c.command ?? ""}`);
       return r.safe ? null : block("v3lite", `Guardian V3 Lite flagged ${r.threat}`);
     }
   },
@@ -604,8 +661,7 @@ var DEFAULT_RULES = [
     match: (c) => {
       if (c.kind !== "fs" || !c.paths?.length) return null;
       const hit = c.paths.find(
-        (p) => SECRET_PATHS.test(p) || /[\\\/]\.ssh[\\\/]/i.test(p) || // any write into ~/.ssh (e.g. authorized_keys = backdoor)
-        /[\\\/](etc|boot|sys|windows[\\\/]system32)[\\\/]/i.test(p)
+        (p) => SECRET_PATHS.test(p) || /[\\/]\.ssh[\\/]/i.test(p) || /[\\/](etc|boot|sys|windows[\\/]system32)[\\/]/i.test(p)
       );
       return hit ? ask("sensitive-path-write", `Writing to a sensitive location: ${hit}`) : null;
     }
@@ -1722,6 +1778,13 @@ var RULES = [
   { label: "aws-key", re: /AKIA[0-9A-Z]{16}/g },
   { label: "jwt", re: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{6,}/g },
   { label: "telegram-token", re: /\b\d{8,10}:[A-Za-z0-9_-]{30,}\b/g },
+  // Auth headers / inline credentials (any provider) — the audit found these leaked.
+  { label: "bearer-token", re: /\bbearer\s+[A-Za-z0-9._~+/=-]{12,}/gi },
+  { label: "basic-auth", re: /\bbasic\s+[A-Za-z0-9+/=]{12,}/gi },
+  // key: value / key=value secrets (password, token, secret, api_key, access_key, …).
+  { label: "secret-kv", re: /\b(?:pass(?:word|wd)?|pwd|secret|token|api[_-]?key|access[_-]?key|auth)\s*[:=]\s*\S{3,}/gi },
+  // Credentials embedded in a URL: scheme://user:PASSWORD@host  → redact the password.
+  { label: "url-credential", re: /\b([a-z][a-z0-9+.-]*:\/\/[^/\s:@]+:)[^/\s@]+(@)/gi },
   { label: "email", re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g },
   { label: "phone", re: /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}/g }
 ];
@@ -1739,7 +1802,7 @@ function entropy(s) {
   return h;
 }
 function looksLikeUnknownSecret(token) {
-  if (token.length < 40) return false;
+  if (token.length < 32) return false;
   if (token.includes("\u27E8REDACTED:")) return false;
   if (/^[0-9a-f]+$/i.test(token)) return false;
   const classes = (/[a-z]/.test(token) ? 1 : 0) + (/[A-Z]/.test(token) ? 1 : 0) + (/[0-9]/.test(token) ? 1 : 0);
@@ -1832,18 +1895,36 @@ function oneLineSummary(rec) {
   if (rec.note) bits.push(rec.note.replace(/\s+/g, " ").slice(0, 60));
   return bits.join(" \xB7 ") || "(activity)";
 }
+function redactRecord(rec) {
+  const tally = /* @__PURE__ */ new Map();
+  const rd = (s) => {
+    if (!s) return s;
+    const r = redact(s);
+    for (const x of r.redactions) tally.set(x.label, (tally.get(x.label) ?? 0) + x.count);
+    return r.text;
+  };
+  const safeRec = {
+    ...rec,
+    user: rd(rec.user),
+    note: rd(rec.note),
+    router: rd(rec.router),
+    context: rd(rec.context),
+    files: rec.files?.map((f) => rd(f) ?? f)
+  };
+  return { rec: safeRec, redactions: [...tally.entries()].map(([label, count]) => ({ label, count })) };
+}
 function captureTurn(rec) {
-  const safe = redact(renderTurn(rec));
-  appendJournal(rec.date, `${safe.text}
+  const { rec: safeRec, redactions } = redactRecord(rec);
+  const journal = renderTurn(safeRec);
+  appendJournal(rec.date, `${journal}
 `);
-  const summary = redact(`${rec.ts} \xB7 ${oneLineSummary(rec)}`).text;
-  updateDigest(summary, rec.context ? redact(rec.context).text : void 0);
-  updateTimeline(rec.date, redact(oneLineSummary(rec)).text);
-  const auditClean = !containsSecret(readJournal(rec.date));
+  updateDigest(`${safeRec.ts} \xB7 ${oneLineSummary(safeRec)}`, safeRec.context);
+  updateTimeline(safeRec.date, oneLineSummary(safeRec));
+  const auditClean = !containsSecret(readJournal(rec.date)) && !containsSecret(readDigest() ?? "");
   return {
     journalDate: rec.date,
-    redactions: safe.redactions,
-    bytes: Buffer.byteLength(safe.text, "utf8"),
+    redactions,
+    bytes: Buffer.byteLength(journal, "utf8"),
     auditClean
   };
 }
@@ -1990,17 +2071,20 @@ function supervisedCapture(rec) {
   try {
     drainBacklog();
     const id = uid(rec.ts);
-    walAppend(id, rec);
+    const safe = redactRecord(rec).rec;
+    walAppend(id, safe);
     try {
-      const res = captureTurn(rec);
+      const res = captureTurn(safe);
       walCommit(id);
+      walCompact();
       recordHealth();
       return res;
     } catch (primaryErr) {
       recordFault("primary", primaryErr);
       try {
-        const res = captureTurn(rec);
+        const res = captureTurn(safe);
         walCommit(id);
+        walCompact();
         recordHealth();
         return res;
       } catch (standbyErr) {

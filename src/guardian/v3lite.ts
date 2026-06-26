@@ -167,6 +167,18 @@ export function scanToolCall(name: string, description: string, params: unknown)
 /** Alias matching the worker/CLI call-site name (scanMCPCall === scanToolCall). */
 export const scanMCPCall = scanToolCall;
 
+/** Scan an EXEC command (the operator's own command line): IOC catalog + hidden-unicode ONLY.
+ *  Prompt-injection patterns are deliberately NOT applied here — the operator's command is
+ *  trusted input, and injection-shaped strings in a legit arg (e.g. a git commit message
+ *  "ignore all previous instructions in the old TODO") must not be blocked. Injection scanning
+ *  belongs on UNTRUSTED input — see scanFileInput (file/web/paste) and scanToolCall (MCP params). */
+export function scanExecCommand(text: string): ScanResult {
+  const ioc = firstIOC(text);
+  if (ioc) return { safe: false, threat: ioc };
+  if (hasHiddenUnicode(text)) return { safe: false, threat: "hidden_unicode" };
+  return { safe: true };
+}
+
 /** Score a completed prompt/response pair (system-prompt leak / echoed injection / empty answer). */
 export function scoreInteractionPair(prompt: string, response: string): ScoreResult {
   const flags: string[] = [];
