@@ -25,6 +25,16 @@ export function listConnectors(category?: string): readonly ConnectorEntry[] {
   return category ? CONNECTOR_CATALOG.filter((c) => c.category === category) : CONNECTOR_CATALOG;
 }
 
+/** The distinct connector categories in the catalog (for validating a `list <category>` filter). */
+export function connectorCategories(): string[] {
+  return [...new Set(CONNECTOR_CATALOG.map((c) => c.category))].sort();
+}
+
+/** True if the slug is currently in the user's added list. */
+export function isConnectorAdded(slug: string): boolean {
+  return readAdded().includes(slug);
+}
+
 export interface AddConnectorResult {
   ok: boolean;
   error?: string;
@@ -46,6 +56,10 @@ export function addedConnectors(): ConnectorEntry[] {
   return CONNECTOR_CATALOG.filter((c) => added.has(c.slug));
 }
 
-export function removeConnector(slug: string): void {
-  writeAdded(readAdded().filter((s) => s !== slug));
+/** Remove a connector from the added list. Returns true if it was actually present. */
+export function removeConnector(slug: string): boolean {
+  const before = readAdded();
+  if (!before.includes(slug)) return false;
+  writeAdded(before.filter((s) => s !== slug));
+  return true;
 }

@@ -4,7 +4,7 @@
 //   add <slug>        → validate + record (inert)
 //   remove <slug>     → drop it
 import type { Command } from "commander";
-import { listConnectors, addConnector, removeConnector, addedConnectors } from "../connectors/connectors.js";
+import { listConnectors, addConnector, removeConnector, addedConnectors, connectorCategories } from "../connectors/connectors.js";
 import { ok, info, heading, die } from "./ui.js";
 import { accent, dim } from "../ui/theme.js";
 
@@ -15,6 +15,10 @@ export function registerConnectorsCommand(program: Command): void {
     .command("list [category]")
     .description("list the connector catalog (optionally filtered by category)")
     .action((category?: string) => {
+      if (category && !connectorCategories().includes(category)) {
+        info(`unknown category '${category}' — categories: ${connectorCategories().join(", ")}`);
+        return;
+      }
       const entries = listConnectors(category);
       const added = new Set(addedConnectors().map((c) => c.slug));
       heading(category ? `Connectors · ${category}` : "Connectors");
@@ -38,7 +42,7 @@ export function registerConnectorsCommand(program: Command): void {
     .command("remove <slug>")
     .description("remove a connector")
     .action((slug: string) => {
-      removeConnector(slug);
-      ok(`removed ${accent(slug)}`);
+      if (removeConnector(slug)) ok(`removed ${accent(slug)}`);
+      else info(`'${slug}' is not in your added list — nothing to remove`);
     });
 }

@@ -10,7 +10,18 @@ import { isFirstRun, runOnboarding } from "./onboarding/wrapper.js";
 import { assembleOriroSession } from "./onboarding/assemble.js";
 import { getTerminalLanguage, translateForCoder, translateForUser } from "./language/index.js";
 import { setupNllbTranslator } from "./language/nllb-translator.js";
-import { dim } from "./ui/theme.js";
+import { dim, accent } from "./ui/theme.js";
+
+/** In-REPL help — real, not LLM-fabricated. Lists the chat-loop commands and the shell subcommands. */
+function replHelp(): string {
+  return (
+    `\n  ${accent("ORIRO terminal — help")}\n` +
+    `  ${dim("Just type to chat; ORIRO writes and runs code for you (keyless, free).")}\n\n` +
+    `  ${accent("/help")}  this help     ${accent("/exit")} or ${accent("/quit")}  leave     ${dim("Ctrl-D / Ctrl-C also exit")}\n` +
+    `  ${dim("Run these OUTSIDE the chat (in your shell):")}\n` +
+    `  ${dim("oriro skills · routers · connectors · channels · scribe · language · avatar")}\n\n`
+  );
+}
 
 export async function runRepl(): Promise<void> {
   if (isFirstRun()) await runOnboarding();
@@ -32,6 +43,7 @@ export async function runRepl(): Promise<void> {
       }
       if (!line) continue;
       if (line === "/exit" || line === "/quit") break;
+      if (line === "/help" || line === "/?") { stdout.write(replHelp()); continue; }
 
       const english = await translateForCoder(line, lang); // user's language → English for the model
       let out = "";

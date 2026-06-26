@@ -4,9 +4,14 @@
 // and what the smoke gate exercises); `--all` lists every language. Local-only, reversible.
 import type { Command } from "commander";
 import { stdin } from "node:process";
-import { LANGUAGES, languageByCode, getTerminalLanguage, setTerminalLanguage, selectLanguageInteractive } from "../language/index.js";
+import { LANGUAGES, languageByCode, getTerminalLanguage, setTerminalLanguage, selectLanguageInteractive, type OriroLanguage } from "../language/index.js";
 import { ok, info, heading, die } from "./ui.js";
 import { accent, dim } from "../ui/theme.js";
+
+/** Resolve a language by ISO code OR by (case-insensitive) English name — what the help promises. */
+function resolveLanguage(input: string): OriroLanguage | undefined {
+  return languageByCode(input) ?? LANGUAGES.find((l) => l.name.toLowerCase() === input.trim().toLowerCase());
+}
 
 export function registerLanguageCommand(program: Command): void {
   program
@@ -24,7 +29,7 @@ export function registerLanguageCommand(program: Command): void {
         return;
       }
       if (code) {
-        const lang = languageByCode(code);
+        const lang = resolveLanguage(code);
         if (!lang) die(`unknown language '${code}' — run \`oriro language --all\` to see the list`);
         setTerminalLanguage(lang);
         ok(`${accent(lang.name)} is now your terminal language.`);

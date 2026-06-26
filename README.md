@@ -2,21 +2,25 @@
 
 # ORIRO‑Terminal - **“Head | Memory | Eyeball for AI”**
 
-# **FREE TIER | BYOK** | **Works in 100 Languages | Live Security Gaurdian-V3 (MCP Watch)**
+# **FREE · KEYLESS · BYOK** | **Works in 100 Languages | Deterministic Security Guardian V3**
 
-A terminal coder that **sees the web**, **speaks and listens in 100 languages**, **guards itself**, and can wear a **floating avatar that talks back in its own voice** — all on‑device.
-
-A free, on-device-friendly terminal AI agent — built on the Pi agent harness (used as a library).
+A free, keyless terminal AI coder — built on the Pi agent harness (used as a library).
+It **writes and runs code** from a pool of free routers, works in **your language**, **guards every action**,
+can **inspect a live site's structure**, and greets you with an **avatar in its own on-device voice**.
 Your language, your machine, no paid keys required.
 
-## What's inside
-- **Keyless free-router Mux** — best-router selection + invisible failover across free providers, with an on-device floor. Never a paid key.
-- **100 languages** — type in your language; the model reasons in English; replies come back translated (on-device NLLB).
-- **Guardian V3** — a security gate on every tool call, default-on, fail-closed.
-- **Head** — goes out, inspects a live site, and reverse-engineers it to code.
-- **Scriber** — a consent-gated, self-healing local work journal (never leaves your machine).
-- **323 skills**, **multi-agent orchestration** on the free pool, and **MCP connectors**.
-- **Channels** — drive ORIRO from Telegram/Discord/WhatsApp with your own bot.
+## What's inside (this release)
+- **Keyless free-router Mux** — best-router selection + invisible failover across free providers, with an on-device floor. **Never a paid key.** BYOK optional (live-validated).
+- **100 languages** — pick yours at first run; the model works in English. On-device NLLB translation is an optional add-on (without it, your text passes through as-is).
+- **Guardian V3 (Lite)** — a **deterministic** security gate on every tool call (default-on, fail-closed): blocks `curl|sh` remote-exec, destructive wipes, reverse shells, and env/secret exfil. No weights, no tokenizer, no download.
+- **Head** — fetches a live site, detects its **sections/structure**, and reports the gaps to build from (the coder writes the code from that report).
+- **Scriber (memory)** — a consent-gated local work journal, **off by default**; turns are recalled across sessions and never leave your machine.
+- **323 skills** (CORE/TAIL tiered) + **multi-agent orchestration** on the free pool.
+- **MCP connector catalog** (59) and **Channels** — run ORIRO from Telegram/Discord/WhatsApp with **your own** bot.
+- **Avatar** — pick a face at onboarding; it greets you aloud in its paired on-device voice.
+
+## On the roadmap (not in this release)
+Full-page **screenshot → code** Head (Playwright), the **two-way voice loop** (speak + listen/STT), in-REPL **permission modes**, and **`oriro mcp`** guided setup. Today the Head is fetch/structure-based and voice is the avatar's spoken greeting.
 
 ## Install
 

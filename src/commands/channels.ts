@@ -98,6 +98,10 @@ export function registerChannelsCommand(program: Command): void {
     .description("remove a configured channel")
     .action((kind: string) => {
       if (!isKind(kind)) die(`unknown channel '${kind}' — one of: ${KINDS.join(", ")}`);
+      if (!readChannels().some((c) => c.kind === kind)) {
+        info(`no ${kind} channel configured — nothing to remove`);
+        return;
+      }
       removeChannel(kind);
       ok(`removed ${accent(kind)}`);
     });

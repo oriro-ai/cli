@@ -475,6 +475,10 @@ var REVERSE_SHELL = [
 ];
 var SECRET_PATHS = /(\.ssh\/id_|\.ssh\/.*_rsa|\.aws\/credentials|\.oriro\/credentials|\.config\/gcloud|\.env(\.|\b)|\.netrc|id_ed25519|\.kube\/config|wallet\.dat|\.gnupg\/)/i;
 var NET_SINK = /\b(curl|wget|nc|ncat|socat|scp|rsync|ftp|tftp|invoke-webrequest|invoke-restmethod)\b/i;
+var ENV_EXFIL = [
+  /\$\(\s*(printenv|env)\b/i,
+  /\$\(\s*cat\b[^)]*(\.ssh|\.aws|\.env|\.netrc|credential|secret|token|id_rsa|id_ed25519)/i
+];
 var PERSISTENCE = [
   /\bcrontab\b\s+(-|\S+)/i,
   // crontab install
@@ -540,6 +544,14 @@ var DEFAULT_RULES = [
         return block("secret-exfiltration", "Reading secrets and sending them off the machine");
       }
       return null;
+    }
+  },
+  {
+    id: "env-exfiltration",
+    description: "Block dumping env vars / secret files into a network request (curl \u2026$(printenv SECRET)).",
+    match: (c) => {
+      const cmd = norm(cmdOf(c));
+      return cmd && NET_SINK.test(cmd) && anyMatch(ENV_EXFIL, cmd) ? block("env-exfiltration", "Sending environment variables / secret files off the machine") : null;
     }
   },
   {
@@ -2813,6 +2825,17 @@ function setupNllbTranslator(opts) {
 }
 
 // src/repl.ts
+function replHelp() {
+  return `
+  ${accent("ORIRO terminal \u2014 help")}
+  ${dim("Just type to chat; ORIRO writes and runs code for you (keyless, free).")}
+
+  ${accent("/help")}  this help     ${accent("/exit")} or ${accent("/quit")}  leave     ${dim("Ctrl-D / Ctrl-C also exit")}
+  ${dim("Run these OUTSIDE the chat (in your shell):")}
+  ${dim("oriro skills \xB7 routers \xB7 connectors \xB7 channels \xB7 scribe \xB7 language \xB7 avatar")}
+
+`;
+}
 async function runRepl() {
   if (isFirstRun()) await runOnboarding();
   else stdout4.write(banner());
@@ -2831,6 +2854,10 @@ async function runRepl() {
       }
       if (!line) continue;
       if (line === "/exit" || line === "/quit") break;
+      if (line === "/help" || line === "/?") {
+        stdout4.write(replHelp());
+        continue;
+      }
       const english = await translateForCoder(line, lang);
       let out = "";
       const unsub = session.subscribe((e) => {
@@ -4284,6 +4311,9 @@ function writeAdded(slugs) {
 function listConnectors(category) {
   return category ? CONNECTOR_CATALOG.filter((c) => c.category === category) : CONNECTOR_CATALOG;
 }
+function connectorCategories() {
+  return [...new Set(CONNECTOR_CATALOG.map((c) => c.category))].sort();
+}
 function addConnector(slug) {
   const entry = connectorBySlug(slug);
   if (!entry) return { ok: false, error: `unknown connector '${slug}' \u2014 run \`oriro connectors list\`` };
@@ -4297,13 +4327,20 @@ function addedConnectors() {
   return CONNECTOR_CATALOG.filter((c) => added.has(c.slug));
 }
 function removeConnector(slug) {
-  writeAdded(readAdded().filter((s) => s !== slug));
+  const before = readAdded();
+  if (!before.includes(slug)) return false;
+  writeAdded(before.filter((s) => s !== slug));
+  return true;
 }
 
 // src/commands/connectors.ts
 function registerConnectorsCommand(program2) {
   const connectors = program2.command("connectors").description("MCP connectors \u2014 add external tools/services (inert until used)");
   connectors.command("list [category]").description("list the connector catalog (optionally filtered by category)").action((category) => {
+    if (category && !connectorCategories().includes(category)) {
+      info(`unknown category '${category}' \u2014 categories: ${connectorCategories().join(", ")}`);
+      return;
+    }
     const entries = listConnectors(category);
     const added = new Set(addedConnectors().map((c) => c.slug));
     heading(category ? `Connectors \xB7 ${category}` : "Connectors");
@@ -4320,8 +4357,8 @@ function registerConnectorsCommand(program2) {
     ok(`added ${accent(slug)} \u2014 inert until a session uses it`);
   });
   connectors.command("remove <slug>").description("remove a connector").action((slug) => {
-    removeConnector(slug);
-    ok(`removed ${accent(slug)}`);
+    if (removeConnector(slug)) ok(`removed ${accent(slug)}`);
+    else info(`'${slug}' is not in your added list \u2014 nothing to remove`);
   });
 }
 
@@ -4571,6 +4608,10 @@ function registerChannelsCommand(program2) {
   });
   channels.command("remove <kind>").description("remove a configured channel").action((kind) => {
     if (!isKind(kind)) die(`unknown channel '${kind}' \u2014 one of: ${KINDS.join(", ")}`);
+    if (!readChannels().some((c) => c.kind === kind)) {
+      info(`no ${kind} channel configured \u2014 nothing to remove`);
+      return;
+    }
     removeChannel(kind);
     ok(`removed ${accent(kind)}`);
   });
@@ -4595,6 +4636,9 @@ function registerSkillsCommand(program2) {
 
 // src/commands/language.ts
 import { stdin as stdin5 } from "process";
+function resolveLanguage(input) {
+  return languageByCode(input) ?? LANGUAGES.find((l) => l.name.toLowerCase() === input.trim().toLowerCase());
+}
 function registerLanguageCommand(program2) {
   program2.command("language").description("show or change your terminal language").argument("[code]", "switch directly to this language (ISO code or name, e.g. es)").option("-a, --all", "list every available language").action(async (code, opts) => {
     if (opts.all) {
@@ -4607,7 +4651,7 @@ function registerLanguageCommand(program2) {
       return;
     }
     if (code) {
-      const lang = languageByCode(code);
+      const lang = resolveLanguage(code);
       if (!lang) die(`unknown language '${code}' \u2014 run \`oriro language --all\` to see the list`);
       setTerminalLanguage(lang);
       ok(`${accent(lang.name)} is now your terminal language.`);
