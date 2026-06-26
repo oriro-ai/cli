@@ -560,7 +560,7 @@ var REVERSE_SHELL = [
   /\bmkfifo\b[^\n]*(\bnc\b|\bncat\b)/i
   // mkfifo backpipe
 ];
-var SECRET_PATHS = /(\.ssh(?:[\\/]|(?=[\s"']|$))|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws(?:[\\/]|(?=[\s"']|$))|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker(?:[\\/]|(?=[\s"']|$))|\.git-credentials|\.kube(?:[\\/]|(?=[\s"']|$))|wallet\.dat|\.gnupg(?:[\\/]|(?=[\s"']|$))|cookies(\.sqlite)?|login\s*data)/i;
+var SECRET_PATHS = /(\.ssh(?![-.\w])|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws(?![-.\w])|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker(?![-.\w])|\.git-credentials|\.kube(?![-.\w])|wallet\.dat|\.gnupg(?![-.\w])|cookies(\.sqlite)?|login\s*data)/i;
 var NET_SINK = /\b(curl|wget|nc|ncat|netcat|socat|scp|rsync|ftp|tftp|invoke-webrequest|invoke-restmethod)\b/i;
 var ENV_EXFIL = [
   /\$\(\s*(printenv|env)\b/i,

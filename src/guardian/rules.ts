@@ -130,12 +130,14 @@ const REVERSE_SHELL: RegExp[] = [
 ];
 
 // ── Secret / credential exfiltration ──────────────────────────────────────────
-// `END` = a path-DIR boundary: a slash (sub-path) OR the token ends (whitespace / quote / EOL).
-// NOT a bare `\b`, which also fires before `-`/`.` and would over-block legit `.docker-compose.yml`,
-// `.aws-vault-config`, `.kube-notes`, etc. The bare secret-dir (`~/.aws | curl`) still matches via
-// the whitespace lookahead; the credential FILE inside (`~/.aws/credentials`) via the slash.
+// Secret-dir boundary `(?![-.\w])`: the dir name must NOT be followed by a filename-continuation
+// char (`-`, `.`, or a word char). This blocks the bare dir before ANY separator — whitespace, a
+// slash sub-path, a quote, EOL, OR an adjacent shell separator (`~/.aws|curl`, `~/.aws;curl`,
+// `~/.aws&&curl`, `~/.aws>out`) — while still ALLOWING legit `.docker-compose.yml`, `.aws-vault-config`,
+// `.kube-notes`, `.aws.backup`. (A bare `\b` over-blocked the hyphen/dot files; a whitespace-only
+// lookahead under-blocked the adjacent-separator exfils — this negative lookahead does both right.)
 const SECRET_PATHS =
-  /(\.ssh(?:[\\/]|(?=[\s"']|$))|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws(?:[\\/]|(?=[\s"']|$))|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker(?:[\\/]|(?=[\s"']|$))|\.git-credentials|\.kube(?:[\\/]|(?=[\s"']|$))|wallet\.dat|\.gnupg(?:[\\/]|(?=[\s"']|$))|cookies(\.sqlite)?|login\s*data)/i;
+  /(\.ssh(?![-.\w])|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws(?![-.\w])|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker(?![-.\w])|\.git-credentials|\.kube(?![-.\w])|wallet\.dat|\.gnupg(?![-.\w])|cookies(\.sqlite)?|login\s*data)/i;
 const NET_SINK = /\b(curl|wget|nc|ncat|netcat|socat|scp|rsync|ftp|tftp|invoke-webrequest|invoke-restmethod)\b/i;
 const ENV_EXFIL: RegExp[] = [
   /\$\(\s*(printenv|env)\b/i, // $(printenv X) / $(env)
