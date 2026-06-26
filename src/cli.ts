@@ -11,6 +11,8 @@ import { registerScribeCommand } from "./commands/scribe.js";
 import { registerConnectorsCommand } from "./commands/connectors.js";
 import { registerChannelsCommand } from "./commands/channels.js";
 import { registerSkillsCommand } from "./commands/skills.js";
+import { registerLanguageCommand } from "./commands/language.js";
+import { registerAvatarCommand } from "./commands/avatar.js";
 
 const version = (createRequire(import.meta.url)("../package.json") as { version: string }).version;
 
@@ -34,6 +36,8 @@ registerScribeCommand(program);
 registerConnectorsCommand(program);
 registerChannelsCommand(program);
 registerSkillsCommand(program);
+registerLanguageCommand(program);
+registerAvatarCommand(program);
 
 program.parseAsync().catch((e: unknown) => {
   process.stderr.write(`\nORIRO error: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}\n`);

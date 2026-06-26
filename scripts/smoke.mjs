@@ -34,6 +34,11 @@ run(["channels", "add", "discord", "not-a-token"], { expectExit: 1, contains: "r
 run(["channels", "start", "discord"], { expectExit: 1, contains: "no discord bot configured" });
 run(["channels", "start", "whatsapp"], { expectExit: 0, contains: "ToS" }); // refused without --accept-risk
 run(["bogus"], { expectExit: 1, contains: "unknown command" }); // must NOT fall through to the REPL
+run(["language", "es"], { expectExit: 0, contains: "terminal language" }); // onboarding hints `oriro language` — must exist
+run(["language", "--all"], { expectExit: 0, contains: "Languages" });
+run(["language", "zzz"], { expectExit: 1, contains: "unknown language" });
+run(["avatar", "--list"], { expectExit: 0, contains: "" }); // onboarding hints `oriro avatar` — must exist
+run(["avatar", "not-a-real-avatar"], { expectExit: 1, contains: "unknown avatar" });
 run(["--help"], { contains: "routers" });
 
 process.stdout.write(`\nSMOKE: ${fails === 0 ? "PASS ✅" : `FAIL ❌ (${fails})`}\n`);

@@ -854,6 +854,10 @@ function avatarsInCategory(category) {
   const c = category.toLowerCase();
   return AVATARS.filter((a) => a.category.toLowerCase() === c);
 }
+function avatarBySlug(slug) {
+  const s = (slug || "").toLowerCase();
+  return AVATARS.find((a) => a.slug.toLowerCase() === s);
+}
 function avatarImageUrl(a) {
   return a.image_url.startsWith("http") ? a.image_url : `${AVATAR_ORIGIN}${a.image_url}`;
 }
@@ -876,6 +880,10 @@ function writeAvatarConfig(cfg) {
 }
 function isAvatarConfigured() {
   return readAvatarConfig() !== null;
+}
+function getSelectedAvatar() {
+  const cfg = readAvatarConfig();
+  return cfg && avatarBySlug(cfg.slug) || null;
 }
 function setSelectedAvatar(avatar, opts) {
   const cfg = {
@@ -4543,6 +4551,73 @@ function registerSkillsCommand(program2) {
   });
 }
 
+// src/commands/language.ts
+import { stdin as stdin5 } from "process";
+function registerLanguageCommand(program2) {
+  program2.command("language").description("show or change your terminal language").argument("[code]", "switch directly to this language (ISO code or name, e.g. es)").option("-a, --all", "list every available language").action(async (code, opts) => {
+    if (opts.all) {
+      heading(`Languages (${LANGUAGES.length})`);
+      for (const l of LANGUAGES) {
+        const star = l.neuralVoice ? accent("\u2605") : " ";
+        process.stdout.write(`  ${star} ${l.name} ${dim(`(${l.code})`)}
+`);
+      }
+      return;
+    }
+    if (code) {
+      const lang = languageByCode(code);
+      if (!lang) die(`unknown language '${code}' \u2014 run \`oriro language --all\` to see the list`);
+      setTerminalLanguage(lang);
+      ok(`${accent(lang.name)} is now your terminal language.`);
+      return;
+    }
+    if (stdin5.isTTY) {
+      const lang = await selectLanguageInteractive();
+      setTerminalLanguage(lang);
+      ok(`${accent(lang.name)} is now your terminal language.`);
+    } else {
+      const cur = getTerminalLanguage();
+      info(`terminal language: ${accent(cur.name)} ${dim(`(${cur.code})`)}`);
+      info(dim("change it with `oriro language <code>` (e.g. `oriro language es`) or `oriro language --all`"));
+    }
+  });
+}
+
+// src/commands/avatar.ts
+import { stdin as stdin6 } from "process";
+function registerAvatarCommand(program2) {
+  program2.command("avatar").description("show or change your terminal avatar").argument("[slug]", "set directly to this avatar slug").option("-l, --list", "list every avatar by category").action(async (slug, opts) => {
+    if (opts.list) {
+      for (const cat of avatarCategories()) {
+        heading(cat);
+        for (const a of avatarsInCategory(cat)) process.stdout.write(`  ${accent(a.slug)}
+`);
+      }
+      return;
+    }
+    if (slug) {
+      const avatar = avatarBySlug(slug);
+      if (!avatar) die(`unknown avatar '${slug}' \u2014 run \`oriro avatar --list\` to see the faces`);
+      setSelectedAvatar(avatar, { speak: true });
+      ok(`${accent(avatar.slug)} is now your terminal face.`);
+      return;
+    }
+    if (stdin6.isTTY) {
+      const chosen = await selectAvatarInteractive();
+      if (!chosen) {
+        info("no change.");
+        return;
+      }
+      setSelectedAvatar(chosen, { speak: true });
+      await previewAvatar(chosen);
+    } else {
+      const cur = getSelectedAvatar();
+      info(cur ? `terminal face: ${accent(cur.slug)}` : "no avatar set yet");
+      info(dim("change it with `oriro avatar <slug>` or `oriro avatar --list`"));
+    }
+  });
+}
+
 // src/cli.ts
 var version = createRequire(import.meta.url)("../package.json").version;
 var program = new Command();
@@ -4561,6 +4636,8 @@ registerScribeCommand(program);
 registerConnectorsCommand(program);
 registerChannelsCommand(program);
 registerSkillsCommand(program);
+registerLanguageCommand(program);
+registerAvatarCommand(program);
 program.parseAsync().catch((e) => {
   process.stderr.write(`
 ORIRO error: ${e instanceof Error ? e.stack ?? e.message : String(e)}
