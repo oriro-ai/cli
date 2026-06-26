@@ -22,19 +22,19 @@ Your language, your machine, no paid keys required.
 ## On the roadmap (not in this release)
 Full-page **screenshot → code** Head (Playwright), the **two-way voice loop** (speak + listen/STT), in-REPL **permission modes**, and **`oriro mcp`** guided setup. Today the Head is fetch/structure-based and voice is the avatar's spoken greeting.
 
-## Install
+**## Install**
 
-Run it instantly — no install, works on any OS with Node ≥ 20:
+**Run it instantly — no install**, works on any OS with Node ≥ 20:
 ```bash
 npx @oriro/orirocli
 ```
 
-Or install the `oriro` command globally:
+**Or install the** `oriro` command globally:
 ```bash
 npm i -g @oriro/orirocli   # then: oriro
 ```
 
-Both paths reach the same first-run setup. `npx` and `npm i -g` are the supported install channels — they work on every OS with Node ≥ 20, no build step.
+**Both paths reach the same first-run setup.** `npx` and `npm i -g` are the supported install channels — they work on every OS with Node ≥ 20, no build step.
 
 <details>
 <summary>From source (contributors)</summary>
