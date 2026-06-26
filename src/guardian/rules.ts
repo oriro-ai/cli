@@ -130,8 +130,12 @@ const REVERSE_SHELL: RegExp[] = [
 ];
 
 // ── Secret / credential exfiltration ──────────────────────────────────────────
+// `END` = a path-DIR boundary: a slash (sub-path) OR the token ends (whitespace / quote / EOL).
+// NOT a bare `\b`, which also fires before `-`/`.` and would over-block legit `.docker-compose.yml`,
+// `.aws-vault-config`, `.kube-notes`, etc. The bare secret-dir (`~/.aws | curl`) still matches via
+// the whitespace lookahead; the credential FILE inside (`~/.aws/credentials`) via the slash.
 const SECRET_PATHS =
-  /(\.ssh(?:[\\/]|\b)|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws(?:[\\/]|\b)|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker(?:[\\/]|\b)|\.git-credentials|\.kube(?:[\\/]|\b)|wallet\.dat|\.gnupg(?:[\\/]|\b)|cookies(\.sqlite)?|login\s*data)/i;
+  /(\.ssh(?:[\\/]|(?=[\s"']|$))|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws(?:[\\/]|(?=[\s"']|$))|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker(?:[\\/]|(?=[\s"']|$))|\.git-credentials|\.kube(?:[\\/]|(?=[\s"']|$))|wallet\.dat|\.gnupg(?:[\\/]|(?=[\s"']|$))|cookies(\.sqlite)?|login\s*data)/i;
 const NET_SINK = /\b(curl|wget|nc|ncat|netcat|socat|scp|rsync|ftp|tftp|invoke-webrequest|invoke-restmethod)\b/i;
 const ENV_EXFIL: RegExp[] = [
   /\$\(\s*(printenv|env)\b/i, // $(printenv X) / $(env)
