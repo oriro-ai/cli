@@ -2,11 +2,12 @@
 // duplicated shebang, wrong asset paths, swallowed unknown commands — can never ship silently.
 // Source-running spikes cannot catch these (they resolve paths at source depth). Run: npm run smoke
 import { spawnSync } from "node:child_process";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const bin = join(process.cwd(), "dist", "cli.js");
+const version = JSON.parse(readFileSync(join(process.cwd(), "package.json"), "utf8")).version;
 const state = mkdtempSync(join(tmpdir(), "oriro-smoke-"));
 const env = { ...process.env, ORIRO_STATE_DIR: state, ORIRO_SCRIBE_DIR: state, ORIRO_SKILLS_DIR: "" };
 
@@ -23,7 +24,7 @@ function run(args, { expectExit = 0, contains } = {}) {
   process.stdout.write(`${ok ? "✅" : "❌"} oriro ${args.join(" ") || "(repl)"}${detail ? `  — ${detail}` : ""}\n`);
 }
 
-run(["--version"], { contains: "0.1.0" });
+run(["--version"], { contains: version }); // read from package.json — never drifts on a version bump
 run(["skills", "list"], { contains: "323 loaded" }); // bundle path must resolve the skills dir
 run(["scribe", "status"], { contains: "Scriber" });
 run(["connectors", "list"], { contains: "59 connectors" });

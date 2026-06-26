@@ -30,9 +30,15 @@ Or install the `oriro` command globally:
 npm i -g @oriro/orirocli   # then: oriro
 ```
 
-Straight from GitHub (prebuilt — no build step needed):
+Both paths reach the same first-run setup. `npx` and `npm i -g` are the supported install channels — they work on every OS with Node ≥ 20, no build step.
+
+<details>
+<summary>From source (contributors)</summary>
+
 ```bash
-npm i -g github:oriro-ai/cli   # then: oriro
+git clone https://github.com/oriro-ai/cli && cd cli
+npm install && npm run build   # then: node dist/cli.js
 ```
+</details>
 
 > Built on [Pi](https://github.com/earendil-works/pi) (MIT). See `ATTRIBUTION.md` for full provenance.
