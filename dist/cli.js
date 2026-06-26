@@ -1238,14 +1238,20 @@ async function selectAvatarInteractive() {
 `
       )
     );
-    const cn = Number(
-      (await ask(rl, `
-  ${C3.teal}\u203A${C3.reset} Pick a category number: `)).trim()
-    );
-    const cat = cats[cn - 1];
-    if (!cat) {
-      stdout3.write("  No category chosen.\n");
-      return null;
+    let cat;
+    for (; ; ) {
+      const ans = (await ask(rl, `
+  ${C3.teal}\u203A${C3.reset} Pick a category number ${C3.dim}(or Enter to skip)${C3.reset}: `)).trim();
+      if (!ans) {
+        stdout3.write(`  ${C3.dim}Skipped \u2014 no avatar.${C3.reset}
+`);
+        return null;
+      }
+      const n = Number(ans);
+      cat = Number.isInteger(n) ? cats[n - 1] : void 0;
+      if (cat) break;
+      stdout3.write(`  ${C3.dim}Please enter a number from the list.${C3.reset}
+`);
     }
     const list = avatarsInCategory(cat);
     stdout3.write("\n");
@@ -1253,16 +1259,20 @@ async function selectAvatarInteractive() {
       (a, i) => stdout3.write(`  ${C3.teal}${String(i + 1).padStart(2)}${C3.reset}  ${a.slug}
 `)
     );
-    const an = Number(
-      (await ask(rl, `
-  ${C3.teal}\u203A${C3.reset} Pick an avatar number: `)).trim()
-    );
-    const chosen = list[an - 1];
-    if (!chosen) {
-      stdout3.write("  No avatar chosen.\n");
-      return null;
+    for (; ; ) {
+      const ans = (await ask(rl, `
+  ${C3.teal}\u203A${C3.reset} Pick an avatar number ${C3.dim}(or Enter to skip)${C3.reset}: `)).trim();
+      if (!ans) {
+        stdout3.write(`  ${C3.dim}Skipped \u2014 no avatar.${C3.reset}
+`);
+        return null;
+      }
+      const n = Number(ans);
+      const chosen = Number.isInteger(n) ? list[n - 1] : void 0;
+      if (chosen) return chosen;
+      stdout3.write(`  ${C3.dim}Please enter a number from the list.${C3.reset}
+`);
     }
-    return chosen;
   } finally {
     rl.close();
   }
@@ -1439,6 +1449,23 @@ var RouterMux = class {
     for (const s of stats) if (this.stats.has(s.id)) this.stats.set(s.id, { ...s });
   }
 };
+function healthStatePath(dir) {
+  return join10(dir, "routers", "health.json");
+}
+function saveMuxState(dir, stats) {
+  const p = healthStatePath(dir);
+  mkdirSync5(join10(dir, "routers"), { recursive: true });
+  writeFileSync7(p, JSON.stringify(stats, null, 2), "utf8");
+}
+function loadMuxState(dir) {
+  const p = healthStatePath(dir);
+  if (!existsSync3(p)) return [];
+  try {
+    return JSON.parse(readFileSync8(p, "utf8"));
+  } catch {
+    return [];
+  }
+}
 
 // src/routers/floor.ts
 var KEYLESS_FLOOR = [
@@ -1507,7 +1534,7 @@ async function validateRouter(entry, key, modelId) {
   try {
     let res;
     if (entry.api === "google-generative-ai") {
-      const url = `${entry.baseUrl.replace(/\/$/, "")}/models/${model}:generateContent${key ? `?key=${key}` : ""}`;
+      const url = `${entry.baseUrl.replace(/\/$/, "")}/models/${model}:generateContent${key ? `?key=${encodeURIComponent(key)}` : ""}`;
       res = await fetch(url, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -2313,6 +2340,10 @@ function registerOriroMux(registry, opts = {}) {
   const routers = opts.routers ?? (pooled.length > 0 ? pooled : KEYLESS_FLOOR);
   const byId = new Map(routers.map((r) => [r.id, r]));
   const mux = new RouterMux(routers.map((r) => r.id));
+  try {
+    mux.load(loadMuxState(oriroDir()));
+  } catch {
+  }
   registry.registerProvider(MUX_PROVIDER, {
     name: "ORIRO Free (keyless Mux)",
     api: "openai-completions",
@@ -2340,7 +2371,12 @@ function registerOriroMux(registry, opts = {}) {
       const withMemory = memory ? { ...ctx, systemPrompt: `${ctx.systemPrompt}
 
 ${memory}` } : ctx;
-      void driveMux(out, mux, byId, withMemory, options);
+      void driveMux(out, mux, byId, withMemory, options).finally(() => {
+        try {
+          saveMuxState(oriroDir(), mux.snapshot());
+        } catch {
+        }
+      });
       return out;
     }
   });
@@ -2984,6 +3020,28 @@ function setupNllbTranslator(opts) {
   return instance;
 }
 
+// src/language/gateway.ts
+var isEnglish2 = (code) => !code || code.toLowerCase().startsWith("en");
+var isCommand = (text) => text.trimStart().startsWith("/");
+async function ensureReady() {
+  try {
+    await setupNllbTranslator().load();
+  } catch {
+  }
+}
+async function translateIncoming(message) {
+  const lang = getTerminalLanguage().code;
+  if (isEnglish2(lang) || !message.trim() || isCommand(message)) return message;
+  await ensureReady();
+  return translateForCoder(message, lang);
+}
+async function translateOutgoing(text) {
+  const lang = getTerminalLanguage().code;
+  if (isEnglish2(lang) || !text.trim()) return text;
+  await ensureReady();
+  return translateForUser(text, lang);
+}
+
 // src/repl.ts
 function replHelp() {
   return `
@@ -2999,9 +3057,7 @@ function replHelp() {
 async function runRepl() {
   if (isFirstRun()) await runOnboarding();
   else stdout5.write(banner());
-  const lang = getTerminalLanguage().code;
-  const isEnglish2 = lang.toLowerCase().startsWith("en");
-  if (!isEnglish2) setupNllbTranslator();
+  const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
   const { session } = await assembleOriroSession();
   const rl = createInterface4({ input: stdin4, output: stdout5 });
   try {
@@ -3013,19 +3069,20 @@ async function runRepl() {
         break;
       }
       if (!line) continue;
-      if (line === "/exit" || line === "/quit") break;
-      if (line === "/help" || line === "/?") {
+      const slash = line.toLowerCase();
+      if (slash === "/exit" || slash === "/quit") break;
+      if (slash === "/help" || slash === "/?") {
         stdout5.write(replHelp());
         continue;
       }
-      const english = await translateForCoder(line, lang);
+      const english = await translateIncoming(line);
       noteUserInput(line);
       let out = "";
       const unsub = session.subscribe((e) => {
         if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
           const d = e.assistantMessageEvent.delta ?? "";
           out += d;
-          if (isEnglish2) stdout5.write(d);
+          if (isEnglish3) stdout5.write(d);
         }
       });
       try {
@@ -3033,8 +3090,8 @@ async function runRepl() {
       } finally {
         unsub();
       }
-      if (isEnglish2) stdout5.write("\n\n");
-      else stdout5.write(`${await translateForUser(out.trim(), lang)}
+      if (isEnglish3) stdout5.write("\n\n");
+      else stdout5.write(`${await translateOutgoing(out.trim())}
 
 `);
     }

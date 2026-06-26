@@ -14,9 +14,10 @@ import type {
   SimpleStreamOptions,
 } from "@earendil-works/pi-ai";
 import type { ModelRegistry } from "@earendil-works/pi-coding-agent";
-import { RouterMux, type CallError } from "./mux.js";
+import { RouterMux, saveMuxState, loadMuxState, type CallError } from "./mux.js";
 import { KEYLESS_FLOOR, routerModel, type KeylessRouter } from "./floor.js";
 import { resolvePool } from "./router-pool.js";
+import { oriroDir } from "../config/paths.js";
 import { applyIdentity, scrubMessageIdentity } from "../identity/filter.js";
 import { sanitizeMessageToolCalls, sanitizeEventToolCalls } from "./tool-sanitize.js";
 import { buildScribeContext } from "../scribe/scribe-pi.js";
@@ -132,6 +133,7 @@ export function registerOriroMux(
   const routers = opts.routers ?? (pooled.length > 0 ? pooled : KEYLESS_FLOOR);
   const byId = new Map(routers.map((r) => [r.id, r]));
   const mux = new RouterMux(routers.map((r) => r.id));
+  try { mux.load(loadMuxState(oriroDir())); } catch { /* fresh state if unreadable */ } // health survives between invocations
 
   registry.registerProvider(MUX_PROVIDER, {
     name: "ORIRO Free (keyless Mux)",
@@ -161,7 +163,9 @@ export function registerOriroMux(
       const ctx = applyIdentity(context);
       const memory = buildScribeContext();
       const withMemory = memory ? { ...ctx, systemPrompt: `${ctx.systemPrompt}\n\n${memory}` } : ctx;
-      void driveMux(out, mux, byId, withMemory, options);
+      void driveMux(out, mux, byId, withMemory, options).finally(() => {
+        try { saveMuxState(oriroDir(), mux.snapshot()); } catch { /* best-effort persistence */ }
+      });
       return out;
     },
   });

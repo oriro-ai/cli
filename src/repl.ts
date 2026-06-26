@@ -9,8 +9,8 @@ import { banner } from "./ui/banner.js";
 import { isFirstRun, runOnboarding } from "./onboarding/wrapper.js";
 import { assembleOriroSession } from "./onboarding/assemble.js";
 import { noteUserInput } from "./scribe/scribe-pi.js";
-import { getTerminalLanguage, translateForCoder, translateForUser } from "./language/index.js";
-import { setupNllbTranslator } from "./language/nllb-translator.js";
+import { getTerminalLanguage } from "./language/index.js";
+import { translateIncoming, translateOutgoing } from "./language/gateway.js";
 import { dim, accent } from "./ui/theme.js";
 
 /** In-REPL help — real, not LLM-fabricated. Lists the chat-loop commands and the shell subcommands. */
@@ -28,9 +28,7 @@ export async function runRepl(): Promise<void> {
   if (isFirstRun()) await runOnboarding();
   else stdout.write(banner());
 
-  const lang = getTerminalLanguage().code;
-  const isEnglish = lang.toLowerCase().startsWith("en");
-  if (!isEnglish) setupNllbTranslator(); // wire the on-device translator (passthrough if unavailable)
+  const isEnglish = getTerminalLanguage().code.toLowerCase().startsWith("en");
 
   const { session } = await assembleOriroSession();
   const rl = createInterface({ input: stdin, output: stdout });
@@ -43,10 +41,14 @@ export async function runRepl(): Promise<void> {
         break; // stdin closed (Ctrl-D or piped-input EOF) → exit cleanly, not a crash
       }
       if (!line) continue;
-      if (line === "/exit" || line === "/quit") break;
-      if (line === "/help" || line === "/?") { stdout.write(replHelp()); continue; }
+      const slash = line.toLowerCase();
+      if (slash === "/exit" || slash === "/quit") break;
+      if (slash === "/help" || slash === "/?") { stdout.write(replHelp()); continue; }
 
-      const english = await translateForCoder(line, lang); // user's language → English for the model
+      // Route through the language gateway: it lazily wires + warms the on-device NLLB translator
+      // on first non-English use (the direct translate path never loaded it) and passes through for
+      // English / slash inputs. Degrades to passthrough if the model runtime is absent.
+      const english = await translateIncoming(line); // user's language → English for the model
       noteUserInput(line); // record the user's exact words so the Scriber journals them (recall across sessions)
       let out = "";
       const unsub = session.subscribe((e: { type: string; assistantMessageEvent?: { type: string; delta?: string } }) => {
@@ -62,7 +64,7 @@ export async function runRepl(): Promise<void> {
         unsub();
       }
       if (isEnglish) stdout.write("\n\n");
-      else stdout.write(`${await translateForUser(out.trim(), lang)}\n\n`); // English reply → user's language
+      else stdout.write(`${await translateOutgoing(out.trim())}\n\n`); // English reply → user's language
     }
   } finally {
     rl.close();

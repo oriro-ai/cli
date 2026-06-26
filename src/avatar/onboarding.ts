@@ -58,28 +58,28 @@ export async function selectAvatarInteractive(): Promise<AvatarEntry | null> {
         `  ${C.teal}${String(i + 1).padStart(2)}${C.reset}  ${cat} ${C.dim}(${avatarsInCategory(cat).length})${C.reset}\n`,
       ),
     );
-    const cn = Number(
-      (await ask(rl, `\n  ${C.teal}›${C.reset} Pick a category number: `)).trim(),
-    );
-    const cat = cats[cn - 1];
-    if (!cat) {
-      stdout.write("  No category chosen.\n");
-      return null;
+    let cat: string | undefined;
+    for (;;) {
+      const ans = (await ask(rl, `\n  ${C.teal}›${C.reset} Pick a category number ${C.dim}(or Enter to skip)${C.reset}: `)).trim();
+      if (!ans) { stdout.write(`  ${C.dim}Skipped — no avatar.${C.reset}\n`); return null; }
+      const n = Number(ans);
+      cat = Number.isInteger(n) ? cats[n - 1] : undefined;
+      if (cat) break;
+      stdout.write(`  ${C.dim}Please enter a number from the list.${C.reset}\n`);
     }
     const list = avatarsInCategory(cat);
     stdout.write("\n");
     list.forEach((a, i) =>
       stdout.write(`  ${C.teal}${String(i + 1).padStart(2)}${C.reset}  ${a.slug}\n`),
     );
-    const an = Number(
-      (await ask(rl, `\n  ${C.teal}›${C.reset} Pick an avatar number: `)).trim(),
-    );
-    const chosen = list[an - 1];
-    if (!chosen) {
-      stdout.write("  No avatar chosen.\n");
-      return null;
+    for (;;) {
+      const ans = (await ask(rl, `\n  ${C.teal}›${C.reset} Pick an avatar number ${C.dim}(or Enter to skip)${C.reset}: `)).trim();
+      if (!ans) { stdout.write(`  ${C.dim}Skipped — no avatar.${C.reset}\n`); return null; }
+      const n = Number(ans);
+      const chosen = Number.isInteger(n) ? list[n - 1] : undefined;
+      if (chosen) return chosen;
+      stdout.write(`  ${C.dim}Please enter a number from the list.${C.reset}\n`);
     }
-    return chosen;
   } finally {
     rl.close();
   }

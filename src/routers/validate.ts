@@ -24,7 +24,7 @@ export async function validateRouter(
   try {
     let res: Response;
     if (entry.api === "google-generative-ai") {
-      const url = `${entry.baseUrl.replace(/\/$/, "")}/models/${model}:generateContent${key ? `?key=${key}` : ""}`;
+      const url = `${entry.baseUrl.replace(/\/$/, "")}/models/${model}:generateContent${key ? `?key=${encodeURIComponent(key)}` : ""}`;
       res = await fetch(url, {
         method: "POST",
         headers: { "content-type": "application/json" },

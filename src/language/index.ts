@@ -1,6 +1,6 @@
 // ORIRO CLI — language module (the multilingual layer).
 //
-// Step 1 of the CLI experience: the user picks one of 99 languages at first run;
+// Step 1 of the CLI experience: the user picks one of 100 languages at first run;
 // that becomes the terminal's language. They type/read in it; the AI/coder always
 // receives ENGLISH (on-device translate). Replies render back to their language.
 //
