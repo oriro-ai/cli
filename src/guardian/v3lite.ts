@@ -73,11 +73,11 @@ export const INJECTION_PATTERNS: RegExp[] = [
 
 // ─── IOC signatures (exfil / dropper / obfuscated-loader / RCE pipe) ──────────
 export const IOC_PATTERNS: ReadonlyArray<readonly [string, RegExp]> = [
-  ["ioc:secret_read", /\bread\b[^\n]*(\.ssh|\.env\b|id_rsa)/i],
+  ["ioc:secret_read", /\bread\b[^\n]*(\.ssh(?![-.\w])|\.env\b|id_rsa)/i],
   ["ioc:exfil_post", /\bsend\b[^\n]*\bto\s+https?:\/\//i],
   ["ioc:env_exfil", /process\.env[^\n]{0,40}https?:\/\//i],
   ["ioc:pipe_shell", /(curl|wget)[^\n]*\|\s*(sh|bash|node)\b/i],
-  ["ioc:pipe_exfil", /(cat|type|read)[^\n]*(\.ssh|id_rsa|\.env\b)[^\n]*\|\s*(curl|wget|nc)\b/i],
+  ["ioc:pipe_exfil", /(cat|type|read)[^\n]*(\.ssh(?![-.\w])|id_rsa|\.env\b)[^\n]*\|\s*(curl|wget|nc)\b/i],
   ["ioc:exfiltrate", /exfiltrat/i],
   ["ioc:obf_loader", /eval\(\s*(atob|Buffer\.from)\(/i],
   ["ioc:cp_loader", /child_process[\s\S]{0,40}(atob|fromCharCode)/i],
