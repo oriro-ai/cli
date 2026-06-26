@@ -71,11 +71,11 @@ As forward integration to base CLI Terminal of pi-mono foundation; we used same 
 We also added a fun factor in work for you: AVATAR you chose of your own in Terminal.
 A genuinely cool stack, a terminal coder that sees the web (ORIRO-Head: Crawl → Screenshot + HTML → Reverse-engineered code), Speaks/listens in 99 languages, guards itself (Guardian V3 Lite), and can wear a floating avatar that talks back in its own voice. All on-device.
 
-Permission cycle / Safety │ ✅ 4 modes: Shift+Tab → │ Postures │ Manual / Accept_Edits / Auto / Plan  
-Thinking-cycle → alt+shift+t
+Permission cycle / Safety │ ✅ 4 modes: Shift+Tab → │ Postures │ Manual / Accept_Edits / Auto / Plan / Thinking-cycle → alt+shift+t
 
 **Safety - ORIRO floor baked in: Even Auto can't run what Guardian blocks (wipes/exfil/curl|sh)**
 
-"Auto" = don't-ask-for-low-risk, never run-anything; Plan = read-only
-“Indicators” ● Manual · ✎ Accept Edits · ⏵⏵Auto · ▢ Plan │ Type-check clean
+**"Auto"** = don't-ask-for-low-risk, never run-anything; **Plan**= read-only
+
+**“Indicators”** **●** Manual · **✎** Accept Edits · **⏵⏵**Auto · **▢** Plan │ Type-check clean
 
