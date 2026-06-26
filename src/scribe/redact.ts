@@ -24,6 +24,11 @@ const RULES: Rule[] = [
     label: "private-key",
     re: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g,
   },
+  // Lone PEM markers — a key SPLIT across fields/turns leaves only a BEGIN-head or an END-tail in
+  // one field. A field carrying either marker is key material: redact the marker + its adjacent body
+  // (forward from BEGIN, backward to END) so no sub-threshold fragment can ever sit on disk.
+  { label: "private-key", re: /-----BEGIN[A-Z ]*PRIVATE KEY-----[\s\S]*/g },
+  { label: "private-key", re: /[\s\S]*-----END[A-Z ]*PRIVATE KEY-----/g },
   { label: "anthropic-key", re: /sk-ant-[A-Za-z0-9_-]{20,}/g },
   { label: "openrouter-key", re: /sk-or-v1-[A-Za-z0-9]{20,}/g },
   // Stripe-style keys (sk_live_/pk_live_/rk_test_/…), underscore segments.

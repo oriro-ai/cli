@@ -120,7 +120,11 @@ export function loadMuxState(dir: string): RouterStat[] {
   const p = healthStatePath(dir);
   if (!existsSync(p)) return [];
   try {
-    return JSON.parse(readFileSync(p, "utf8")) as RouterStat[];
+    const stats = JSON.parse(readFileSync(p, "utf8")) as RouterStat[];
+    // JSON has no Infinity — `latencyMs: Infinity` (an untried router) serializes to `null`. Coerce
+    // it back, or a reloaded untried router would rank as latency-0 (ahead of the proven-fastest)
+    // and poison the EWMA on its next success.
+    return stats.map((s) => ({ ...s, latencyMs: Number.isFinite(s.latencyMs) ? s.latencyMs : Number.POSITIVE_INFINITY }));
   } catch {
     return [];
   }

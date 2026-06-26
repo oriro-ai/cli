@@ -68,7 +68,9 @@ export function useRouters(ids: string[]): { applied: string[]; unknown: string[
   const reg = readReg();
   const applied = ids.filter((id) => reg[id]);
   const unknown = ids.filter((id) => !reg[id]);
-  savePool(oriroDir(), applied);
+  // Only persist when at least one id is valid. An all-invalid `use` (e.g. a typo) must be a
+  // no-op — NOT clobber the user's existing active pool to empty.
+  if (applied.length > 0) savePool(oriroDir(), applied);
   return { applied, unknown };
 }
 

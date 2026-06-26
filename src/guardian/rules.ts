@@ -47,7 +47,7 @@ function commandWord(stmt: string): string {
 }
 
 // ── rm target classification ──────────────────────────────────────────────────
-const SYS_DIR = "(etc|usr|bin|sbin|var|boot|lib|lib64|sys|proc|dev|root|opt|windows|system32|library|applications)";
+const SYS_DIR = "(etc|usr|bin|sbin|var|boot|lib|lib64|sys|proc|dev|root|opt|windows|system32|programdata|library|applications|system|private|cores|volumes|network)";
 type RmTarget = "danger" | "system-sub" | "safe";
 function classifyRmTarget(raw: string): RmTarget {
   let t = stripQuotes(raw).trim();
@@ -105,7 +105,7 @@ const FETCH = "(curl|wget|fetch|httpie)";
 const SHELL = "(sh|bash|zsh|dash|ksh|sudo\\s+sh|sudo\\s+bash|python\\d?|node|perl|ruby|php)";
 const REMOTE_EXEC: RegExp[] = [
   new RegExp(`\\b${FETCH}\\b[^\\n|]*\\|\\s*(sudo\\s+)?${SHELL}\\b`, "i"), // curl … | sh
-  new RegExp(`(?:^|[\\s;&|(])(bash|sh|zsh|ksh|source|\\.)\\s+<\\s*\\(\\s*${FETCH}`, "i"), // sh <(curl) / . <(curl)
+  new RegExp(`(?:^|[\\s;&|(])(bash|sh|zsh|ksh|source|\\.)\\s*<\\s*\\(\\s*${FETCH}`, "i"), // sh <(curl) / bash<(curl) / . <(curl)
   new RegExp(`\\b(bash|sh|zsh|ksh|eval)\\b[^\\n]*\\$\\(\\s*${FETCH}\\b`, "i"), // bash -c "$(curl)"
   new RegExp(`\\$\\(\\s*${FETCH}\\b[^)]*\\)`, "i"), // bare $(curl …) substitution
   /`\s*(curl|wget|fetch)\b/i, // backtick `curl`
@@ -131,7 +131,7 @@ const REVERSE_SHELL: RegExp[] = [
 
 // ── Secret / credential exfiltration ──────────────────────────────────────────
 const SECRET_PATHS =
-  /(\.ssh(\/|\b)|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws[\\/]|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker[\\/]config|\.git-credentials|\.kube[\\/]config|wallet\.dat|\.gnupg[\\/]|cookies(\.sqlite)?|login\s*data)/i;
+  /(\.ssh(?:[\\/]|\b)|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws(?:[\\/]|\b)|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker(?:[\\/]|\b)|\.git-credentials|\.kube(?:[\\/]|\b)|wallet\.dat|\.gnupg(?:[\\/]|\b)|cookies(\.sqlite)?|login\s*data)/i;
 const NET_SINK = /\b(curl|wget|nc|ncat|netcat|socat|scp|rsync|ftp|tftp|invoke-webrequest|invoke-restmethod)\b/i;
 const ENV_EXFIL: RegExp[] = [
   /\$\(\s*(printenv|env)\b/i, // $(printenv X) / $(env)

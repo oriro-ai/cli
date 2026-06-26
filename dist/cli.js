@@ -463,7 +463,7 @@ function commandWord(stmt) {
   while (i < w.length && /^[\w.]+=/.test(w[i] ?? "")) i++;
   return (w[i] ?? "").replace(/^.*[\\/]/, "").toLowerCase();
 }
-var SYS_DIR = "(etc|usr|bin|sbin|var|boot|lib|lib64|sys|proc|dev|root|opt|windows|system32|library|applications)";
+var SYS_DIR = "(etc|usr|bin|sbin|var|boot|lib|lib64|sys|proc|dev|root|opt|windows|system32|programdata|library|applications|system|private|cores|volumes|network)";
 function classifyRmTarget(raw) {
   let t = stripQuotes(raw).trim();
   if (!t || t.startsWith("-")) return "safe";
@@ -521,8 +521,8 @@ var SHELL = "(sh|bash|zsh|dash|ksh|sudo\\s+sh|sudo\\s+bash|python\\d?|node|perl|
 var REMOTE_EXEC = [
   new RegExp(`\\b${FETCH}\\b[^\\n|]*\\|\\s*(sudo\\s+)?${SHELL}\\b`, "i"),
   // curl … | sh
-  new RegExp(`(?:^|[\\s;&|(])(bash|sh|zsh|ksh|source|\\.)\\s+<\\s*\\(\\s*${FETCH}`, "i"),
-  // sh <(curl) / . <(curl)
+  new RegExp(`(?:^|[\\s;&|(])(bash|sh|zsh|ksh|source|\\.)\\s*<\\s*\\(\\s*${FETCH}`, "i"),
+  // sh <(curl) / bash<(curl) / . <(curl)
   new RegExp(`\\b(bash|sh|zsh|ksh|eval)\\b[^\\n]*\\$\\(\\s*${FETCH}\\b`, "i"),
   // bash -c "$(curl)"
   new RegExp(`\\$\\(\\s*${FETCH}\\b[^)]*\\)`, "i"),
@@ -560,7 +560,7 @@ var REVERSE_SHELL = [
   /\bmkfifo\b[^\n]*(\bnc\b|\bncat\b)/i
   // mkfifo backpipe
 ];
-var SECRET_PATHS = /(\.ssh(\/|\b)|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws[\\/]|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker[\\/]config|\.git-credentials|\.kube[\\/]config|wallet\.dat|\.gnupg[\\/]|cookies(\.sqlite)?|login\s*data)/i;
+var SECRET_PATHS = /(\.ssh(?:[\\/]|\b)|authorized_keys|id_rsa|id_ed25519|id_ecdsa|\.aws(?:[\\/]|\b)|\.oriro[\\/]credentials|\.config[\\/]gcloud|\.env(\.|\b)|\.netrc|\.npmrc|\.pypirc|\.docker(?:[\\/]|\b)|\.git-credentials|\.kube(?:[\\/]|\b)|wallet\.dat|\.gnupg(?:[\\/]|\b)|cookies(\.sqlite)?|login\s*data)/i;
 var NET_SINK = /\b(curl|wget|nc|ncat|netcat|socat|scp|rsync|ftp|tftp|invoke-webrequest|invoke-restmethod)\b/i;
 var ENV_EXFIL = [
   /\$\(\s*(printenv|env)\b/i,
@@ -1461,7 +1461,8 @@ function loadMuxState(dir) {
   const p = healthStatePath(dir);
   if (!existsSync3(p)) return [];
   try {
-    return JSON.parse(readFileSync8(p, "utf8"));
+    const stats = JSON.parse(readFileSync8(p, "utf8"));
+    return stats.map((s) => ({ ...s, latencyMs: Number.isFinite(s.latencyMs) ? s.latencyMs : Number.POSITIVE_INFINITY }));
   } catch {
     return [];
   }
@@ -1616,7 +1617,7 @@ function useRouters(ids) {
   const reg = readReg();
   const applied = ids.filter((id) => reg[id]);
   const unknown = ids.filter((id) => !reg[id]);
-  savePool(oriroDir(), applied);
+  if (applied.length > 0) savePool(oriroDir(), applied);
   return { applied, unknown };
 }
 function resolvePool() {
@@ -1815,6 +1816,11 @@ var RULES = [
     label: "private-key",
     re: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g
   },
+  // Lone PEM markers — a key SPLIT across fields/turns leaves only a BEGIN-head or an END-tail in
+  // one field. A field carrying either marker is key material: redact the marker + its adjacent body
+  // (forward from BEGIN, backward to END) so no sub-threshold fragment can ever sit on disk.
+  { label: "private-key", re: /-----BEGIN[A-Z ]*PRIVATE KEY-----[\s\S]*/g },
+  { label: "private-key", re: /[\s\S]*-----END[A-Z ]*PRIVATE KEY-----/g },
   { label: "anthropic-key", re: /sk-ant-[A-Za-z0-9_-]{20,}/g },
   { label: "openrouter-key", re: /sk-or-v1-[A-Za-z0-9]{20,}/g },
   // Stripe-style keys (sk_live_/pk_live_/rk_test_/…), underscore segments.
@@ -3060,6 +3066,22 @@ async function runRepl() {
   const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
   const { session } = await assembleOriroSession();
   const rl = createInterface4({ input: stdin4, output: stdout5 });
+  let closing = false;
+  const onSigint = () => {
+    if (closing) return;
+    closing = true;
+    stdout5.write(dim("\nBye.\n"));
+    try {
+      rl.close();
+    } catch {
+    }
+    try {
+      session.dispose();
+    } catch {
+    }
+    process.exit(0);
+  };
+  process.on("SIGINT", onSigint);
   try {
     for (; ; ) {
       let line;
@@ -3096,9 +3118,12 @@ async function runRepl() {
 `);
     }
   } finally {
-    rl.close();
-    session.dispose();
-    stdout5.write(dim("\nBye.\n"));
+    process.removeListener("SIGINT", onSigint);
+    if (!closing) {
+      rl.close();
+      session.dispose();
+      stdout5.write(dim("\nBye.\n"));
+    }
   }
 }
 

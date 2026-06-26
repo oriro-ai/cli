@@ -48,6 +48,14 @@ for (const f of readdirSync(dir)) {
 }
 leaks.length ? bad(`ON-DISK LEAK: ${leaks.join(", ")}`) : ok("no raw secret on disk (journal/digest/timeline/WAL)");
 
+// 2b) Private key SPLIT across fields (head in user, tail in note) — no fragment may reach disk.
+supervisedCapture({ ts: "2026-06-26T01:00:00.000Z", date: "2026-06-26",
+  user: "-----BEGIN RSA PRIVATE KEY-----\nMIIEhalfUNIQtopKEYxyz0123456789",
+  note: "tailUNIQbottomKEYmaterial987654\n-----END RSA PRIVATE KEY-----" });
+const splitLeaks: string[] = [];
+for (const f of readdirSync(dir)) { const c = readFileSync(join(dir, f), "utf8"); for (const core of ["halfUNIQtopKEY", "tailUNIQbottomKEY"]) if (c.includes(core)) splitLeaks.push(`${f}:${core}`); }
+splitLeaks.length ? bad(`split-field PEM leak: ${splitLeaks.join(", ")}`) : ok("split-field private key — no fragment on disk");
+
 // 3) WAL is compacted on the success path (not an unbounded plaintext transcript).
 const wal = join(dir, "_wal.jsonl");
 const walBytes = existsSync(wal) ? readFileSync(wal, "utf8").trim().length : 0;

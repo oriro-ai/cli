@@ -32,6 +32,21 @@ export async function runRepl(): Promise<void> {
 
   const { session } = await assembleOriroSession();
   const rl = createInterface({ input: stdin, output: stdout });
+
+  // SIGINT (Ctrl-C) can land MID-GENERATION, where there's no readline question to reject — without
+  // this, a second Ctrl-C force-killed the process (exit 1, no goodbye). Handle it ourselves: exit
+  // cleanly with "Bye." from any state (idle or streaming). Idempotent so repeated Ctrl-C is safe.
+  let closing = false;
+  const onSigint = (): void => {
+    if (closing) return;
+    closing = true;
+    stdout.write(dim("\nBye.\n"));
+    try { rl.close(); } catch { /* */ }
+    try { session.dispose(); } catch { /* */ }
+    process.exit(0);
+  };
+  process.on("SIGINT", onSigint);
+
   try {
     for (;;) {
       let line: string;
@@ -67,8 +82,11 @@ export async function runRepl(): Promise<void> {
       else stdout.write(`${await translateOutgoing(out.trim())}\n\n`); // English reply → user's language
     }
   } finally {
-    rl.close();
-    session.dispose();
-    stdout.write(dim("\nBye.\n"));
+    process.removeListener("SIGINT", onSigint);
+    if (!closing) {
+      rl.close();
+      session.dispose();
+      stdout.write(dim("\nBye.\n"));
+    }
   }
 }
