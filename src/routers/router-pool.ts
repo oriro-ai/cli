@@ -74,6 +74,11 @@ export function useRouters(ids: string[]): { applied: string[]; unknown: string[
   return { applied, unknown };
 }
 
+/** Every router the user has registered (catalog + custom --url adds), for display/inspection. */
+export function registeredRouters(): KeylessRouter[] {
+  return Object.values(readReg());
+}
+
 /** The user's selected pool resolved to KeylessRouter[] for the Mux (empty → caller uses the floor). */
 export function resolvePool(): KeylessRouter[] {
   const reg = readReg();

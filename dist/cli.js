@@ -1798,6 +1798,9 @@ function useRouters(ids) {
   if (applied.length > 0) savePool(oriroDir(), applied);
   return { applied, unknown };
 }
+function registeredRouters() {
+  return Object.values(readReg());
+}
 function resolvePool() {
   const reg = readReg();
   return loadPool(oriroDir()).map((id) => reg[id]).filter((r) => Boolean(r));
@@ -3759,15 +3762,42 @@ function registerRoutersCommand(program2) {
       process.stdout.write(`  ${accent(r.id.padEnd(22))} ${r.displayName.padEnd(24)} ${tier}
 `);
     }
+    const custom = registeredRouters().filter((r) => !ROUTER_CATALOG.some((c) => c.id === r.id));
+    if (custom.length) {
+      process.stdout.write(`
+  ${accent("your custom routers")}
+`);
+      for (const r of custom) {
+        const type = r.apiKey && r.apiKey !== KEYLESS_SENTINEL ? dim("BYOK") : fgHex(PALETTE.success, "keyless");
+        process.stdout.write(`  ${accent(r.id.padEnd(22))} ${dim(r.baseUrl.padEnd(40))} ${type}
+`);
+      }
+    }
     const pool = resolvePool();
     info(pool.length ? `active pool: ${pool.map((p) => p.id).join(", ")}` : "active pool: empty \u2192 using the keyless floor");
   });
-  routers.command("add <slug>").description("live-validate a router and add it to the pool").option("-k, --key <key>", "API key (for non-keyless routers)").option("-m, --model <id>", "pin a specific model id").action(async (slug, opts) => {
-    const entry = routerById(slug);
-    if (!entry) die(`unknown router '${slug}' \u2014 run \`oriro routers list\``);
+  routers.command("add <name>").description("live-validate a router and add it to the pool \u2014 a catalog name, OR any custom endpoint via --url").option("-k, --key <key>", "API key (BYOK) \u2014 omit for a keyless free router").option("-m, --model <id>", "model id to run (REQUIRED for a custom --url router)").option("--url <baseUrl>", "add ANY custom free/BYOK router by its OpenAI-compatible base URL (the part BEFORE /chat/completions)").option("--api <api>", "custom router API: 'openai' (default) or 'google'", "openai").action(async (name, opts) => {
+    let entry;
+    if (opts.url) {
+      if (!opts.model) die("a custom --url router needs --model <id> (the model to run on that endpoint)");
+      const baseUrl = opts.url.replace(/\/(?:chat\/completions)\/?$/i, "").replace(/\/$/, "");
+      entry = {
+        id: name,
+        displayName: name,
+        baseUrl,
+        api: opts.api === "google" ? "google-generative-ai" : "openai-completions",
+        freeModels: [opts.model],
+        keyless: !opts.key,
+        tier: "free",
+        kind: "chat"
+      };
+    } else {
+      entry = routerById(name);
+      if (!entry) die(`unknown router '${name}' \u2014 run \`oriro routers list\`, or add any custom endpoint with: oriro routers add <name> --url <baseUrl> --model <id> [--key <key>]`);
+    }
     const res = await addRouter(entry, { ...opts.key ? { key: opts.key } : {}, ...opts.model ? { modelId: opts.model } : {} });
-    if (!res.ok) die(`could not add '${slug}': ${res.validation.error ?? "validation failed"}`);
-    ok(`added ${accent(slug)} (${res.validation.latencyMs}ms, model ${res.validation.model}) \u2192 active pool`);
+    if (!res.ok) die(`could not add '${name}': ${res.validation.error ?? "validation failed"}`);
+    ok(`added ${accent(name)} (${res.validation.latencyMs}ms, model ${res.validation.model}${opts.key ? ", BYOK" : ", keyless"}) \u2192 active pool`);
   });
   routers.command("use <slugs...>").description("set the active router pool (ids must be added first)").action((slugs) => {
     const { applied, unknown } = useRouters(slugs);
