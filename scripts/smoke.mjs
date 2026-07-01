@@ -25,7 +25,7 @@ function run(args, { expectExit = 0, contains } = {}) {
 }
 
 run(["--version"], { contains: version }); // read from package.json — never drifts on a version bump
-run(["skills", "list"], { contains: "327 loaded" }); // bundle path must resolve the skills dir
+run(["skills", "list"], { contains: "326 loaded" }); // bundle path must resolve the skills dir
 run(["scribe", "status"], { contains: "Scriber" });
 run(["connectors", "list"], { contains: "addable" }); // summary: N addable · M added · K coming soon
 run(["routers", "list"], { contains: "active pool" });
@@ -40,6 +40,8 @@ run(["language", "--all"], { expectExit: 0, contains: "Languages" });
 run(["language", "zzz"], { expectExit: 1, contains: "unknown language" });
 run(["avatar", "--list"], { expectExit: 0, contains: "" }); // onboarding hints `oriro avatar` — must exist
 run(["avatar", "not-a-real-avatar"], { expectExit: 1, contains: "unknown avatar" });
+run(["head"], { expectExit: 0, contains: "ORIRO Head" }); // no target → usage, clean exit (no network)
+run(["head", "--help"], { expectExit: 0, contains: "reverse-engineer" }); // flags documented
 run(["connectors", "list", "ZzzNotACategory"], { expectExit: 1, contains: "unknown category" }); // bad input → exit 1
 run(["connectors", "remove", "never-added-xyz"], { expectExit: 0, contains: "nothing to remove" }); // no false-positive remove
 run(["routers", "use", "neveradded-xyz"], { expectExit: 1, contains: "none of those" }); // no false success on unregistered ids

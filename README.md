@@ -13,14 +13,14 @@ Your language, your machine, no paid keys required.
 - **Keyless free-router Mux** — best-router selection + invisible failover across free providers, with an on-device floor. **Never a paid key.** BYOK optional (live-validated).
 - **100 languages** — pick yours at first run; the model works in English. On-device NLLB translation is an optional add-on (without it, your text passes through as-is).
 - **Guardian V3 (Lite)** — a **deterministic** security gate on every tool call (default-on, fail-closed): blocks `curl|sh` remote-exec, destructive wipes, reverse shells, and env/secret exfil. No weights, no tokenizer, no download.
-- **Head** — fetches a live site, detects its **sections/structure**, and reports the gaps to build from (the coder writes the code from that report).
+- **Head** — go out to a live site and SEE it. `oriro head <url>` does a keyless structural read (sections, CTAs, gaps vs competitors — pure fetch, no browser). With the optional Chromium peer it also **reverse-engineers a page into clean code** (`--code`), a **YAML build spec** (`--spec`), or **full-page screenshots** (`--shots`). The chat agent can call the same via its `inspect_site` / `url_to_code` / `url_to_spec` / `capture_site` tools.
 - **Scriber (memory)** — a consent-gated local work journal, **off by default**; turns are recalled across sessions and never leave your machine.
 - **323 skills** (CORE/TAIL tiered) + **multi-agent orchestration** on the free pool.
 - **MCP connector catalog** (59) and **Channels** — run ORIRO from Telegram/Discord/WhatsApp with **your own** bot.
 - **Avatar** — pick a face at onboarding; it greets you aloud in its paired on-device voice.
 
 ## On the roadmap (not in this release)
-Full-page **screenshot → code** Head (Playwright), the **two-way voice loop** (speak + listen/STT), in-REPL **permission modes**, and **`oriro mcp`** guided setup. Today the Head is fetch/structure-based and voice is the avatar's spoken greeting.
+The **two-way voice loop** (speak + listen/STT — today voice is the avatar's spoken greeting), **video → code** at pixel fidelity (shipped but experimental — needs a vision-capable router), in-REPL **permission modes**, and **`oriro mcp`** guided setup. The Head's structural read is keyless and always on; its screenshot / code / spec flows are opt-in behind the Chromium peer (`npm i playwright && npx playwright install chromium`).
 
 **## Install**
 
@@ -47,17 +47,15 @@ npm install && npm run build   # then: node dist/cli.js
 
 > Built on [Pi](https://github.com/earendil-works/pi) (MIT). See `ATTRIBUTION.md` for full provenance.
 
-**ORIRO-Head:**
+**ORIRO-Head — how it works:**
 
-Always in context; never forgets anything; scribes everything for you locally and present the router “REAL-TIME FOREVER”. 
-Goes to the URL → crawls it in a real browser (Playwright).
-Captures → full-page screenshot + the rendered HTML (page.content () the post-JS DOM, "what it saw").
-Reverse-engineers → feeds that HTML (+ the screenshot for visual context) to the coder model → clean, working code.
-Returns BOTH → {html: <what it saw>, screenshot, code: <clean reproduction>}.
+- **Structural read (default, keyless, no browser):** `oriro head <url> [competitor …]` server-side `fetch()`es the page, detects 15 section types (hero, pricing, CTA, testimonials, FAQ, …), runs a gap analysis vs any competitor URLs, and prints a priority-ranked report + action items. Add `--html` for a visual report. `$0`, deterministic, nothing leaves the machine.
+- **URL → code / spec (opt-in, Chromium peer):** `--code` crawls the page in a real browser (Playwright), captures the rendered post-JS HTML + a full-page screenshot, and reverse-engineers **clean, runnable code**; `--spec` emits a stack-agnostic **YAML build spec** instead. The coder runs on the free keyless Mux — no paid key.
+- **Screenshots:** `--shots` assembles full-page screenshots of every URL into one visual flow HTML.
+- The chat agent reaches all of this on its own judgment via the `inspect_site` / `url_to_code` / `url_to_spec` / `capture_site` tools — just say “go look at stripe.com and rebuild the pricing page”.
 
 **Multi-Lingual** (99 Global Languages): 
-You can use your native language in terminal and it will explain in the default language to AI router in your terminal to build and work along with/for you in ORIRO-Terminal. 
-TWO-WAY VOICE LOOP LIVE.  (TTS) and hears (STT, with the free translate → English path for the coder).
+Use your native language in the terminal; ORIRO translates to English for the router, works for you, and translates back. Voice today is the avatar's spoken greeting (TTS); the **two-way voice loop** (listen/STT) is on the roadmap.
 
 **Guardian V3** Security: Talk-to-setup MCP (Guardian companion)
 By TranzGuard.com, Financial Industry grade Live agentic threat analysis anomalous MCP payloads, crawler/Trojan/spam/3rd-party injection, behavioral detection.   

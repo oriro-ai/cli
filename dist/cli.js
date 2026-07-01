@@ -1,4 +1,151 @@
 #!/usr/bin/env node
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// src/head/screenshot-flow.ts
+var screenshot_flow_exports = {};
+__export(screenshot_flow_exports, {
+  buildScreenshotFlowHtml: () => buildScreenshotFlowHtml,
+  captureScreens: () => captureScreens
+});
+async function captureScreens(urls, opts = {}) {
+  let chromium;
+  try {
+    ({ chromium } = await import("playwright"));
+  } catch {
+    throw new Error("@oriro/head/screenshot needs the `playwright` peer dependency (and `npx playwright install chromium`).");
+  }
+  const viewport = opts.viewport ?? DEFAULT_VIEWPORT;
+  const out = [];
+  const videos = [];
+  const browser = await chromium.launch({ headless: true });
+  const ctxOpts = { viewport, deviceScaleFactor: 1 };
+  if (opts.video) {
+    const [os, path, fs] = await Promise.all([import("os"), import("path"), import("fs/promises")]);
+    const dir = opts.videoDir ?? path.join(os.tmpdir(), "oriro-head-video");
+    await fs.mkdir(dir, { recursive: true });
+    ctxOpts.recordVideo = { dir, size: viewport };
+  }
+  const ctx = await browser.newContext(ctxOpts);
+  try {
+    let done = 0;
+    for (const url of urls) {
+      const page = await ctx.newPage();
+      const rec = { url, ok: false, status: 0, title: "", png: null, videoPath: null, html: null, note: "" };
+      try {
+        const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: opts.navTimeoutMs ?? 3e4 });
+        rec.status = resp ? resp.status() : 0;
+        try {
+          await page.waitForLoadState("networkidle", { timeout: 8e3 });
+        } catch {
+        }
+        await scrollToBottom(page);
+        await page.waitForTimeout(600);
+        rec.title = await page.title();
+        rec.html = await page.content();
+        const buf = await page.screenshot({ fullPage: true });
+        rec.png = new Uint8Array(buf);
+        rec.ok = true;
+      } catch (e) {
+        rec.note = (e instanceof Error ? e.message : String(e)).split("\n")[0] ?? "capture failed";
+      } finally {
+        const vid = opts.video ? page.video() : null;
+        await page.close();
+        out.push(rec);
+        videos.push(vid);
+        opts.onProgress?.(++done, urls.length, url);
+      }
+    }
+  } finally {
+    if (opts.video) {
+      for (let i = 0; i < out.length; i++) {
+        try {
+          const p = await videos[i]?.path();
+          const c = out[i];
+          if (p && c) c.videoPath = p;
+        } catch {
+        }
+      }
+    }
+    await browser.close();
+  }
+  return out;
+}
+async function scrollToBottom(page) {
+  await page.evaluate(async () => {
+    await new Promise((resolve) => {
+      let y = 0;
+      const step = 500;
+      const timer = setInterval(() => {
+        window.scrollBy(0, step);
+        y += step;
+        if (y >= document.body.scrollHeight) {
+          clearInterval(timer);
+          resolve();
+        }
+      }, 120);
+      setTimeout(() => {
+        clearInterval(timer);
+        resolve();
+      }, 6e3);
+    });
+    window.scrollTo(0, 0);
+  });
+}
+function esc2(s) {
+  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function hostOf3(u) {
+  try {
+    return new URL(u).host.replace(/^www\./, "");
+  } catch {
+    return u;
+  }
+}
+function pathOf2(u) {
+  try {
+    return new URL(u).pathname || "/";
+  } catch {
+    return u;
+  }
+}
+function toBase642(bytes) {
+  const g = globalThis;
+  if (g.Buffer) return g.Buffer.from(bytes).toString("base64");
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i] ?? 0);
+  return g.btoa ? g.btoa(bin) : "";
+}
+function buildScreenshotFlowHtml(groups, opts = {}) {
+  const imgSrc = opts.imgSrc ?? defaultImgSrc;
+  const all = groups.flatMap((g) => g.captures);
+  const ok2 = all.filter((c) => c.ok).length;
+  const sections = groups.map((g) => {
+    const cards = g.captures.map((c, i) => {
+      const src = c.ok ? imgSrc(c, i) : "";
+      const vsrc = c.ok && c.videoPath ? opts.videoSrc ? opts.videoSrc(c, i) : c.videoPath : "";
+      const media = c.ok && src ? `<a href="${src}" target="_blank"><img loading="lazy" src="${src}" alt="${esc2(c.title)}"></a>${vsrc ? `<video class="vid" controls preload="metadata" src="${vsrc}"></video>` : ""}` : `<div class="failbox">${esc2(c.note || "no capture")}</div>`;
+      return `<figure class="shot"><figcaption><span class="step">${i + 1}</span><span class="u">${esc2(hostOf3(c.url))}<b>${esc2(pathOf2(c.url))}</b></span><span class="pill ${c.ok ? "ok" : "bad"}">${c.ok ? (c.status || 200) + " OK" : "FAILED"}</span></figcaption>${media}<div class="cap">${esc2(c.title || "(no title)")}</div></figure>`;
+    }).join("");
+    return `<section><h2>${esc2(g.name)}</h2><div class="row">${cards}</div></section>`;
+  }).join("");
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc2(opts.title ?? "ORIRO Head \u2014 visual flow")}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#0b0b12;color:#e2e8f0;font:14px/1.5 ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif;padding:24px}h1{font-size:22px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(90deg,#2dd4bf,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}.sub{color:#94a3b8;margin:4px 0 22px}h2{font-size:15px;color:#f1f5f9;margin:22px 0 12px;border-left:3px solid #2dd4bf;padding-left:8px}.row{display:flex;gap:16px;overflow-x:auto;padding-bottom:12px}.shot{flex:0 0 300px;background:#0f0f1a;border:1px solid #1e293b;border-radius:12px;overflow:hidden}figcaption{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#15151f;border-bottom:1px solid #1e293b;font-size:11px}.step{background:#2dd4bf;color:#06251f;font-weight:800;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;flex:0 0 auto}.u{flex:1;color:#cbd5e1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.u b{color:#64748b;font-weight:400}.pill{font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px}.pill.ok{background:rgba(34,197,94,.15);color:#4ade80}.pill.bad{background:rgba(244,63,94,.15);color:#fb7185}.shot img{width:100%;height:360px;object-fit:cover;object-position:top;display:block;background:#fff}.shot .vid{width:100%;display:block;background:#000;border-top:1px solid #1e293b}.failbox{height:120px;display:flex;align-items:center;justify-content:center;color:#fb7185;font-size:11px;padding:12px;text-align:center}.cap{padding:8px 10px;font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.foot{margin-top:26px;color:#475569;font-size:11px;border-top:1px solid #1e293b;padding-top:12px}</style></head><body><h1>ORIRO Head \u2014 visual flow</h1><div class="sub">The head visited ${all.length} screens and captured ${ok2}/${all.length} full-page screenshots. Click any shot to open full size.</div>${sections}<div class="foot">ORIRO Head \xB7 real full-page screenshots, hydration-waited + scrolled for lazy content.</div></body></html>`;
+}
+var DEFAULT_VIEWPORT, defaultImgSrc;
+var init_screenshot_flow = __esm({
+  "src/head/screenshot-flow.ts"() {
+    "use strict";
+    DEFAULT_VIEWPORT = { width: 1280, height: 800 };
+    defaultImgSrc = (c) => c.png ? `data:image/png;base64,${toBase642(c.png)}` : "";
+  }
+});
 
 // src/cli.ts
 import { createRequire } from "module";
@@ -3140,8 +3287,491 @@ async function comparePages(opts) {
   };
 }
 
-// src/head/pi-tool.ts
-function summarizeForCoder(report) {
+// src/head/run.ts
+import { writeFile } from "fs/promises";
+import { join as join18 } from "path";
+
+// src/head/inspection-html.ts
+var PRIORITY_COLOR = {
+  CRITICAL: "#f43f5e",
+  // rose
+  HIGH: "#f59e0b",
+  // amber
+  MEDIUM: "#0ea5e9",
+  // sky
+  LOW: "#64748b"
+  // slate
+};
+var SECTION_ORDER = [
+  "navigation",
+  "hero",
+  "socialProof",
+  "stats",
+  "features",
+  "demo",
+  "video",
+  "integrations",
+  "comparison",
+  "pricing",
+  "testimonials",
+  "faq",
+  "newsletter",
+  "cta",
+  "team"
+];
+function esc(s) {
+  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function hostOf2(url) {
+  try {
+    return new URL(url).host.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+function pathOf(url) {
+  try {
+    const u = new URL(url);
+    return (u.pathname || "/") + (u.search || "");
+  } catch {
+    return url;
+  }
+}
+function orderedSections(sections) {
+  return [...sections].sort((a, b) => {
+    const ia = SECTION_ORDER.indexOf(a.type);
+    const ib = SECTION_ORDER.indexOf(b.type);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+}
+function sectionBlock(s) {
+  const color = PRIORITY_COLOR[s.priority];
+  return `
+    <div class="blk" style="border-left:4px solid ${color}">
+      <div class="blk-row">
+        <span class="dot" style="background:${color}"></span>
+        <span class="blk-label">${esc(s.label)}</span>
+        <span class="blk-pri" style="color:${color}">${esc(s.priority)}</span>
+      </div>
+      <code class="blk-ev">${esc(s.evidence)}</code>
+    </div>`;
+}
+function pageCard(p, isTarget) {
+  const statusOk = p.ok && p.metrics.status >= 200 && p.metrics.status < 400;
+  const badge = statusOk ? `<span class="pill pill-ok">${p.metrics.status || 200} OK</span>` : `<span class="pill pill-bad">${p.metrics.status || "FAILED"}</span>`;
+  const blocks = p.sections.length ? orderedSections(p.sections).map(sectionBlock).join("") : `<div class="blk-empty">No sections detected${p.note ? "" : " (sparse / client-rendered?)"}</div>`;
+  const kb = Math.round(p.metrics.htmlBytes / 1024);
+  return `
+    <div class="card${isTarget ? " card-target" : ""}">
+      <div class="chrome">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span class="addr" title="${esc(p.url)}">${esc(hostOf2(p.url))}<span class="path">${esc(pathOf(p.url))}</span></span>
+        ${badge}
+      </div>
+      ${isTarget ? '<div class="tag-you">YOUR PAGE</div>' : ""}
+      <div class="title">${esc(p.title || "(untitled)")}</div>
+      <div class="stack">${blocks}</div>
+      <div class="meta">
+        <span title="headings">H ${p.headings.length}</span>
+        <span title="CTAs">CTA ${p.ctas.length}</span>
+        <span title="links">\u21A9 ${p.metrics ? p.links : 0}</span>
+        <span title="images">\u25A6 ${p.images}</span>
+        <span title="video">${p.hasVideo ? "\u25B6 video" : "\u25B7 no video"}</span>
+        <span title="page size">${kb} KB</span>
+        <span title="DOM nodes">${p.metrics.domNodes} nodes</span>
+        <span title="fetch time">${p.metrics.fetchMs} ms</span>
+      </div>
+      ${p.note ? `<div class="note">\u26A0 ${esc(p.note)}</div>` : ""}
+    </div>`;
+}
+function gapsPanel(report) {
+  if (!report.missing.length && !report.advantages.length) return "";
+  const missing = report.missing.map((g) => {
+    const color = PRIORITY_COLOR[g.priority];
+    return `<li><span class="dot" style="background:${color}"></span><b>${esc(g.label)}</b>
+      <span class="gap-pri" style="color:${color}">${esc(g.priority)}</span>
+      <div class="gap-rec">${esc(g.recommendation)}</div>
+      <div class="gap-on">on: ${g.presentOn.map((u) => esc(hostOf2(u))).join(", ")}</div></li>`;
+  }).join("");
+  const adv = report.advantages.map((s) => `<span class="chip">${esc(s.label)}</span>`).join("");
+  return `
+    <div class="gaps">
+      ${report.missing.length ? `<div class="gaps-col"><h2>Missing from your page</h2><ul class="gap-list">${missing}</ul></div>` : ""}
+      ${report.advantages.length ? `<div class="gaps-col"><h2>Your advantages</h2><div class="chips">${adv}</div></div>` : ""}
+    </div>`;
+}
+function buildInspectionHtml(report) {
+  const pages = [report.target, ...report.competitors];
+  const ok2 = pages.filter((p) => p.ok).length;
+  const cards = pages.map((p, i) => pageCard(p, i === 0)).join("");
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ORIRO Inspector \u2014 what it saw</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0b0b12;color:#e2e8f0;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:24px}
+  .head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .head h1{font-size:20px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(90deg,#2dd4bf,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:#94a3b8;font-size:13px;margin-bottom:18px}
+  .summary{background:#11111c;border:1px solid #1e293b;border-radius:12px;padding:12px 14px;margin-bottom:20px;color:#cbd5e1}
+  .row{display:flex;gap:16px;overflow-x:auto;padding-bottom:10px}
+  .card{flex:0 0 300px;background:#0f0f1a;border:1px solid #1e293b;border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .card-target{border-color:#2dd4bf;box-shadow:0 0 0 1px rgba(45,212,191,.25)}
+  .chrome{display:flex;align-items:center;gap:8px;background:#15151f;padding:8px 10px;border-bottom:1px solid #1e293b}
+  .dots{display:flex;gap:4px}.dots i{width:8px;height:8px;border-radius:50%;background:#334155;display:block}
+  .addr{flex:1;font-size:11px;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .addr .path{color:#64748b;font-weight:400}
+  .pill{font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px}
+  .pill-ok{background:rgba(34,197,94,.15);color:#4ade80}.pill-bad{background:rgba(244,63,94,.15);color:#fb7185}
+  .tag-you{font-size:9px;font-weight:800;letter-spacing:.08em;color:#2dd4bf;padding:6px 12px 0}
+  .title{font-size:13px;font-weight:600;color:#f1f5f9;padding:8px 12px 4px}
+  .stack{display:flex;flex-direction:column;gap:6px;padding:8px 12px}
+  .blk{background:#13131f;border-radius:8px;padding:7px 9px}
+  .blk-row{display:flex;align-items:center;gap:7px}
+  .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .blk-label{font-weight:600;font-size:12px;flex:1;color:#e2e8f0}
+  .blk-pri{font-size:9px;font-weight:700;letter-spacing:.04em}
+  .blk-ev{display:block;font-size:10px;color:#64748b;font-family:ui-monospace,monospace;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .blk-empty{color:#64748b;font-size:12px;padding:10px;text-align:center;font-style:italic}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px;border-top:1px solid #1e293b;color:#94a3b8;font-size:11px;margin-top:auto}
+  .note{background:rgba(245,158,11,.1);color:#fbbf24;font-size:11px;padding:7px 12px;border-top:1px solid rgba(245,158,11,.2)}
+  .gaps{display:flex;gap:24px;flex-wrap:wrap;margin-top:24px}
+  .gaps-col{flex:1;min-width:260px}
+  .gaps h2{font-size:14px;color:#f1f5f9;margin-bottom:10px}
+  .gap-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .gap-list li{background:#0f0f1a;border:1px solid #1e293b;border-radius:10px;padding:10px 12px}
+  .gap-list b{font-size:13px}.gap-pri{font-size:10px;font-weight:700;margin-left:6px}
+  .gap-rec{color:#94a3b8;font-size:12px;margin-top:4px}.gap-on{color:#64748b;font-size:10px;margin-top:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:rgba(45,212,191,.12);color:#5eead4;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600}
+  .foot{margin-top:26px;color:#475569;font-size:11px;border-top:1px solid #1e293b;padding-top:12px}
+</style></head>
+<body>
+  <div class="head"><h1>ORIRO Inspector</h1><span class="sub">what the head saw \u2014 ${ok2}/${pages.length} pages crawled</span></div>
+  <div class="summary">${esc(report.summary)}</div>
+  <div class="row">${cards}</div>
+  ${gapsPanel(report)}
+  <div class="foot">ORIRO Inspector \xB7 structural read (server-side HTML) \xB7 each block = a section the head detected, coloured by priority.</div>
+</body></html>`;
+}
+
+// src/head/media.ts
+var IMAGE_MIME_BY_SUFFIX = Object.freeze({
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".bmp": "image/bmp",
+  ".tif": "image/tiff",
+  ".tiff": "image/tiff",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".heic": "image/heic",
+  ".heif": "image/heif",
+  ".avif": "image/avif"
+});
+var VIDEO_MIME_BY_SUFFIX = Object.freeze({
+  ".mp4": "video/mp4",
+  ".mpg": "video/mpeg",
+  ".mpeg": "video/mpeg",
+  ".mkv": "video/x-matroska",
+  ".avi": "video/x-msvideo",
+  ".mov": "video/quicktime",
+  ".ogv": "video/ogg",
+  ".wmv": "video/x-ms-wmv",
+  ".webm": "video/webm",
+  ".m4v": "video/x-m4v",
+  ".flv": "video/x-flv",
+  ".3gp": "video/3gpp",
+  ".3g2": "video/3gpp2"
+});
+function suffixOf(nameOrPath) {
+  const base = (nameOrPath || "").split(/[\\/]/).pop() ?? "";
+  const i = base.lastIndexOf(".");
+  return i < 0 ? "" : base.slice(i).toLowerCase();
+}
+function sniff(head) {
+  if (!head || head.length < 12) return null;
+  const b = (i) => head[i] ?? -1;
+  if (b(0) === 26 && b(1) === 69 && b(2) === 223 && b(3) === 163) return { kind: "video", mimeType: "video/webm" };
+  if (b(4) === 102 && b(5) === 116 && b(6) === 121 && b(7) === 112) return { kind: "video", mimeType: "video/mp4" };
+  if (b(0) === 137 && b(1) === 80 && b(2) === 78 && b(3) === 71) return { kind: "image", mimeType: "image/png" };
+  if (b(0) === 255 && b(1) === 216 && b(2) === 255) return { kind: "image", mimeType: "image/jpeg" };
+  if (b(0) === 71 && b(1) === 73 && b(2) === 70) return { kind: "image", mimeType: "image/gif" };
+  return null;
+}
+function detectMediaType(nameOrPath, head) {
+  const sniffed = sniff(head);
+  if (sniffed) return sniffed;
+  const suf = suffixOf(nameOrPath);
+  const v = VIDEO_MIME_BY_SUFFIX[suf];
+  if (v) return { kind: "video", mimeType: v };
+  const img = IMAGE_MIME_BY_SUFFIX[suf];
+  if (img) return { kind: "image", mimeType: img };
+  return { kind: "unknown", mimeType: "application/octet-stream" };
+}
+
+// src/head/video-to-code.ts
+var WATCH_PROMPT = `You are watching a screen recording of a web UI. Produce a precise, build-ready SPECIFICATION to reconstruct it exactly \u2014 another engineer must rebuild it from your spec alone. Cover, in order:
+1. Overall layout & structure (header/nav, hero, content sections in order, footer).
+2. Each section: its components, exact text/copy, and visual hierarchy.
+3. Styling: colors (hex if discernible), typography (family/weight/scale), spacing, radius, shadows.
+4. Behavior visible across the recording: hover/focus states, scroll reveals, modals, carousels, tabs, animations, transitions \u2014 note the trigger and the effect.
+5. Responsive behavior if the recording shows resizing.
+Be concrete and exhaustive. Output a structured spec, not prose.`;
+var CODE_PROMPT_PREFIX = `You are an expert front-end engineer. Build COMPLETE, working, production-quality code that reproduces the following UI specification EXACTLY \u2014 correct layout, components, copy, colors, typography, spacing, and the described interactions. No placeholders, no TODOs, no "...". Return ONLY the code.`;
+async function videoToCode(input, models, opts = {}) {
+  if (!input.videoPath && !(input.frames && input.frames.length)) {
+    throw new Error("videoToCode needs input.videoPath or input.frames.");
+  }
+  const mimeType = input.mimeType ?? (input.videoPath ? detectMediaType(input.videoPath).mimeType : void 0);
+  const watchPrompt = `${opts.watchPrompt ?? WATCH_PROMPT}${input.goal ? `
+
+User goal: ${input.goal}` : ""}`;
+  const spec = (await models.watch({ videoPath: input.videoPath, frames: input.frames, mimeType, prompt: watchPrompt })).trim();
+  const stack = input.stack ?? "a single self-contained HTML file with inline CSS + vanilla JS (no build step)";
+  const codePrompt = `${opts.codePromptPrefix ?? CODE_PROMPT_PREFIX}
+
+Target stack: ${stack}
+
+=== UI SPECIFICATION ===
+${spec}`;
+  const code = (await models.code(codePrompt)).trim();
+  return { spec, code };
+}
+var REVERSE_PROMPT = `You are an expert front-end engineer. Below is the captured RENDERED HTML of a live web page (optionally with visual notes from a screenshot). REVERSE-ENGINEER it into CLEAN, COMPLETE, PRODUCTION-QUALITY, RUNNABLE code that a developer can PASTE AND BUILD with no edits.
+
+Requirements:
+\u2022 Reproduce the page EXACTLY: every meaningful section/component in order, the real text/copy, layout, and visual design \u2014 colors as hex, typography (family/weight/size), spacing, radius, shadows, borders.
+\u2022 Strip tracking/ads/analytics/third-party cruft and dead markup; keep the real content.
+\u2022 Output COMPLETE file(s) for the target stack: include EVERY import, the entry/mount point (e.g. ReactDOM render / index), all components, and all styles. If multiple files are needed, emit each prefixed with a "// FILE: <path>" header so it can be split out.
+\u2022 Use the REAL extracted content/data (titles, labels, links, values) \u2014 never lorem ipsum or dummy data.
+\u2022 NO placeholders, NO TODOs, NO "...", NO truncation, NO commentary or explanation. Every component fully implemented and wired.
+\u2022 It must be immediately runnable and visually faithful.
+Return ONLY the code.`;
+var SCREENSHOT_DESC_PROMPT = `Describe this screenshot of a web page for FAITHFUL pixel-level reconstruction. Be concrete and exhaustive: overall layout & grid, each section top\u2192bottom, every component, exact colors (hex if discernible), typography (family/weight/size/line-height), spacing/padding/margins, border radius, shadows, alignment, and any icons/imagery. This description will be used to rebuild the page, so omit nothing visually significant.`;
+async function htmlToCode(input, models) {
+  if (!input.html || !input.html.trim()) throw new Error("htmlToCode needs input.html.");
+  let visualNotes = "";
+  if (input.screenshot && models.watch) {
+    visualNotes = (await models.watch({ frames: [input.screenshot], mimeType: "image/png", prompt: SCREENSHOT_DESC_PROMPT })).trim();
+  }
+  const stack = input.stack ?? "a single clean self-contained HTML file with inline CSS (no build step)";
+  const prompt = `${REVERSE_PROMPT}
+
+Target stack: ${stack}${input.goal ? `
+Goal: ${input.goal}` : ""}${visualNotes ? `
+
+=== VISUAL (from screenshot) ===
+${visualNotes}` : ""}
+
+=== CAPTURED HTML ===
+${input.html}`;
+  const code = (await models.code(prompt)).trim();
+  return { code, visualNotes: visualNotes || void 0 };
+}
+async function urlToCode(url, models, opts = {}) {
+  const { captureScreens: captureScreens2 } = await Promise.resolve().then(() => (init_screenshot_flow(), screenshot_flow_exports));
+  const caps = await captureScreens2([url], { viewport: opts.viewport });
+  const cap = caps[0];
+  if (!cap || !cap.ok || !cap.html) {
+    throw new Error(`urlToCode: could not capture ${url}${cap?.note ? ` (${cap.note})` : ""}.`);
+  }
+  const { code } = await htmlToCode(
+    { html: cap.html, screenshot: cap.png ?? void 0, goal: opts.goal, stack: opts.stack },
+    models
+  );
+  return { url, html: cap.html, screenshot: cap.png, code };
+}
+var SPEC_YAML_PROMPT = `You are a senior front-end engineer reverse-engineering a live web page so ANOTHER engineer can rebuild it from your spec ALONE. Below is the page's captured RENDERED HTML (optionally with visual notes from a screenshot). Strip tracking/ads/analytics/dead markup; keep the meaningful structure. Output a precise, exhaustive, build-ready spec as VALID YAML ONLY \u2014 no prose, no markdown, no code fences. Use exactly this top-level schema:
+page:            # url, title, purpose (one line: what this page is for)
+design_tokens:   # colors: {name: hex}; typography: {fontFamily, weights, scale}; spacing; radius; shadows
+layout:          # ordered list of regions top\u2192bottom; each: {region, role, components: [names]}
+components:      # reusable components; each: {name, description, structure (element tree), styling (key css/classes), content_example}
+data_model:      # entities the page renders; each: {entity, fields: [..]}
+interactions:    # list of {trigger, effect}
+responsive:      # notable breakpoints/behavior
+build_notes:     # how to assemble it, stack-agnostic
+Be concrete (real colors as hex, real copy, real fields). Output ONLY YAML.`;
+async function htmlToSpec(input, models) {
+  if (!input.html || !input.html.trim()) throw new Error("htmlToSpec needs input.html.");
+  let visualNotes = "";
+  if (input.screenshot && models.watch) {
+    visualNotes = (await models.watch({ frames: [input.screenshot], mimeType: "image/png", prompt: SCREENSHOT_DESC_PROMPT })).trim();
+  }
+  const prompt = `${SPEC_YAML_PROMPT}${input.goal ? `
+Goal: ${input.goal}` : ""}${visualNotes ? `
+
+=== VISUAL (from screenshot) ===
+${visualNotes}` : ""}
+
+=== CAPTURED HTML ===
+${input.html}`;
+  let spec = (await models.code(prompt)).trim();
+  spec = spec.replace(/^```ya?ml\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+  return { spec, visualNotes: visualNotes || void 0 };
+}
+async function urlToSpec(url, models, opts = {}) {
+  const { captureScreens: captureScreens2 } = await Promise.resolve().then(() => (init_screenshot_flow(), screenshot_flow_exports));
+  const caps = await captureScreens2([url], { viewport: opts.viewport });
+  const cap = caps[0];
+  if (!cap || !cap.ok || !cap.html) {
+    throw new Error(`urlToSpec: could not capture ${url}${cap?.note ? ` (${cap.note})` : ""}.`);
+  }
+  const { spec } = await htmlToSpec(
+    { html: cap.html, screenshot: cap.png ?? void 0, goal: opts.goal },
+    models
+  );
+  return { url, html: cap.html, screenshot: cap.png, spec };
+}
+async function extractFrames(videoPath, opts = {}) {
+  const [{ spawn: spawn3 }, os, path, fs] = await Promise.all([
+    import("child_process"),
+    import("os"),
+    import("path"),
+    import("fs/promises")
+  ]);
+  const count = opts.count ?? 8;
+  const ffmpeg = opts.ffmpegPath ?? "ffmpeg";
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "oriro-head-frames-"));
+  const pattern = path.join(dir, "f-%03d.png");
+  await new Promise((resolve, reject) => {
+    const p = spawn3(ffmpeg, ["-hide_banner", "-loglevel", "error", "-i", videoPath, "-vf", "thumbnail", "-frames:v", String(count), "-y", pattern], { stdio: "ignore" });
+    p.on("error", () => reject(new Error("ffmpeg not found \u2014 pass frames yourself or a video-capable model, or set ffmpegPath.")));
+    p.on("close", (code) => code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}`)));
+  });
+  const files = (await fs.readdir(dir)).filter((f) => f.endsWith(".png")).sort();
+  const frames = [];
+  for (const f of files.slice(0, count)) frames.push(new Uint8Array(await fs.readFile(path.join(dir, f))));
+  return frames;
+}
+
+// src/head/model.ts
+import { register as registerOpenAICompletions2 } from "@earendil-works/pi-ai/openai-completions";
+
+// src/routers/keyless-complete.ts
+import { complete } from "@earendil-works/pi-ai";
+async function completeViaRouter(router, context, maxTokens = 1024) {
+  const reply = await complete(routerModel(router), context, {
+    apiKey: router.apiKey,
+    maxTokens
+  });
+  if (reply.stopReason === "error") {
+    const msg = reply.errorMessage ?? "router error";
+    const err = new Error(msg);
+    if (/\b429\b|rate.?limit|too many requests/i.test(msg)) err.status = 429;
+    throw err;
+  }
+  const text = reply.content.filter((c) => c.type === "text").map((c) => c.text).join("");
+  if (!text.trim()) throw new Error("empty completion");
+  return text;
+}
+
+// src/head/model.ts
+var HEAD_CODER_SYSTEM = "You are ORIRO Head's senior front-end engineer. Reproduce UIs faithfully and output exactly what the instruction asks for (clean, working code or a structured spec). No preamble.";
+function buildHeadCoderModel(routers = KEYLESS_FLOOR) {
+  registerOpenAICompletions2();
+  const byId = new Map(routers.map((r) => [r.id, r]));
+  const mux = new RouterMux(routers.map((r) => r.id));
+  return async (prompt) => {
+    const context = {
+      systemPrompt: HEAD_CODER_SYSTEM,
+      messages: [{ role: "user", content: prompt, timestamp: Date.now() }]
+    };
+    const { result } = await mux.run(async (id) => {
+      const r = byId.get(id);
+      if (!r) throw new Error(`unknown router ${id}`);
+      return completeViaRouter(r, context, 8192);
+    });
+    return result;
+  };
+}
+function headModels(routers = KEYLESS_FLOOR) {
+  return { code: buildHeadCoderModel(routers) };
+}
+var HEAD_WATCH_SYSTEM = "You are ORIRO Head's UI analyst. From the described/attached media, produce a precise, build-ready specification of the interface. Be concrete and exhaustive. No preamble.";
+function buildHeadWatchModel(routers = KEYLESS_FLOOR) {
+  registerOpenAICompletions2();
+  const byId = new Map(routers.map((r) => [r.id, r]));
+  const mux = new RouterMux(routers.map((r) => r.id));
+  return async ({ prompt }) => {
+    const context = {
+      systemPrompt: HEAD_WATCH_SYSTEM,
+      messages: [{ role: "user", content: prompt, timestamp: Date.now() }]
+    };
+    const { result } = await mux.run(async (id) => {
+      const r = byId.get(id);
+      if (!r) throw new Error(`unknown router ${id}`);
+      return completeViaRouter(r, context, 8192);
+    });
+    return result;
+  };
+}
+function headVideoModels(routers = KEYLESS_FLOOR) {
+  return { watch: buildHeadWatchModel(routers), code: buildHeadCoderModel(routers) };
+}
+
+// src/head/intent.ts
+var TRIGGERS = [
+  /\bgo (and )?(look|check|see|visit|inspect)\b/i,
+  /\binspect\b/i,
+  /\bcompare\b/i,
+  /\bvs\.?\b/i,
+  /\bgap analysis\b/i,
+  /\bcompetitive analysis\b/i,
+  /\bwhat (do|does) .* have that we (don'?t|do not|lack)\b/i,
+  /\b(build|make) .* like .+'s\b/i,
+  // "build a pricing page like stripe's"
+  /\blook at (this )?(url|site|page|https?:\/\/)/i
+];
+var SELF = /\b(us|our|ours|my|mine|this (site|page|app))\b/i;
+var SHOTS = /\bscreenshots?\b|\bshow me\b|--shots\b|\bvisual(s|ly)?\b/i;
+var URL_RE = /\b((?:https?:\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\s)]*)?)\b/gi;
+function normalize(u) {
+  const t = u.replace(/[).,;]+$/, "").trim();
+  if (!t) return "";
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+}
+function extractUrls(text) {
+  const seen = /* @__PURE__ */ new Set();
+  for (const m of text.matchAll(URL_RE)) {
+    const u = normalize(m[1] ?? "");
+    if (u && /\.[a-z]{2,}/i.test(u)) seen.add(u);
+  }
+  return [...seen];
+}
+function detectInspectIntent(text) {
+  const urls = extractUrls(text);
+  const phraseHit = TRIGGERS.some((re) => re.test(text));
+  const isInspect = phraseHit || urls.length >= 2;
+  const targetIsSelf = SELF.test(text);
+  const wantsShots = SHOTS.test(text);
+  if (!isInspect || urls.length === 0) {
+    return { isInspect: isInspect && urls.length > 0, targetIsSelf, competitors: [], wantsShots };
+  }
+  if (targetIsSelf) {
+    return { isInspect: true, targetIsSelf: true, competitors: urls, wantsShots };
+  }
+  const [target, ...competitors] = urls;
+  return { isInspect: true, targetIsSelf: false, target, competitors, wantsShots };
+}
+
+// src/head/run.ts
+function hostSlug(url) {
+  try {
+    return new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`).host.replace(/^www\./, "").replace(/[^a-z0-9.-]/gi, "_");
+  } catch {
+    return "site";
+  }
+}
+function extForStack(stack) {
+  const s = (stack ?? "").toLowerCase();
+  if (/\btsx?\b|react|next/.test(s)) return s.includes("ts") ? ".tsx" : ".jsx";
+  if (/\bvue\b/.test(s)) return ".vue";
+  if (/\bsvelte\b/.test(s)) return ".svelte";
+  return ".html";
+}
+function summarizeReport(report) {
   const lines = [report.summary];
   const page = (p) => `  \u2022 ${p.url} \u2014 ${p.ok ? `${p.sections.length} sections: ${p.sections.map((s) => s.type).join(", ")}` : `not readable (${p.note})`}`;
   lines.push("Pages seen:");
@@ -3157,11 +3787,106 @@ function summarizeForCoder(report) {
   }
   return lines.join("\n");
 }
+async function runInspect(target, competitors, opts = {}) {
+  const report = await comparePages({ targetUrl: target, competitorUrls: competitors.length ? competitors : [target] });
+  const files = [];
+  if (opts.html) {
+    const path = join18(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(target)}-inspect.html`);
+    await writeFile(path, buildInspectionHtml(report), "utf8");
+    files.push(path);
+  }
+  return { summary: summarizeReport(report), files, report };
+}
+function parseHeadTargets(text, selfOrigin) {
+  const intent = detectInspectIntent(text);
+  if (intent.targetIsSelf) return { target: selfOrigin ?? null, competitors: intent.competitors };
+  if (intent.target) return { target: intent.target, competitors: intent.competitors };
+  const urls = extractUrls(text);
+  return { target: urls[0] ?? null, competitors: urls.slice(1) };
+}
+async function runUrlToCode(url, opts = {}) {
+  try {
+    const res = await urlToCode(url, headModels(), { goal: opts.goal, stack: opts.stack });
+    const codePath = join18(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(url)}${extForStack(opts.stack)}`);
+    await writeFile(codePath, res.code, "utf8");
+    return { summary: `Reverse-engineered ${url} into clean code (${res.code.length} chars) \u2192 ${codePath}`, files: [codePath] };
+  } catch (e) {
+    return { summary: headCaptureError("url\u2192code", e), files: [] };
+  }
+}
+async function runUrlToSpec(url, opts = {}) {
+  try {
+    const res = await urlToSpec(url, headModels(), { goal: opts.goal });
+    const specPath = join18(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(url)}.spec.yaml`);
+    await writeFile(specPath, res.spec, "utf8");
+    return { summary: `Reverse-engineered ${url} into a YAML build spec \u2192 ${specPath}`, files: [specPath] };
+  } catch (e) {
+    return { summary: headCaptureError("url\u2192spec", e), files: [] };
+  }
+}
+async function runCapture(urls, opts = {}) {
+  try {
+    const { captureScreens: captureScreens2, buildScreenshotFlowHtml: buildScreenshotFlowHtml2 } = await Promise.resolve().then(() => (init_screenshot_flow(), screenshot_flow_exports));
+    const caps = await captureScreens2(urls, { video: opts.video });
+    const html = buildScreenshotFlowHtml2([{ name: "Captured screens", captures: caps }]);
+    const flowPath = join18(opts.outDir ?? process.cwd(), "oriro-head-flow.html");
+    await writeFile(flowPath, html, "utf8");
+    const ok2 = caps.filter((c) => c.ok).length;
+    return { summary: `Captured ${ok2}/${caps.length} full-page screenshots \u2192 ${flowPath}`, files: [flowPath] };
+  } catch (e) {
+    return { summary: headCaptureError("screenshots", e), files: [] };
+  }
+}
+async function runVideoToCode(videoPath, opts = {}) {
+  try {
+    const mime = detectMediaType(videoPath).mimeType;
+    let frames;
+    try {
+      frames = await extractFrames(videoPath, { count: 8 });
+    } catch {
+      frames = void 0;
+    }
+    const res = await videoToCode(
+      { videoPath, frames, mimeType: mime, goal: opts.goal, stack: opts.stack },
+      headVideoModels()
+    );
+    const codePath = join18(opts.outDir ?? process.cwd(), `oriro-head-video${extForStack(opts.stack)}`);
+    await writeFile(codePath, res.code, "utf8");
+    return { summary: `Watched ${videoPath} \u2192 built code (${res.code.length} chars) \u2192 ${codePath}
+(experimental on the free floor \u2014 add a vision-capable router for pixel-faithful results.)`, files: [codePath] };
+  } catch (e) {
+    return { summary: `video\u2192code failed: ${e instanceof Error ? e.message : String(e)}. This flow needs a readable video and gives best results with a vision-capable router.`, files: [] };
+  }
+}
+function headCaptureError(op, e) {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/playwright/i.test(msg)) {
+    return `${op} needs the Chromium browser. Install it once:
+  npm i playwright && npx playwright install chromium
+Then retry. (The structural read \`oriro head <url>\` needs no browser.)`;
+  }
+  return `${op} failed: ${msg}`;
+}
+
+// src/head/pi-tool.ts
 var InspectSiteParams = Type2.Object({
   url: Type2.String({ description: "The target website URL to inspect or rebuild from." }),
   competitors: Type2.Optional(
     Type2.Array(Type2.String(), { description: "Optional competitor/reference URLs to compare the target against." })
   )
+});
+var UrlParam = Type2.Object({
+  url: Type2.String({ description: "The website URL to capture and rebuild." }),
+  goal: Type2.Optional(Type2.String({ description: "Optional natural-language goal, e.g. 'rebuild the pricing page'." })),
+  stack: Type2.Optional(Type2.String({ description: "Target stack for the generated code. Default: one self-contained HTML file." }))
+});
+var CaptureParams = Type2.Object({
+  urls: Type2.Array(Type2.String(), { description: "One or more URLs to screenshot in a real browser." })
+});
+var VideoParams = Type2.Object({
+  videoPath: Type2.String({ description: "Path to a screen-recording video to rebuild the UI from." }),
+  goal: Type2.Optional(Type2.String()),
+  stack: Type2.Optional(Type2.String())
 });
 function registerHead(pi) {
   pi.registerTool({
@@ -3170,10 +3895,49 @@ function registerHead(pi) {
     description: "Go out to a live website and SEE it: its sections, CTAs, structure, and any gaps versus competitor URLs. Returns a structured report to build from. Call this whenever the user wants to look at, compare against, or rebuild a website/page.",
     parameters: InspectSiteParams,
     async execute(_toolCallId, params) {
-      const target = params.url;
-      const competitors = params.competitors?.length ? params.competitors : [target];
-      const report = await comparePages({ targetUrl: target, competitorUrls: competitors });
-      return { content: [{ type: "text", text: summarizeForCoder(report) }], details: report };
+      const competitors = params.competitors?.length ? params.competitors : [params.url];
+      const report = await comparePages({ targetUrl: params.url, competitorUrls: competitors });
+      return { content: [{ type: "text", text: summarizeReport(report) }], details: report };
+    }
+  });
+  pi.registerTool({
+    name: "url_to_code",
+    label: "ORIRO Head \xB7 url\u2192code",
+    description: "Go to a URL, capture the live rendered page in a real browser, and REVERSE-ENGINEER it into clean, runnable code. Use when the user wants to rebuild/clone a page. Writes the code to a file in the working directory. Needs the `playwright` peer for the browser capture.",
+    parameters: UrlParam,
+    async execute(_toolCallId, params) {
+      const out = await runUrlToCode(params.url, { goal: params.goal, stack: params.stack });
+      return { content: [{ type: "text", text: out.summary }], details: { files: out.files } };
+    }
+  });
+  pi.registerTool({
+    name: "url_to_spec",
+    label: "ORIRO Head \xB7 url\u2192spec",
+    description: "Go to a URL, capture it, and reverse-engineer a precise, stack-agnostic YAML BUILD SPEC (design tokens, layout, component tree, data model, interactions). Use when the user wants a spec to rebuild from rather than a one-shot code dump. Needs the `playwright` peer.",
+    parameters: UrlParam,
+    async execute(_toolCallId, params) {
+      const out = await runUrlToSpec(params.url, { goal: params.goal });
+      return { content: [{ type: "text", text: out.summary }], details: { files: out.files } };
+    }
+  });
+  pi.registerTool({
+    name: "capture_site",
+    label: "ORIRO Head \xB7 screenshots",
+    description: "Visit each URL in a real browser and capture full-page screenshots, assembled into one visual flow HTML file. Use when the user wants to SEE pages, not just their structure. Needs the `playwright` peer.",
+    parameters: CaptureParams,
+    async execute(_toolCallId, params) {
+      const out = await runCapture(params.urls);
+      return { content: [{ type: "text", text: out.summary }], details: { files: out.files } };
+    }
+  });
+  pi.registerTool({
+    name: "video_to_code",
+    label: "ORIRO Head \xB7 video\u2192code",
+    description: "Watch a screen-recording video of a UI and build working code from it. Experimental on the free floor (best results with a vision-capable router). Use when the user drops a recording to rebuild.",
+    parameters: VideoParams,
+    async execute(_toolCallId, params) {
+      const out = await runVideoToCode(params.videoPath, { goal: params.goal, stack: params.stack });
+      return { content: [{ type: "text", text: out.summary }], details: { files: out.files } };
     }
   });
 }
@@ -3268,11 +4032,11 @@ function registerOrchestrator(pi) {
 import { loadSkills, formatSkillsForPrompt } from "@earendil-works/pi-coding-agent";
 import { fileURLToPath } from "url";
 import { existsSync as existsSync11 } from "fs";
-import { dirname as dirname2, join as join18 } from "path";
+import { dirname as dirname2, join as join19 } from "path";
 function packageRoot(start) {
   let dir = start;
   for (let i = 0; i < 10; i++) {
-    if (existsSync11(join18(dir, "package.json"))) return dir;
+    if (existsSync11(join19(dir, "package.json"))) return dir;
     const parent = dirname2(dir);
     if (parent === dir) break;
     dir = parent;
@@ -3281,7 +4045,7 @@ function packageRoot(start) {
 }
 function skillsDir() {
   if (process.env.ORIRO_SKILLS_DIR) return process.env.ORIRO_SKILLS_DIR;
-  return join18(packageRoot(dirname2(fileURLToPath(import.meta.url))), "skills");
+  return join19(packageRoot(dirname2(fileURLToPath(import.meta.url))), "skills");
 }
 async function loadOriroSkills(dir = skillsDir()) {
   const result = await loadSkills({
@@ -4022,7 +4786,7 @@ function registerScribeCommand(program2) {
 
 // src/connectors/connectors.ts
 import { readFileSync as readFileSync19, writeFileSync as writeFileSync14 } from "fs";
-import { join as join19 } from "path";
+import { join as join20 } from "path";
 
 // src/connectors/catalog.ts
 var CONNECTOR_CATALOG = [
@@ -5012,7 +5776,7 @@ function connectorBySlug(slug) {
 
 // src/connectors/connectors.ts
 function file2() {
-  return join19(oriroDir(), "connectors.json");
+  return join20(oriroDir(), "connectors.json");
 }
 function readAdded() {
   try {
@@ -5023,7 +5787,7 @@ function readAdded() {
   }
 }
 function writeAdded(slugs) {
-  writeFileSync14(join19(ensureOriroDir(), "connectors.json"), JSON.stringify([...new Set(slugs)], null, 2), "utf8");
+  writeFileSync14(join20(ensureOriroDir(), "connectors.json"), JSON.stringify([...new Set(slugs)], null, 2), "utf8");
 }
 function listConnectors(category) {
   return category ? CONNECTOR_CATALOG.filter((c) => c.category === category) : CONNECTOR_CATALOG;
@@ -5091,9 +5855,9 @@ function registerConnectorsCommand(program2) {
 
 // src/channels/config.ts
 import { readFileSync as readFileSync20, writeFileSync as writeFileSync15 } from "fs";
-import { join as join20 } from "path";
+import { join as join21 } from "path";
 function file3() {
-  return join20(oriroDir(), "channels.json");
+  return join21(oriroDir(), "channels.json");
 }
 function readChannels() {
   try {
@@ -5106,10 +5870,10 @@ function readChannels() {
 function saveChannel(cfg) {
   const all = readChannels().filter((c) => c.kind !== cfg.kind);
   all.push(cfg);
-  writeFileSync15(join20(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync15(join21(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
 }
 function removeChannel(kind) {
-  writeFileSync15(join20(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
+  writeFileSync15(join21(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
 }
 
 // src/channels/telegram.ts
@@ -5226,9 +5990,9 @@ async function startDiscord(token) {
 }
 
 // src/channels/whatsapp.ts
-import { join as join21 } from "path";
+import { join as join22 } from "path";
 function whatsappAuthDir() {
-  return join21(oriroDir(), "whatsapp-auth");
+  return join22(oriroDir(), "whatsapp-auth");
 }
 async function startWhatsApp() {
   let baileys;
@@ -5432,6 +6196,67 @@ function registerAvatarCommand(program2) {
   });
 }
 
+// src/commands/head.ts
+function usage() {
+  heading("ORIRO Head \u{1F9ED}");
+  info("Go out to a live site and SEE it \u2014 structure, gaps, or a full rebuild. Keyless, on-device.");
+  process.stdout.write(
+    `
+  ${accent("oriro head <url> [competitor ...]")}   ${dim("structural read + gap analysis (no browser)")}
+  ${accent("oriro head <url> --html")}              ${dim("also write the visual HTML report")}
+  ${accent("oriro head <url> --code")}              ${dim("reverse-engineer clean, runnable code")}
+  ${accent("oriro head <url> --spec")}              ${dim("reverse-engineer a YAML build spec")}
+  ${accent("oriro head <url> [url ...] --shots")}   ${dim("full-page screenshots \u2192 visual flow HTML")}
+  ${accent("oriro head --video <path>")}            ${dim("rebuild a UI from a screen recording (experimental)")}
+
+  ${dim("--goal <text>  --stack <text>  --out <dir>")}
+  ${dim("code/spec/shots need Chromium once: npm i playwright && npx playwright install chromium")}
+`
+  );
+}
+function registerHeadCommand(program2) {
+  program2.command("head").description("go out to a live site and SEE it \u2014 structure, code, spec, or screenshots").argument("[url]", "the target URL (or omit when using --video)").argument("[competitors...]", "optional competitor/reference URLs").option("--code", "reverse-engineer the page into clean, runnable code").option("--spec", "reverse-engineer the page into a YAML build spec").option("--shots", "capture full-page screenshots into one visual flow HTML").option("--html", "also write the visual HTML report (structural read)").option("--video <path>", "rebuild a UI from a screen recording (experimental)").option("--goal <text>", "natural-language goal for the rebuild").option("--stack <text>", "target stack for generated code").option("--out <dir>", "directory to write artifacts into (default: current dir)").action(async (url, competitors, opts) => {
+    const outDir = opts.out;
+    if (opts.video) {
+      heading("ORIRO Head \xB7 video\u2192code");
+      const res = await runVideoToCode(opts.video, { goal: opts.goal, stack: opts.stack, outDir });
+      process.stdout.write(`${res.summary}
+`);
+      for (const f of res.files) ok(`wrote ${f}`);
+      return;
+    }
+    if (!url) {
+      usage();
+      return;
+    }
+    const looksLikeUrl = /^https?:\/\//i.test(url) || /^[a-z0-9-]+(?:\.[a-z0-9-]+)+/i.test(url);
+    let target = url;
+    let refs = competitors;
+    if (!looksLikeUrl) {
+      const parsed = parseHeadTargets([url, ...competitors].join(" "));
+      if (!parsed.target) {
+        usage();
+        return;
+      }
+      target = parsed.target;
+      refs = parsed.competitors;
+    }
+    heading("ORIRO Head \u{1F9ED}");
+    try {
+      let res;
+      if (opts.code) res = await runUrlToCode(target, { goal: opts.goal, stack: opts.stack, outDir });
+      else if (opts.spec) res = await runUrlToSpec(target, { goal: opts.goal, outDir });
+      else if (opts.shots) res = await runCapture([target, ...refs], { outDir });
+      else res = await runInspect(target, refs, { html: opts.html, outDir });
+      process.stdout.write(`${res.summary}
+`);
+      for (const f of res.files) ok(`wrote ${f}`);
+    } catch (e) {
+      die(`head failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  });
+}
+
 // src/cli.ts
 var version = createRequire(import.meta.url)("../package.json").version;
 var program = new Command();
@@ -5457,6 +6282,7 @@ registerChannelsCommand(program);
 registerSkillsCommand(program);
 registerLanguageCommand(program);
 registerAvatarCommand(program);
+registerHeadCommand(program);
 program.parseAsync().catch((e) => {
   if (e instanceof DieError) return;
   process.stderr.write(`
