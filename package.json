@@ -1,10 +1,11 @@
 {
   "name": "@oriro/orirocli",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "ORIRO — a free, on-device-friendly terminal AI agent. Built on the Pi agent harness (used as a library).",
   "type": "module",
   "bin": {
-    "oriro": "./dist/cli.js"
+    "oriro": "./dist/cli.js",
+    "orirocli": "./dist/cli.js"
   },
   "engines": {
     "node": ">=20"

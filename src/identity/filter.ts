@@ -33,7 +33,9 @@ export function applyIdentity(context: Context): Context {
 /** Backstop, per sentence: (1) neutralize any base-model self-identification (replace the banned
  *  name with ORIRO), and (2) GUARANTEE positive identity — if the sentence introduces itself as an
  *  AI/assistant ("I am a coding assistant") without naming ORIRO, insert the name. Together these
- *  ensure the assistant never leaks a base model AND always identifies as ORIRO. */
+ *  ensure the assistant never leaks a base model AND always identifies as ORIRO. (Router disclosure —
+ *  e.g. a "Powered by <router>" footer — is intentionally NOT stripped: ORIRO is transparent about the
+ *  racing routers and rewards the winner.) */
 export function scrubIdentity(text: string): string {
   return text.replace(/[^.?!\n]+[.?!]?/g, (sentence) => {
     let s = SELF_REF.test(sentence) && BANNED_TEST.test(sentence) ? sentence.replace(BANNED_REPLACE, "ORIRO") : sentence;
