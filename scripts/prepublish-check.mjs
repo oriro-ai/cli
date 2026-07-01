@@ -36,7 +36,7 @@ const skillsDir = join(root, "skills");
 let skillCount = 0;
 const walk = (d) => { for (const e of readdirSync(d)) { const p = join(d, e); statSync(p).isDirectory() ? walk(p) : (e === "SKILL.md" && skillCount++); } };
 if (existsSync(skillsDir)) walk(skillsDir);
-check(skillCount === 323, `skills shipping: ${skillCount}`, `skills count = ${skillCount} (expected 323)`);
+check(skillCount === 327, `skills shipping: ${skillCount}`, `skills count = ${skillCount} (expected 327)`);
 
 // 4. The packed file list is EXACTLY the allowed set — the real guarantee of what reaches users.
 const ALLOWED = (p) => p === "package.json" || p === "README.md" || p === "LICENSE" || p === "ATTRIBUTION.md" || p === "dist/cli.js" || p.startsWith("skills/");
