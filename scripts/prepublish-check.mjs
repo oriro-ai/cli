@@ -39,7 +39,7 @@ if (existsSync(skillsDir)) walk(skillsDir);
 check(skillCount === 323, `skills shipping: ${skillCount}`, `skills count = ${skillCount} (expected 323)`);
 
 // 4. The packed file list is EXACTLY the allowed set — the real guarantee of what reaches users.
-const ALLOWED = (p) => p === "package.json" || p === "README.md" || p === "ATTRIBUTION.md" || p === "dist/cli.js" || p.startsWith("skills/");
+const ALLOWED = (p) => p === "package.json" || p === "README.md" || p === "LICENSE" || p === "ATTRIBUTION.md" || p === "dist/cli.js" || p.startsWith("skills/");
 try {
   // --ignore-scripts so the `prepare` build doesn't print into the --json output; slice from the
   // first "[" to drop any leading npm notice noise before parsing.

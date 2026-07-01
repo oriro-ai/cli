@@ -19,7 +19,7 @@ npm pkg set private=true      # re-arm the gate immediately
 npm deprecate "@oriro/cli@<=2026.6.10" "Moved to @oriro/orirocli — install that for the clean rebuild."
 
 # Verify from a clean shell (new user path):
-npx -y @oriro/orirocli@latest --version    # → 0.1.0
+npx -y @oriro/orirocli@latest --version    # → 0.1.8
 ```
 
 ## What a user gets after this
