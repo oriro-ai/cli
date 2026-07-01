@@ -9,6 +9,7 @@ import { isLanguageConfigured, runLanguageOnboarding } from "../language/index.j
 import { activateGuardian } from "../guardian/index.js";
 import { isAvatarConfigured, runAvatarOnboarding } from "../avatar/index.js";
 import { hasScribeChoice, setScribeConsent } from "../scribe/consent.js";
+import { hasRouterChoice, runRouterOnboarding } from "../routers/onboarding.js";
 import { dim, accent } from "../ui/theme.js";
 import { ask } from "./prompt.js";
 
@@ -54,6 +55,10 @@ export async function runOnboarding(): Promise<void> {
     stdout.write(yes ? `  ${accent("📓 Scriber")} on.\n` : `  ${dim("Scriber off — `oriro scribe on` anytime.")}\n`);
   }
 
-  // Step 6 — channels are offered in the channels milestone (BYO bot creds).
+  // Step 6 — routers / BYOK (offered ONCE; keyless floor stays the zero-config default, so a fresh
+  // user can always chat). This is the step that was previously missing from the journey.
+  if (!hasRouterChoice()) await runRouterOnboarding();
+
+  // (Channels — BYO bot creds — are offered in the channels milestone.)
   stdout.write(`\n  ${accent("ORIRO is ready.")} ${dim("Type to chat · /exit to leave")}\n\n`);
 }

@@ -65,6 +65,35 @@ walBytes <= 4 ? ok(`WAL compacted after ${SECRETS.length} commits (${walBytes} b
 const legit = redact("Refactored parseConfig() in src/app.ts; commit a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2 fixes the bug.").text;
 legit.includes("a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2") && legit.includes("parseConfig") ? ok("legit text + git SHA preserved") : bad(`over-redacted legit text: ${legit.slice(0, 80)}`);
 
+// 5) Claude Code transcript adapter — distil the latest turn + scope guard.
+const { lastTurnFromTranscript, shouldCapture, parseHookStdin } = await import("../src/scribe/transcript.js");
+const transcript = join(dir, "transcript.jsonl");
+writeFileSync(transcript, [
+  JSON.stringify({ type: "user", timestamp: "2026-06-30T00:00:00.000Z", message: { role: "user", content: "fix the scribe bug" } }),
+  JSON.stringify({ type: "assistant", timestamp: "2026-06-30T00:00:01.000Z", message: { role: "assistant", content: [
+    { type: "text", text: "Editing the file; my key is sk-ant-api03-TRANSCRIPTLEAKzzzzzzzzzz012345 oops" },
+    { type: "tool_use", name: "Edit", input: { file_path: "src/scribe/transcript.ts" } },
+  ] } }),
+].join("\n") + "\n");
+const turn = lastTurnFromTranscript(transcript);
+turn?.user === "fix the scribe bug" ? ok("transcript: user text extracted") : bad(`transcript user: ${turn?.user}`);
+turn?.tools?.includes("Edit") ? ok("transcript: tool name extracted") : bad(`transcript tools: ${turn?.tools}`);
+turn?.files?.includes("src/scribe/transcript.ts") ? ok("transcript: file path extracted") : bad(`transcript files: ${turn?.files}`);
+// End-to-end: the secret in the transcript must be redacted before disk.
+if (turn) supervisedCapture({ ts: turn.ts ?? "2026-06-30T00:00:02.000Z", date: "2026-06-30", user: turn.user, note: turn.note, tools: turn.tools, files: turn.files });
+let tLeak = false;
+for (const f of readdirSync(dir)) { if (f.endsWith(".jsonl")) continue; if (readFileSync(join(dir, f), "utf8").includes("TRANSCRIPTLEAK")) tLeak = true; }
+tLeak ? bad("transcript secret leaked to disk") : ok("transcript secret redacted before disk");
+// parseHookStdin tolerance + scope guard.
+parseHookStdin('{"transcript_path":"x","cwd":"y","stop_hook_active":true}').stopHookActive === true ? ok("hook stdin parsed") : bad("hook stdin parse");
+parseHookStdin("not json").stopHookActive === false ? ok("hook stdin junk-tolerant") : bad("hook stdin junk");
+delete process.env.ORIRO_SCRIBE_ONLY;
+shouldCapture("C:/Users/vinay/Downloads") === true ? ok("scope: default captures all") : bad("scope default");
+process.env.ORIRO_SCRIBE_ONLY = "1";
+shouldCapture("C:/Users/vinay/Downloads") === false ? ok("scope: ONLY excludes non-oriro") : bad("scope only-exclude");
+shouldCapture("C:/Users/vinay/orirocli") === true ? ok("scope: ONLY allows oriro path") : bad("scope only-allow");
+delete process.env.ORIRO_SCRIBE_ONLY;
+
 rmSync(dir, { recursive: true, force: true });
 process.stdout.write(`\n${fails === 0 ? "SCRIBE TESTS: PASS ✅" : `SCRIBE TESTS: FAIL ❌ (${fails})`}\n`);
 process.exit(fails === 0 ? 0 : 1);

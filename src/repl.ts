@@ -1,19 +1,23 @@
 // ORIRO REPL — the default (no-subcommand) experience: first-run onboarding → assemble the full
-// keyless session (Mux + Guardian + Head + Scriber + Orchestrator + skills) → a language-wrapped
-// readline chat loop. Extracted from cli.ts so the entry point is a thin command dispatcher.
-//   (v1 REPL is a clean readline loop with the language seam; swapping in Pi's rich pi-tui
-//    InteractiveMode — editor / @files / !bash — is a flagged polish follow-up.)
+// keyless session (Mux + Guardian + Head + Scriber + Orchestrator + skills) → an interactive loop.
+//
+// On a real terminal we run the rich pi-tui REPL (`repl-ui/tui-repl`) — a persistent posture FOOTER
+// (● Manual · ✎ Accept Edits · ⏵⏵ Auto · ▢ Plan) with a Shift+Tab cycle, fully ORIRO-branded.
+// When stdin/stdout is NOT a TTY (pipes, CI, the QA harness), we fall back to a plain readline loop
+// with the same language seam — so non-interactive use is unaffected.
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
+import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { banner } from "./ui/banner.js";
 import { isFirstRun, runOnboarding } from "./onboarding/wrapper.js";
 import { assembleOriroSession } from "./onboarding/assemble.js";
 import { noteUserInput } from "./scribe/scribe-pi.js";
 import { getTerminalLanguage } from "./language/index.js";
 import { translateIncoming, translateOutgoing } from "./language/gateway.js";
+import { runTuiRepl } from "./repl-ui/tui-repl.js";
 import { dim, accent } from "./ui/theme.js";
 
-/** In-REPL help — real, not LLM-fabricated. Lists the chat-loop commands and the shell subcommands. */
+/** In-REPL help — real, not LLM-fabricated. */
 function replHelp(): string {
   return (
     `\n  ${accent("ORIRO terminal — help")}\n` +
@@ -28,14 +32,21 @@ export async function runRepl(): Promise<void> {
   if (isFirstRun()) await runOnboarding();
   else stdout.write(banner());
 
-  const isEnglish = getTerminalLanguage().code.toLowerCase().startsWith("en");
-
   const { session } = await assembleOriroSession();
+
+  // Rich TUI (posture footer + Shift+Tab) on a real terminal; plain readline loop otherwise.
+  if (stdin.isTTY && stdout.isTTY) {
+    await runTuiRepl(session);
+    return;
+  }
+  await runReadlineRepl(session);
+}
+
+/** The plain, non-TTY loop (pipes / CI / QA). Same language seam; no footer (no raw-mode terminal). */
+async function runReadlineRepl(session: AgentSession): Promise<void> {
+  const isEnglish = getTerminalLanguage().code.toLowerCase().startsWith("en");
   const rl = createInterface({ input: stdin, output: stdout });
 
-  // SIGINT (Ctrl-C) can land MID-GENERATION, where there's no readline question to reject — without
-  // this, a second Ctrl-C force-killed the process (exit 1, no goodbye). Handle it ourselves: exit
-  // cleanly with "Bye." from any state (idle or streaming). Idempotent so repeated Ctrl-C is safe.
   let closing = false;
   const onSigint = (): void => {
     if (closing) return;
@@ -53,33 +64,32 @@ export async function runRepl(): Promise<void> {
       try {
         line = (await rl.question("› ")).trim();
       } catch {
-        break; // stdin closed (Ctrl-D or piped-input EOF) → exit cleanly, not a crash
+        break; // stdin closed (Ctrl-D / piped EOF) → exit cleanly
       }
       if (!line) continue;
       const slash = line.toLowerCase();
       if (slash === "/exit" || slash === "/quit") break;
       if (slash === "/help" || slash === "/?") { stdout.write(replHelp()); continue; }
 
-      // Route through the language gateway: it lazily wires + warms the on-device NLLB translator
-      // on first non-English use (the direct translate path never loaded it) and passes through for
-      // English / slash inputs. Degrades to passthrough if the model runtime is absent.
-      const english = await translateIncoming(line); // user's language → English for the model
-      noteUserInput(line); // record the user's exact words so the Scriber journals them (recall across sessions)
+      const english = await translateIncoming(line);
+      noteUserInput(line);
       let out = "";
-      const unsub = session.subscribe((e: { type: string; assistantMessageEvent?: { type: string; delta?: string } }) => {
-        if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
-          const d = e.assistantMessageEvent.delta ?? "";
-          out += d;
-          if (isEnglish) stdout.write(d); // stream live for English; non-English buffers to translate
-        }
-      });
+      const unsub = session.subscribe(
+        (e: { type: string; assistantMessageEvent?: { type: string; delta?: string } }) => {
+          if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
+            const d = e.assistantMessageEvent.delta ?? "";
+            out += d;
+            if (isEnglish) stdout.write(d);
+          }
+        },
+      );
       try {
         await session.prompt(english);
       } finally {
         unsub();
       }
       if (isEnglish) stdout.write("\n\n");
-      else stdout.write(`${await translateOutgoing(out.trim())}\n\n`); // English reply → user's language
+      else stdout.write(`${await translateOutgoing(out.trim())}\n\n`);
     }
   } finally {
     process.removeListener("SIGINT", onSigint);

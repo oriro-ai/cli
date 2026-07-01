@@ -5,8 +5,8 @@ import { createRequire } from "module";
 import { Command } from "commander";
 
 // src/repl.ts
-import { createInterface as createInterface4 } from "readline/promises";
-import { stdin as stdin4, stdout as stdout5 } from "process";
+import { createInterface as createInterface5 } from "readline/promises";
+import { stdin as stdin5, stdout as stdout6 } from "process";
 
 // src/ui/theme.ts
 var PALETTE = {
@@ -71,8 +71,8 @@ ${tagline}
 }
 
 // src/onboarding/wrapper.ts
-import { createInterface as createInterface3 } from "readline/promises";
-import { stdin as stdin3, stdout as stdout4 } from "process";
+import { createInterface as createInterface4 } from "readline/promises";
+import { stdin as stdin4, stdout as stdout5 } from "process";
 
 // src/language/languages.ts
 var LANGUAGES = [
@@ -1327,12 +1327,569 @@ function hasScribeChoice() {
   }
 }
 
+// src/routers/onboarding.ts
+import { createInterface as createInterface3 } from "readline/promises";
+import { stdin as stdin3, stdout as stdout4 } from "process";
+import { existsSync as existsSync4, mkdirSync as mkdirSync7, writeFileSync as writeFileSync9 } from "fs";
+import { join as join12 } from "path";
+
+// src/routers/catalog.ts
+var C4 = (e) => ({
+  api: "openai-completions",
+  freeModels: [],
+  tier: "free",
+  kind: "chat",
+  ...e
+});
+var ROUTER_CATALOG = [
+  // ── Keyless & live-verified (works now, zero keys, through the agent) ──
+  C4({
+    id: "pollinations",
+    displayName: "Pollinations",
+    baseUrl: "https://text.pollinations.ai/openai",
+    freeModels: ["openai", "mistral"],
+    obtainUrl: "https://pollinations.ai",
+    keyless: true,
+    verified: true
+  }),
+  // ── Free, no credit card — user brings a free token (validated at add-time) ──
+  // LLM7 serves anonymously over raw HTTP but REJECTS a bogus bearer, and the agent
+  // transport must send one for remote URLs — so it is NOT keyless-through-the-agent.
+  // A free token (no card) at llm7.io makes it work via `oriro routers add llm7 --key`.
+  C4({
+    id: "llm7",
+    displayName: "LLM7.io",
+    baseUrl: "https://api.llm7.io/v1",
+    freeModels: ["codestral-latest", "kimi-k2.6", "gpt-5.4-mini", "deepseek-v4-flash"],
+    obtainUrl: "https://llm7.io"
+  }),
+  // ── Free, no credit card — user brings a free key (validated at add-time) ──
+  C4({
+    id: "openrouter",
+    displayName: "OpenRouter",
+    baseUrl: "https://openrouter.ai/api/v1",
+    freeModels: ["deepseek/deepseek-chat-v3-0324:free", "moonshotai/kimi-k2.6:free"],
+    obtainUrl: "https://openrouter.ai/keys"
+  }),
+  C4({
+    id: "requesty",
+    displayName: "Requesty",
+    baseUrl: "https://router.requesty.ai/v1",
+    freeModels: ["google/gemini-2.0-flash-exp"],
+    obtainUrl: "https://requesty.ai"
+  }),
+  C4({
+    id: "google",
+    displayName: "Google AI Studio",
+    api: "google-generative-ai",
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta",
+    freeModels: ["gemini-2.5-flash", "gemini-2.0-flash"],
+    obtainUrl: "https://aistudio.google.com/apikey"
+  }),
+  C4({
+    id: "groq",
+    displayName: "Groq",
+    baseUrl: "https://api.groq.com/openai/v1",
+    freeModels: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
+    obtainUrl: "https://console.groq.com/keys"
+  }),
+  C4({
+    id: "mistral",
+    displayName: "Mistral",
+    baseUrl: "https://api.mistral.ai/v1",
+    freeModels: ["mistral-small-latest"],
+    obtainUrl: "https://console.mistral.ai/api-keys"
+  }),
+  C4({
+    id: "cerebras",
+    displayName: "Cerebras",
+    baseUrl: "https://api.cerebras.ai/v1",
+    freeModels: ["llama-3.3-70b", "llama3.1-8b"],
+    obtainUrl: "https://cloud.cerebras.ai"
+  }),
+  C4({
+    id: "cloudflare",
+    displayName: "Cloudflare Workers AI",
+    baseUrl: "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/v1",
+    freeModels: ["@cf/meta/llama-3.1-8b-instruct"],
+    obtainUrl: "https://dash.cloudflare.com/profile/api-tokens"
+  }),
+  C4({
+    id: "github-models",
+    displayName: "GitHub Models",
+    baseUrl: "https://models.inference.ai.azure.com",
+    freeModels: ["gpt-4o-mini"],
+    obtainUrl: "https://github.com/marketplace/models"
+  }),
+  C4({
+    id: "nvidia",
+    displayName: "NVIDIA NIM",
+    baseUrl: "https://integrate.api.nvidia.com/v1",
+    freeModels: ["moonshotai/kimi-k2.6", "meta/llama-3.1-8b-instruct"],
+    obtainUrl: "https://build.nvidia.com"
+  }),
+  C4({
+    id: "sambanova",
+    displayName: "SambaNova",
+    baseUrl: "https://api.sambanova.ai/v1",
+    freeModels: ["Meta-Llama-3.3-70B-Instruct"],
+    obtainUrl: "https://cloud.sambanova.ai"
+  }),
+  C4({
+    id: "siliconflow",
+    displayName: "SiliconFlow",
+    baseUrl: "https://api.siliconflow.cn/v1",
+    freeModels: ["Qwen/Qwen2.5-7B-Instruct"],
+    obtainUrl: "https://siliconflow.cn"
+  }),
+  C4({
+    id: "deepseek",
+    displayName: "DeepSeek",
+    baseUrl: "https://api.deepseek.com/v1",
+    freeModels: ["deepseek-chat"],
+    obtainUrl: "https://platform.deepseek.com/api_keys"
+  }),
+  C4({
+    id: "zai",
+    displayName: "Z.AI GLM",
+    baseUrl: "https://api.z.ai/api/paas/v4",
+    freeModels: ["glm-4-flash"],
+    obtainUrl: "https://z.ai"
+  }),
+  C4({
+    id: "scaleway",
+    displayName: "Scaleway",
+    baseUrl: "https://api.scaleway.ai/v1",
+    freeModels: ["llama-3.1-8b-instruct"],
+    obtainUrl: "https://console.scaleway.com"
+  }),
+  C4({
+    id: "xai",
+    displayName: "xAI Grok",
+    baseUrl: "https://api.x.ai/v1",
+    freeModels: ["grok-2-latest"],
+    obtainUrl: "https://console.x.ai"
+  }),
+  C4({
+    id: "together",
+    displayName: "Together AI",
+    baseUrl: "https://api.together.xyz/v1",
+    freeModels: ["meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"],
+    obtainUrl: "https://api.together.ai"
+  }),
+  C4({
+    id: "fireworks",
+    displayName: "Fireworks AI",
+    baseUrl: "https://api.fireworks.ai/inference/v1",
+    freeModels: ["accounts/fireworks/models/llama-v3p1-8b-instruct"],
+    obtainUrl: "https://fireworks.ai"
+  }),
+  C4({
+    id: "ai21",
+    displayName: "AI21 Labs",
+    baseUrl: "https://api.ai21.com/studio/v1",
+    freeModels: ["jamba-mini"],
+    obtainUrl: "https://studio.ai21.com"
+  }),
+  C4({
+    id: "hyperbolic",
+    displayName: "Hyperbolic",
+    baseUrl: "https://api.hyperbolic.xyz/v1",
+    freeModels: ["meta-llama/Meta-Llama-3.1-8B-Instruct"],
+    obtainUrl: "https://app.hyperbolic.xyz"
+  }),
+  C4({
+    id: "nebius",
+    displayName: "Nebius",
+    baseUrl: "https://api.studio.nebius.ai/v1",
+    freeModels: ["meta-llama/Meta-Llama-3.1-8B-Instruct"],
+    obtainUrl: "https://studio.nebius.ai"
+  }),
+  C4({
+    id: "novita",
+    displayName: "Novita",
+    baseUrl: "https://api.novita.ai/v3/openai",
+    freeModels: ["meta-llama/llama-3.1-8b-instruct"],
+    obtainUrl: "https://novita.ai"
+  }),
+  C4({
+    id: "upstage",
+    displayName: "Upstage",
+    baseUrl: "https://api.upstage.ai/v1/solar",
+    freeModels: ["solar-mini"],
+    obtainUrl: "https://console.upstage.ai"
+  }),
+  C4({
+    id: "nlpcloud",
+    displayName: "NLP Cloud",
+    baseUrl: "https://api.nlpcloud.io/v1",
+    freeModels: ["finetuned-llama-3-70b"],
+    obtainUrl: "https://nlpcloud.com"
+  }),
+  C4({
+    id: "baseten",
+    displayName: "Baseten",
+    baseUrl: "https://inference.baseten.co/v1",
+    freeModels: ["llama-3.1-8b-instruct"],
+    obtainUrl: "https://baseten.co"
+  }),
+  C4({
+    id: "anyscale",
+    displayName: "Anyscale",
+    baseUrl: "https://api.endpoints.anyscale.com/v1",
+    freeModels: ["meta-llama/Meta-Llama-3.1-8B-Instruct"],
+    obtainUrl: "https://anyscale.com"
+  }),
+  C4({
+    id: "inference-net",
+    displayName: "Inference.net",
+    baseUrl: "https://api.inference.net/v1",
+    freeModels: ["meta-llama/llama-3.1-8b-instruct"],
+    obtainUrl: "https://inference.net"
+  }),
+  C4({
+    id: "cohere",
+    displayName: "Cohere",
+    baseUrl: "https://api.cohere.ai/compatibility/v1",
+    freeModels: ["command-r-08-2024"],
+    obtainUrl: "https://dashboard.cohere.com/api-keys"
+  }),
+  C4({
+    id: "chutes",
+    displayName: "Chutes",
+    baseUrl: "https://llm.chutes.ai/v1",
+    freeModels: ["deepseek-ai/DeepSeek-V3"],
+    obtainUrl: "https://chutes.ai"
+  }),
+  C4({
+    id: "berget",
+    displayName: "Berget AI",
+    baseUrl: "https://api.berget.ai/v1",
+    freeModels: ["mistralai/Mistral-Small-Instruct"],
+    obtainUrl: "https://berget.ai"
+  }),
+  C4({
+    id: "huggingface",
+    displayName: "Hugging Face",
+    baseUrl: "https://router.huggingface.co/v1",
+    freeModels: ["meta-llama/Llama-3.2-3B-Instruct"],
+    obtainUrl: "https://huggingface.co/settings/tokens"
+  }),
+  C4({
+    id: "replicate",
+    displayName: "Replicate",
+    baseUrl: "https://api.replicate.com/v1",
+    freeModels: ["meta/meta-llama-3.1-8b-instruct"],
+    obtainUrl: "https://replicate.com/account/api-tokens"
+  }),
+  // ── Free gateways/proxies (no CC) — route through your own provider keys ──
+  C4({
+    id: "vercel-ai-gateway",
+    displayName: "Vercel AI Gateway",
+    baseUrl: "https://ai-gateway.vercel.sh/v1",
+    freeModels: ["openai/gpt-4o-mini"],
+    obtainUrl: "https://vercel.com/ai-gateway"
+  }),
+  C4({
+    id: "portkey",
+    displayName: "Portkey",
+    baseUrl: "https://api.portkey.ai/v1",
+    freeModels: [],
+    obtainUrl: "https://portkey.ai"
+  }),
+  C4({
+    id: "helicone",
+    displayName: "Helicone",
+    baseUrl: "https://oai.helicone.ai/v1",
+    freeModels: [],
+    obtainUrl: "https://helicone.ai"
+  }),
+  C4({
+    id: "litellm",
+    displayName: "LiteLLM (self-hosted)",
+    baseUrl: "http://localhost:4000/v1",
+    freeModels: [],
+    keyless: true
+  }),
+  C4({
+    id: "ollama",
+    displayName: "Ollama (local)",
+    api: "ollama",
+    baseUrl: "http://localhost:11434/v1",
+    freeModels: ["llama3.2"],
+    keyless: true
+  }),
+  // ── Image / speech services (catalog completeness; not chat-routable by the Mux) ──
+  C4({
+    id: "stability",
+    displayName: "Stability AI",
+    baseUrl: "https://api.stability.ai/v2beta",
+    freeModels: ["stable-image-core"],
+    obtainUrl: "https://platform.stability.ai",
+    kind: "image"
+  }),
+  C4({
+    id: "fal",
+    displayName: "fal.ai",
+    baseUrl: "https://fal.run",
+    freeModels: ["fal-ai/flux/schnell"],
+    obtainUrl: "https://fal.ai",
+    kind: "image"
+  }),
+  C4({
+    id: "wavespeed",
+    displayName: "WaveSpeedAI",
+    baseUrl: "https://api.wavespeed.ai",
+    freeModels: [],
+    obtainUrl: "https://wavespeed.ai",
+    kind: "image"
+  }),
+  C4({
+    id: "ai-horde",
+    displayName: "AI Horde",
+    baseUrl: "https://aihorde.net/api/v2",
+    freeModels: [],
+    obtainUrl: "https://aihorde.net",
+    keyless: true,
+    kind: "image"
+  }),
+  C4({
+    id: "assemblyai",
+    displayName: "AssemblyAI",
+    baseUrl: "https://api.assemblyai.com/v2",
+    freeModels: [],
+    obtainUrl: "https://assemblyai.com",
+    kind: "speech"
+  }),
+  // ── Paid (requires payment/recharge — moved out of free per the CC rule) ──
+  C4({
+    id: "moonshot",
+    displayName: "Moonshot (Direct)",
+    baseUrl: "https://api.moonshot.ai/v1",
+    freeModels: ["kimi-k2.6"],
+    obtainUrl: "https://platform.moonshot.ai",
+    tier: "paid"
+  }),
+  // ── ORIRO models — coming soon, greyed/"(free)", not selectable yet ──
+  C4({ id: "oriro-gauss", displayName: "ORIRO-Gauss", baseUrl: "", comingSoon: true }),
+  C4({ id: "oriro-avila", displayName: "ORIRO-Avila", baseUrl: "", comingSoon: true })
+];
+function routerById(id) {
+  return ROUTER_CATALOG.find((r) => r.id === id);
+}
+
+// src/routers/router-pool.ts
+import { mkdirSync as mkdirSync6, readFileSync as readFileSync9, writeFileSync as writeFileSync8 } from "fs";
+import { join as join11 } from "path";
+
+// src/routers/pool.ts
+import { existsSync as existsSync3, mkdirSync as mkdirSync5, readFileSync as readFileSync8, writeFileSync as writeFileSync7 } from "fs";
+import { join as join10 } from "path";
+function poolFile(dir) {
+  return join10(dir, "routers", "selected.json");
+}
+function loadPool(dir) {
+  const p = poolFile(dir);
+  if (!existsSync3(p)) return [];
+  try {
+    const v = JSON.parse(readFileSync8(p, "utf8"));
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+function savePool(dir, ids) {
+  mkdirSync5(join10(dir, "routers"), { recursive: true });
+  writeFileSync7(poolFile(dir), JSON.stringify([...new Set(ids)], null, 2), "utf8");
+}
+
+// src/routers/validate.ts
+var PROBE_TIMEOUT_MS = 12e3;
+async function validateRouter(entry, key, modelId) {
+  const model = modelId ?? entry.freeModels[0] ?? "";
+  const t0 = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+  try {
+    let res;
+    if (entry.api === "google-generative-ai") {
+      const url = `${entry.baseUrl.replace(/\/$/, "")}/models/${model}:generateContent${key ? `?key=${encodeURIComponent(key)}` : ""}`;
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: "ping" }] }] }),
+        signal: controller.signal
+      });
+    } else {
+      const headers = { "content-type": "application/json" };
+      if (key) headers.authorization = `Bearer ${key}`;
+      res = await fetch(`${entry.baseUrl.replace(/\/$/, "")}/chat/completions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: "ping" }],
+          max_tokens: 1
+        }),
+        signal: controller.signal
+      });
+    }
+    return {
+      ok: res.ok,
+      latencyMs: Date.now() - t0,
+      model,
+      error: res.ok ? void 0 : `HTTP ${res.status}`
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      latencyMs: Date.now() - t0,
+      model,
+      error: e instanceof Error ? e.message : String(e)
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// src/routers/router-pool.ts
+var KEYLESS_SENTINEL = "oriro-keyless-no-key-required";
+function regFile() {
+  return join11(oriroDir(), "routers", "registered.json");
+}
+function readReg() {
+  try {
+    return JSON.parse(readFileSync9(regFile(), "utf8"));
+  } catch {
+    return {};
+  }
+}
+function writeReg(m) {
+  mkdirSync6(join11(oriroDir(), "routers"), { recursive: true });
+  writeFileSync8(regFile(), JSON.stringify(m, null, 2), "utf8");
+}
+async function addRouter(entry, opts) {
+  if (entry.comingSoon) {
+    return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: "coming soon" } };
+  }
+  if (entry.kind && entry.kind !== "chat") {
+    return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: `'${entry.id}' is a ${entry.kind} router, not a chat router` } };
+  }
+  const key = opts?.key ?? (entry.keyless ? KEYLESS_SENTINEL : void 0);
+  const v = await validateRouter(entry, key, opts?.modelId);
+  if (!v.ok) return { ok: false, validation: v };
+  const router = {
+    id: entry.id,
+    name: entry.displayName,
+    baseUrl: entry.baseUrl,
+    model: opts?.modelId ?? v.model ?? entry.freeModels[0] ?? "",
+    apiKey: key ?? KEYLESS_SENTINEL
+  };
+  const reg = readReg();
+  reg[entry.id] = router;
+  writeReg(reg);
+  savePool(oriroDir(), [...loadPool(oriroDir()), entry.id]);
+  return { ok: true, validation: v };
+}
+function useRouters(ids) {
+  const reg = readReg();
+  const applied = ids.filter((id) => reg[id]);
+  const unknown = ids.filter((id) => !reg[id]);
+  if (applied.length > 0) savePool(oriroDir(), applied);
+  return { applied, unknown };
+}
+function resolvePool() {
+  const reg = readReg();
+  return loadPool(oriroDir()).map((id) => reg[id]).filter((r) => Boolean(r));
+}
+
+// src/routers/onboarding.ts
+function markerFile() {
+  return join12(oriroDir(), "routers", "onboarded.json");
+}
+function hasRouterChoice() {
+  try {
+    return existsSync4(markerFile());
+  } catch {
+    return false;
+  }
+}
+function markRouterOnboarded() {
+  try {
+    mkdirSync7(join12(oriroDir(), "routers"), { recursive: true });
+    writeFileSync9(markerFile(), `${JSON.stringify({ onboardedAt: (/* @__PURE__ */ new Date()).toISOString() }, null, 2)}
+`, "utf8");
+  } catch {
+  }
+}
+async function runRouterOnboarding() {
+  stdout4.write(
+    `
+  ${accent("Routers")} \u2014 ORIRO runs on a ${accent("free keyless router")} by default. No key, $0, works right now.
+  ${dim("Add your own key (any free provider) for a faster, private lane \u2014 or skip and stay keyless.")}
+`
+  );
+  const rl = createInterface3({ input: stdin3, output: stdout4 });
+  try {
+    const add = (await ask(rl, `  Add your own key now? ${dim("[y/N]")} `)).trim().toLowerCase();
+    if (add === "y" || add === "yes") {
+      const picks = ROUTER_CATALOG.filter(
+        (r) => !r.comingSoon && !r.keyless && (!r.kind || r.kind === "chat")
+      ).slice(0, 8);
+      stdout4.write(`
+  ${dim("Free providers (grab a free key from each provider's site):")}
+`);
+      for (const r of picks) {
+        stdout4.write(`    ${accent(r.id.padEnd(14))} ${dim(r.displayName)}
+`);
+      }
+      stdout4.write(`    ${dim("\u2026or any id from `oriro routers list`")}
+
+`);
+      const slug = (await ask(rl, `  Which provider? ${dim("(id, or blank to skip)")} `)).trim();
+      if (slug) {
+        const entry = routerById(slug);
+        if (!entry) {
+          stdout4.write(`  ${dim(`Unknown '${slug}' \u2014 skipped. You can add it later: oriro routers add ${slug}`)}
+`);
+        } else {
+          const key = (await ask(rl, `  Paste your ${accent(entry.displayName)} API key: `)).trim();
+          if (key) {
+            stdout4.write(`  ${dim("Validating\u2026")}
+`);
+            const res = await addRouter(entry, { key });
+            if (res.ok) {
+              stdout4.write(
+                `  ${accent("\u2713")} added ${accent(slug)} (${res.validation.latencyMs}ms) \u2014 it now races in your pool.
+`
+              );
+            } else {
+              stdout4.write(
+                `  ${dim(`Couldn't add ${slug}: ${res.validation.error ?? "validation failed"}. Staying keyless \u2014 retry: oriro routers add ${slug} --key <key>`)}
+`
+              );
+            }
+          } else {
+            stdout4.write(`  ${dim("No key entered \u2014 staying keyless.")}
+`);
+          }
+        }
+      }
+    }
+  } finally {
+    rl.close();
+  }
+  markRouterOnboarded();
+  stdout4.write(`  ${dim("Manage routers anytime: ")}${accent("oriro routers list \xB7 add \xB7 use")}
+`);
+}
+
 // src/onboarding/wrapper.ts
 function isFirstRun() {
   return !isLanguageConfigured() || !hasScribeChoice();
 }
 async function askYesNo(question) {
-  const rl = createInterface3({ input: stdin3, output: stdout4 });
+  const rl = createInterface4({ input: stdin4, output: stdout5 });
   try {
     const a = (await ask(rl, `${question} ${dim("[Y/n]")} `)).trim().toLowerCase();
     return a === "" || a === "y" || a === "yes";
@@ -1341,10 +1898,10 @@ async function askYesNo(question) {
   }
 }
 async function runOnboarding() {
-  stdout4.write(banner());
+  stdout5.write(banner());
   await runLanguageOnboarding();
   await activateGuardian();
-  stdout4.write(`  ${accent("\u{1F6E1} Guardian V3")} is on by default. ${accent("\u{1F9ED} Head")} is ready.
+  stdout5.write(`  ${accent("\u{1F6E1} Guardian V3")} is on by default. ${accent("\u{1F9ED} Head")} is ready.
 
 `);
   if (!isAvatarConfigured()) await runAvatarOnboarding();
@@ -1353,11 +1910,12 @@ async function runOnboarding() {
       "Remember with me? The Scriber keeps your work in context on THIS machine only \u2014 it never leaves it."
     );
     setScribeConsent(yes);
-    stdout4.write(yes ? `  ${accent("\u{1F4D3} Scriber")} on.
+    stdout5.write(yes ? `  ${accent("\u{1F4D3} Scriber")} on.
 ` : `  ${dim("Scriber off \u2014 `oriro scribe on` anytime.")}
 `);
   }
-  stdout4.write(`
+  if (!hasRouterChoice()) await runRouterOnboarding();
+  stdout5.write(`
   ${accent("ORIRO is ready.")} ${dim("Type to chat \xB7 /exit to leave")}
 
 `);
@@ -1379,8 +1937,8 @@ import { streamSimple as piStreamSimple, createAssistantMessageEventStream } fro
 import { register as registerOpenAICompletions } from "@earendil-works/pi-ai/openai-completions";
 
 // src/routers/mux.ts
-import { existsSync as existsSync3, mkdirSync as mkdirSync5, readFileSync as readFileSync8, writeFileSync as writeFileSync7 } from "fs";
-import { join as join10 } from "path";
+import { existsSync as existsSync5, mkdirSync as mkdirSync8, readFileSync as readFileSync10, writeFileSync as writeFileSync10 } from "fs";
+import { join as join13 } from "path";
 var COOLDOWN_DEFAULT_MS = 6e4;
 var UNHEALTHY_AFTER = 3;
 var RouterMux = class {
@@ -1450,18 +2008,18 @@ var RouterMux = class {
   }
 };
 function healthStatePath(dir) {
-  return join10(dir, "routers", "health.json");
+  return join13(dir, "routers", "health.json");
 }
 function saveMuxState(dir, stats) {
   const p = healthStatePath(dir);
-  mkdirSync5(join10(dir, "routers"), { recursive: true });
-  writeFileSync7(p, JSON.stringify(stats, null, 2), "utf8");
+  mkdirSync8(join13(dir, "routers"), { recursive: true });
+  writeFileSync10(p, JSON.stringify(stats, null, 2), "utf8");
 }
 function loadMuxState(dir) {
   const p = healthStatePath(dir);
-  if (!existsSync3(p)) return [];
+  if (!existsSync5(p)) return [];
   try {
-    const stats = JSON.parse(readFileSync8(p, "utf8"));
+    const stats = JSON.parse(readFileSync10(p, "utf8"));
     return stats.map((s) => ({ ...s, latencyMs: Number.isFinite(s.latencyMs) ? s.latencyMs : Number.POSITIVE_INFINITY }));
   } catch {
     return [];
@@ -1498,131 +2056,6 @@ function routerModel(r) {
     contextWindow: 128e3,
     maxTokens: 4096
   };
-}
-
-// src/routers/router-pool.ts
-import { mkdirSync as mkdirSync7, readFileSync as readFileSync10, writeFileSync as writeFileSync9 } from "fs";
-import { join as join12 } from "path";
-
-// src/routers/pool.ts
-import { existsSync as existsSync4, mkdirSync as mkdirSync6, readFileSync as readFileSync9, writeFileSync as writeFileSync8 } from "fs";
-import { join as join11 } from "path";
-function poolFile(dir) {
-  return join11(dir, "routers", "selected.json");
-}
-function loadPool(dir) {
-  const p = poolFile(dir);
-  if (!existsSync4(p)) return [];
-  try {
-    const v = JSON.parse(readFileSync9(p, "utf8"));
-    return Array.isArray(v) ? v : [];
-  } catch {
-    return [];
-  }
-}
-function savePool(dir, ids) {
-  mkdirSync6(join11(dir, "routers"), { recursive: true });
-  writeFileSync8(poolFile(dir), JSON.stringify([...new Set(ids)], null, 2), "utf8");
-}
-
-// src/routers/validate.ts
-var PROBE_TIMEOUT_MS = 12e3;
-async function validateRouter(entry, key, modelId) {
-  const model = modelId ?? entry.freeModels[0] ?? "";
-  const t0 = Date.now();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
-  try {
-    let res;
-    if (entry.api === "google-generative-ai") {
-      const url = `${entry.baseUrl.replace(/\/$/, "")}/models/${model}:generateContent${key ? `?key=${encodeURIComponent(key)}` : ""}`;
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: "ping" }] }] }),
-        signal: controller.signal
-      });
-    } else {
-      const headers = { "content-type": "application/json" };
-      if (key) headers.authorization = `Bearer ${key}`;
-      res = await fetch(`${entry.baseUrl.replace(/\/$/, "")}/chat/completions`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model,
-          messages: [{ role: "user", content: "ping" }],
-          max_tokens: 1
-        }),
-        signal: controller.signal
-      });
-    }
-    return {
-      ok: res.ok,
-      latencyMs: Date.now() - t0,
-      model,
-      error: res.ok ? void 0 : `HTTP ${res.status}`
-    };
-  } catch (e) {
-    return {
-      ok: false,
-      latencyMs: Date.now() - t0,
-      model,
-      error: e instanceof Error ? e.message : String(e)
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-// src/routers/router-pool.ts
-var KEYLESS_SENTINEL = "oriro-keyless-no-key-required";
-function regFile() {
-  return join12(oriroDir(), "routers", "registered.json");
-}
-function readReg() {
-  try {
-    return JSON.parse(readFileSync10(regFile(), "utf8"));
-  } catch {
-    return {};
-  }
-}
-function writeReg(m) {
-  mkdirSync7(join12(oriroDir(), "routers"), { recursive: true });
-  writeFileSync9(regFile(), JSON.stringify(m, null, 2), "utf8");
-}
-async function addRouter(entry, opts) {
-  if (entry.comingSoon) {
-    return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: "coming soon" } };
-  }
-  if (entry.kind && entry.kind !== "chat") {
-    return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: `'${entry.id}' is a ${entry.kind} router, not a chat router` } };
-  }
-  const key = opts?.key ?? (entry.keyless ? KEYLESS_SENTINEL : void 0);
-  const v = await validateRouter(entry, key, opts?.modelId);
-  if (!v.ok) return { ok: false, validation: v };
-  const router = {
-    id: entry.id,
-    name: entry.displayName,
-    baseUrl: entry.baseUrl,
-    model: opts?.modelId ?? v.model ?? entry.freeModels[0] ?? "",
-    apiKey: key ?? KEYLESS_SENTINEL
-  };
-  const reg = readReg();
-  reg[entry.id] = router;
-  writeReg(reg);
-  savePool(oriroDir(), [...loadPool(oriroDir()), entry.id]);
-  return { ok: true, validation: v };
-}
-function useRouters(ids) {
-  const reg = readReg();
-  const applied = ids.filter((id) => reg[id]);
-  const unknown = ids.filter((id) => !reg[id]);
-  if (applied.length > 0) savePool(oriroDir(), applied);
-  return { applied, unknown };
-}
-function resolvePool() {
-  const reg = readReg();
-  return loadPool(oriroDir()).map((id) => reg[id]).filter((r) => Boolean(r));
 }
 
 // src/identity/filter.ts
@@ -1699,43 +2132,43 @@ function sanitizeEventToolCalls(ev) {
 }
 
 // src/scribe/scribe-pi.ts
-import { existsSync as existsSync9, readFileSync as readFileSync16 } from "fs";
+import { existsSync as existsSync10, readFileSync as readFileSync16 } from "fs";
 import { Type } from "typebox";
 
 // src/scribe/capture.ts
-import { closeSync as closeSync2, fsyncSync as fsyncSync2, mkdirSync as mkdirSync10, openSync as openSync2, writeSync as writeSync2 } from "fs";
-import { join as join14 } from "path";
+import { closeSync as closeSync2, fsyncSync as fsyncSync2, mkdirSync as mkdirSync11, openSync as openSync2, writeSync as writeSync2 } from "fs";
+import { join as join15 } from "path";
 
 // src/scribe/digest.ts
-import { existsSync as existsSync5, mkdirSync as mkdirSync8, readFileSync as readFileSync11, writeFileSync as writeFileSync10 } from "fs";
+import { existsSync as existsSync6, mkdirSync as mkdirSync9, readFileSync as readFileSync11, writeFileSync as writeFileSync11 } from "fs";
 
 // src/scribe/paths.ts
-import { join as join13 } from "path";
+import { join as join14 } from "path";
 function scribeDir() {
   const override = process.env.ORIRO_SCRIBE_DIR?.trim();
-  return override && override.length > 0 ? override : join13(CONFIG_DIR, "scribe");
+  return override && override.length > 0 ? override : join14(CONFIG_DIR, "scribe");
 }
 function journalFile(date) {
-  return join13(scribeDir(), `${date}.md`);
+  return join14(scribeDir(), `${date}.md`);
 }
 function digestFile() {
-  return join13(scribeDir(), "_digest.md");
+  return join14(scribeDir(), "_digest.md");
 }
 function timelineFile() {
-  return join13(scribeDir(), "_timeline.md");
+  return join14(scribeDir(), "_timeline.md");
 }
 function artifactsDir() {
-  return join13(scribeDir(), "artifacts");
+  return join14(scribeDir(), "artifacts");
 }
 
 // src/scribe/digest.ts
 var DIGEST_CAP = 8192;
 var TIMELINE_DAY_CAP = 400;
 function read(file4) {
-  return existsSync5(file4) ? readFileSync11(file4, "utf8") : "";
+  return existsSync6(file4) ? readFileSync11(file4, "utf8") : "";
 }
 function updateDigest(summary, context) {
-  mkdirSync8(scribeDir(), { recursive: true });
+  mkdirSync9(scribeDir(), { recursive: true });
   const existing = read(digestFile());
   let contextBlock = context?.trim();
   if (!contextBlock) {
@@ -1758,10 +2191,10 @@ ${contextBlock}
     recent = recent.slice(0, recent.lastIndexOf("\n")).trimEnd();
     out = header2 + recent;
   }
-  writeFileSync10(digestFile(), out, "utf8");
+  writeFileSync11(digestFile(), out, "utf8");
 }
 function updateTimeline(date, topic) {
-  mkdirSync8(scribeDir(), { recursive: true });
+  mkdirSync9(scribeDir(), { recursive: true });
   const clean = topic.replace(/\s+/g, " ").trim();
   if (!clean) return;
   const lines = read(timelineFile()).split("\n").filter(Boolean);
@@ -1776,26 +2209,29 @@ function updateTimeline(date, topic) {
     body[idx] = merged;
   }
   body.sort();
-  writeFileSync10(timelineFile(), `${header2}
+  writeFileSync11(timelineFile(), `${header2}
 ${body.join("\n")}
 `, "utf8");
 }
 function readDigest() {
   return read(digestFile());
 }
+function readTimeline() {
+  return read(timelineFile());
+}
 
 // src/scribe/journal.ts
 import {
   closeSync,
-  existsSync as existsSync6,
+  existsSync as existsSync7,
   fsyncSync,
-  mkdirSync as mkdirSync9,
+  mkdirSync as mkdirSync10,
   openSync,
   readFileSync as readFileSync12,
   writeSync
 } from "fs";
 function appendJournal(date, content) {
-  mkdirSync9(scribeDir(), { recursive: true });
+  mkdirSync10(scribeDir(), { recursive: true });
   const fd = openSync(journalFile(date), "a");
   try {
     writeSync(fd, content.endsWith("\n") ? content : `${content}
@@ -1807,7 +2243,7 @@ function appendJournal(date, content) {
 }
 function readJournal(date) {
   const f = journalFile(date);
-  return existsSync6(f) ? readFileSync12(f, "utf8") : "";
+  return existsSync7(f) ? readFileSync12(f, "utf8") : "";
 }
 
 // src/scribe/redact.ts
@@ -1903,9 +2339,9 @@ function containsSecret(text) {
 // src/scribe/capture.ts
 var INLINE_CAP = 4e3;
 function sideFile(date, ts, kind, full) {
-  mkdirSync10(artifactsDir(), { recursive: true });
+  mkdirSync11(artifactsDir(), { recursive: true });
   const name = `${date}_${ts.replace(/[:.]/g, "-")}_${kind}.md`;
-  const p = join14(artifactsDir(), name);
+  const p = join15(artifactsDir(), name);
   const fd = openSync2(p, "w");
   try {
     writeSync2(fd, full);
@@ -1991,18 +2427,18 @@ function captureTurn(rec) {
 import {
   closeSync as closeSync3,
   fsyncSync as fsyncSync3,
-  mkdirSync as mkdirSync11,
+  mkdirSync as mkdirSync12,
   openSync as openSync3,
   readFileSync as readFileSync13,
-  writeFileSync as writeFileSync11,
+  writeFileSync as writeFileSync12,
   writeSync as writeSync3
 } from "fs";
-import { join as join15 } from "path";
+import { join as join16 } from "path";
 function healthFile() {
-  return join15(scribeDir(), "_health.json");
+  return join16(scribeDir(), "_health.json");
 }
 function faultLogFile() {
-  return join15(scribeDir(), "_faults.log");
+  return join16(scribeDir(), "_faults.log");
 }
 function read2() {
   try {
@@ -2012,8 +2448,8 @@ function read2() {
   }
 }
 function write(h) {
-  mkdirSync11(scribeDir(), { recursive: true });
-  writeFileSync11(healthFile(), `${JSON.stringify(h, null, 2)}
+  mkdirSync12(scribeDir(), { recursive: true });
+  writeFileSync12(healthFile(), `${JSON.stringify(h, null, 2)}
 `, "utf8");
 }
 function recordHealth() {
@@ -2023,7 +2459,7 @@ function recordHealth() {
 }
 function recordFault(role, err) {
   try {
-    mkdirSync11(scribeDir(), { recursive: true });
+    mkdirSync12(scribeDir(), { recursive: true });
     const msg = `${(/* @__PURE__ */ new Date()).toISOString()} [${role}] ${err instanceof Error ? err.message : String(err)}`;
     const fd = openSync3(faultLogFile(), "a");
     try {
@@ -2040,24 +2476,27 @@ function recordFault(role, err) {
   } catch {
   }
 }
+function readHealth() {
+  return read2();
+}
 
 // src/scribe/wal.ts
 import {
   closeSync as closeSync4,
-  existsSync as existsSync7,
+  existsSync as existsSync8,
   fsyncSync as fsyncSync4,
-  mkdirSync as mkdirSync12,
+  mkdirSync as mkdirSync13,
   openSync as openSync4,
   readFileSync as readFileSync14,
-  writeFileSync as writeFileSync12,
+  writeFileSync as writeFileSync13,
   writeSync as writeSync4
 } from "fs";
-import { join as join16 } from "path";
+import { join as join17 } from "path";
 function walFile() {
-  return join16(scribeDir(), "_wal.jsonl");
+  return join17(scribeDir(), "_wal.jsonl");
 }
 function appendLine(obj) {
-  mkdirSync12(scribeDir(), { recursive: true });
+  mkdirSync13(scribeDir(), { recursive: true });
   const fd = openSync4(walFile(), "a");
   try {
     writeSync4(fd, `${JSON.stringify(obj)}
@@ -2074,7 +2513,7 @@ function walCommit(id) {
   appendLine({ t: "commit", id });
 }
 function walPending() {
-  if (!existsSync7(walFile())) return [];
+  if (!existsSync8(walFile())) return [];
   const committed = /* @__PURE__ */ new Set();
   const adds = /* @__PURE__ */ new Map();
   for (const line of readFileSync14(walFile(), "utf8").split("\n")) {
@@ -2093,10 +2532,10 @@ function walPending() {
   return out;
 }
 function walCompact() {
-  if (!existsSync7(walFile())) return;
+  if (!existsSync8(walFile())) return;
   const pending = walPending();
   const body = pending.map((p) => JSON.stringify({ t: "add", id: p.id, rec: p.rec })).join("\n");
-  writeFileSync12(walFile(), body ? `${body}
+  writeFileSync13(walFile(), body ? `${body}
 ` : "", "utf8");
 }
 
@@ -2157,15 +2596,15 @@ function supervisedCapture(rec) {
 }
 
 // src/scribe/retrieval.ts
-import { existsSync as existsSync8, readFileSync as readFileSync15, readdirSync } from "fs";
+import { existsSync as existsSync9, readFileSync as readFileSync15, readdirSync } from "fs";
 function listDays() {
   const dir = scribeDir();
-  if (!existsSync8(dir)) return [];
+  if (!existsSync9(dir)) return [];
   return readdirSync(dir).filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f)).map((f) => f.replace(/\.md$/, "")).sort();
 }
 function readDay(date) {
   const f = journalFile(date);
-  return existsSync8(f) ? readFileSync15(f, "utf8") : "";
+  return existsSync9(f) ? readFileSync15(f, "utf8") : "";
 }
 function searchScribe(query, limit = 100) {
   const q = query.toLowerCase().trim();
@@ -2204,7 +2643,7 @@ function buildScribeContext() {
   const parts = [];
   try {
     const t = timelineFile();
-    if (existsSync9(t)) parts.push(`# Work history \u2014 every day so far
+    if (existsSync10(t)) parts.push(`# Work history \u2014 every day so far
 ${readFileSync16(t, "utf8").trim()}`);
   } catch {
   }
@@ -2825,12 +3264,12 @@ function registerOrchestrator(pi) {
 // src/skills/loader.ts
 import { loadSkills, formatSkillsForPrompt } from "@earendil-works/pi-coding-agent";
 import { fileURLToPath } from "url";
-import { existsSync as existsSync10 } from "fs";
-import { dirname as dirname2, join as join17 } from "path";
+import { existsSync as existsSync11 } from "fs";
+import { dirname as dirname2, join as join18 } from "path";
 function packageRoot(start) {
   let dir = start;
   for (let i = 0; i < 10; i++) {
-    if (existsSync10(join17(dir, "package.json"))) return dir;
+    if (existsSync11(join18(dir, "package.json"))) return dir;
     const parent = dirname2(dir);
     if (parent === dir) break;
     dir = parent;
@@ -2839,7 +3278,7 @@ function packageRoot(start) {
 }
 function skillsDir() {
   if (process.env.ORIRO_SKILLS_DIR) return process.env.ORIRO_SKILLS_DIR;
-  return join17(packageRoot(dirname2(fileURLToPath(import.meta.url))), "skills");
+  return join18(packageRoot(dirname2(fileURLToPath(import.meta.url))), "skills");
 }
 async function loadOriroSkills(dir = skillsDir()) {
   const result = await loadSkills({
@@ -3048,6 +3487,149 @@ async function translateOutgoing(text) {
   return translateForUser(text, lang);
 }
 
+// src/repl-ui/tui-repl.ts
+import { ProcessTerminal, TUI, Editor, Text, Container } from "@earendil-works/pi-tui";
+
+// src/repl-ui/permission.ts
+var MODES = ["manual", "accept_edits", "auto", "plan"];
+var MODE_META = {
+  manual: { label: "Manual", indicator: "\u25CF" },
+  accept_edits: { label: "Accept Edits", indicator: "\u270E" },
+  auto: { label: "Auto", indicator: "\u23F5\u23F5" },
+  plan: { label: "Plan", indicator: "\u25A2" }
+};
+var current = "manual";
+function getMode() {
+  return current;
+}
+function cycleMode() {
+  const i = MODES.indexOf(current);
+  current = MODES[(i + 1) % MODES.length];
+  return current;
+}
+
+// src/repl-ui/tui-repl.ts
+var editorTheme = {
+  borderColor: (s) => dim(s),
+  selectList: {
+    selectedPrefix: (s) => accent(s),
+    selectedText: (s) => accent(s),
+    description: (s) => dim(s),
+    scrollInfo: (s) => dim(s),
+    noMatch: (s) => dim(s)
+  }
+};
+function footerText() {
+  const cur = getMode();
+  const bar = MODES.map((m) => {
+    const meta = MODE_META[m];
+    const s = `${meta.indicator} ${meta.label}`;
+    return m === cur ? accent(s) : dim(s);
+  }).join(dim(" \xB7 "));
+  return `${bar}   ${dim("Shift+Tab to switch \xB7 /exit")}`;
+}
+async function runTuiRepl(session) {
+  const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
+  const term = new ProcessTerminal();
+  const tui = new TUI(term, true);
+  const chat = new Container();
+  const editor = new Editor(tui, editorTheme, { paddingX: 1 });
+  const sep = new Text(dim("\u2500".repeat(Math.max(8, term.columns))), 0, 0);
+  const footer = new Text(footerText(), 0, 0);
+  tui.addChild(chat);
+  tui.addChild(editor);
+  tui.addChild(sep);
+  tui.addChild(footer);
+  tui.setFocus(editor);
+  const refreshFooter = () => {
+    sep.setText(dim("\u2500".repeat(Math.max(8, term.columns))));
+    footer.setText(footerText());
+    tui.requestRender();
+  };
+  const removeListener = tui.addInputListener((data) => {
+    if (data === "\x1B[Z") {
+      cycleMode();
+      refreshFooter();
+      return { consume: true };
+    }
+    return void 0;
+  });
+  let stopped = false;
+  const cleanup = () => {
+    if (stopped) return;
+    stopped = true;
+    try {
+      removeListener();
+    } catch {
+    }
+    try {
+      session.dispose();
+    } catch {
+    }
+    try {
+      tui.stop();
+    } catch {
+    }
+    process.stdout.write(dim("\nBye.\n"));
+    process.exit(0);
+  };
+  process.on("SIGINT", cleanup);
+  let busy = false;
+  editor.onSubmit = (raw) => {
+    const text = raw.trim();
+    if (!text || busy) return;
+    const slash = text.toLowerCase();
+    if (slash === "/exit" || slash === "/quit") return cleanup();
+    if (slash === "/help" || slash === "/?") {
+      chat.addChild(new Text(dim("  Just type to chat. Shift+Tab cycles posture. /exit to leave."), 0, 0));
+      editor.setText("");
+      tui.requestRender();
+      return;
+    }
+    editor.addToHistory(text);
+    editor.setText("");
+    chat.addChild(new Text(`${accent("\u203A")} ${text}`, 0, 1));
+    const streaming = new Text(dim("\u2026"), 0, 0);
+    chat.addChild(streaming);
+    tui.requestRender();
+    busy = true;
+    void (async () => {
+      const english = await translateIncoming(text);
+      noteUserInput(text);
+      let out = "";
+      const unsub = session.subscribe(
+        (e) => {
+          if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
+            out += e.assistantMessageEvent.delta ?? "";
+            if (isEnglish3) {
+              streaming.setText(out);
+              tui.requestRender();
+            }
+          }
+        }
+      );
+      try {
+        await session.prompt(english);
+      } catch {
+        streaming.setText(dim("(every free router is busy right now \u2014 give it a moment and try again)"));
+        tui.requestRender();
+        busy = false;
+        unsub();
+        return;
+      }
+      unsub();
+      const finalText = isEnglish3 ? out.trim() : await translateOutgoing(out.trim());
+      streaming.setText(finalText || dim("(no response)"));
+      tui.requestRender();
+      busy = false;
+    })();
+  };
+  tui.start();
+  refreshFooter();
+  await new Promise(() => {
+  });
+}
+
 // src/repl.ts
 function replHelp() {
   return `
@@ -3062,15 +3644,22 @@ function replHelp() {
 }
 async function runRepl() {
   if (isFirstRun()) await runOnboarding();
-  else stdout5.write(banner());
-  const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
+  else stdout6.write(banner());
   const { session } = await assembleOriroSession();
-  const rl = createInterface4({ input: stdin4, output: stdout5 });
+  if (stdin5.isTTY && stdout6.isTTY) {
+    await runTuiRepl(session);
+    return;
+  }
+  await runReadlineRepl(session);
+}
+async function runReadlineRepl(session) {
+  const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
+  const rl = createInterface5({ input: stdin5, output: stdout6 });
   let closing = false;
   const onSigint = () => {
     if (closing) return;
     closing = true;
-    stdout5.write(dim("\nBye.\n"));
+    stdout6.write(dim("\nBye.\n"));
     try {
       rl.close();
     } catch {
@@ -3094,26 +3683,28 @@ async function runRepl() {
       const slash = line.toLowerCase();
       if (slash === "/exit" || slash === "/quit") break;
       if (slash === "/help" || slash === "/?") {
-        stdout5.write(replHelp());
+        stdout6.write(replHelp());
         continue;
       }
       const english = await translateIncoming(line);
       noteUserInput(line);
       let out = "";
-      const unsub = session.subscribe((e) => {
-        if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
-          const d = e.assistantMessageEvent.delta ?? "";
-          out += d;
-          if (isEnglish3) stdout5.write(d);
+      const unsub = session.subscribe(
+        (e) => {
+          if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
+            const d = e.assistantMessageEvent.delta ?? "";
+            out += d;
+            if (isEnglish3) stdout6.write(d);
+          }
         }
-      });
+      );
       try {
         await session.prompt(english);
       } finally {
         unsub();
       }
-      if (isEnglish3) stdout5.write("\n\n");
-      else stdout5.write(`${await translateOutgoing(out.trim())}
+      if (isEnglish3) stdout6.write("\n\n");
+      else stdout6.write(`${await translateOutgoing(out.trim())}
 
 `);
     }
@@ -3122,354 +3713,9 @@ async function runRepl() {
     if (!closing) {
       rl.close();
       session.dispose();
-      stdout5.write(dim("\nBye.\n"));
+      stdout6.write(dim("\nBye.\n"));
     }
   }
-}
-
-// src/routers/catalog.ts
-var C4 = (e) => ({
-  api: "openai-completions",
-  freeModels: [],
-  tier: "free",
-  kind: "chat",
-  ...e
-});
-var ROUTER_CATALOG = [
-  // ── Keyless & live-verified (works now, zero keys, through the agent) ──
-  C4({
-    id: "pollinations",
-    displayName: "Pollinations",
-    baseUrl: "https://text.pollinations.ai/openai",
-    freeModels: ["openai", "mistral"],
-    obtainUrl: "https://pollinations.ai",
-    keyless: true,
-    verified: true
-  }),
-  // ── Free, no credit card — user brings a free token (validated at add-time) ──
-  // LLM7 serves anonymously over raw HTTP but REJECTS a bogus bearer, and the agent
-  // transport must send one for remote URLs — so it is NOT keyless-through-the-agent.
-  // A free token (no card) at llm7.io makes it work via `oriro routers add llm7 --key`.
-  C4({
-    id: "llm7",
-    displayName: "LLM7.io",
-    baseUrl: "https://api.llm7.io/v1",
-    freeModels: ["codestral-latest", "kimi-k2.6", "gpt-5.4-mini", "deepseek-v4-flash"],
-    obtainUrl: "https://llm7.io"
-  }),
-  // ── Free, no credit card — user brings a free key (validated at add-time) ──
-  C4({
-    id: "openrouter",
-    displayName: "OpenRouter",
-    baseUrl: "https://openrouter.ai/api/v1",
-    freeModels: ["deepseek/deepseek-chat-v3-0324:free", "moonshotai/kimi-k2.6:free"],
-    obtainUrl: "https://openrouter.ai/keys"
-  }),
-  C4({
-    id: "requesty",
-    displayName: "Requesty",
-    baseUrl: "https://router.requesty.ai/v1",
-    freeModels: ["google/gemini-2.0-flash-exp"],
-    obtainUrl: "https://requesty.ai"
-  }),
-  C4({
-    id: "google",
-    displayName: "Google AI Studio",
-    api: "google-generative-ai",
-    baseUrl: "https://generativelanguage.googleapis.com/v1beta",
-    freeModels: ["gemini-2.5-flash", "gemini-2.0-flash"],
-    obtainUrl: "https://aistudio.google.com/apikey"
-  }),
-  C4({
-    id: "groq",
-    displayName: "Groq",
-    baseUrl: "https://api.groq.com/openai/v1",
-    freeModels: ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
-    obtainUrl: "https://console.groq.com/keys"
-  }),
-  C4({
-    id: "mistral",
-    displayName: "Mistral",
-    baseUrl: "https://api.mistral.ai/v1",
-    freeModels: ["mistral-small-latest"],
-    obtainUrl: "https://console.mistral.ai/api-keys"
-  }),
-  C4({
-    id: "cerebras",
-    displayName: "Cerebras",
-    baseUrl: "https://api.cerebras.ai/v1",
-    freeModels: ["llama-3.3-70b", "llama3.1-8b"],
-    obtainUrl: "https://cloud.cerebras.ai"
-  }),
-  C4({
-    id: "cloudflare",
-    displayName: "Cloudflare Workers AI",
-    baseUrl: "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/v1",
-    freeModels: ["@cf/meta/llama-3.1-8b-instruct"],
-    obtainUrl: "https://dash.cloudflare.com/profile/api-tokens"
-  }),
-  C4({
-    id: "github-models",
-    displayName: "GitHub Models",
-    baseUrl: "https://models.inference.ai.azure.com",
-    freeModels: ["gpt-4o-mini"],
-    obtainUrl: "https://github.com/marketplace/models"
-  }),
-  C4({
-    id: "nvidia",
-    displayName: "NVIDIA NIM",
-    baseUrl: "https://integrate.api.nvidia.com/v1",
-    freeModels: ["moonshotai/kimi-k2.6", "meta/llama-3.1-8b-instruct"],
-    obtainUrl: "https://build.nvidia.com"
-  }),
-  C4({
-    id: "sambanova",
-    displayName: "SambaNova",
-    baseUrl: "https://api.sambanova.ai/v1",
-    freeModels: ["Meta-Llama-3.3-70B-Instruct"],
-    obtainUrl: "https://cloud.sambanova.ai"
-  }),
-  C4({
-    id: "siliconflow",
-    displayName: "SiliconFlow",
-    baseUrl: "https://api.siliconflow.cn/v1",
-    freeModels: ["Qwen/Qwen2.5-7B-Instruct"],
-    obtainUrl: "https://siliconflow.cn"
-  }),
-  C4({
-    id: "deepseek",
-    displayName: "DeepSeek",
-    baseUrl: "https://api.deepseek.com/v1",
-    freeModels: ["deepseek-chat"],
-    obtainUrl: "https://platform.deepseek.com/api_keys"
-  }),
-  C4({
-    id: "zai",
-    displayName: "Z.AI GLM",
-    baseUrl: "https://api.z.ai/api/paas/v4",
-    freeModels: ["glm-4-flash"],
-    obtainUrl: "https://z.ai"
-  }),
-  C4({
-    id: "scaleway",
-    displayName: "Scaleway",
-    baseUrl: "https://api.scaleway.ai/v1",
-    freeModels: ["llama-3.1-8b-instruct"],
-    obtainUrl: "https://console.scaleway.com"
-  }),
-  C4({
-    id: "xai",
-    displayName: "xAI Grok",
-    baseUrl: "https://api.x.ai/v1",
-    freeModels: ["grok-2-latest"],
-    obtainUrl: "https://console.x.ai"
-  }),
-  C4({
-    id: "together",
-    displayName: "Together AI",
-    baseUrl: "https://api.together.xyz/v1",
-    freeModels: ["meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"],
-    obtainUrl: "https://api.together.ai"
-  }),
-  C4({
-    id: "fireworks",
-    displayName: "Fireworks AI",
-    baseUrl: "https://api.fireworks.ai/inference/v1",
-    freeModels: ["accounts/fireworks/models/llama-v3p1-8b-instruct"],
-    obtainUrl: "https://fireworks.ai"
-  }),
-  C4({
-    id: "ai21",
-    displayName: "AI21 Labs",
-    baseUrl: "https://api.ai21.com/studio/v1",
-    freeModels: ["jamba-mini"],
-    obtainUrl: "https://studio.ai21.com"
-  }),
-  C4({
-    id: "hyperbolic",
-    displayName: "Hyperbolic",
-    baseUrl: "https://api.hyperbolic.xyz/v1",
-    freeModels: ["meta-llama/Meta-Llama-3.1-8B-Instruct"],
-    obtainUrl: "https://app.hyperbolic.xyz"
-  }),
-  C4({
-    id: "nebius",
-    displayName: "Nebius",
-    baseUrl: "https://api.studio.nebius.ai/v1",
-    freeModels: ["meta-llama/Meta-Llama-3.1-8B-Instruct"],
-    obtainUrl: "https://studio.nebius.ai"
-  }),
-  C4({
-    id: "novita",
-    displayName: "Novita",
-    baseUrl: "https://api.novita.ai/v3/openai",
-    freeModels: ["meta-llama/llama-3.1-8b-instruct"],
-    obtainUrl: "https://novita.ai"
-  }),
-  C4({
-    id: "upstage",
-    displayName: "Upstage",
-    baseUrl: "https://api.upstage.ai/v1/solar",
-    freeModels: ["solar-mini"],
-    obtainUrl: "https://console.upstage.ai"
-  }),
-  C4({
-    id: "nlpcloud",
-    displayName: "NLP Cloud",
-    baseUrl: "https://api.nlpcloud.io/v1",
-    freeModels: ["finetuned-llama-3-70b"],
-    obtainUrl: "https://nlpcloud.com"
-  }),
-  C4({
-    id: "baseten",
-    displayName: "Baseten",
-    baseUrl: "https://inference.baseten.co/v1",
-    freeModels: ["llama-3.1-8b-instruct"],
-    obtainUrl: "https://baseten.co"
-  }),
-  C4({
-    id: "anyscale",
-    displayName: "Anyscale",
-    baseUrl: "https://api.endpoints.anyscale.com/v1",
-    freeModels: ["meta-llama/Meta-Llama-3.1-8B-Instruct"],
-    obtainUrl: "https://anyscale.com"
-  }),
-  C4({
-    id: "inference-net",
-    displayName: "Inference.net",
-    baseUrl: "https://api.inference.net/v1",
-    freeModels: ["meta-llama/llama-3.1-8b-instruct"],
-    obtainUrl: "https://inference.net"
-  }),
-  C4({
-    id: "cohere",
-    displayName: "Cohere",
-    baseUrl: "https://api.cohere.ai/compatibility/v1",
-    freeModels: ["command-r-08-2024"],
-    obtainUrl: "https://dashboard.cohere.com/api-keys"
-  }),
-  C4({
-    id: "chutes",
-    displayName: "Chutes",
-    baseUrl: "https://llm.chutes.ai/v1",
-    freeModels: ["deepseek-ai/DeepSeek-V3"],
-    obtainUrl: "https://chutes.ai"
-  }),
-  C4({
-    id: "berget",
-    displayName: "Berget AI",
-    baseUrl: "https://api.berget.ai/v1",
-    freeModels: ["mistralai/Mistral-Small-Instruct"],
-    obtainUrl: "https://berget.ai"
-  }),
-  C4({
-    id: "huggingface",
-    displayName: "Hugging Face",
-    baseUrl: "https://router.huggingface.co/v1",
-    freeModels: ["meta-llama/Llama-3.2-3B-Instruct"],
-    obtainUrl: "https://huggingface.co/settings/tokens"
-  }),
-  C4({
-    id: "replicate",
-    displayName: "Replicate",
-    baseUrl: "https://api.replicate.com/v1",
-    freeModels: ["meta/meta-llama-3.1-8b-instruct"],
-    obtainUrl: "https://replicate.com/account/api-tokens"
-  }),
-  // ── Free gateways/proxies (no CC) — route through your own provider keys ──
-  C4({
-    id: "vercel-ai-gateway",
-    displayName: "Vercel AI Gateway",
-    baseUrl: "https://ai-gateway.vercel.sh/v1",
-    freeModels: ["openai/gpt-4o-mini"],
-    obtainUrl: "https://vercel.com/ai-gateway"
-  }),
-  C4({
-    id: "portkey",
-    displayName: "Portkey",
-    baseUrl: "https://api.portkey.ai/v1",
-    freeModels: [],
-    obtainUrl: "https://portkey.ai"
-  }),
-  C4({
-    id: "helicone",
-    displayName: "Helicone",
-    baseUrl: "https://oai.helicone.ai/v1",
-    freeModels: [],
-    obtainUrl: "https://helicone.ai"
-  }),
-  C4({
-    id: "litellm",
-    displayName: "LiteLLM (self-hosted)",
-    baseUrl: "http://localhost:4000/v1",
-    freeModels: [],
-    keyless: true
-  }),
-  C4({
-    id: "ollama",
-    displayName: "Ollama (local)",
-    api: "ollama",
-    baseUrl: "http://localhost:11434/v1",
-    freeModels: ["llama3.2"],
-    keyless: true
-  }),
-  // ── Image / speech services (catalog completeness; not chat-routable by the Mux) ──
-  C4({
-    id: "stability",
-    displayName: "Stability AI",
-    baseUrl: "https://api.stability.ai/v2beta",
-    freeModels: ["stable-image-core"],
-    obtainUrl: "https://platform.stability.ai",
-    kind: "image"
-  }),
-  C4({
-    id: "fal",
-    displayName: "fal.ai",
-    baseUrl: "https://fal.run",
-    freeModels: ["fal-ai/flux/schnell"],
-    obtainUrl: "https://fal.ai",
-    kind: "image"
-  }),
-  C4({
-    id: "wavespeed",
-    displayName: "WaveSpeedAI",
-    baseUrl: "https://api.wavespeed.ai",
-    freeModels: [],
-    obtainUrl: "https://wavespeed.ai",
-    kind: "image"
-  }),
-  C4({
-    id: "ai-horde",
-    displayName: "AI Horde",
-    baseUrl: "https://aihorde.net/api/v2",
-    freeModels: [],
-    obtainUrl: "https://aihorde.net",
-    keyless: true,
-    kind: "image"
-  }),
-  C4({
-    id: "assemblyai",
-    displayName: "AssemblyAI",
-    baseUrl: "https://api.assemblyai.com/v2",
-    freeModels: [],
-    obtainUrl: "https://assemblyai.com",
-    kind: "speech"
-  }),
-  // ── Paid (requires payment/recharge — moved out of free per the CC rule) ──
-  C4({
-    id: "moonshot",
-    displayName: "Moonshot (Direct)",
-    baseUrl: "https://api.moonshot.ai/v1",
-    freeModels: ["kimi-k2.6"],
-    obtainUrl: "https://platform.moonshot.ai",
-    tier: "paid"
-  }),
-  // ── ORIRO models — coming soon, greyed/"(free)", not selectable yet ──
-  C4({ id: "oriro-gauss", displayName: "ORIRO-Gauss", baseUrl: "", comingSoon: true }),
-  C4({ id: "oriro-avila", displayName: "ORIRO-Avila", baseUrl: "", comingSoon: true })
-];
-function routerById(id) {
-  return ROUTER_CATALOG.find((r) => r.id === id);
 }
 
 // src/commands/ui.ts
@@ -3534,6 +3780,117 @@ function registerRoutersCommand(program2) {
 }
 
 // src/commands/scribe.ts
+import { readFileSync as readFileSync18 } from "fs";
+
+// src/scribe/transcript.ts
+import { existsSync as existsSync12, readFileSync as readFileSync17 } from "fs";
+function parseHookStdin(raw) {
+  try {
+    const j = JSON.parse(raw);
+    return {
+      transcriptPath: typeof j.transcript_path === "string" ? j.transcript_path : void 0,
+      cwd: typeof j.cwd === "string" ? j.cwd : void 0,
+      sessionId: typeof j.session_id === "string" ? j.session_id : void 0,
+      stopHookActive: j.stop_hook_active === true
+    };
+  } catch {
+    return { stopHookActive: false };
+  }
+}
+function shouldCapture(cwd) {
+  if (process.env.ORIRO_SCRIBE_ONLY !== "1") return true;
+  if (!cwd) return false;
+  return /oriro/i.test(cwd.replace(/\\/g, "/"));
+}
+function textOf(content) {
+  if (!content) return "";
+  if (typeof content === "string") return content;
+  return content.filter((b) => b.type === "text" && typeof b.text === "string").map((b) => b.text).join("\n").trim();
+}
+function isHumanUser(e) {
+  if (e.type !== "user" && e.message?.role !== "user") return false;
+  const c = e.message?.content;
+  if (typeof c === "string") return c.trim().length > 0;
+  if (Array.isArray(c)) return c.some((b) => b.type === "text" && (b.text ?? "").trim().length > 0);
+  return false;
+}
+var FILE_KEYS = ["file_path", "path", "notebook_path", "filePath"];
+function lastTurnFromTranscript(path) {
+  if (!existsSync12(path)) return null;
+  const raw = readFileSync17(path, "utf8");
+  const entries = [];
+  for (const line of raw.split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      entries.push(JSON.parse(line));
+    } catch {
+    }
+  }
+  if (entries.length === 0) return null;
+  let anchor;
+  let start = -1;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i];
+    if (e && isHumanUser(e)) {
+      start = i;
+      anchor = e;
+      break;
+    }
+  }
+  const slice = start === -1 ? entries : entries.slice(start);
+  const user = anchor ? textOf(anchor.message?.content) : "";
+  const noteParts = [];
+  const tools = /* @__PURE__ */ new Set();
+  const files = /* @__PURE__ */ new Set();
+  let ts;
+  for (const e of slice) {
+    if (e.timestamp) ts = e.timestamp;
+    const role = e.type ?? e.message?.role;
+    const content = e.message?.content;
+    if (role === "assistant") {
+      const t = textOf(content);
+      if (t) noteParts.push(t);
+    }
+    if (Array.isArray(content)) {
+      for (const b of content) {
+        if (b.type === "tool_use" && b.name) {
+          tools.add(b.name);
+          const input = b.input ?? {};
+          for (const k of FILE_KEYS) {
+            const v = input[k];
+            if (typeof v === "string" && v.trim()) files.add(v.trim());
+          }
+        }
+      }
+    }
+  }
+  const note = noteParts.join("\n\n").trim();
+  if (!user && !note && tools.size === 0) return null;
+  return {
+    user: user || void 0,
+    note: note || void 0,
+    tools: tools.size ? [...tools] : void 0,
+    files: files.size ? [...files] : void 0,
+    ts
+  };
+}
+
+// src/commands/scribe.ts
+function readStdin() {
+  try {
+    return readFileSync18(0, "utf8");
+  } catch {
+    return "";
+  }
+}
+function csv(v) {
+  if (typeof v !== "string") return void 0;
+  const arr = v.split(",").map((s) => s.trim()).filter(Boolean);
+  return arr.length ? arr : void 0;
+}
+function hasContent(rec) {
+  return Boolean(rec.user?.trim() || rec.note?.trim() || rec.tools?.length || rec.files?.length);
+}
 function registerScribeCommand(program2) {
   const scribe = program2.command("scribe").description("the consent-gated local work journal (off by default)");
   scribe.command("on").description("enable the journal (recorded locally at ~/.oriro/scribe, never leaves your machine)").action(() => {
@@ -3548,11 +3905,94 @@ function registerScribeCommand(program2) {
   scribe.command("status").description("show whether the journal is on or off").action(() => {
     info(isScribeEnabled() ? "Scriber: ON" : "Scriber: OFF (default)");
   });
+  scribe.command("capture").description("capture one turn into the journal (used by the Claude Code Stop hook + /scribe skill)").option("--hook", "read the Claude Code Stop-hook JSON from stdin and capture the latest turn").option("--json <record>", "capture an explicit TurnRecord (JSON)").option("--user <text>", "the user/request text for this turn").option("--note <text>", "a note / assistant summary for this turn").option("--router <name>", "which router/model produced the turn").option("--files <list>", "comma-separated file paths touched").option("--tools <list>", "comma-separated tool names used").action((opts) => {
+    try {
+      if (!isScribeEnabled()) {
+        if (!opts.hook) info("Scriber is OFF \u2014 run `oriro scribe on` first.");
+        return;
+      }
+      const now = (/* @__PURE__ */ new Date()).toISOString();
+      let rec = null;
+      if (opts.hook) {
+        const hook = parseHookStdin(readStdin());
+        if (hook.stopHookActive) return;
+        if (!shouldCapture(hook.cwd)) return;
+        if (!hook.transcriptPath) return;
+        const turn = lastTurnFromTranscript(hook.transcriptPath);
+        if (!turn) return;
+        const ts = turn.ts ?? now;
+        rec = {
+          ts,
+          date: ts.slice(0, 10),
+          user: turn.user,
+          note: turn.note,
+          tools: turn.tools,
+          files: turn.files,
+          router: opts.router ?? "claude-code",
+          context: hook.cwd ? `cwd: ${hook.cwd}` : void 0
+        };
+      } else if (opts.json) {
+        const parsed = JSON.parse(opts.json);
+        const ts = parsed.ts ?? now;
+        rec = { ...parsed, ts, date: parsed.date ?? ts.slice(0, 10) };
+      } else {
+        rec = {
+          ts: now,
+          date: now.slice(0, 10),
+          user: opts.user,
+          note: opts.note,
+          router: opts.router,
+          files: csv(opts.files),
+          tools: csv(opts.tools)
+        };
+      }
+      if (!rec || !hasContent(rec)) {
+        if (!opts.hook) info("nothing to capture.");
+        return;
+      }
+      const res = supervisedCapture(rec);
+      if (!opts.hook) {
+        if (res) {
+          const red = res.redactions.length ? ` (redacted: ${res.redactions.map((r) => `${r.label}\xD7${r.count}`).join(", ")})` : "";
+          ok(`captured \u2192 ${res.journalDate}.md${red}`);
+        } else {
+          info("capture deferred (logged); will retry next turn.");
+        }
+      }
+    } catch (err) {
+      if (!opts.hook) fail(`scribe capture: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  });
+  scribe.command("recall <query>").description("full-text search across every day's journal").option("-n, --limit <n>", "max matches", "50").action((query, opts) => {
+    const limit = Math.max(1, Number(opts.limit) || 50);
+    const hits = searchScribe(query, limit);
+    if (!hits.length) {
+      info(`no matches for "${query}".`);
+      return;
+    }
+    heading(`Scribe \u2014 ${hits.length} match(es) for "${query}"`);
+    for (const h of hits) info(`${h.date}:${h.line} \xB7 ${h.text}`);
+  });
+  scribe.command("digest").description("print the rolling digest (recent context, injectable in a flash)").action(() => {
+    const d = readDigest();
+    process.stdout.write(d?.trim() ? `${d.trim()}
+` : "\xB7 digest empty (nothing captured yet).\n");
+  });
+  scribe.command("timeline").description("print the full-history timeline (one line per day)").action(() => {
+    const t = readTimeline();
+    process.stdout.write(t?.trim() ? `${t.trim()}
+` : "\xB7 timeline empty (nothing captured yet).\n");
+  });
+  scribe.command("health").description("show the scribe writer's health (last write, fault count)").action(() => {
+    const h = readHealth();
+    info(`last write: ${h.lastWriteAt ?? "never"}`);
+    info(`faults: ${h.faultCount}${h.lastFault ? ` (last: ${h.lastFault})` : ""}`);
+  });
 }
 
 // src/connectors/connectors.ts
-import { readFileSync as readFileSync17, writeFileSync as writeFileSync13 } from "fs";
-import { join as join18 } from "path";
+import { readFileSync as readFileSync19, writeFileSync as writeFileSync14 } from "fs";
+import { join as join19 } from "path";
 
 // src/connectors/catalog.ts
 var CONNECTOR_CATALOG = [
@@ -4542,18 +4982,18 @@ function connectorBySlug(slug) {
 
 // src/connectors/connectors.ts
 function file2() {
-  return join18(oriroDir(), "connectors.json");
+  return join19(oriroDir(), "connectors.json");
 }
 function readAdded() {
   try {
-    const v = JSON.parse(readFileSync17(file2(), "utf8"));
+    const v = JSON.parse(readFileSync19(file2(), "utf8"));
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
   }
 }
 function writeAdded(slugs) {
-  writeFileSync13(join18(ensureOriroDir(), "connectors.json"), JSON.stringify([...new Set(slugs)], null, 2), "utf8");
+  writeFileSync14(join19(ensureOriroDir(), "connectors.json"), JSON.stringify([...new Set(slugs)], null, 2), "utf8");
 }
 function listConnectors(category) {
   return category ? CONNECTOR_CATALOG.filter((c) => c.category === category) : CONNECTOR_CATALOG;
@@ -4620,14 +5060,14 @@ function registerConnectorsCommand(program2) {
 }
 
 // src/channels/config.ts
-import { readFileSync as readFileSync18, writeFileSync as writeFileSync14 } from "fs";
-import { join as join19 } from "path";
+import { readFileSync as readFileSync20, writeFileSync as writeFileSync15 } from "fs";
+import { join as join20 } from "path";
 function file3() {
-  return join19(oriroDir(), "channels.json");
+  return join20(oriroDir(), "channels.json");
 }
 function readChannels() {
   try {
-    const v = JSON.parse(readFileSync18(file3(), "utf8"));
+    const v = JSON.parse(readFileSync20(file3(), "utf8"));
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
@@ -4636,10 +5076,10 @@ function readChannels() {
 function saveChannel(cfg) {
   const all = readChannels().filter((c) => c.kind !== cfg.kind);
   all.push(cfg);
-  writeFileSync14(join19(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync15(join20(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
 }
 function removeChannel(kind) {
-  writeFileSync14(join19(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
+  writeFileSync15(join20(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
 }
 
 // src/channels/telegram.ts
@@ -4756,9 +5196,9 @@ async function startDiscord(token) {
 }
 
 // src/channels/whatsapp.ts
-import { join as join20 } from "path";
+import { join as join21 } from "path";
 function whatsappAuthDir() {
-  return join20(oriroDir(), "whatsapp-auth");
+  return join21(oriroDir(), "whatsapp-auth");
 }
 async function startWhatsApp() {
   let baileys;
@@ -4893,7 +5333,7 @@ function registerSkillsCommand(program2) {
 }
 
 // src/commands/language.ts
-import { stdin as stdin5 } from "process";
+import { stdin as stdin6 } from "process";
 function resolveLanguage(input) {
   return languageByCode(input) ?? LANGUAGES.find((l) => l.name.toLowerCase() === input.trim().toLowerCase());
 }
@@ -4915,7 +5355,7 @@ function registerLanguageCommand(program2) {
       ok(`${accent(lang.name)} is now your terminal language.`);
       return;
     }
-    if (stdin5.isTTY) {
+    if (stdin6.isTTY) {
       const lang = await selectLanguageInteractive();
       setTerminalLanguage(lang);
       ok(`${accent(lang.name)} is now your terminal language.`);
@@ -4928,7 +5368,7 @@ function registerLanguageCommand(program2) {
 }
 
 // src/commands/avatar.ts
-import { stdin as stdin6 } from "process";
+import { stdin as stdin7 } from "process";
 function registerAvatarCommand(program2) {
   program2.command("avatar").description("show or change your terminal avatar").argument("[slug]", "set directly to this avatar slug").option("-l, --list", "list every avatar by category").action(async (slug, opts) => {
     if (opts.list) {
@@ -4946,7 +5386,7 @@ function registerAvatarCommand(program2) {
       ok(`${accent(avatar.slug)} is now your terminal face.`);
       return;
     }
-    if (stdin6.isTTY) {
+    if (stdin7.isTTY) {
       const chosen = await selectAvatarInteractive();
       if (!chosen) {
         info("no change.");
