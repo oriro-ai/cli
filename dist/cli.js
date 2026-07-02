@@ -1550,6 +1550,15 @@ var ROUTER_CATALOG = [
     obtainUrl: "https://openrouter.ai/keys"
   }),
   C4({
+    id: "huggingface",
+    displayName: "Hugging Face",
+    // OpenAI-compatible Inference Router; the validator appends "/chat/completions".
+    // BYOK: the USER pastes their OWN free HF token (never ORIRO's).
+    baseUrl: "https://router.huggingface.co/v1",
+    freeModels: ["meta-llama/Llama-3.1-8B-Instruct", "Qwen/Qwen2.5-7B-Instruct"],
+    obtainUrl: "https://huggingface.co/settings/tokens"
+  }),
+  C4({
     id: "requesty",
     displayName: "Requesty",
     baseUrl: "https://router.requesty.ai/v1",
