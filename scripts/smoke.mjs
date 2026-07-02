@@ -25,7 +25,7 @@ function run(args, { expectExit = 0, contains } = {}) {
 }
 
 run(["--version"], { contains: version }); // read from package.json — never drifts on a version bump
-run(["skills", "list"], { contains: "326 loaded" }); // bundle path must resolve the skills dir
+run(["skills", "list"], { contains: "loaded" }); // bundle path must resolve the skills dir (exact count enforced by the prepublish gate)
 run(["scribe", "status"], { contains: "Scriber" });
 run(["connectors", "list"], { contains: "addable" }); // summary: N addable · M added · K coming soon
 run(["routers", "list"], { contains: "active pool" });
