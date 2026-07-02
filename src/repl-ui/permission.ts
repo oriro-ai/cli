@@ -35,6 +35,20 @@ export function cycleMode(): PermissionMode {
   return current;
 }
 
+// Thinking cycle (alt+shift+t) — orthogonal to the posture. When ON, the REPL prepends a
+// plan-first reasoning primer to the turn: a real behaviour change on the keyless floor (the
+// model plans before acting), not a cosmetic toggle. Off by default.
+let thinking = false;
+export function getThinking(): boolean {
+  return thinking;
+}
+export function toggleThinking(): boolean {
+  thinking = !thinking;
+  return thinking;
+}
+export const THINKING_PRIMER =
+  "Think step by step and plan your approach before acting. Reason carefully and check your work.";
+
 export type ToolKind = "read" | "edit" | "exec" | "other";
 
 /** Classify a tool by name into read-only / edit / exec / other (drives Plan + Accept-Edits). */

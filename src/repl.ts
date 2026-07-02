@@ -15,6 +15,7 @@ import { noteUserInput } from "./scribe/scribe-pi.js";
 import { getTerminalLanguage } from "./language/index.js";
 import { translateIncoming, translateOutgoing } from "./language/gateway.js";
 import { runTuiRepl } from "./repl-ui/tui-repl.js";
+import { setupVoiceInput } from "./voice/setup.js";
 import { dim, accent } from "./ui/theme.js";
 
 /** In-REPL help — real, not LLM-fabricated. */
@@ -33,6 +34,7 @@ export async function runRepl(): Promise<void> {
   else stdout.write(banner());
 
   const { session } = await assembleOriroSession();
+  setupVoiceInput(); // wire the on-device Whisper listener into the voice seam (graceful if absent)
 
   // Rich TUI (posture footer + Shift+Tab) on a real terminal; plain readline loop otherwise.
   if (stdin.isTTY && stdout.isTTY) {

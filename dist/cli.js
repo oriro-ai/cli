@@ -1060,6 +1060,25 @@ Allow this action?`,
   });
 }
 
+// src/guardian/mcp.ts
+function vetMcpServer(name, server) {
+  const command = typeof server.command === "string" ? server.command : "";
+  const args = Array.isArray(server.args) ? server.args.map(String).join(" ") : "";
+  const url = typeof server.url === "string" ? server.url : "";
+  const env = server.env && typeof server.env === "object" ? Object.entries(server.env).map(([k, v]) => `${k}=${String(v)}`).join(" ") : "";
+  const blob = [command, args, url, env].filter(Boolean).join(" ");
+  return evaluate(
+    {
+      toolName: name,
+      kind: "mcp",
+      params: server,
+      command: blob || void 0,
+      mcpServer: name
+    },
+    resolvePolicy(readGuardianConfig())
+  );
+}
+
 // src/guardian/activate.ts
 var modelFetcher = null;
 async function activateGuardian() {
@@ -1224,40 +1243,44 @@ import { tmpdir } from "os";
 import { join as join7 } from "path";
 import { writeFileSync as writeFileSync5, rmSync } from "fs";
 var synth = null;
+var listener = null;
 function registerVoiceSynth(fn) {
   synth = fn;
 }
-function audioPlayers(file4) {
-  if (process.platform === "darwin") return [{ cmd: "afplay", args: [file4] }];
+function registerVoiceListen(fn) {
+  listener = fn;
+}
+function audioPlayers(file5) {
+  if (process.platform === "darwin") return [{ cmd: "afplay", args: [file5] }];
   if (process.platform === "win32")
     return [
-      { cmd: "powershell", args: ["-NoProfile", "-c", `(New-Object Media.SoundPlayer '${file4}').PlaySync()`] }
+      { cmd: "powershell", args: ["-NoProfile", "-c", `(New-Object Media.SoundPlayer '${file5}').PlaySync()`] }
     ];
   return [
-    { cmd: "aplay", args: ["-q", file4] },
-    { cmd: "ffplay", args: ["-nodisp", "-autoexit", "-loglevel", "quiet", file4] },
-    { cmd: "paplay", args: [file4] }
+    { cmd: "aplay", args: ["-q", file5] },
+    { cmd: "ffplay", args: ["-nodisp", "-autoexit", "-loglevel", "quiet", file5] },
+    { cmd: "paplay", args: [file5] }
   ];
 }
 function playWav(wav) {
-  const file4 = join7(tmpdir(), `oriro-avatar-${process.pid}-${wav.length}.wav`);
-  writeFileSync5(file4, wav);
-  const players = audioPlayers(file4);
+  const file5 = join7(tmpdir(), `oriro-avatar-${process.pid}-${wav.length}.wav`);
+  writeFileSync5(file5, wav);
+  const players = audioPlayers(file5);
   return new Promise((resolve) => {
     const tryPlayer = (i) => {
       if (i >= players.length) {
-        rmSync(file4, { force: true });
+        rmSync(file5, { force: true });
         return resolve(false);
       }
       const p = players[i];
       if (!p) {
-        rmSync(file4, { force: true });
+        rmSync(file5, { force: true });
         return resolve(false);
       }
       const child = spawn(p.cmd, p.args, { stdio: "ignore" });
       child.on("error", () => tryPlayer(i + 1));
       child.on("close", (code) => {
-        rmSync(file4, { force: true });
+        rmSync(file5, { force: true });
         resolve(code === 0);
       });
     };
@@ -1273,6 +1296,14 @@ async function speak(text, opts = {}) {
     return false;
   }
 }
+async function listen() {
+  if (!listener) return null;
+  try {
+    return await listener();
+  } catch {
+    return null;
+  }
+}
 
 // src/avatar/onboarding.ts
 import { stdin as stdin2, stdout as stdout3 } from "process";
@@ -1286,9 +1317,9 @@ import { existsSync, readFileSync as readFileSync6, rmSync as rmSync2 } from "fs
 function tmpWav() {
   return join8(tmpdir2(), `oriro-tts-${process.pid}-${Date.now()}-${Math.floor(performance.now())}.wav`);
 }
-function readAndClean(file4) {
-  const buf = readFileSync6(file4);
-  rmSync2(file4, { force: true });
+function readAndClean(file5) {
+  const buf = readFileSync6(file5);
+  rmSync2(file5, { force: true });
   return new Uint8Array(buf);
 }
 function winSapi(text, lang) {
@@ -2314,8 +2345,8 @@ function artifactsDir() {
 // src/scribe/digest.ts
 var DIGEST_CAP = 8192;
 var TIMELINE_DAY_CAP = 400;
-function read(file4) {
-  return existsSync6(file4) ? readFileSync11(file4, "utf8") : "";
+function read(file5) {
+  return existsSync6(file5) ? readFileSync11(file5, "utf8") : "";
 }
 function updateDigest(summary, context) {
   mkdirSync9(scribeDir(), { recursive: true });
@@ -3625,7 +3656,7 @@ async function urlToSpec(url, models, opts = {}) {
   return { url, html: cap.html, screenshot: cap.png, spec };
 }
 async function extractFrames(videoPath, opts = {}) {
-  const [{ spawn: spawn3 }, os, path, fs] = await Promise.all([
+  const [{ spawn: spawn4 }, os, path, fs] = await Promise.all([
     import("child_process"),
     import("os"),
     import("path"),
@@ -3636,7 +3667,7 @@ async function extractFrames(videoPath, opts = {}) {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "oriro-head-frames-"));
   const pattern = path.join(dir, "f-%03d.png");
   await new Promise((resolve, reject) => {
-    const p = spawn3(ffmpeg, ["-hide_banner", "-loglevel", "error", "-i", videoPath, "-vf", "thumbnail", "-frames:v", String(count), "-y", pattern], { stdio: "ignore" });
+    const p = spawn4(ffmpeg, ["-hide_banner", "-loglevel", "error", "-i", videoPath, "-vf", "thumbnail", "-frames:v", String(count), "-y", pattern], { stdio: "ignore" });
     p.on("error", () => reject(new Error("ffmpeg not found \u2014 pass frames yourself or a video-capable model, or set ffmpegPath.")));
     p.on("close", (code) => code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}`)));
   });
@@ -4274,6 +4305,15 @@ function cycleMode() {
   current = MODES[(i + 1) % MODES.length];
   return current;
 }
+var thinking = false;
+function getThinking() {
+  return thinking;
+}
+function toggleThinking() {
+  thinking = !thinking;
+  return thinking;
+}
+var THINKING_PRIMER = "Think step by step and plan your approach before acting. Reason carefully and check your work.";
 
 // src/repl-ui/tui-repl.ts
 var editorTheme = {
@@ -4293,7 +4333,8 @@ function footerText() {
     const s = `${meta.indicator} ${meta.label}`;
     return m === cur ? accent(s) : dim(s);
   }).join(dim(" \xB7 "));
-  return `${bar}   ${dim("Shift+Tab to switch \xB7 /exit")}`;
+  const think = getThinking() ? accent("\u{1F9E0} Thinking") : dim("\u{1F9E0} Thinking");
+  return `${bar}   ${think}   ${dim("Shift+Tab posture \xB7 Alt+Shift+T thinking \xB7 /exit")}`;
 }
 async function runTuiRepl(session) {
   const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
@@ -4316,6 +4357,11 @@ async function runTuiRepl(session) {
   const removeListener = tui.addInputListener((data) => {
     if (data === "\x1B[Z") {
       cycleMode();
+      refreshFooter();
+      return { consume: true };
+    }
+    if (data === "\x1BT" || data === "\x1Bt") {
+      toggleThinking();
       refreshFooter();
       return { consume: true };
     }
@@ -4348,9 +4394,26 @@ async function runTuiRepl(session) {
     const slash = text.toLowerCase();
     if (slash === "/exit" || slash === "/quit") return cleanup();
     if (slash === "/help" || slash === "/?") {
-      chat.addChild(new Text(dim("  Just type to chat. Shift+Tab cycles posture. /exit to leave."), 0, 0));
+      chat.addChild(new Text(dim("  Just type to chat. Shift+Tab posture \xB7 Alt+Shift+T thinking \xB7 /voice to speak \xB7 /exit."), 0, 0));
       editor.setText("");
       tui.requestRender();
+      return;
+    }
+    if (slash === "/voice") {
+      editor.setText("");
+      const status = new Text(dim("  \u{1F399} listening\u2026 (needs ffmpeg + the transformers voice peer)"), 0, 0);
+      chat.addChild(status);
+      tui.requestRender();
+      void (async () => {
+        const heard = await listen();
+        if (heard?.text) {
+          status.setText(dim(`  \u{1F399} heard [${heard.language}]:`));
+          editor.setText(heard.text);
+        } else {
+          status.setText(dim("  \u{1F399} voice input unavailable (install ffmpeg + `npm i @huggingface/transformers`)."));
+        }
+        tui.requestRender();
+      })();
       return;
     }
     editor.addToHistory(text);
@@ -4361,7 +4424,10 @@ async function runTuiRepl(session) {
     tui.requestRender();
     busy = true;
     void (async () => {
-      const english = await translateIncoming(text);
+      let english = await translateIncoming(text);
+      if (getThinking()) english = `${THINKING_PRIMER}
+
+${english}`;
       noteUserInput(text);
       let out = "";
       const unsub = session.subscribe(
@@ -4397,6 +4463,94 @@ async function runTuiRepl(session) {
   });
 }
 
+// src/voice/mic.ts
+import { spawn as spawn3 } from "child_process";
+import { tmpdir as tmpdir3 } from "os";
+import { join as join20 } from "path";
+import { existsSync as existsSync12, statSync as statSync2 } from "fs";
+function recorders(outFile, seconds) {
+  const dur = String(seconds);
+  if (process.platform === "darwin") {
+    return [
+      { cmd: "ffmpeg", args: ["-hide_banner", "-loglevel", "error", "-f", "avfoundation", "-i", ":0", "-t", dur, "-y", outFile] },
+      { cmd: "sox", args: ["-d", outFile, "trim", "0", dur] }
+    ];
+  }
+  if (process.platform === "win32") {
+    return [
+      { cmd: "ffmpeg", args: ["-hide_banner", "-loglevel", "error", "-f", "dshow", "-i", "audio=default", "-t", dur, "-y", outFile] }
+    ];
+  }
+  return [
+    { cmd: "arecord", args: ["-q", "-f", "cd", "-d", dur, outFile] },
+    { cmd: "ffmpeg", args: ["-hide_banner", "-loglevel", "error", "-f", "alsa", "-i", "default", "-t", dur, "-y", outFile] },
+    { cmd: "sox", args: ["-d", outFile, "trim", "0", dur] }
+  ];
+}
+async function recordMic(seconds = 6) {
+  const outFile = join20(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
+  for (const r of recorders(outFile, seconds)) {
+    const okFile = await new Promise((resolve) => {
+      const child = spawn3(r.cmd, r.args, { stdio: "ignore" });
+      child.on("error", () => resolve(false));
+      child.on("close", (code) => resolve(code === 0 && existsSync12(outFile) && statSync2(outFile).size > 44));
+    });
+    if (okFile) return outFile;
+  }
+  return null;
+}
+
+// src/voice/stt.ts
+async function decodePcm(path) {
+  const { spawn: spawn4 } = await import("child_process");
+  return await new Promise((resolve, reject) => {
+    const chunks = [];
+    const p = spawn4(
+      "ffmpeg",
+      ["-hide_banner", "-loglevel", "error", "-i", path, "-ac", "1", "-ar", "16000", "-f", "f32le", "pipe:1"],
+      { stdio: ["ignore", "pipe", "ignore"] }
+    );
+    p.stdout.on("data", (c) => chunks.push(c));
+    p.on("error", () => reject(new Error("ffmpeg not found \u2014 install ffmpeg to decode audio for speech-to-text.")));
+    p.on("close", (code) => {
+      if (code !== 0) return reject(new Error(`ffmpeg exited ${code ?? "?"} decoding ${path}`));
+      const buf = Buffer.concat(chunks);
+      if (!buf.length) return reject(new Error(`no audio decoded from ${path}`));
+      resolve(new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4)));
+    });
+  });
+}
+var asr = null;
+async function loadAsr(modelId = "Xenova/whisper-base") {
+  if (asr) return asr;
+  const { pipeline } = await import("@huggingface/transformers");
+  asr = await pipeline("automatic-speech-recognition", modelId);
+  return asr;
+}
+async function transcribeAudioFile(path, opts = {}) {
+  const pcm = await decodePcm(path);
+  const model = await loadAsr();
+  const out = await model(pcm, {
+    task: opts.translate ? "translate" : "transcribe",
+    return_language: true,
+    chunk_length_s: 30
+  });
+  return { text: (out?.text ?? "").trim(), language: out?.language ?? "en" };
+}
+
+// src/voice/setup.ts
+var wired2 = false;
+function setupVoiceInput() {
+  if (wired2) return;
+  wired2 = true;
+  registerVoiceListen(async () => {
+    const clip = await recordMic();
+    if (!clip) throw new Error("no microphone recorder available");
+    const t = await transcribeAudioFile(clip, { translate: true });
+    return { text: t.text, language: t.language };
+  });
+}
+
 // src/repl.ts
 function replHelp() {
   return `
@@ -4413,6 +4567,7 @@ async function runRepl() {
   if (isFirstRun()) await runOnboarding();
   else stdout6.write(banner());
   const { session } = await assembleOriroSession();
+  setupVoiceInput();
   if (stdin5.isTTY && stdout6.isTTY) {
     await runTuiRepl(session);
     return;
@@ -4577,7 +4732,7 @@ function registerRoutersCommand(program2) {
 import { readFileSync as readFileSync18 } from "fs";
 
 // src/scribe/transcript.ts
-import { existsSync as existsSync12, readFileSync as readFileSync17 } from "fs";
+import { existsSync as existsSync13, readFileSync as readFileSync17 } from "fs";
 function parseHookStdin(raw) {
   try {
     const j = JSON.parse(raw);
@@ -4610,7 +4765,7 @@ function isHumanUser(e) {
 }
 var FILE_KEYS = ["file_path", "path", "notebook_path", "filePath"];
 function lastTurnFromTranscript(path) {
-  if (!existsSync12(path)) return null;
+  if (!existsSync13(path)) return null;
   const raw = readFileSync17(path, "utf8");
   const entries = [];
   for (const line of raw.split("\n")) {
@@ -4784,9 +4939,13 @@ function registerScribeCommand(program2) {
   });
 }
 
+// src/commands/connectors.ts
+import { createInterface as createInterface6 } from "readline/promises";
+import { stdin as stdin6, stdout as stdout7 } from "process";
+
 // src/connectors/connectors.ts
 import { readFileSync as readFileSync19, writeFileSync as writeFileSync14 } from "fs";
-import { join as join20 } from "path";
+import { join as join21 } from "path";
 
 // src/connectors/catalog.ts
 var CONNECTOR_CATALOG = [
@@ -5776,7 +5935,7 @@ function connectorBySlug(slug) {
 
 // src/connectors/connectors.ts
 function file2() {
-  return join20(oriroDir(), "connectors.json");
+  return join21(oriroDir(), "connectors.json");
 }
 function readAdded() {
   try {
@@ -5787,7 +5946,7 @@ function readAdded() {
   }
 }
 function writeAdded(slugs) {
-  writeFileSync14(join20(ensureOriroDir(), "connectors.json"), JSON.stringify([...new Set(slugs)], null, 2), "utf8");
+  writeFileSync14(join21(ensureOriroDir(), "connectors.json"), JSON.stringify([...new Set(slugs)], null, 2), "utf8");
 }
 function listConnectors(category) {
   return category ? CONNECTOR_CATALOG.filter((c) => c.category === category) : CONNECTOR_CATALOG;
@@ -5815,6 +5974,84 @@ function removeConnector(slug) {
   if (!before.includes(slug)) return false;
   writeAdded(before.filter((s) => s !== slug));
   return true;
+}
+
+// src/connectors/custom.ts
+import { readFileSync as readFileSync20, writeFileSync as writeFileSync15 } from "fs";
+import { join as join22 } from "path";
+function file3() {
+  return join22(oriroDir(), "mcp-custom.json");
+}
+function readCustomServers() {
+  try {
+    const v = JSON.parse(readFileSync20(file3(), "utf8"));
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+function saveCustomServer(server) {
+  const rest = readCustomServers().filter((s) => s.name.toLowerCase() !== server.name.toLowerCase());
+  writeFileSync15(join22(ensureOriroDir(), "mcp-custom.json"), JSON.stringify([...rest, server], null, 2), "utf8");
+}
+function removeCustomServer(name) {
+  const before = readCustomServers();
+  const after = before.filter((s) => s.name.toLowerCase() !== name.toLowerCase());
+  if (after.length === before.length) return false;
+  writeFileSync15(join22(ensureOriroDir(), "mcp-custom.json"), JSON.stringify(after, null, 2), "utf8");
+  return true;
+}
+function trustedServerNames() {
+  return readCustomServers().filter((s) => s.trusted).map((s) => s.name);
+}
+function isServerTrusted(name) {
+  return trustedServerNames().some((n) => n.toLowerCase() === name.toLowerCase());
+}
+
+// src/connectors/setup.ts
+function buildServerConfig(i) {
+  if (i.url) return { type: "http", url: i.url, ...i.headers && Object.keys(i.headers).length ? { headers: i.headers } : {} };
+  return {
+    type: "stdio",
+    command: i.command ?? "",
+    ...i.args && i.args.length ? { args: i.args } : {},
+    ...i.env && Object.keys(i.env).length ? { env: i.env } : {}
+  };
+}
+function vetServer(i) {
+  const alreadyTrusted = isServerTrusted(i.name);
+  const v = vetMcpServer(i.name, { command: i.command, args: i.args, url: i.url, env: i.env });
+  let decision = v.decision;
+  if (decision === "ask" && alreadyTrusted) decision = "allow";
+  return { decision, reason: v.reason, alreadyTrusted };
+}
+function parsePairs(s) {
+  const out = {};
+  for (const part of (s ?? "").split(",")) {
+    const t = part.trim();
+    if (!t) continue;
+    const eq = t.indexOf("=");
+    if (eq < 0) continue;
+    out[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
+  }
+  return out;
+}
+
+// src/connectors/mcp-client.ts
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+function assertSafeUrl(raw, allowLocal = false) {
+  const u = new URL(raw);
+  if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error(`unsupported scheme: ${u.protocol}`);
+  const host = u.hostname.toLowerCase();
+  const isLoopback = host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".localhost");
+  const isPrivate = /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host) || /^169\.254\./.test(host) || /^fe80:/i.test(host) || /^f[cd][0-9a-f]{2}:/i.test(host) || host === "169.254.169.254" || host === "metadata.google.internal";
+  if ((isLoopback || isPrivate) && !allowLocal) {
+    throw new Error(`blocked SSRF target ${host} (use --allow-local for loopback/LAN MCP servers)`);
+  }
+  if (u.protocol === "http:" && !isLoopback && !allowLocal) throw new Error(`refusing plaintext http to ${host} \u2014 use https`);
+  return u;
 }
 
 // src/commands/connectors.ts
@@ -5851,17 +6088,118 @@ function registerConnectorsCommand(program2) {
     if (removeConnector(slug)) ok(`removed ${accent(slug)}`);
     else info(`'${slug}' is not in your added list \u2014 nothing to remove`);
   });
+  connectors.command("setup").description("guided setup of a CUSTOM MCP server \u2014 Guardian-vetted, no JSON").option("--name <name>", "a short name for the server").option("--command <cmd>", "stdio launch command, e.g. 'npx -y @scope/mcp'").option("--args <args>", "space-separated args for --command").option("--env <pairs>", "comma-separated KEY=VAL env vars").option("--url <url>", "http(s) MCP endpoint (instead of --command)").option("--header <pairs>", "comma-separated KEY=VAL headers (with --url)").option("--allow-local", "permit loopback/LAN URL targets").option("-y, --yes", "trust and save when Guardian says 'ask'").action(async (opts) => {
+    const interactive = !!stdin6.isTTY && !!stdout7.isTTY;
+    let { name, command, url } = opts;
+    let argsStr = opts.args;
+    let envStr = opts.env;
+    if (!name || !command && !url) {
+      if (!interactive) {
+        heading("ORIRO MCP setup \u{1F6E1}");
+        info("Describe a custom MCP server; Guardian vets it before it's saved \u2014 no JSON.");
+        process.stdout.write(
+          `
+  ${accent('oriro connectors setup --name <n> --command "npx -y @scope/mcp"')}
+  ${accent("oriro connectors setup --name <n> --url https://host/mcp")}
+  ${dim('optional: --args "a b"  --env K=V,K2=V2  --header K=V  --allow-local  --yes')}
+
+  ${dim("On a real terminal, run it with no flags for a guided Q&A.")}
+`
+        );
+        return;
+      }
+      const rl = createInterface6({ input: stdin6, output: stdout7 });
+      try {
+        name = name || (await rl.question("Server name: ")).trim();
+        if (!command && !url) {
+          const t = (await rl.question("Transport \u2014 [s]tdio command or [u]rl? ")).trim().toLowerCase();
+          if (t.startsWith("u")) {
+            url = (await rl.question("URL: ")).trim();
+          } else {
+            command = (await rl.question("Command (e.g. npx -y @scope/mcp): ")).trim();
+            argsStr = (await rl.question("Args (space-separated, optional): ")).trim() || void 0;
+            envStr = (await rl.question("Env KEY=VAL,comma-separated (optional): ")).trim() || void 0;
+          }
+        }
+      } finally {
+        rl.close();
+      }
+    }
+    if (!name) die("a server name is required");
+    if (!command && !url) die("either --command or --url is required");
+    const args = argsStr ? argsStr.split(/\s+/).filter(Boolean) : void 0;
+    const env = envStr ? parsePairs(envStr) : void 0;
+    const headers = opts.header ? parsePairs(opts.header) : void 0;
+    if (url) {
+      try {
+        assertSafeUrl(url, !!opts.allowLocal);
+      } catch (e) {
+        die(e instanceof Error ? e.message : String(e));
+      }
+    }
+    const input = { name, command, args, env, url, headers };
+    const config = buildServerConfig(input);
+    const outcome = vetServer(input);
+    heading("ORIRO MCP setup \xB7 Guardian \u{1F6E1}");
+    if (outcome.decision === "block") {
+      die(`Guardian BLOCKED "${name}": ${outcome.reason}. Not saved.`);
+    }
+    let trusted = outcome.decision === "allow";
+    if (outcome.decision === "ask") {
+      info(`Guardian: ${outcome.reason}`);
+      if (opts.yes) {
+        trusted = true;
+      } else if (interactive) {
+        const rl = createInterface6({ input: stdin6, output: stdout7 });
+        try {
+          const ans = (await rl.question(`Trust and save "${name}"? [y/N] `)).trim().toLowerCase();
+          trusted = ans === "y" || ans === "yes";
+        } finally {
+          rl.close();
+        }
+      } else {
+        info(`Not saved \u2014 re-run with --yes to trust "${name}".`);
+        return;
+      }
+      if (!trusted) {
+        info("Not saved.");
+        return;
+      }
+    }
+    saveCustomServer({ name, config, trusted });
+    ok(`saved MCP server ${accent(name)} \u2014 ${trusted ? "trusted" : "untrusted"} (${config.type})`);
+    if (outcome.alreadyTrusted) info("already trusted \u2014 Guardian did not re-ask");
+  });
+  connectors.command("custom").description("list the custom MCP servers you've set up").action(() => {
+    const servers = readCustomServers();
+    heading("Custom MCP servers");
+    if (!servers.length) {
+      info("none yet \u2014 add one with `oriro connectors setup`");
+      return;
+    }
+    for (const s of servers) {
+      const where = s.config.type === "stdio" ? s.config.command : s.config.url;
+      const mark = s.trusted ? accent("\u25CF") : dim("\u25CB");
+      process.stdout.write(`  ${mark} ${accent(s.name.padEnd(20))} ${dim(`${s.config.type} \xB7 ${where}`)}
+`);
+    }
+    info(`${servers.length} custom \xB7 ${servers.filter((s) => s.trusted).length} trusted`);
+  });
+  connectors.command("forget <name>").description("remove a custom MCP server you set up").action((name) => {
+    if (removeCustomServer(name)) ok(`forgot ${accent(name)}`);
+    else info(`'${name}' is not a custom server \u2014 nothing to forget`);
+  });
 }
 
 // src/channels/config.ts
-import { readFileSync as readFileSync20, writeFileSync as writeFileSync15 } from "fs";
-import { join as join21 } from "path";
-function file3() {
-  return join21(oriroDir(), "channels.json");
+import { readFileSync as readFileSync21, writeFileSync as writeFileSync16 } from "fs";
+import { join as join23 } from "path";
+function file4() {
+  return join23(oriroDir(), "channels.json");
 }
 function readChannels() {
   try {
-    const v = JSON.parse(readFileSync20(file3(), "utf8"));
+    const v = JSON.parse(readFileSync21(file4(), "utf8"));
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
@@ -5870,10 +6208,10 @@ function readChannels() {
 function saveChannel(cfg) {
   const all = readChannels().filter((c) => c.kind !== cfg.kind);
   all.push(cfg);
-  writeFileSync15(join21(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync16(join23(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
 }
 function removeChannel(kind) {
-  writeFileSync15(join21(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
+  writeFileSync16(join23(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
 }
 
 // src/channels/telegram.ts
@@ -5958,9 +6296,9 @@ async function validateDiscordToken(token) {
   return me.username ?? me.id ?? "unknown";
 }
 async function startDiscord(token) {
-  const { Client, GatewayIntentBits, Events } = await import("discord.js");
+  const { Client: Client2, GatewayIntentBits, Events } = await import("discord.js");
   const host = new OriroChannelHost();
-  const client = new Client({
+  const client = new Client2({
     intents: [
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMessages,
@@ -5990,9 +6328,9 @@ async function startDiscord(token) {
 }
 
 // src/channels/whatsapp.ts
-import { join as join22 } from "path";
+import { join as join24 } from "path";
 function whatsappAuthDir() {
-  return join22(oriroDir(), "whatsapp-auth");
+  return join24(oriroDir(), "whatsapp-auth");
 }
 async function startWhatsApp() {
   let baileys;
@@ -6127,7 +6465,7 @@ function registerSkillsCommand(program2) {
 }
 
 // src/commands/language.ts
-import { stdin as stdin6 } from "process";
+import { stdin as stdin7 } from "process";
 function resolveLanguage(input) {
   return languageByCode(input) ?? LANGUAGES.find((l) => l.name.toLowerCase() === input.trim().toLowerCase());
 }
@@ -6149,7 +6487,7 @@ function registerLanguageCommand(program2) {
       ok(`${accent(lang.name)} is now your terminal language.`);
       return;
     }
-    if (stdin6.isTTY) {
+    if (stdin7.isTTY) {
       const lang = await selectLanguageInteractive();
       setTerminalLanguage(lang);
       ok(`${accent(lang.name)} is now your terminal language.`);
@@ -6162,7 +6500,7 @@ function registerLanguageCommand(program2) {
 }
 
 // src/commands/avatar.ts
-import { stdin as stdin7 } from "process";
+import { stdin as stdin8 } from "process";
 function registerAvatarCommand(program2) {
   program2.command("avatar").description("show or change your terminal avatar").argument("[slug]", "set directly to this avatar slug").option("-l, --list", "list every avatar by category").action(async (slug, opts) => {
     if (opts.list) {
@@ -6180,7 +6518,7 @@ function registerAvatarCommand(program2) {
       ok(`${accent(avatar.slug)} is now your terminal face.`);
       return;
     }
-    if (stdin7.isTTY) {
+    if (stdin8.isTTY) {
       const chosen = await selectAvatarInteractive();
       if (!chosen) {
         info("no change.");
@@ -6257,6 +6595,44 @@ function registerHeadCommand(program2) {
   });
 }
 
+// src/commands/voice.ts
+import { stdin as stdin9, stdout as stdout8 } from "process";
+function registerVoiceCommand(program2) {
+  program2.command("voice").description("speech-to-text \u2014 transcribe an audio file or the mic (on-device Whisper, experimental)").argument("[file]", "audio file to transcribe (omit to record from the mic on a real terminal)").option("--translate", "translate speech to English (Whisper translate task)").option("--seconds <n>", "mic recording length in seconds", "6").action(async (file5, opts) => {
+    const interactive = !!stdin9.isTTY && !!stdout8.isTTY;
+    heading("ORIRO voice \u{1F399}");
+    let audio = file5;
+    if (!audio) {
+      if (!interactive) {
+        info("On-device speech-to-text (experimental \u2014 needs ffmpeg + the transformers voice peer).");
+        process.stdout.write(
+          `
+  ${accent("oriro voice <audiofile>")}         ${dim("transcribe an audio file")}
+  ${accent("oriro voice --translate <file>")}  ${dim("transcribe + translate to English")}
+  ${dim("On a real terminal, run `oriro voice` with no file to record from the mic.")}
+`
+        );
+        return;
+      }
+      info(`Recording ${opts.seconds ?? "6"}s from the mic\u2026 (speak now)`);
+      const clip = await recordMic(Number(opts.seconds ?? 6));
+      if (!clip) die("no microphone recorder found \u2014 install ffmpeg (or sox/arecord) to record.");
+      audio = clip;
+    }
+    try {
+      const t = await transcribeAudioFile(audio, { translate: !!opts.translate });
+      if (!t.text) {
+        info("(no speech recognized)");
+        return;
+      }
+      process.stdout.write(`  ${dim(`[${t.language}]`)} ${t.text}
+`);
+    } catch (e) {
+      die(`voice: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  });
+}
+
 // src/cli.ts
 var version = createRequire(import.meta.url)("../package.json").version;
 var program = new Command();
@@ -6283,6 +6659,7 @@ registerSkillsCommand(program);
 registerLanguageCommand(program);
 registerAvatarCommand(program);
 registerHeadCommand(program);
+registerVoiceCommand(program);
 program.parseAsync().catch((e) => {
   if (e instanceof DieError) return;
   process.stderr.write(`

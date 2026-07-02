@@ -13,10 +13,11 @@
 import { ProcessTerminal, TUI, Editor, Text, Container, type EditorTheme } from "@earendil-works/pi-tui";
 import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { accent, dim } from "../ui/theme.js";
-import { cycleMode, getMode, MODE_META, MODES } from "./permission.js";
+import { cycleMode, getMode, MODE_META, MODES, getThinking, toggleThinking, THINKING_PRIMER } from "./permission.js";
 import { getTerminalLanguage } from "../language/index.js";
 import { translateIncoming, translateOutgoing } from "../language/gateway.js";
 import { noteUserInput } from "../scribe/scribe-pi.js";
+import { listen } from "../avatar/voice.js";
 
 const editorTheme: EditorTheme = {
   borderColor: (s) => dim(s),
@@ -29,7 +30,7 @@ const editorTheme: EditorTheme = {
   },
 };
 
-/** The posture bar: ● Manual · ✎ Accept Edits · ⏵⏵ Auto · ▢ Plan  + the Shift+Tab hint. */
+/** The posture bar: ● Manual · ✎ Accept Edits · ⏵⏵ Auto · ▢ Plan  + Thinking + the key hints. */
 function footerText(): string {
   const cur = getMode();
   const bar = MODES.map((m) => {
@@ -37,7 +38,8 @@ function footerText(): string {
     const s = `${meta.indicator} ${meta.label}`;
     return m === cur ? accent(s) : dim(s);
   }).join(dim(" · "));
-  return `${bar}   ${dim("Shift+Tab to switch · /exit")}`;
+  const think = getThinking() ? accent("🧠 Thinking") : dim("🧠 Thinking");
+  return `${bar}   ${think}   ${dim("Shift+Tab posture · Alt+Shift+T thinking · /exit")}`;
 }
 
 export async function runTuiRepl(session: AgentSession): Promise<void> {
@@ -62,10 +64,17 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
     tui.requestRender();
   };
 
-  // Shift+Tab cycles the posture. (ProcessTerminal emits \x1b[Z for Shift+Tab, incl. on Windows.)
+  // Shift+Tab cycles the posture (\x1b[Z). Alt+Shift+T toggles the thinking cycle: Alt sends an
+  // ESC prefix and Shift makes the letter uppercase, so the sequence is ESC + 'T' (\x1bT). Accept
+  // the lowercase Alt+t (\x1bt) as an alias so it fires on terminals that don't uppercase.
   const removeListener = tui.addInputListener((data) => {
     if (data === "\x1b[Z") {
       cycleMode();
+      refreshFooter();
+      return { consume: true };
+    }
+    if (data === "\x1bT" || data === "\x1bt") {
+      toggleThinking();
       refreshFooter();
       return { consume: true };
     }
@@ -91,9 +100,27 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
     const slash = text.toLowerCase();
     if (slash === "/exit" || slash === "/quit") return cleanup();
     if (slash === "/help" || slash === "/?") {
-      chat.addChild(new Text(dim("  Just type to chat. Shift+Tab cycles posture. /exit to leave."), 0, 0));
+      chat.addChild(new Text(dim("  Just type to chat. Shift+Tab posture · Alt+Shift+T thinking · /voice to speak · /exit."), 0, 0));
       editor.setText("");
       tui.requestRender();
+      return;
+    }
+    if (slash === "/voice") {
+      // Speak a turn: record the mic + transcribe on-device, then drop the text into the editor to review + send.
+      editor.setText("");
+      const status = new Text(dim("  🎙 listening… (needs ffmpeg + the transformers voice peer)"), 0, 0);
+      chat.addChild(status);
+      tui.requestRender();
+      void (async () => {
+        const heard = await listen();
+        if (heard?.text) {
+          status.setText(dim(`  🎙 heard [${heard.language}]:`));
+          editor.setText(heard.text);
+        } else {
+          status.setText(dim("  🎙 voice input unavailable (install ffmpeg + `npm i @huggingface/transformers`)."));
+        }
+        tui.requestRender();
+      })();
       return;
     }
 
@@ -106,7 +133,8 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
 
     busy = true;
     void (async () => {
-      const english = await translateIncoming(text);
+      let english = await translateIncoming(text);
+      if (getThinking()) english = `${THINKING_PRIMER}\n\n${english}`; // plan-first when thinking is on
       noteUserInput(text);
       let out = "";
       const unsub = session.subscribe(
