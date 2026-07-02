@@ -105,6 +105,16 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       tui.requestRender();
       return;
     }
+    if (slash === "/skill" || slash === "/skills") {
+      chat.addChild(new Text(dim("  326 skills bundled & active. Browse them: `oriro skills list --all` in your shell."), 0, 0));
+      editor.setText(""); tui.requestRender();
+      return;
+    }
+    if (slash === "/connector" || slash === "/connectors") {
+      chat.addChild(new Text(dim("  59 MCP connectors. Add your own: `oriro connectors setup` · or `oriro connectors add <slug>`."), 0, 0));
+      editor.setText(""); tui.requestRender();
+      return;
+    }
     if (slash === "/voice") {
       // Speak a turn: record the mic + transcribe on-device, then drop the text into the editor to review + send.
       editor.setText("");

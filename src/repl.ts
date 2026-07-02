@@ -72,6 +72,8 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       const slash = line.toLowerCase();
       if (slash === "/exit" || slash === "/quit") break;
       if (slash === "/help" || slash === "/?") { stdout.write(replHelp()); continue; }
+      if (slash === "/skill" || slash === "/skills") { stdout.write(`  ${dim("326 skills bundled & active. Browse: oriro skills list --all")}\n`); continue; }
+      if (slash === "/connector" || slash === "/connectors") { stdout.write(`  ${dim("59 MCP connectors. Add: oriro connectors setup · or oriro connectors add <slug>")}\n`); continue; }
 
       const english = await translateIncoming(line);
       noteUserInput(line);
