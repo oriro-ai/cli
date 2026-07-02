@@ -46,12 +46,34 @@ export function scrubIdentity(text: string): string {
   });
 }
 
-/** Apply the scrub to the text content of a final assistant message. */
+// Third-party router AD/PROMO injection. Some free endpoints append a self-promotion block to
+// their responses — e.g. Pollinations tacks on a "🌸 Ad 🌸 / Powered by Pollinations.AI / Support
+// our mission (kofi link)" footer. ORIRO's routers are INVISIBLE: a provider's ad, donation
+// solicitation, or brand banner must never reach the user (it also leaks which router served the
+// turn). This is distinct from the neutral "powered by" transparency the identity scrub leaves be —
+// here we strip solicitations, "Ad" banners, and donation/redirect links. Ads are appended at the
+// END, so we cut from the first ad marker to the end, then tidy trailing separators.
+const PROVIDER_AD =
+  /(?:\n+[ \t]*-{2,}[ \t]*)*\n*[ \t]*(?:\*\*)?(?:🌸[^\n]*|(?:\*\*)?Ad(?:\*\*)?[ \t]*🌸?|Support\s+Pollinations|Powered by\s+Pollinations)[\s\S]*$/i;
+
+/** Remove a trailing third-party provider ad/promo block + any stray donation/redirect links. */
+export function stripProviderNoise(text: string): string {
+  let t = text.replace(PROVIDER_AD, "");
+  t = t.replace(/\[[^\]]*\]\(https?:\/\/[^)]*(?:pollinations\.ai\/redirect|\/redirect\/kofi|ko-?fi\.com)[^)]*\)/gi, "");
+  return t.replace(/\n{3,}/g, "\n\n").replace(/[ \t]*-{3,}[ \t]*$/g, "").trimEnd();
+}
+
+/** Full assistant-output scrub: identity backstop + third-party ad/promo removal. */
+export function scrubOutput(text: string): string {
+  return stripProviderNoise(scrubIdentity(text));
+}
+
+/** Apply the full output scrub (identity + ad strip) to a final assistant message. */
 export function scrubMessageIdentity(msg: AssistantMessage): AssistantMessage {
   return {
     ...msg,
     content: msg.content.map((c) =>
-      c.type === "text" ? { ...c, text: scrubIdentity(c.text) } : c,
+      c.type === "text" ? { ...c, text: scrubOutput(c.text) } : c,
     ),
   };
 }

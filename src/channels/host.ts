@@ -5,7 +5,7 @@
 // kill-shot #4). One session per host. Built fresh on Pi; zero OpenClaw footprint.
 import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { assembleOriroSession } from "../onboarding/assemble.js";
-import { scrubIdentity } from "../identity/filter.js";
+import { scrubOutput } from "../identity/filter.js";
 import { noteUserInput } from "../scribe/scribe-pi.js";
 
 export class OriroChannelHost {
@@ -39,7 +39,7 @@ export class OriroChannelHost {
       }
       // Channels return the accumulated stream (the mux scrubs only the final message object), so
       // enforce ORIRO identity here too — every channel reply is leak-free and self-identifies.
-      return scrubIdentity(out).trim() || "(ORIRO had no reply)";
+      return scrubOutput(out).trim() || "(ORIRO had no reply)";
     } catch (e) {
       return `ORIRO error: ${e instanceof Error ? e.message : String(e)}`;
     }

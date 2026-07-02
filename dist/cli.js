@@ -80,7 +80,7 @@ async function captureScreens(urls, opts = {}) {
 }
 async function scrollToBottom(page) {
   await page.evaluate(async () => {
-    await new Promise((resolve) => {
+    await new Promise((resolve2) => {
       let y = 0;
       const step = 500;
       const timer = setInterval(() => {
@@ -88,12 +88,12 @@ async function scrollToBottom(page) {
         y += step;
         if (y >= document.body.scrollHeight) {
           clearInterval(timer);
-          resolve();
+          resolve2();
         }
       }, 120);
       setTimeout(() => {
         clearInterval(timer);
-        resolve();
+        resolve2();
       }, 6e3);
     });
     window.scrollTo(0, 0);
@@ -1266,22 +1266,22 @@ function playWav(wav) {
   const file5 = join7(tmpdir(), `oriro-avatar-${process.pid}-${wav.length}.wav`);
   writeFileSync5(file5, wav);
   const players = audioPlayers(file5);
-  return new Promise((resolve) => {
+  return new Promise((resolve2) => {
     const tryPlayer = (i) => {
       if (i >= players.length) {
         rmSync(file5, { force: true });
-        return resolve(false);
+        return resolve2(false);
       }
       const p = players[i];
       if (!p) {
         rmSync(file5, { force: true });
-        return resolve(false);
+        return resolve2(false);
       }
       const child = spawn(p.cmd, p.args, { stdio: "ignore" });
       child.on("error", () => tryPlayer(i + 1));
       child.on("close", (code) => {
         rmSync(file5, { force: true });
-        resolve(code === 0);
+        resolve2(code === 0);
       });
     };
     tryPlayer(0);
@@ -1326,11 +1326,11 @@ function winSapi(text, lang) {
   const out = tmpWav();
   const culture = lang ? `'${lang.replace(/'/g, "")}'` : "$null";
   const ps = `Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; $c = ${culture}; if ($c) { try { $s.SelectVoiceByHints([System.Speech.Synthesis.VoiceGender]::NotSet, [System.Speech.Synthesis.VoiceAge]::NotSet, 0, (New-Object System.Globalization.CultureInfo($c))) } catch {} } $s.SetOutputToWaveFile('${out}'); $s.Speak([Console]::In.ReadToEnd()); $s.Dispose();`;
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve2, reject) => {
     const p = spawn2("powershell", ["-NoProfile", "-Command", ps], { stdio: ["pipe", "ignore", "ignore"] });
     p.on("error", reject);
     p.on("close", (code) => {
-      if (code === 0 && existsSync(out)) resolve(readAndClean(out));
+      if (code === 0 && existsSync(out)) resolve2(readAndClean(out));
       else reject(new Error("SAPI synth failed"));
     });
     p.stdin.write(text);
@@ -1339,23 +1339,23 @@ function winSapi(text, lang) {
 }
 function macSay(text) {
   const out = tmpWav();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve2, reject) => {
     const p = spawn2("say", ["-o", out, "--data-format=LEI16@22050", text], { stdio: "ignore" });
     p.on("error", reject);
     p.on(
       "close",
-      (code) => code === 0 && existsSync(out) ? resolve(readAndClean(out)) : reject(new Error("say failed"))
+      (code) => code === 0 && existsSync(out) ? resolve2(readAndClean(out)) : reject(new Error("say failed"))
     );
   });
 }
 function linuxEspeak(text) {
   const out = tmpWav();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve2, reject) => {
     const p = spawn2("espeak", ["-w", out, text], { stdio: "ignore" });
     p.on("error", reject);
     p.on(
       "close",
-      (code) => code === 0 && existsSync(out) ? resolve(readAndClean(out)) : reject(new Error("espeak failed"))
+      (code) => code === 0 && existsSync(out) ? resolve2(readAndClean(out)) : reject(new Error("espeak failed"))
     );
   });
 }
@@ -3476,11 +3476,20 @@ function scrubIdentity(text) {
     return s;
   });
 }
+var PROVIDER_AD = /(?:\n+[ \t]*-{2,}[ \t]*)*\n*[ \t]*(?:\*\*)?(?:🌸[^\n]*|(?:\*\*)?Ad(?:\*\*)?[ \t]*🌸?|Support\s+Pollinations|Powered by\s+Pollinations)[\s\S]*$/i;
+function stripProviderNoise(text) {
+  let t = text.replace(PROVIDER_AD, "");
+  t = t.replace(/\[[^\]]*\]\(https?:\/\/[^)]*(?:pollinations\.ai\/redirect|\/redirect\/kofi|ko-?fi\.com)[^)]*\)/gi, "");
+  return t.replace(/\n{3,}/g, "\n\n").replace(/[ \t]*-{3,}[ \t]*$/g, "").trimEnd();
+}
+function scrubOutput(text) {
+  return stripProviderNoise(scrubIdentity(text));
+}
 function scrubMessageIdentity(msg) {
   return {
     ...msg,
     content: msg.content.map(
-      (c) => c.type === "text" ? { ...c, text: scrubIdentity(c.text) } : c
+      (c) => c.type === "text" ? { ...c, text: scrubOutput(c.text) } : c
     )
   };
 }
@@ -4881,10 +4890,10 @@ async function extractFrames(videoPath, opts = {}) {
   const ffmpeg = opts.ffmpegPath ?? "ffmpeg";
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "oriro-head-frames-"));
   const pattern = path.join(dir, "f-%03d.png");
-  await new Promise((resolve, reject) => {
+  await new Promise((resolve2, reject) => {
     const p = spawn4(ffmpeg, ["-hide_banner", "-loglevel", "error", "-i", videoPath, "-vf", "thumbnail", "-frames:v", String(count), "-y", pattern], { stdio: "ignore" });
     p.on("error", () => reject(new Error("ffmpeg not found \u2014 pass frames yourself or a video-capable model, or set ffmpegPath.")));
-    p.on("close", (code) => code === 0 ? resolve() : reject(new Error(`ffmpeg exited ${code}`)));
+    p.on("close", (code) => code === 0 ? resolve2() : reject(new Error(`ffmpeg exited ${code}`)));
   });
   const files = (await fs.readdir(dir)).filter((f) => f.endsWith(".png")).sort();
   const frames = [];
@@ -5495,6 +5504,30 @@ function toggleThinking() {
 }
 var THINKING_PRIMER = "Think step by step and plan your approach before acting. Reason carefully and check your work.";
 
+// src/repl-ui/verify-actions.ts
+import { existsSync as existsSync13 } from "fs";
+import { isAbsolute, resolve } from "path";
+var CLAIM = /\b(?:have|has)\s+been\s+created\b|\b(?:created|wrote|written|saved|generated)\b(?![ \t]*(?:by you|it yourself))/i;
+var SUGGESTION = /\byou\s+(?:can|could|should|may)\s+(?:create|add|save|make|put)\b/i;
+var PATH_RE = /(?:`|"|')?((?:[A-Za-z]:[\\/]|\.{0,2}[\\/])?[\w.\\/-]+\.(?:html?|css|json|m?[jt]sx?|py|md|txt|vue|svelte|go|rs|java|rb|php|sh|ya?ml|sql|toml|env|cpp|hpp|[ch])(?![A-Za-z0-9]))(?:`|"|')?/gi;
+function phantomFileWarning(reply, cwd = process.cwd()) {
+  if (!reply || !CLAIM.test(reply)) return "";
+  const missing = /* @__PURE__ */ new Set();
+  for (const m of reply.matchAll(PATH_RE)) {
+    const p = m[1];
+    if (!p) continue;
+    if (/^https?:|node_modules|<[^>]+>|your-|example\./i.test(p)) continue;
+    const abs = isAbsolute(p) ? p : resolve(cwd, p.replace(/^[.][\\/]/, ""));
+    if (!existsSync13(abs)) missing.add(p);
+  }
+  if (missing.size === 0) return "";
+  if (SUGGESTION.test(reply) && !/\b(?:have|has)\s+been\s+created\b/i.test(reply)) return "";
+  const list = [...missing].slice(0, 5).join(", ");
+  const plural = missing.size > 1;
+  return `
+\u26A0 ORIRO said it ${plural ? "created files" : "created a file"} (${list}), but ${plural ? "they're" : "it's"} not on disk \u2014 the free router may have described the write without actually running it. Retry, or add your own key with \`oriro routers\` for reliable coding.`;
+}
+
 // src/repl-ui/tui-repl.ts
 var editorTheme = {
   borderColor: (s) => dim(s),
@@ -5643,8 +5676,10 @@ ${english}`;
         return;
       }
       unsub();
-      const finalText = isEnglish3 ? out.trim() : await translateOutgoing(out.trim());
-      streaming.setText(finalText || dim("(no response)"));
+      const cleaned = scrubOutput(out);
+      const finalText = isEnglish3 ? cleaned.trim() : await translateOutgoing(cleaned.trim());
+      const warn = phantomFileWarning(finalText);
+      streaming.setText((finalText || dim("(no response)")) + (warn ? dim(warn) : ""));
       tui.requestRender();
       busy = false;
     })();
@@ -5659,7 +5694,7 @@ ${english}`;
 import { spawn as spawn3 } from "child_process";
 import { tmpdir as tmpdir3 } from "os";
 import { join as join22 } from "path";
-import { existsSync as existsSync13, statSync as statSync2 } from "fs";
+import { existsSync as existsSync14, statSync as statSync2 } from "fs";
 function recorders(outFile, seconds) {
   const dur = String(seconds);
   if (process.platform === "darwin") {
@@ -5682,10 +5717,10 @@ function recorders(outFile, seconds) {
 async function recordMic(seconds = 6) {
   const outFile = join22(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
   for (const r of recorders(outFile, seconds)) {
-    const okFile = await new Promise((resolve) => {
+    const okFile = await new Promise((resolve2) => {
       const child = spawn3(r.cmd, r.args, { stdio: "ignore" });
-      child.on("error", () => resolve(false));
-      child.on("close", (code) => resolve(code === 0 && existsSync13(outFile) && statSync2(outFile).size > 44));
+      child.on("error", () => resolve2(false));
+      child.on("close", (code) => resolve2(code === 0 && existsSync14(outFile) && statSync2(outFile).size > 44));
     });
     if (okFile) return outFile;
   }
@@ -5695,7 +5730,7 @@ async function recordMic(seconds = 6) {
 // src/voice/stt.ts
 async function decodePcm(path) {
   const { spawn: spawn4 } = await import("child_process");
-  return await new Promise((resolve, reject) => {
+  return await new Promise((resolve2, reject) => {
     const chunks = [];
     const p = spawn4(
       "ffmpeg",
@@ -5708,7 +5743,7 @@ async function decodePcm(path) {
       if (code !== 0) return reject(new Error(`ffmpeg exited ${code ?? "?"} decoding ${path}`));
       const buf = Buffer.concat(chunks);
       if (!buf.length) return reject(new Error(`no audio decoded from ${path}`));
-      resolve(new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4)));
+      resolve2(new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4)));
     });
   });
 }
@@ -5816,9 +5851,7 @@ async function runReadlineRepl(session) {
       const unsub = session.subscribe(
         (e) => {
           if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
-            const d = e.assistantMessageEvent.delta ?? "";
-            out += d;
-            if (isEnglish3) stdout7.write(d);
+            out += e.assistantMessageEvent.delta ?? "";
           }
         }
       );
@@ -5827,8 +5860,9 @@ async function runReadlineRepl(session) {
       } finally {
         unsub();
       }
-      if (isEnglish3) stdout7.write("\n\n");
-      else stdout7.write(`${await translateOutgoing(out.trim())}
+      const cleaned = scrubOutput(out);
+      const shown = isEnglish3 ? cleaned.trim() : await translateOutgoing(cleaned.trim());
+      stdout7.write(`${shown}${phantomFileWarning(shown)}
 
 `);
     }
@@ -5934,7 +5968,7 @@ function registerRoutersCommand(program2) {
 import { readFileSync as readFileSync19 } from "fs";
 
 // src/scribe/transcript.ts
-import { existsSync as existsSync14, readFileSync as readFileSync18 } from "fs";
+import { existsSync as existsSync15, readFileSync as readFileSync18 } from "fs";
 function parseHookStdin(raw) {
   try {
     const j = JSON.parse(raw);
@@ -5967,7 +6001,7 @@ function isHumanUser(e) {
 }
 var FILE_KEYS = ["file_path", "path", "notebook_path", "filePath"];
 function lastTurnFromTranscript(path) {
-  if (!existsSync14(path)) return null;
+  if (!existsSync15(path)) return null;
   const raw = readFileSync18(path, "utf8");
   const entries = [];
   for (const line of raw.split("\n")) {
@@ -6414,7 +6448,7 @@ var OriroChannelHost = class {
       } finally {
         unsub();
       }
-      return scrubIdentity(out).trim() || "(ORIRO had no reply)";
+      return scrubOutput(out).trim() || "(ORIRO had no reply)";
     } catch (e) {
       return `ORIRO error: ${e instanceof Error ? e.message : String(e)}`;
     }

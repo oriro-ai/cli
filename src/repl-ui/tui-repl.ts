@@ -18,6 +18,8 @@ import { getTerminalLanguage } from "../language/index.js";
 import { translateIncoming, translateOutgoing } from "../language/gateway.js";
 import { noteUserInput } from "../scribe/scribe-pi.js";
 import { listen } from "../avatar/voice.js";
+import { scrubOutput } from "../identity/filter.js";
+import { phantomFileWarning } from "./verify-actions.js";
 
 const editorTheme: EditorTheme = {
   borderColor: (s) => dim(s),
@@ -168,8 +170,10 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
         return;
       }
       unsub();
-      const finalText = isEnglish ? out.trim() : await translateOutgoing(out.trim());
-      streaming.setText(finalText || dim("(no response)"));
+      const cleaned = scrubOutput(out); // strip any third-party router ad/promo before the final render
+      const finalText = isEnglish ? cleaned.trim() : await translateOutgoing(cleaned.trim());
+      const warn = phantomFileWarning(finalText); // flag claimed-but-absent file writes (weak-router hallucination)
+      streaming.setText((finalText || dim("(no response)")) + (warn ? dim(warn) : ""));
       tui.requestRender();
       busy = false;
     })();
