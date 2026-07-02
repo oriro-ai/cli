@@ -7,6 +7,7 @@ import { loadSkills, formatSkillsForPrompt } from "@earendil-works/pi-coding-age
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { oriroDir } from "../config/paths.js";
 
 /** Walk up from `start` to the package root (the dir holding package.json). */
 function packageRoot(start: string): string {
@@ -29,6 +30,20 @@ export function skillsDir(): string {
   return join(packageRoot(dirname(fileURLToPath(import.meta.url))), "skills");
 }
 
+/** User-added skills live here (dynamic, not bundled): drop a `<name>/SKILL.md` folder in and it
+ *  loads alongside the shipped library. Override with ORIRO_USER_SKILLS_DIR. */
+export function userSkillsDir(): string {
+  return process.env.ORIRO_USER_SKILLS_DIR ?? join(oriroDir(), "skills");
+}
+
+/** All skill roots to load from: the bundled library + the user's own dir (if it exists). */
+export function skillRoots(): string[] {
+  const roots = [skillsDir()];
+  const user = userSkillsDir();
+  if (existsSync(user) && user !== roots[0]) roots.push(user);
+  return roots;
+}
+
 export interface LoadedSkill {
   name: string;
   description: string;
@@ -44,12 +59,14 @@ export interface OriroSkills {
   prompt: string;
 }
 
-/** Load + tier the bundled ORIRO skills via Pi's native loader. */
+/** Load + tier the ORIRO skills (bundled + the user's own dir) via Pi's native loader. */
 export async function loadOriroSkills(dir: string = skillsDir()): Promise<OriroSkills> {
+  // Load from the bundled library AND ~/.oriro/skills so user-added skills show up dynamically.
+  const paths = dir === skillsDir() ? skillRoots() : [dir];
   const result: unknown = await loadSkills({
     cwd: dir,
     agentDir: dir,
-    skillPaths: [dir],
+    skillPaths: paths,
     includeDefaults: false,
   });
   const all = (Array.isArray(result) ? result : ((result as { skills?: LoadedSkill[] }).skills ?? [])) as LoadedSkill[];

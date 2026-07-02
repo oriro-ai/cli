@@ -1,12 +1,16 @@
-// `oriro skills` — inspect the bundled ORIRO skill library and its Option-B tiering.
-//   list  → CORE (model-visible) / TAIL (/name-only) counts, with optional names
+// `oriro skills` — the ORIRO skill library (bundled + your own).
+//   list          → CORE (model-visible) / TAIL (/name-only) counts, with optional names
+//   add <path>    → add YOUR skill (a folder with SKILL.md, or a SKILL.md file) into ~/.oriro/skills
+//   remove <name> → drop a user-added skill
+import { existsSync, statSync, mkdirSync, cpSync, rmSync } from "node:fs";
+import { resolve, join, basename, dirname } from "node:path";
 import type { Command } from "commander";
-import { loadOriroSkills } from "../skills/loader.js";
-import { info, heading } from "./ui.js";
+import { loadOriroSkills, userSkillsDir } from "../skills/loader.js";
+import { info, heading, ok, die } from "./ui.js";
 import { accent, dim } from "../ui/theme.js";
 
 export function registerSkillsCommand(program: Command): void {
-  const skills = program.command("skills").description("the bundled ORIRO skill library (Option-B tiered)");
+  const skills = program.command("skills").description("the ORIRO skill library — bundled + your own");
 
   skills
     .command("list")
@@ -22,5 +26,41 @@ export function registerSkillsCommand(program: Command): void {
           process.stdout.write(`  ${tag}  ${sk.name}\n`);
         }
       }
+      info(`Add your own: ${accent("oriro skills add <path>")} ${dim(`→ ${userSkillsDir()}`)}`);
+    });
+
+  skills
+    .command("add <path>")
+    .description("add your own skill — a folder containing SKILL.md, or a SKILL.md file")
+    .action((p: string) => {
+      const src = resolve(p);
+      if (!existsSync(src)) die(`not found: ${src}`);
+      const dest = userSkillsDir();
+      mkdirSync(dest, { recursive: true });
+      const st = statSync(src);
+      if (st.isDirectory()) {
+        if (!existsSync(join(src, "SKILL.md"))) die(`no SKILL.md in ${src} — a skill folder must contain SKILL.md`);
+        const name = basename(src);
+        cpSync(src, join(dest, name), { recursive: true });
+        ok(`added skill ${accent(name)} → ${join(dest, name)}`);
+      } else if (basename(src).toLowerCase() === "skill.md") {
+        const name = basename(dirname(src)) || "custom-skill";
+        mkdirSync(join(dest, name), { recursive: true });
+        cpSync(src, join(dest, name, "SKILL.md"));
+        ok(`added skill ${accent(name)} → ${join(dest, name)}`);
+      } else {
+        die("expected a folder containing SKILL.md, or a SKILL.md file");
+      }
+      info("It loads on next launch — and is available in chat via /skill.");
+    });
+
+  skills
+    .command("remove <name>")
+    .description("remove a skill you added")
+    .action((name: string) => {
+      const target = join(userSkillsDir(), name);
+      if (!existsSync(target)) { info(`'${name}' is not a user-added skill — nothing to remove`); return; }
+      rmSync(target, { recursive: true, force: true });
+      ok(`removed ${accent(name)}`);
     });
 }

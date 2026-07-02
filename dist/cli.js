@@ -80,7 +80,7 @@ async function captureScreens(urls, opts = {}) {
 }
 async function scrollToBottom(page) {
   await page.evaluate(async () => {
-    await new Promise((resolve2) => {
+    await new Promise((resolve3) => {
       let y = 0;
       const step = 500;
       const timer = setInterval(() => {
@@ -88,12 +88,12 @@ async function scrollToBottom(page) {
         y += step;
         if (y >= document.body.scrollHeight) {
           clearInterval(timer);
-          resolve2();
+          resolve3();
         }
       }, 120);
       setTimeout(() => {
         clearInterval(timer);
-        resolve2();
+        resolve3();
       }, 6e3);
     });
     window.scrollTo(0, 0);
@@ -1266,22 +1266,22 @@ function playWav(wav) {
   const file5 = join7(tmpdir(), `oriro-avatar-${process.pid}-${wav.length}.wav`);
   writeFileSync5(file5, wav);
   const players = audioPlayers(file5);
-  return new Promise((resolve2) => {
+  return new Promise((resolve3) => {
     const tryPlayer = (i) => {
       if (i >= players.length) {
         rmSync(file5, { force: true });
-        return resolve2(false);
+        return resolve3(false);
       }
       const p = players[i];
       if (!p) {
         rmSync(file5, { force: true });
-        return resolve2(false);
+        return resolve3(false);
       }
       const child = spawn(p.cmd, p.args, { stdio: "ignore" });
       child.on("error", () => tryPlayer(i + 1));
       child.on("close", (code) => {
         rmSync(file5, { force: true });
-        resolve2(code === 0);
+        resolve3(code === 0);
       });
     };
     tryPlayer(0);
@@ -1326,11 +1326,11 @@ function winSapi(text, lang) {
   const out = tmpWav();
   const culture = lang ? `'${lang.replace(/'/g, "")}'` : "$null";
   const ps = `Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; $c = ${culture}; if ($c) { try { $s.SelectVoiceByHints([System.Speech.Synthesis.VoiceGender]::NotSet, [System.Speech.Synthesis.VoiceAge]::NotSet, 0, (New-Object System.Globalization.CultureInfo($c))) } catch {} } $s.SetOutputToWaveFile('${out}'); $s.Speak([Console]::In.ReadToEnd()); $s.Dispose();`;
-  return new Promise((resolve2, reject) => {
+  return new Promise((resolve3, reject) => {
     const p = spawn2("powershell", ["-NoProfile", "-Command", ps], { stdio: ["pipe", "ignore", "ignore"] });
     p.on("error", reject);
     p.on("close", (code) => {
-      if (code === 0 && existsSync(out)) resolve2(readAndClean(out));
+      if (code === 0 && existsSync(out)) resolve3(readAndClean(out));
       else reject(new Error("SAPI synth failed"));
     });
     p.stdin.write(text);
@@ -1339,23 +1339,23 @@ function winSapi(text, lang) {
 }
 function macSay(text) {
   const out = tmpWav();
-  return new Promise((resolve2, reject) => {
+  return new Promise((resolve3, reject) => {
     const p = spawn2("say", ["-o", out, "--data-format=LEI16@22050", text], { stdio: "ignore" });
     p.on("error", reject);
     p.on(
       "close",
-      (code) => code === 0 && existsSync(out) ? resolve2(readAndClean(out)) : reject(new Error("say failed"))
+      (code) => code === 0 && existsSync(out) ? resolve3(readAndClean(out)) : reject(new Error("say failed"))
     );
   });
 }
 function linuxEspeak(text) {
   const out = tmpWav();
-  return new Promise((resolve2, reject) => {
+  return new Promise((resolve3, reject) => {
     const p = spawn2("espeak", ["-w", out, text], { stdio: "ignore" });
     p.on("error", reject);
     p.on(
       "close",
-      (code) => code === 0 && existsSync(out) ? resolve2(readAndClean(out)) : reject(new Error("espeak failed"))
+      (code) => code === 0 && existsSync(out) ? resolve3(readAndClean(out)) : reject(new Error("espeak failed"))
     );
   });
 }
@@ -2139,11 +2139,21 @@ function skillsDir() {
   if (process.env.ORIRO_SKILLS_DIR) return process.env.ORIRO_SKILLS_DIR;
   return join13(packageRoot(dirname2(fileURLToPath(import.meta.url))), "skills");
 }
+function userSkillsDir() {
+  return process.env.ORIRO_USER_SKILLS_DIR ?? join13(oriroDir(), "skills");
+}
+function skillRoots() {
+  const roots = [skillsDir()];
+  const user = userSkillsDir();
+  if (existsSync5(user) && user !== roots[0]) roots.push(user);
+  return roots;
+}
 async function loadOriroSkills(dir = skillsDir()) {
+  const paths = dir === skillsDir() ? skillRoots() : [dir];
   const result = await loadSkills({
     cwd: dir,
     agentDir: dir,
-    skillPaths: [dir],
+    skillPaths: paths,
     includeDefaults: false
   });
   const all = Array.isArray(result) ? result : result.skills ?? [];
@@ -4890,10 +4900,10 @@ async function extractFrames(videoPath, opts = {}) {
   const ffmpeg = opts.ffmpegPath ?? "ffmpeg";
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), "oriro-head-frames-"));
   const pattern = path.join(dir, "f-%03d.png");
-  await new Promise((resolve2, reject) => {
+  await new Promise((resolve3, reject) => {
     const p = spawn4(ffmpeg, ["-hide_banner", "-loglevel", "error", "-i", videoPath, "-vf", "thumbnail", "-frames:v", String(count), "-y", pattern], { stdio: "ignore" });
     p.on("error", () => reject(new Error("ffmpeg not found \u2014 pass frames yourself or a video-capable model, or set ffmpegPath.")));
-    p.on("close", (code) => code === 0 ? resolve2() : reject(new Error(`ffmpeg exited ${code}`)));
+    p.on("close", (code) => code === 0 ? resolve3() : reject(new Error(`ffmpeg exited ${code}`)));
   });
   const files = (await fs.readdir(dir)).filter((f) => f.endsWith(".png")).sort();
   const frames = [];
@@ -5295,7 +5305,8 @@ async function assembleOriroSession(opts = {}) {
     cwd,
     agentDir: getAgentDir(),
     settingsManager,
-    additionalSkillPaths: [skillsDir()],
+    additionalSkillPaths: skillRoots(),
+    // bundled library + the user's own ~/.oriro/skills
     extensionFactories: [registerGuardian, registerHead, registerScribe, registerOrchestrator]
   });
   await resourceLoader.reload();
@@ -5717,10 +5728,10 @@ function recorders(outFile, seconds) {
 async function recordMic(seconds = 6) {
   const outFile = join22(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
   for (const r of recorders(outFile, seconds)) {
-    const okFile = await new Promise((resolve2) => {
+    const okFile = await new Promise((resolve3) => {
       const child = spawn3(r.cmd, r.args, { stdio: "ignore" });
-      child.on("error", () => resolve2(false));
-      child.on("close", (code) => resolve2(code === 0 && existsSync14(outFile) && statSync2(outFile).size > 44));
+      child.on("error", () => resolve3(false));
+      child.on("close", (code) => resolve3(code === 0 && existsSync14(outFile) && statSync2(outFile).size > 44));
     });
     if (okFile) return outFile;
   }
@@ -5730,7 +5741,7 @@ async function recordMic(seconds = 6) {
 // src/voice/stt.ts
 async function decodePcm(path) {
   const { spawn: spawn4 } = await import("child_process");
-  return await new Promise((resolve2, reject) => {
+  return await new Promise((resolve3, reject) => {
     const chunks = [];
     const p = spawn4(
       "ffmpeg",
@@ -5743,7 +5754,7 @@ async function decodePcm(path) {
       if (code !== 0) return reject(new Error(`ffmpeg exited ${code ?? "?"} decoding ${path}`));
       const buf = Buffer.concat(chunks);
       if (!buf.length) return reject(new Error(`no audio decoded from ${path}`));
-      resolve2(new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4)));
+      resolve3(new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4)));
     });
   });
 }
@@ -6651,8 +6662,10 @@ function registerChannelsCommand(program2) {
 }
 
 // src/commands/skills.ts
+import { existsSync as existsSync16, statSync as statSync3, mkdirSync as mkdirSync15, cpSync, rmSync as rmSync3 } from "fs";
+import { resolve as resolve2, join as join26, basename, dirname as dirname3 } from "path";
 function registerSkillsCommand(program2) {
-  const skills = program2.command("skills").description("the bundled ORIRO skill library (Option-B tiered)");
+  const skills = program2.command("skills").description("the ORIRO skill library \u2014 bundled + your own");
   skills.command("list").description("show CORE / TAIL skill counts (use --all to list names)").option("-a, --all", "list every skill name").action(async (opts) => {
     const s = await loadOriroSkills();
     heading("Skills");
@@ -6664,6 +6677,37 @@ function registerSkillsCommand(program2) {
 `);
       }
     }
+    info(`Add your own: ${accent("oriro skills add <path>")} ${dim(`\u2192 ${userSkillsDir()}`)}`);
+  });
+  skills.command("add <path>").description("add your own skill \u2014 a folder containing SKILL.md, or a SKILL.md file").action((p) => {
+    const src = resolve2(p);
+    if (!existsSync16(src)) die(`not found: ${src}`);
+    const dest = userSkillsDir();
+    mkdirSync15(dest, { recursive: true });
+    const st = statSync3(src);
+    if (st.isDirectory()) {
+      if (!existsSync16(join26(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
+      const name = basename(src);
+      cpSync(src, join26(dest, name), { recursive: true });
+      ok(`added skill ${accent(name)} \u2192 ${join26(dest, name)}`);
+    } else if (basename(src).toLowerCase() === "skill.md") {
+      const name = basename(dirname3(src)) || "custom-skill";
+      mkdirSync15(join26(dest, name), { recursive: true });
+      cpSync(src, join26(dest, name, "SKILL.md"));
+      ok(`added skill ${accent(name)} \u2192 ${join26(dest, name)}`);
+    } else {
+      die("expected a folder containing SKILL.md, or a SKILL.md file");
+    }
+    info("It loads on next launch \u2014 and is available in chat via /skill.");
+  });
+  skills.command("remove <name>").description("remove a skill you added").action((name) => {
+    const target = join26(userSkillsDir(), name);
+    if (!existsSync16(target)) {
+      info(`'${name}' is not a user-added skill \u2014 nothing to remove`);
+      return;
+    }
+    rmSync3(target, { recursive: true, force: true });
+    ok(`removed ${accent(name)}`);
   });
 }
 
