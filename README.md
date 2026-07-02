@@ -9,6 +9,12 @@ It **writes and runs code** from a pool of free routers, works in **your languag
 can **inspect a live site's structure**, and greets you with an **avatar in its own on-device voice**.
 Your language, your machine, no paid keys required.
 
+<p align="center">
+  <img src="docs/oriro-cli-live.gif" alt="ORIRO CLI — a live keyless session: writes code, sees the web, guards itself" width="820">
+</p>
+
+<p align="center"><sub>A real terminal session, captured live: <code>npx @oriro/orirocli</code> → write code → Head → Guardian → voice.</sub></p>
+
 ## What's inside (this release)
 - **Keyless free-router Mux** — best-router selection + invisible failover across free providers, with an on-device floor. **Never a paid key.** BYOK optional (live-validated).
 - **100 languages** — pick yours at first run; the model works in English. On-device NLLB translation is an optional add-on (without it, your text passes through as-is).
