@@ -463,7 +463,7 @@ Use for rigorous evaluation. Pass on NoLiMa = real long-context understanding.
 ```
 Gate 1 — Numeric bar (table stakes):
   Quality eval on held-out set (same distribution as training)
-  Pass threshold: ≥ 0.88 (Gauss) / ≥ 0.86 (Avila)
+  Pass threshold: ≥ 0.85 (set per model and size)
   ALSO run 128K NIAH after YaRN fine-tuning and after skill-bake
   Use Gemini 3.5 Flash as judge (free tier, Google AI Studio)
 
@@ -662,7 +662,7 @@ FROM /path/to/model-q4.gguf
 PARAMETER num_ctx 131072     # 128K context window
 PARAMETER temperature 0.7
 PARAMETER top_p 0.9
-SYSTEM "You are Gauss, ORIRO's technical AI model."
+SYSTEM "You are a helpful, technical AI assistant."
 EOF
 
 # Create and test
