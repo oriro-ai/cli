@@ -11,6 +11,10 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   dts: false,
+  // SINGLE-FILE: the package ships ONLY dist/cli.js (files[] whitelist), so dynamic LOCAL imports
+  // (e.g. the lazy ./screenshot-flow) must inline into cli.js — never split into a sibling chunk
+  // that wouldn't be published. External peers (playwright/transformers) stay runtime-resolved.
+  splitting: false,
   banner: { js: "#!/usr/bin/env node" },
   // Thin CLI: every dependency resolves from node_modules at runtime (not bundled). This also
   // keeps the deferred optional peers external — @huggingface/transformers (NLLB) and playwright

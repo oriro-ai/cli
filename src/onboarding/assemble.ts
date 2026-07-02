@@ -17,7 +17,7 @@ import { registerGuardian } from "../guardian/pi-gate.js";
 import { registerHead } from "../head/pi-tool.js";
 import { registerScribe, attachScribe } from "../scribe/scribe-pi.js";
 import { registerOrchestrator } from "../orchestrate.js";
-import { skillsDir } from "../skills/loader.js";
+import { skillRoots } from "../skills/loader.js";
 
 export interface AssembledSession {
   session: AgentSession;
@@ -43,7 +43,7 @@ export async function assembleOriroSession(opts: { cwd?: string } = {}): Promise
     cwd,
     agentDir: getAgentDir(),
     settingsManager,
-    additionalSkillPaths: [skillsDir()],
+    additionalSkillPaths: skillRoots(), // bundled library + the user's own ~/.oriro/skills
     extensionFactories: [registerGuardian, registerHead, registerScribe, registerOrchestrator],
   });
   await resourceLoader.reload();

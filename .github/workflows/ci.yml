@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [pi-greenfield, main]
+  pull_request:
+    branches: [pi-greenfield, main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # undici 8.5 (via pi-coding-agent) needs Node's markAsUncloneable — Node 22+.
+        node-version: ["22.12.0", "24"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Smoke (built binary)
+        run: node scripts/smoke.mjs

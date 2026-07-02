@@ -19,14 +19,17 @@ Your language, your machine, no paid keys required.
 - **Keyless free-router Mux** — best-router selection + invisible failover across free providers, with an on-device floor. **Never a paid key.** BYOK optional (live-validated).
 - **100 languages** — pick yours at first run; the model works in English. On-device NLLB translation is an optional add-on (without it, your text passes through as-is).
 - **Guardian V3 (Lite)** — a **deterministic** security gate on every tool call (default-on, fail-closed): blocks `curl|sh` remote-exec, destructive wipes, reverse shells, and env/secret exfil. No weights, no tokenizer, no download.
-- **Head** — fetches a live site, detects its **sections/structure**, and reports the gaps to build from (the coder writes the code from that report).
+- **Head** — go out to a live site and SEE it. `oriro head <url>` does a keyless structural read (sections, CTAs, gaps vs competitors — pure fetch, no browser). With the optional Chromium peer it also **reverse-engineers a page into clean code** (`--code`), a **YAML build spec** (`--spec`), or **full-page screenshots** (`--shots`). The chat agent can call the same via its `inspect_site` / `url_to_code` / `url_to_spec` / `capture_site` tools.
 - **Scriber (memory)** — a consent-gated local work journal, **off by default**; turns are recalled across sessions and never leave your machine.
 - **323 skills** (CORE/TAIL tiered) + **multi-agent orchestration** on the free pool.
-- **MCP connector catalog** (59) and **Channels** — run ORIRO from Telegram/Discord/WhatsApp with **your own** bot.
+- **MCP connectors** — a 59-entry catalog (`oriro connectors add <slug>`) **plus guided setup of ANY custom server** (`oriro connectors setup`), Guardian-vetted before it's saved (no JSON).
 - **Avatar** — pick a face at onboarding; it greets you aloud in its paired on-device voice.
+- **Voice input** — `oriro voice` transcribes audio/mic to text on-device (Whisper, translate→English path); `/voice` speaks a turn in chat. *Experimental — needs ffmpeg + the transformers peer.*
+- **Permission postures** — Shift+Tab cycles **Manual · Accept-Edits · Auto · Plan**; **Alt+Shift+T** toggles a plan-first **Thinking** mode. Guardian is the floor in every posture.
+- **Channels** — run ORIRO from Telegram/Discord/WhatsApp with **your own** bot.
 
 ## On the roadmap (not in this release)
-Full-page **screenshot → code** Head (Playwright), the **two-way voice loop** (speak + listen/STT), in-REPL **permission modes**, and **`oriro mcp`** guided setup. Today the Head is fetch/structure-based and voice is the avatar's spoken greeting.
+A fully **hands-free two-way voice loop** (auto mic → reply → speak — today `oriro voice`/`/voice` do on-device STT and the avatar speaks its greeting) and richer on-device TTS voices, plus **video → code** at pixel fidelity (shipped but experimental — needs a vision-capable router). The Head's structural read is keyless and always on; its screenshot / code / spec flows are opt-in behind the Chromium peer (`npm i playwright && npx playwright install chromium`), and voice STT is opt-in behind ffmpeg + the transformers peer.
 
 **## Install**
 
@@ -53,25 +56,19 @@ npm install && npm run build   # then: node dist/cli.js
 
 > Built on [Pi](https://github.com/earendil-works/pi) (MIT). See `ATTRIBUTION.md` for full provenance.
 
-**ORIRO-Head:**
+**ORIRO-Head — how it works:**
 
-Always in context; never forgets anything; scribes everything for you locally and present the router “REAL-TIME FOREVER”. 
-Goes to the URL → crawls it in a real browser (Playwright).
-Captures → full-page screenshot + the rendered HTML (page.content () the post-JS DOM, "what it saw").
-Reverse-engineers → feeds that HTML (+ the screenshot for visual context) to the coder model → clean, working code.
-Returns BOTH → {html: <what it saw>, screenshot, code: <clean reproduction>}.
+- **Structural read (default, keyless, no browser):** `oriro head <url> [competitor …]` server-side `fetch()`es the page, detects 15 section types (hero, pricing, CTA, testimonials, FAQ, …), runs a gap analysis vs any competitor URLs, and prints a priority-ranked report + action items. Add `--html` for a visual report. `$0`, deterministic, nothing leaves the machine.
+- **URL → code / spec (opt-in, Chromium peer):** `--code` crawls the page in a real browser (Playwright), captures the rendered post-JS HTML + a full-page screenshot, and reverse-engineers **clean, runnable code**; `--spec` emits a stack-agnostic **YAML build spec** instead. The coder runs on the free keyless Mux — no paid key.
+- **Screenshots:** `--shots` assembles full-page screenshots of every URL into one visual flow HTML.
+- The chat agent reaches all of this on its own judgment via the `inspect_site` / `url_to_code` / `url_to_spec` / `capture_site` tools — just say “go look at stripe.com and rebuild the pricing page”.
 
 **Multi-Lingual** (99 Global Languages): 
-You can use your native language in terminal and it will explain in the default language to AI router in your terminal to build and work along with/for you in ORIRO-Terminal. 
-TWO-WAY VOICE LOOP LIVE.  (TTS) and hears (STT, with the free translate → English path for the coder).
+Use your native language in the terminal; ORIRO translates to English for the router, works for you, and translates back. **Voice:** `oriro voice` (or `/voice` in chat) transcribes speech on-device via Whisper — with the translate→English path for the coder — and the avatar speaks its greeting (TTS). On-device STT is experimental (needs ffmpeg + the `@huggingface/transformers` peer); a fully hands-free loop is the next polish.
 
-**Guardian V3** Security: Talk-to-setup MCP (Guardian companion)
-By TranzGuard.com, Financial Industry grade Live agentic threat analysis anomalous MCP payloads, crawler/Trojan/spam/3rd-party injection, behavioral detection.   
-Guardian V3 Lite is pure deterministic TypeScript regex injection patterns + IOC signatures + hidden- unicode ranges + heuristics. No weights, no tokenizer, no download. It's default-on by construction and it’s a Guardian, as deterministic detectors, not a downloadable model. Speed: Agentic, Deep.
+**Guardian V3 — the security floor.** Guardian V3 **Lite** ships in the CLI: pure deterministic TypeScript (regex injection patterns + IOC signatures + hidden-unicode ranges + heuristics). No weights, no tokenizer, no download; default-on by construction, fail-closed. *(The heavier financial-grade agentic/behavioral threat analysis by TranzGuard.com is the upstream vision, not bundled here.)*
 
-ORIRO MCP setup — guided Q&A, no JSON: it asks name, command/URL, args, env; builds the config for you.
-Guardian vets every server before it's saved (proven 5/5): blocks a malicious launch (curl | sh, obfuscated loader, env →URL exfil), asks-to-trust a new clean server, allows an already-trusted one — and remembers your "trust" so it won't re-ask.
-Type-check clean.
+**MCP setup — guided, no JSON.** `oriro connectors setup` asks for the name, command/URL, args, and env and builds the config for you. Guardian **vets every server before it's saved**: it blocks a malicious launch (`curl | sh`, obfuscated loader, env→URL exfil), asks-to-trust a new clean server, allows an already-trusted one — and **remembers your trust so it won't re-ask**. (`oriro connectors custom` lists them; `oriro connectors forget <name>` removes one.)
 As forward integration to base CLI Terminal of pi-mono foundation; we used same foundation and carry forwarded instead of backward efforts to build it backward bottom up. Thanks to the foundation work by pi-mono foundation, @Claude @KIMI and all other contributors. 
 
 We also added a fun factor in work for you: AVATAR you chose of your own in Terminal.

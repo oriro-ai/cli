@@ -81,6 +81,15 @@ export const ROUTER_CATALOG: readonly RouterEntry[] = [
     obtainUrl: "https://openrouter.ai/keys",
   }),
   C({
+    id: "huggingface",
+    displayName: "Hugging Face",
+    // OpenAI-compatible Inference Router; the validator appends "/chat/completions".
+    // BYOK: the USER pastes their OWN free HF token (never ORIRO's).
+    baseUrl: "https://router.huggingface.co/v1",
+    freeModels: ["meta-llama/Llama-3.1-8B-Instruct", "Qwen/Qwen2.5-7B-Instruct"],
+    obtainUrl: "https://huggingface.co/settings/tokens",
+  }),
+  C({
     id: "requesty",
     displayName: "Requesty",
     baseUrl: "https://router.requesty.ai/v1",

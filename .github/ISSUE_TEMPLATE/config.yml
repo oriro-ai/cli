@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability (private)
+    url: https://github.com/oriro-ai/cli/security/advisories/new
+    about: Please report security issues privately — do not open a public issue.
+  - name: ORIRO on the web
+    url: https://oriro.ai
+    about: Learn more about ORIRO.

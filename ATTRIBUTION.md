@@ -38,6 +38,14 @@ lands in the tree (validated, zero-OpenClaw). Until then it sits under "To fold"
 - **goose** (`github.com/aaif-goose/goose`, Block) — **Apache-2.0** — *pattern reference only* (Rust): the battle-scars hardening — per-server isolation, stderr-on-init-failure, env denylist, 3-state OAuth, OSV check, Windows Job Objects, `_meta` owner stamping.
 - Connector catalog (59 entries) generated from ORIRO's own `connectors_pass.jsonl` (validated set), scrubbed.
 
+## Skill library — skills folded into `skills/` (2026-07-01 batch: +4, 327 total)
+- **graphify** — public/community skill (knowledge-graph builder); Pi variant (`skill-pi.md`) promoted to SKILL.md; license as embedded in dir.
+- **impeccable** — public/community frontend-quality skill; license as embedded in dir.
+- **uipm-ui-styling** — from the public UIPM / ui-ux-pro-max skill pack.
+- **21stdev** — ORIRO-authored (© 2026 ORIRO.ai) 21st.dev Magic-MCP usage skill, privacy-scrubbed for bundling.
+- Evaluated, already bundled (nested in the Step-5 pack — not re-added): focus, marketing, design, zero-to-live, gh, gh-skill, grill-me, playwright-cli, remotion-best-practices, supabase-postgres-best-practices, uipm-* (6), web-design-guidelines, doc-coauthoring, idea-to-deploy, app-builder-guide, debug-and-build-methodology, become-an-ai-engineer-26, image-generation-engineer, oriro-ui-2026, vercel-optimize.
+- Evaluated and EXCLUDED as private/unshippable: tranzguard-1, triro-trading, Training-Steps-Modal, ai-engineering, oriro-agentic, godmode, master-architect, google-ai-latest, remotion-narvo, scribe (local-path-bound), dev, codex-cli-runtime, codex-result-handling, gpt-5-4-prompting, last30days (16MB + vendored scrapers).
+
 ## Evaluated — NOT used (recorded for honesty)
 - **github/copilot-cli** — proprietary / no-derivatives, no source in repo. Blocked.
 - **manaflow-ai/cmux** — GPL-3.0 (copyleft) + Swift/macOS. Blocked.

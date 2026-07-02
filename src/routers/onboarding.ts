@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { oriroDir } from "../config/paths.js";
 import { ROUTER_CATALOG, routerById } from "./catalog.js";
 import { addRouter } from "./router-pool.js";
+import { KEYLESS_FLOOR } from "./floor.js";
 import { ask } from "../onboarding/prompt.js";
 import { accent, dim } from "../ui/theme.js";
 
@@ -41,9 +42,14 @@ function markRouterOnboarded(): void {
  */
 export async function runRouterOnboarding(): Promise<void> {
   stdout.write(
-    `\n  ${accent("Routers")} — ORIRO runs on a ${accent("free keyless router")} by default. ` +
-      `No key, $0, works right now.\n` +
-      `  ${dim("Add your own key (any free provider) for a faster, private lane — or skip and stay keyless.")}\n`,
+    `\n  ${accent("Routers")} — these ${accent("free keyless")} routers race for you by default ${dim("(no key, $0)")}:\n`,
+  );
+  for (const r of KEYLESS_FLOOR) {
+    const local = /localhost|127\.0\.0\.1/.test(r.baseUrl);
+    stdout.write(`    ${accent("●")} ${r.name.padEnd(22)} ${dim(local ? "on-device (if installed)" : "hosted · active")}\n`);
+  }
+  stdout.write(
+    `  ${dim("They're active now — you can chat immediately. Add your own key for a faster, private lane, or skip.")}\n`,
   );
 
   const rl = createInterface({ input: stdin, output: stdout });

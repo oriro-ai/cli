@@ -1,12 +1,159 @@
 #!/usr/bin/env node
+var __defProp = Object.defineProperty;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+
+// src/head/screenshot-flow.ts
+var screenshot_flow_exports = {};
+__export(screenshot_flow_exports, {
+  buildScreenshotFlowHtml: () => buildScreenshotFlowHtml,
+  captureScreens: () => captureScreens
+});
+async function captureScreens(urls, opts = {}) {
+  let chromium;
+  try {
+    ({ chromium } = await import("playwright"));
+  } catch {
+    throw new Error("@oriro/head/screenshot needs the `playwright` peer dependency (and `npx playwright install chromium`).");
+  }
+  const viewport = opts.viewport ?? DEFAULT_VIEWPORT;
+  const out = [];
+  const videos = [];
+  const browser = await chromium.launch({ headless: true });
+  const ctxOpts = { viewport, deviceScaleFactor: 1 };
+  if (opts.video) {
+    const [os, path, fs] = await Promise.all([import("os"), import("path"), import("fs/promises")]);
+    const dir = opts.videoDir ?? path.join(os.tmpdir(), "oriro-head-video");
+    await fs.mkdir(dir, { recursive: true });
+    ctxOpts.recordVideo = { dir, size: viewport };
+  }
+  const ctx = await browser.newContext(ctxOpts);
+  try {
+    let done = 0;
+    for (const url of urls) {
+      const page = await ctx.newPage();
+      const rec = { url, ok: false, status: 0, title: "", png: null, videoPath: null, html: null, note: "" };
+      try {
+        const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: opts.navTimeoutMs ?? 3e4 });
+        rec.status = resp ? resp.status() : 0;
+        try {
+          await page.waitForLoadState("networkidle", { timeout: 8e3 });
+        } catch {
+        }
+        await scrollToBottom(page);
+        await page.waitForTimeout(600);
+        rec.title = await page.title();
+        rec.html = await page.content();
+        const buf = await page.screenshot({ fullPage: true });
+        rec.png = new Uint8Array(buf);
+        rec.ok = true;
+      } catch (e) {
+        rec.note = (e instanceof Error ? e.message : String(e)).split("\n")[0] ?? "capture failed";
+      } finally {
+        const vid = opts.video ? page.video() : null;
+        await page.close();
+        out.push(rec);
+        videos.push(vid);
+        opts.onProgress?.(++done, urls.length, url);
+      }
+    }
+  } finally {
+    if (opts.video) {
+      for (let i = 0; i < out.length; i++) {
+        try {
+          const p = await videos[i]?.path();
+          const c = out[i];
+          if (p && c) c.videoPath = p;
+        } catch {
+        }
+      }
+    }
+    await browser.close();
+  }
+  return out;
+}
+async function scrollToBottom(page) {
+  await page.evaluate(async () => {
+    await new Promise((resolve3) => {
+      let y = 0;
+      const step = 500;
+      const timer = setInterval(() => {
+        window.scrollBy(0, step);
+        y += step;
+        if (y >= document.body.scrollHeight) {
+          clearInterval(timer);
+          resolve3();
+        }
+      }, 120);
+      setTimeout(() => {
+        clearInterval(timer);
+        resolve3();
+      }, 6e3);
+    });
+    window.scrollTo(0, 0);
+  });
+}
+function esc2(s) {
+  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function hostOf3(u) {
+  try {
+    return new URL(u).host.replace(/^www\./, "");
+  } catch {
+    return u;
+  }
+}
+function pathOf2(u) {
+  try {
+    return new URL(u).pathname || "/";
+  } catch {
+    return u;
+  }
+}
+function toBase642(bytes) {
+  const g = globalThis;
+  if (g.Buffer) return g.Buffer.from(bytes).toString("base64");
+  let bin = "";
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i] ?? 0);
+  return g.btoa ? g.btoa(bin) : "";
+}
+function buildScreenshotFlowHtml(groups, opts = {}) {
+  const imgSrc = opts.imgSrc ?? defaultImgSrc;
+  const all = groups.flatMap((g) => g.captures);
+  const ok2 = all.filter((c) => c.ok).length;
+  const sections = groups.map((g) => {
+    const cards = g.captures.map((c, i) => {
+      const src = c.ok ? imgSrc(c, i) : "";
+      const vsrc = c.ok && c.videoPath ? opts.videoSrc ? opts.videoSrc(c, i) : c.videoPath : "";
+      const media = c.ok && src ? `<a href="${src}" target="_blank"><img loading="lazy" src="${src}" alt="${esc2(c.title)}"></a>${vsrc ? `<video class="vid" controls preload="metadata" src="${vsrc}"></video>` : ""}` : `<div class="failbox">${esc2(c.note || "no capture")}</div>`;
+      return `<figure class="shot"><figcaption><span class="step">${i + 1}</span><span class="u">${esc2(hostOf3(c.url))}<b>${esc2(pathOf2(c.url))}</b></span><span class="pill ${c.ok ? "ok" : "bad"}">${c.ok ? (c.status || 200) + " OK" : "FAILED"}</span></figcaption>${media}<div class="cap">${esc2(c.title || "(no title)")}</div></figure>`;
+    }).join("");
+    return `<section><h2>${esc2(g.name)}</h2><div class="row">${cards}</div></section>`;
+  }).join("");
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc2(opts.title ?? "ORIRO Head \u2014 visual flow")}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#0b0b12;color:#e2e8f0;font:14px/1.5 ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif;padding:24px}h1{font-size:22px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(90deg,#2dd4bf,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}.sub{color:#94a3b8;margin:4px 0 22px}h2{font-size:15px;color:#f1f5f9;margin:22px 0 12px;border-left:3px solid #2dd4bf;padding-left:8px}.row{display:flex;gap:16px;overflow-x:auto;padding-bottom:12px}.shot{flex:0 0 300px;background:#0f0f1a;border:1px solid #1e293b;border-radius:12px;overflow:hidden}figcaption{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#15151f;border-bottom:1px solid #1e293b;font-size:11px}.step{background:#2dd4bf;color:#06251f;font-weight:800;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;flex:0 0 auto}.u{flex:1;color:#cbd5e1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.u b{color:#64748b;font-weight:400}.pill{font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px}.pill.ok{background:rgba(34,197,94,.15);color:#4ade80}.pill.bad{background:rgba(244,63,94,.15);color:#fb7185}.shot img{width:100%;height:360px;object-fit:cover;object-position:top;display:block;background:#fff}.shot .vid{width:100%;display:block;background:#000;border-top:1px solid #1e293b}.failbox{height:120px;display:flex;align-items:center;justify-content:center;color:#fb7185;font-size:11px;padding:12px;text-align:center}.cap{padding:8px 10px;font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.foot{margin-top:26px;color:#475569;font-size:11px;border-top:1px solid #1e293b;padding-top:12px}</style></head><body><h1>ORIRO Head \u2014 visual flow</h1><div class="sub">The head visited ${all.length} screens and captured ${ok2}/${all.length} full-page screenshots. Click any shot to open full size.</div>${sections}<div class="foot">ORIRO Head \xB7 real full-page screenshots, hydration-waited + scrolled for lazy content.</div></body></html>`;
+}
+var DEFAULT_VIEWPORT, defaultImgSrc;
+var init_screenshot_flow = __esm({
+  "src/head/screenshot-flow.ts"() {
+    "use strict";
+    DEFAULT_VIEWPORT = { width: 1280, height: 800 };
+    defaultImgSrc = (c) => c.png ? `data:image/png;base64,${toBase642(c.png)}` : "";
+  }
+});
 
 // src/cli.ts
 import { createRequire } from "module";
 import { Command } from "commander";
 
 // src/repl.ts
-import { createInterface as createInterface5 } from "readline/promises";
-import { stdin as stdin5, stdout as stdout6 } from "process";
+import { createInterface as createInterface6 } from "readline/promises";
+import { stdin as stdin6, stdout as stdout7 } from "process";
 
 // src/ui/theme.ts
 var PALETTE = {
@@ -71,8 +218,8 @@ ${tagline}
 }
 
 // src/onboarding/wrapper.ts
-import { createInterface as createInterface4 } from "readline/promises";
-import { stdin as stdin4, stdout as stdout5 } from "process";
+import { createInterface as createInterface5 } from "readline/promises";
+import { stdin as stdin5, stdout as stdout6 } from "process";
 
 // src/language/languages.ts
 var LANGUAGES = [
@@ -913,6 +1060,25 @@ Allow this action?`,
   });
 }
 
+// src/guardian/mcp.ts
+function vetMcpServer(name, server) {
+  const command = typeof server.command === "string" ? server.command : "";
+  const args = Array.isArray(server.args) ? server.args.map(String).join(" ") : "";
+  const url = typeof server.url === "string" ? server.url : "";
+  const env = server.env && typeof server.env === "object" ? Object.entries(server.env).map(([k, v]) => `${k}=${String(v)}`).join(" ") : "";
+  const blob = [command, args, url, env].filter(Boolean).join(" ");
+  return evaluate(
+    {
+      toolName: name,
+      kind: "mcp",
+      params: server,
+      command: blob || void 0,
+      mcpServer: name
+    },
+    resolvePolicy(readGuardianConfig())
+  );
+}
+
 // src/guardian/activate.ts
 var modelFetcher = null;
 async function activateGuardian() {
@@ -1077,41 +1243,45 @@ import { tmpdir } from "os";
 import { join as join7 } from "path";
 import { writeFileSync as writeFileSync5, rmSync } from "fs";
 var synth = null;
+var listener = null;
 function registerVoiceSynth(fn) {
   synth = fn;
 }
-function audioPlayers(file4) {
-  if (process.platform === "darwin") return [{ cmd: "afplay", args: [file4] }];
+function registerVoiceListen(fn) {
+  listener = fn;
+}
+function audioPlayers(file5) {
+  if (process.platform === "darwin") return [{ cmd: "afplay", args: [file5] }];
   if (process.platform === "win32")
     return [
-      { cmd: "powershell", args: ["-NoProfile", "-c", `(New-Object Media.SoundPlayer '${file4}').PlaySync()`] }
+      { cmd: "powershell", args: ["-NoProfile", "-c", `(New-Object Media.SoundPlayer '${file5}').PlaySync()`] }
     ];
   return [
-    { cmd: "aplay", args: ["-q", file4] },
-    { cmd: "ffplay", args: ["-nodisp", "-autoexit", "-loglevel", "quiet", file4] },
-    { cmd: "paplay", args: [file4] }
+    { cmd: "aplay", args: ["-q", file5] },
+    { cmd: "ffplay", args: ["-nodisp", "-autoexit", "-loglevel", "quiet", file5] },
+    { cmd: "paplay", args: [file5] }
   ];
 }
 function playWav(wav) {
-  const file4 = join7(tmpdir(), `oriro-avatar-${process.pid}-${wav.length}.wav`);
-  writeFileSync5(file4, wav);
-  const players = audioPlayers(file4);
-  return new Promise((resolve) => {
+  const file5 = join7(tmpdir(), `oriro-avatar-${process.pid}-${wav.length}.wav`);
+  writeFileSync5(file5, wav);
+  const players = audioPlayers(file5);
+  return new Promise((resolve3) => {
     const tryPlayer = (i) => {
       if (i >= players.length) {
-        rmSync(file4, { force: true });
-        return resolve(false);
+        rmSync(file5, { force: true });
+        return resolve3(false);
       }
       const p = players[i];
       if (!p) {
-        rmSync(file4, { force: true });
-        return resolve(false);
+        rmSync(file5, { force: true });
+        return resolve3(false);
       }
       const child = spawn(p.cmd, p.args, { stdio: "ignore" });
       child.on("error", () => tryPlayer(i + 1));
       child.on("close", (code) => {
-        rmSync(file4, { force: true });
-        resolve(code === 0);
+        rmSync(file5, { force: true });
+        resolve3(code === 0);
       });
     };
     tryPlayer(0);
@@ -1124,6 +1294,14 @@ async function speak(text, opts = {}) {
     return await playWav(wav);
   } catch {
     return false;
+  }
+}
+async function listen() {
+  if (!listener) return null;
+  try {
+    return await listener();
+  } catch {
+    return null;
   }
 }
 
@@ -1139,20 +1317,20 @@ import { existsSync, readFileSync as readFileSync6, rmSync as rmSync2 } from "fs
 function tmpWav() {
   return join8(tmpdir2(), `oriro-tts-${process.pid}-${Date.now()}-${Math.floor(performance.now())}.wav`);
 }
-function readAndClean(file4) {
-  const buf = readFileSync6(file4);
-  rmSync2(file4, { force: true });
+function readAndClean(file5) {
+  const buf = readFileSync6(file5);
+  rmSync2(file5, { force: true });
   return new Uint8Array(buf);
 }
 function winSapi(text, lang) {
   const out = tmpWav();
   const culture = lang ? `'${lang.replace(/'/g, "")}'` : "$null";
   const ps = `Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; $c = ${culture}; if ($c) { try { $s.SelectVoiceByHints([System.Speech.Synthesis.VoiceGender]::NotSet, [System.Speech.Synthesis.VoiceAge]::NotSet, 0, (New-Object System.Globalization.CultureInfo($c))) } catch {} } $s.SetOutputToWaveFile('${out}'); $s.Speak([Console]::In.ReadToEnd()); $s.Dispose();`;
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve3, reject) => {
     const p = spawn2("powershell", ["-NoProfile", "-Command", ps], { stdio: ["pipe", "ignore", "ignore"] });
     p.on("error", reject);
     p.on("close", (code) => {
-      if (code === 0 && existsSync(out)) resolve(readAndClean(out));
+      if (code === 0 && existsSync(out)) resolve3(readAndClean(out));
       else reject(new Error("SAPI synth failed"));
     });
     p.stdin.write(text);
@@ -1161,23 +1339,23 @@ function winSapi(text, lang) {
 }
 function macSay(text) {
   const out = tmpWav();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve3, reject) => {
     const p = spawn2("say", ["-o", out, "--data-format=LEI16@22050", text], { stdio: "ignore" });
     p.on("error", reject);
     p.on(
       "close",
-      (code) => code === 0 && existsSync(out) ? resolve(readAndClean(out)) : reject(new Error("say failed"))
+      (code) => code === 0 && existsSync(out) ? resolve3(readAndClean(out)) : reject(new Error("say failed"))
     );
   });
 }
 function linuxEspeak(text) {
   const out = tmpWav();
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve3, reject) => {
     const p = spawn2("espeak", ["-w", out, text], { stdio: "ignore" });
     p.on("error", reject);
     p.on(
       "close",
-      (code) => code === 0 && existsSync(out) ? resolve(readAndClean(out)) : reject(new Error("espeak failed"))
+      (code) => code === 0 && existsSync(out) ? resolve3(readAndClean(out)) : reject(new Error("espeak failed"))
     );
   });
 }
@@ -1370,6 +1548,15 @@ var ROUTER_CATALOG = [
     baseUrl: "https://openrouter.ai/api/v1",
     freeModels: ["deepseek/deepseek-chat-v3-0324:free", "moonshotai/kimi-k2.6:free"],
     obtainUrl: "https://openrouter.ai/keys"
+  }),
+  C4({
+    id: "huggingface",
+    displayName: "Hugging Face",
+    // OpenAI-compatible Inference Router; the validator appends "/chat/completions".
+    // BYOK: the USER pastes their OWN free HF token (never ORIRO's).
+    baseUrl: "https://router.huggingface.co/v1",
+    freeModels: ["meta-llama/Llama-3.1-8B-Instruct", "Qwen/Qwen2.5-7B-Instruct"],
+    obtainUrl: "https://huggingface.co/settings/tokens"
   }),
   C4({
     id: "requesty",
@@ -1806,6 +1993,38 @@ function resolvePool() {
   return loadPool(oriroDir()).map((id) => reg[id]).filter((r) => Boolean(r));
 }
 
+// src/routers/floor.ts
+var KEYLESS_FLOOR = [
+  {
+    id: "pollinations",
+    name: "Pollinations (free)",
+    baseUrl: "https://text.pollinations.ai/openai",
+    model: "openai",
+    apiKey: "oriro-keyless"
+  },
+  {
+    id: "ollama-local",
+    name: "Ollama (on-device)",
+    baseUrl: "http://localhost:11434/v1",
+    model: "llama3.2",
+    apiKey: "ollama"
+  }
+];
+function routerModel(r) {
+  return {
+    id: r.model,
+    name: r.name,
+    api: "openai-completions",
+    provider: r.id,
+    baseUrl: r.baseUrl,
+    reasoning: false,
+    input: ["text"],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 128e3,
+    maxTokens: 4096
+  };
+}
+
 // src/routers/onboarding.ts
 function markerFile() {
   return join12(oriroDir(), "routers", "onboarded.json");
@@ -1828,8 +2047,16 @@ function markRouterOnboarded() {
 async function runRouterOnboarding() {
   stdout4.write(
     `
-  ${accent("Routers")} \u2014 ORIRO runs on a ${accent("free keyless router")} by default. No key, $0, works right now.
-  ${dim("Add your own key (any free provider) for a faster, private lane \u2014 or skip and stay keyless.")}
+  ${accent("Routers")} \u2014 these ${accent("free keyless")} routers race for you by default ${dim("(no key, $0)")}:
+`
+  );
+  for (const r of KEYLESS_FLOOR) {
+    const local = /localhost|127\.0\.0\.1/.test(r.baseUrl);
+    stdout4.write(`    ${accent("\u25CF")} ${r.name.padEnd(22)} ${dim(local ? "on-device (if installed)" : "hosted \xB7 active")}
+`);
+  }
+  stdout4.write(
+    `  ${dim("They're active now \u2014 you can chat immediately. Add your own key for a faster, private lane, or skip.")}
 `
   );
   const rl = createInterface3({ input: stdin3, output: stdout4 });
@@ -1887,1392 +2114,21 @@ async function runRouterOnboarding() {
 `);
 }
 
-// src/onboarding/wrapper.ts
-function isFirstRun() {
-  return !isLanguageConfigured() || !hasScribeChoice();
-}
-async function askYesNo(question) {
-  const rl = createInterface4({ input: stdin4, output: stdout5 });
-  try {
-    const a = (await ask(rl, `${question} ${dim("[Y/n]")} `)).trim().toLowerCase();
-    return a === "" || a === "y" || a === "yes";
-  } finally {
-    rl.close();
-  }
-}
-async function runOnboarding() {
-  stdout5.write(banner());
-  await runLanguageOnboarding();
-  await activateGuardian();
-  stdout5.write(`  ${accent("\u{1F6E1} Guardian V3")} is on by default. ${accent("\u{1F9ED} Head")} is ready.
-
-`);
-  if (!isAvatarConfigured()) await runAvatarOnboarding();
-  if (!hasScribeChoice()) {
-    const yes = await askYesNo(
-      "Remember with me? The Scriber keeps your work in context on THIS machine only \u2014 it never leaves it."
-    );
-    setScribeConsent(yes);
-    stdout5.write(yes ? `  ${accent("\u{1F4D3} Scriber")} on.
-` : `  ${dim("Scriber off \u2014 `oriro scribe on` anytime.")}
-`);
-  }
-  if (!hasRouterChoice()) await runRouterOnboarding();
-  stdout5.write(`
-  ${accent("ORIRO is ready.")} ${dim("Type to chat \xB7 /exit to leave")}
-
-`);
-}
-
-// src/onboarding/assemble.ts
-import {
-  createAgentSession as createAgentSession2,
-  AuthStorage as AuthStorage2,
-  ModelRegistry as ModelRegistry2,
-  SessionManager as SessionManager2,
-  SettingsManager,
-  DefaultResourceLoader,
-  getAgentDir
-} from "@earendil-works/pi-coding-agent";
-
-// src/routers/mux-provider.ts
-import { streamSimple as piStreamSimple, createAssistantMessageEventStream } from "@earendil-works/pi-ai";
-import { register as registerOpenAICompletions } from "@earendil-works/pi-ai/openai-completions";
-
-// src/routers/mux.ts
-import { existsSync as existsSync5, mkdirSync as mkdirSync8, readFileSync as readFileSync10, writeFileSync as writeFileSync10 } from "fs";
-import { join as join13 } from "path";
-var COOLDOWN_DEFAULT_MS = 6e4;
-var UNHEALTHY_AFTER = 3;
-var RouterMux = class {
-  stats = /* @__PURE__ */ new Map();
-  now;
-  constructor(routerIds, now = () => Date.now()) {
-    this.now = now;
-    for (const id of routerIds) {
-      this.stats.set(id, {
-        id,
-        latencyMs: Number.POSITIVE_INFINITY,
-        healthy: true,
-        cooldownUntil: 0,
-        consecutiveErrors: 0
-      });
-    }
-  }
-  /** Available routers, best-first (healthy, not cooling down, lowest latency). */
-  ranked() {
-    const t = this.now();
-    return [...this.stats.values()].filter((s) => s.healthy && s.cooldownUntil <= t).sort((a, b) => a.latencyMs - b.latencyMs).map((s) => s.id);
-  }
-  recordSuccess(id, latencyMs) {
-    const s = this.stats.get(id);
-    if (!s) return;
-    s.latencyMs = s.latencyMs === Number.POSITIVE_INFINITY ? latencyMs : 0.7 * s.latencyMs + 0.3 * latencyMs;
-    s.consecutiveErrors = 0;
-    s.healthy = true;
-  }
-  recordFailure(id, err) {
-    const s = this.stats.get(id);
-    if (!s) return;
-    s.consecutiveErrors += 1;
-    if (err?.status === 429) {
-      s.cooldownUntil = this.now() + (err.retryAfterMs ?? COOLDOWN_DEFAULT_MS);
-    }
-    if (s.consecutiveErrors >= UNHEALTHY_AFTER) s.healthy = false;
-  }
-  /** Run a call through the best router, failing over on error. Throws only if all exhausted. */
-  async run(call) {
-    const order = this.ranked();
-    if (order.length === 0) {
-      throw new Error(
-        "All selected routers are rate-limited or unavailable. Add a BYOK key, select more free routers, or retry shortly."
-      );
-    }
-    let lastErr;
-    for (const id of order) {
-      const t0 = this.now();
-      try {
-        const result = await call(id);
-        this.recordSuccess(id, this.now() - t0);
-        return { result, routerId: id };
-      } catch (e) {
-        const err = e;
-        this.recordFailure(id, { status: err?.status, retryAfterMs: err?.retryAfterMs });
-        lastErr = e;
-      }
-    }
-    throw lastErr instanceof Error ? lastErr : new Error("All selected routers failed this request.");
-  }
-  snapshot() {
-    return [...this.stats.values()].map((s) => ({ ...s }));
-  }
-  load(stats) {
-    for (const s of stats) if (this.stats.has(s.id)) this.stats.set(s.id, { ...s });
-  }
-};
-function healthStatePath(dir) {
-  return join13(dir, "routers", "health.json");
-}
-function saveMuxState(dir, stats) {
-  const p = healthStatePath(dir);
-  mkdirSync8(join13(dir, "routers"), { recursive: true });
-  writeFileSync10(p, JSON.stringify(stats, null, 2), "utf8");
-}
-function loadMuxState(dir) {
-  const p = healthStatePath(dir);
-  if (!existsSync5(p)) return [];
-  try {
-    const stats = JSON.parse(readFileSync10(p, "utf8"));
-    return stats.map((s) => ({ ...s, latencyMs: Number.isFinite(s.latencyMs) ? s.latencyMs : Number.POSITIVE_INFINITY }));
-  } catch {
-    return [];
-  }
-}
-
-// src/routers/floor.ts
-var KEYLESS_FLOOR = [
-  {
-    id: "pollinations",
-    name: "Pollinations (free)",
-    baseUrl: "https://text.pollinations.ai/openai",
-    model: "openai",
-    apiKey: "oriro-keyless"
-  },
-  {
-    id: "ollama-local",
-    name: "Ollama (on-device)",
-    baseUrl: "http://localhost:11434/v1",
-    model: "llama3.2",
-    apiKey: "ollama"
-  }
-];
-function routerModel(r) {
-  return {
-    id: r.model,
-    name: r.name,
-    api: "openai-completions",
-    provider: r.id,
-    baseUrl: r.baseUrl,
-    reasoning: false,
-    input: ["text"],
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: 128e3,
-    maxTokens: 4096
-  };
-}
-
-// src/identity/filter.ts
-var ORIRO_IDENTITY = "You are ORIRO, a free on-device AI assistant in the user's terminal. You are ORIRO and only ORIRO. Never state, imply, or reveal that you are, or are built on, any other model or company (such as GPT, Claude, Gemini, Qwen, Llama, Mistral, DeepSeek, OpenAI, Anthropic, Google, or Meta). If asked what you are, you are ORIRO.";
-var BANNED_TEST = /\b(qwen|llama|mistral|mixtral|deepseek|gpt(?:-?\d(?:\.\d)?)?|claude|gemini|openai|anthropic|google|meta\s?ai|alibaba)\b/i;
-var BANNED_REPLACE = new RegExp(BANNED_TEST.source, "gi");
-var SELF_REF = /\b(i am|i'm|i was|based on|powered by|my name|my model|my architecture|trained|created by|made by|built (?:on|by)|developed by)\b/i;
-var SELF_INTRO = /\b(i am|i'm)\s+(a|an)\b/i;
-var AI_NOUN = /\b(assistant|ai|model|language model|bot|agent|chatbot)\b/i;
-function applyIdentity(context) {
-  const sys = context.systemPrompt ? `${ORIRO_IDENTITY}
-
-${context.systemPrompt}` : ORIRO_IDENTITY;
-  return { ...context, systemPrompt: sys };
-}
-function scrubIdentity(text) {
-  return text.replace(/[^.?!\n]+[.?!]?/g, (sentence) => {
-    let s = SELF_REF.test(sentence) && BANNED_TEST.test(sentence) ? sentence.replace(BANNED_REPLACE, "ORIRO") : sentence;
-    if (!/\boriro\b/i.test(s) && SELF_INTRO.test(s) && AI_NOUN.test(s)) {
-      s = s.replace(SELF_INTRO, "I am ORIRO, $2");
-    }
-    return s;
-  });
-}
-function scrubMessageIdentity(msg) {
-  return {
-    ...msg,
-    content: msg.content.map(
-      (c) => c.type === "text" ? { ...c, text: scrubIdentity(c.text) } : c
-    )
-  };
-}
-
-// src/routers/tool-sanitize.ts
-var CONTROL_TOKEN = /<\|[^|]*\|>/g;
-var RECIPIENT_PREFIX = /^(?:to=)?(?:functions?|tools?|recipient)[.=]/i;
-var RECIPIENT = /(?:to=)?(?:functions?|tools?|recipient)[.=]([A-Za-z0-9_.:-]+)/i;
-var CLEAN_NAME = /^[A-Za-z0-9_.:-]+$/;
-function sanitizeToolName(raw) {
-  if (!raw) return raw;
-  if (!raw.includes("<|") && !RECIPIENT_PREFIX.test(raw)) return raw;
-  const base = (raw.split("<|")[0] ?? "").replace(RECIPIENT_PREFIX, "").trim();
-  if (base && CLEAN_NAME.test(base)) return base;
-  const recip = raw.match(RECIPIENT);
-  if (recip?.[1]) return recip[1];
-  const m = raw.replace(CONTROL_TOKEN, " ").match(/[A-Za-z_][A-Za-z0-9_.:-]*/);
-  return m ? m[0] : raw;
-}
-function sanitizeMessageToolCalls(msg) {
-  let changed = false;
-  const content = msg.content.map((c) => {
-    if (c.type === "toolCall") {
-      const name = sanitizeToolName(c.name);
-      if (name !== c.name) {
-        changed = true;
-        return { ...c, name };
-      }
-    }
-    return c;
-  });
-  return changed ? { ...msg, content } : msg;
-}
-function sanitizeEventToolCalls(ev) {
-  let next = ev;
-  if ("partial" in next && next.partial) {
-    const partial = sanitizeMessageToolCalls(next.partial);
-    if (partial !== next.partial) next = { ...next, partial };
-  }
-  if (next.type === "toolcall_end" && next.toolCall) {
-    const name = sanitizeToolName(next.toolCall.name);
-    if (name !== next.toolCall.name) next = { ...next, toolCall: { ...next.toolCall, name } };
-  }
-  return next;
-}
-
-// src/scribe/scribe-pi.ts
-import { existsSync as existsSync10, readFileSync as readFileSync16 } from "fs";
-import { Type } from "typebox";
-
-// src/scribe/capture.ts
-import { closeSync as closeSync2, fsyncSync as fsyncSync2, mkdirSync as mkdirSync11, openSync as openSync2, writeSync as writeSync2 } from "fs";
+// src/onboarding/steps.ts
+import { stdin as stdin4, stdout as stdout5 } from "process";
+import { createInterface as createInterface4 } from "readline/promises";
+import { existsSync as existsSync6, mkdirSync as mkdirSync8, writeFileSync as writeFileSync11 } from "fs";
 import { join as join15 } from "path";
-
-// src/scribe/digest.ts
-import { existsSync as existsSync6, mkdirSync as mkdirSync9, readFileSync as readFileSync11, writeFileSync as writeFileSync11 } from "fs";
-
-// src/scribe/paths.ts
-import { join as join14 } from "path";
-function scribeDir() {
-  const override = process.env.ORIRO_SCRIBE_DIR?.trim();
-  return override && override.length > 0 ? override : join14(CONFIG_DIR, "scribe");
-}
-function journalFile(date) {
-  return join14(scribeDir(), `${date}.md`);
-}
-function digestFile() {
-  return join14(scribeDir(), "_digest.md");
-}
-function timelineFile() {
-  return join14(scribeDir(), "_timeline.md");
-}
-function artifactsDir() {
-  return join14(scribeDir(), "artifacts");
-}
-
-// src/scribe/digest.ts
-var DIGEST_CAP = 8192;
-var TIMELINE_DAY_CAP = 400;
-function read(file4) {
-  return existsSync6(file4) ? readFileSync11(file4, "utf8") : "";
-}
-function updateDigest(summary, context) {
-  mkdirSync9(scribeDir(), { recursive: true });
-  const existing = read(digestFile());
-  let contextBlock = context?.trim();
-  if (!contextBlock) {
-    const m = existing.match(/## Context\n([\s\S]*?)\n## /);
-    contextBlock = m?.[1]?.trim() ?? "_(not set yet)_";
-  }
-  const recentMatch = existing.match(/## Recent activity[^\n]*\n([\s\S]*)$/);
-  const priorRecent = recentMatch?.[1]?.trim() ?? "";
-  let recent = summary.trim() ? `- ${summary.trim()}
-${priorRecent}` : priorRecent;
-  const header2 = `# ORIRO Scribe \u2014 Digest
-
-## Context
-${contextBlock}
-
-## Recent activity (newest first)
-`;
-  let out = header2 + recent;
-  while (Buffer.byteLength(out, "utf8") > DIGEST_CAP && recent.includes("\n")) {
-    recent = recent.slice(0, recent.lastIndexOf("\n")).trimEnd();
-    out = header2 + recent;
-  }
-  writeFileSync11(digestFile(), out, "utf8");
-}
-function updateTimeline(date, topic) {
-  mkdirSync9(scribeDir(), { recursive: true });
-  const clean = topic.replace(/\s+/g, " ").trim();
-  if (!clean) return;
-  const lines = read(timelineFile()).split("\n").filter(Boolean);
-  const header2 = "# ORIRO Scribe \u2014 Timeline";
-  const body = lines.filter((l) => l !== header2);
-  const idx = body.findIndex((l) => l.startsWith(`- ${date} \xB7`));
-  if (idx === -1) {
-    body.push(`- ${date} \xB7 ${clean}`.slice(0, TIMELINE_DAY_CAP + date.length + 6));
-  } else {
-    let merged = `${body[idx]}; ${clean}`;
-    if (merged.length > TIMELINE_DAY_CAP) merged = `${merged.slice(0, TIMELINE_DAY_CAP)}\u2026`;
-    body[idx] = merged;
-  }
-  body.sort();
-  writeFileSync11(timelineFile(), `${header2}
-${body.join("\n")}
-`, "utf8");
-}
-function readDigest() {
-  return read(digestFile());
-}
-function readTimeline() {
-  return read(timelineFile());
-}
-
-// src/scribe/journal.ts
-import {
-  closeSync,
-  existsSync as existsSync7,
-  fsyncSync,
-  mkdirSync as mkdirSync10,
-  openSync,
-  readFileSync as readFileSync12,
-  writeSync
-} from "fs";
-function appendJournal(date, content) {
-  mkdirSync10(scribeDir(), { recursive: true });
-  const fd = openSync(journalFile(date), "a");
-  try {
-    writeSync(fd, content.endsWith("\n") ? content : `${content}
-`);
-    fsyncSync(fd);
-  } finally {
-    closeSync(fd);
-  }
-}
-function readJournal(date) {
-  const f = journalFile(date);
-  return existsSync7(f) ? readFileSync12(f, "utf8") : "";
-}
-
-// src/scribe/redact.ts
-var RULES = [
-  {
-    label: "private-key",
-    re: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g
-  },
-  // Lone PEM markers — a key SPLIT across fields/turns leaves only a BEGIN-head or an END-tail in
-  // one field. A field carrying either marker is key material: redact the marker + its adjacent body
-  // (forward from BEGIN, backward to END) so no sub-threshold fragment can ever sit on disk.
-  { label: "private-key", re: /-----BEGIN[A-Z ]*PRIVATE KEY-----[\s\S]*/g },
-  { label: "private-key", re: /[\s\S]*-----END[A-Z ]*PRIVATE KEY-----/g },
-  { label: "anthropic-key", re: /sk-ant-[A-Za-z0-9_-]{20,}/g },
-  { label: "openrouter-key", re: /sk-or-v1-[A-Za-z0-9]{20,}/g },
-  // Stripe-style keys (sk_live_/pk_live_/rk_test_/…), underscore segments.
-  { label: "stripe-key", re: /\b[srp]k_(?:live|test)_[A-Za-z0-9]{16,}/g },
-  // Generic sk- secret keys — allow hyphenated segments (sk-live-…, sk-proj-…) so a second
-  // hyphen no longer breaks the match (the gap the Scriber spike caught).
-  { label: "secret-key-sk", re: /sk[-_][A-Za-z0-9][A-Za-z0-9-]{14,}/g },
-  { label: "google-key", re: /AIza[0-9A-Za-z_-]{30,}/g },
-  { label: "groq-key", re: /gsk_[A-Za-z0-9]{20,}/g },
-  { label: "github-pat", re: /github_pat_[A-Za-z0-9_]{20,}/g },
-  { label: "github-token", re: /gh[posr]_[A-Za-z0-9]{30,}/g },
-  { label: "xai-key", re: /xai-[A-Za-z0-9]{20,}/g },
-  { label: "aws-key", re: /AKIA[0-9A-Z]{16}/g },
-  { label: "jwt", re: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{6,}/g },
-  { label: "telegram-token", re: /\b\d{8,10}:[A-Za-z0-9_-]{30,}\b/g },
-  // Auth headers / inline credentials (any provider) — the audit found these leaked.
-  { label: "bearer-token", re: /\bbearer\s+[A-Za-z0-9._~+/=-]{12,}/gi },
-  { label: "basic-auth", re: /\bbasic\s+[A-Za-z0-9+/=]{12,}/gi },
-  // key: value / key=value secrets (password, token, secret, api_key, access_key, …).
-  { label: "secret-kv", re: /\b(?:pass(?:word|wd)?|pwd|secret|token|api[_-]?key|access[_-]?key|auth)\s*[:=]\s*\S{3,}/gi },
-  // Credentials embedded in a URL: scheme://user:PASSWORD@host  → redact the password.
-  { label: "url-credential", re: /\b([a-z][a-z0-9+.-]*:\/\/[^/\s:@]+:)[^/\s@]+(@)/gi },
-  { label: "email", re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g },
-  { label: "phone", re: /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}/g }
-];
-function marker(label) {
-  return `\u27E8REDACTED:${label}\u27E9`;
-}
-function entropy(s) {
-  const freq = /* @__PURE__ */ new Map();
-  for (const ch of s) freq.set(ch, (freq.get(ch) ?? 0) + 1);
-  let h = 0;
-  for (const n of freq.values()) {
-    const p = n / s.length;
-    h -= p * Math.log2(p);
-  }
-  return h;
-}
-function looksLikeUnknownSecret(token) {
-  if (token.length < 32) return false;
-  if (token.includes("\u27E8REDACTED:")) return false;
-  if (/^[0-9a-f]+$/i.test(token)) return false;
-  const classes = (/[a-z]/.test(token) ? 1 : 0) + (/[A-Z]/.test(token) ? 1 : 0) + (/[0-9]/.test(token) ? 1 : 0);
-  if (classes < 2) return false;
-  return entropy(token) >= 4.2;
-}
-function redact(input) {
-  const counts = /* @__PURE__ */ new Map();
-  let text = input;
-  for (const rule of RULES) {
-    text = text.replace(rule.re, () => {
-      counts.set(rule.label, (counts.get(rule.label) ?? 0) + 1);
-      return marker(rule.label);
-    });
-  }
-  text = text.split(/(\s+)/).map((tok) => {
-    if (looksLikeUnknownSecret(tok)) {
-      counts.set("high-entropy", (counts.get("high-entropy") ?? 0) + 1);
-      return marker("high-entropy");
-    }
-    return tok;
-  }).join("");
-  const redactions = [...counts.entries()].map(([label, count]) => ({
-    label,
-    count
-  }));
-  return { text, redactions };
-}
-function containsSecret(text) {
-  for (const rule of RULES) {
-    rule.re.lastIndex = 0;
-    if (rule.re.test(text)) return true;
-  }
-  for (const tok of text.split(/\s+/)) {
-    if (looksLikeUnknownSecret(tok)) return true;
-  }
-  return false;
-}
-
-// src/scribe/capture.ts
-var INLINE_CAP = 4e3;
-function sideFile(date, ts, kind, full) {
-  mkdirSync11(artifactsDir(), { recursive: true });
-  const name = `${date}_${ts.replace(/[:.]/g, "-")}_${kind}.md`;
-  const p = join15(artifactsDir(), name);
-  const fd = openSync2(p, "w");
-  try {
-    writeSync2(fd, full);
-    fsyncSync2(fd);
-  } finally {
-    closeSync2(fd);
-  }
-  return p;
-}
-function field(date, ts, label, value) {
-  if (!value || !value.trim()) return "";
-  if (value.length > INLINE_CAP) {
-    const ref = sideFile(date, ts, label.toLowerCase().replace(/\s+/g, "-"), value);
-    return `**${label}** (full \u2192 ${ref}):
-${value.slice(0, INLINE_CAP)}
-\u2026(truncated; full content in artifact)
-
-`;
-  }
-  return `**${label}:**
-${value}
-
-`;
-}
-function renderTurn(rec) {
-  let md = `## ${rec.ts}
-
-`;
-  md += field(rec.date, rec.ts, "User", rec.user);
-  md += field(rec.date, rec.ts, "Router", rec.router);
-  if (rec.tools?.length) md += `**Tools:** ${rec.tools.join(", ")}
-
-`;
-  if (rec.files?.length) md += `**Files:** ${rec.files.join(", ")}
-
-`;
-  md += field(rec.date, rec.ts, "Note", rec.note);
-  return `${md}---
-`;
-}
-function oneLineSummary(rec) {
-  const bits = [];
-  if (rec.user) bits.push(rec.user.replace(/\s+/g, " ").slice(0, 80));
-  if (rec.files?.length) bits.push(`files: ${rec.files.slice(0, 3).join(", ")}`);
-  if (rec.note) bits.push(rec.note.replace(/\s+/g, " ").slice(0, 60));
-  return bits.join(" \xB7 ") || "(activity)";
-}
-function redactRecord(rec) {
-  const tally = /* @__PURE__ */ new Map();
-  const rd = (s) => {
-    if (!s) return s;
-    const r = redact(s);
-    for (const x of r.redactions) tally.set(x.label, (tally.get(x.label) ?? 0) + x.count);
-    return r.text;
-  };
-  const safeRec = {
-    ...rec,
-    user: rd(rec.user),
-    note: rd(rec.note),
-    router: rd(rec.router),
-    context: rd(rec.context),
-    files: rec.files?.map((f) => rd(f) ?? f)
-  };
-  return { rec: safeRec, redactions: [...tally.entries()].map(([label, count]) => ({ label, count })) };
-}
-function captureTurn(rec) {
-  const { rec: safeRec, redactions } = redactRecord(rec);
-  const journal = renderTurn(safeRec);
-  appendJournal(rec.date, `${journal}
-`);
-  updateDigest(`${safeRec.ts} \xB7 ${oneLineSummary(safeRec)}`, safeRec.context);
-  updateTimeline(safeRec.date, oneLineSummary(safeRec));
-  const auditClean = !containsSecret(readJournal(rec.date)) && !containsSecret(readDigest() ?? "");
-  return {
-    journalDate: rec.date,
-    redactions,
-    bytes: Buffer.byteLength(journal, "utf8"),
-    auditClean
-  };
-}
-
-// src/scribe/health.ts
-import {
-  closeSync as closeSync3,
-  fsyncSync as fsyncSync3,
-  mkdirSync as mkdirSync12,
-  openSync as openSync3,
-  readFileSync as readFileSync13,
-  writeFileSync as writeFileSync12,
-  writeSync as writeSync3
-} from "fs";
-import { join as join16 } from "path";
-function healthFile() {
-  return join16(scribeDir(), "_health.json");
-}
-function faultLogFile() {
-  return join16(scribeDir(), "_faults.log");
-}
-function read2() {
-  try {
-    return JSON.parse(readFileSync13(healthFile(), "utf8"));
-  } catch {
-    return { faultCount: 0 };
-  }
-}
-function write(h) {
-  mkdirSync12(scribeDir(), { recursive: true });
-  writeFileSync12(healthFile(), `${JSON.stringify(h, null, 2)}
-`, "utf8");
-}
-function recordHealth() {
-  const h = read2();
-  h.lastWriteAt = (/* @__PURE__ */ new Date()).toISOString();
-  write(h);
-}
-function recordFault(role, err) {
-  try {
-    mkdirSync12(scribeDir(), { recursive: true });
-    const msg = `${(/* @__PURE__ */ new Date()).toISOString()} [${role}] ${err instanceof Error ? err.message : String(err)}`;
-    const fd = openSync3(faultLogFile(), "a");
-    try {
-      writeSync3(fd, `${msg}
-`);
-      fsyncSync3(fd);
-    } finally {
-      closeSync3(fd);
-    }
-    const h = read2();
-    h.faultCount = (h.faultCount ?? 0) + 1;
-    h.lastFault = msg;
-    write(h);
-  } catch {
-  }
-}
-function readHealth() {
-  return read2();
-}
-
-// src/scribe/wal.ts
-import {
-  closeSync as closeSync4,
-  existsSync as existsSync8,
-  fsyncSync as fsyncSync4,
-  mkdirSync as mkdirSync13,
-  openSync as openSync4,
-  readFileSync as readFileSync14,
-  writeFileSync as writeFileSync13,
-  writeSync as writeSync4
-} from "fs";
-import { join as join17 } from "path";
-function walFile() {
-  return join17(scribeDir(), "_wal.jsonl");
-}
-function appendLine(obj) {
-  mkdirSync13(scribeDir(), { recursive: true });
-  const fd = openSync4(walFile(), "a");
-  try {
-    writeSync4(fd, `${JSON.stringify(obj)}
-`);
-    fsyncSync4(fd);
-  } finally {
-    closeSync4(fd);
-  }
-}
-function walAppend(id, rec) {
-  appendLine({ t: "add", id, rec });
-}
-function walCommit(id) {
-  appendLine({ t: "commit", id });
-}
-function walPending() {
-  if (!existsSync8(walFile())) return [];
-  const committed = /* @__PURE__ */ new Set();
-  const adds = /* @__PURE__ */ new Map();
-  for (const line of readFileSync14(walFile(), "utf8").split("\n")) {
-    if (!line.trim()) continue;
-    try {
-      const e = JSON.parse(line);
-      if (e.t === "commit") committed.add(e.id);
-      else if (e.t === "add" && e.rec) adds.set(e.id, e.rec);
-    } catch {
-    }
-  }
-  const out = [];
-  for (const [id, rec] of adds) {
-    if (!committed.has(id)) out.push({ id, rec });
-  }
-  return out;
-}
-function walCompact() {
-  if (!existsSync8(walFile())) return;
-  const pending = walPending();
-  const body = pending.map((p) => JSON.stringify({ t: "add", id: p.id, rec: p.rec })).join("\n");
-  writeFileSync13(walFile(), body ? `${body}
-` : "", "utf8");
-}
-
-// src/scribe/supervisor.ts
-var draining = false;
-function uid(ts) {
-  return `${ts}-${Math.random().toString(36).slice(2, 9)}`;
-}
-function drainBacklog() {
-  if (draining) return;
-  draining = true;
-  try {
-    let drained = 0;
-    for (const e of walPending()) {
-      try {
-        captureTurn(e.rec);
-        walCommit(e.id);
-        drained++;
-      } catch (err) {
-        recordFault("standby-replay", err);
-        break;
-      }
-    }
-    if (drained > 0) walCompact();
-  } finally {
-    draining = false;
-  }
-}
-function supervisedCapture(rec) {
-  try {
-    drainBacklog();
-    const id = uid(rec.ts);
-    const safe = redactRecord(rec).rec;
-    walAppend(id, safe);
-    try {
-      const res = captureTurn(safe);
-      walCommit(id);
-      walCompact();
-      recordHealth();
-      return res;
-    } catch (primaryErr) {
-      recordFault("primary", primaryErr);
-      try {
-        const res = captureTurn(safe);
-        walCommit(id);
-        walCompact();
-        recordHealth();
-        return res;
-      } catch (standbyErr) {
-        recordFault("standby", standbyErr);
-        return null;
-      }
-    }
-  } catch (fatal) {
-    recordFault("supervisor", fatal);
-    return null;
-  }
-}
-
-// src/scribe/retrieval.ts
-import { existsSync as existsSync9, readFileSync as readFileSync15, readdirSync } from "fs";
-function listDays() {
-  const dir = scribeDir();
-  if (!existsSync9(dir)) return [];
-  return readdirSync(dir).filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f)).map((f) => f.replace(/\.md$/, "")).sort();
-}
-function readDay(date) {
-  const f = journalFile(date);
-  return existsSync9(f) ? readFileSync15(f, "utf8") : "";
-}
-function searchScribe(query, limit = 100) {
-  const q = query.toLowerCase().trim();
-  if (!q) return [];
-  const hits = [];
-  for (const date of listDays().reverse()) {
-    const lines = readDay(date).split("\n");
-    for (let i = 0; i < lines.length; i++) {
-      const ln = lines[i];
-      if (ln && ln.toLowerCase().includes(q)) {
-        hits.push({ date, line: i + 1, text: ln.trim().slice(0, 200) });
-        if (hits.length >= limit) return hits;
-      }
-    }
-  }
-  return hits;
-}
-
-// src/scribe/scribe-pi.ts
-function scribeTurn(input) {
-  if (!isScribeEnabled()) return;
-  const ts = (/* @__PURE__ */ new Date()).toISOString();
-  supervisedCapture({ ts, date: ts.slice(0, 10), ...input });
-}
-var pendingUserInput = "";
-function noteUserInput(text) {
-  pendingUserInput = text;
-}
-function takePendingUserInput() {
-  const u = pendingUserInput;
-  pendingUserInput = "";
-  return u;
-}
-function buildScribeContext() {
-  if (!isScribeEnabled()) return "";
-  const parts = [];
-  try {
-    const t = timelineFile();
-    if (existsSync10(t)) parts.push(`# Work history \u2014 every day so far
-${readFileSync16(t, "utf8").trim()}`);
-  } catch {
-  }
-  try {
-    const d = readDigest();
-    if (d?.trim()) parts.push(`# Current context (recent)
-${d.trim()}`);
-  } catch {
-  }
-  if (!parts.length) return "";
-  return `${parts.join("\n\n")}
-
-(Call scribe_recall to fetch the full text of any past day or topic.)`;
-}
-function registerScribe(pi) {
-  pi.registerTool({
-    name: "scribe_recall",
-    label: "ORIRO Scribe",
-    description: "Recall the user's past work from the on-device journal: search by keyword, or read a specific day (YYYY-MM-DD). Use to recover decisions, code, files, and context from earlier sessions.",
-    parameters: Type.Object({
-      query: Type.Optional(Type.String({ description: "Keyword/topic to search across all journals." })),
-      day: Type.Optional(Type.String({ description: "A specific day YYYY-MM-DD to read in full." }))
-    }),
-    async execute(_id, params) {
-      let text;
-      const details = {};
-      if (!isScribeEnabled()) {
-        text = "Scribe is off (the user has not enabled it).";
-      } else if (params.day) {
-        text = readDay(params.day) || `No journal for ${params.day}. Days: ${listDays().join(", ") || "none"}`;
-        details.day = params.day;
-      } else {
-        const hits = params.query ? searchScribe(params.query) : [];
-        details.hits = hits;
-        text = hits.length ? hits.map((h) => `${h.date}:${h.line}  ${h.text}`).join("\n") : `No matches${params.query ? ` for "${params.query}"` : ""}. Days recorded: ${listDays().join(", ") || "none"}`;
-      }
-      return { content: [{ type: "text", text }], details };
-    }
-  });
-}
-function attachScribe(session) {
-  let user = "";
-  let assistant = "";
-  const tools = /* @__PURE__ */ new Set();
-  session.subscribe((e) => {
-    if (!isScribeEnabled()) return;
-    if (e?.type === "user_message" || e?.type === "session_user_message") user = String(e.text ?? e.message ?? user);
-    if (e?.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") assistant += e.assistantMessageEvent.delta ?? "";
-    if ((e?.type === "tool_call" || e?.type === "tool_execution_start") && e.toolName) tools.add(String(e.toolName));
-    if (e?.type === "agent_end") {
-      const userText = takePendingUserInput() || user;
-      scribeTurn({ user: userText || void 0, router: "oriro-free", tools: [...tools], note: assistant.slice(0, 4e3) || void 0 });
-      user = "";
-      assistant = "";
-      tools.clear();
-    }
-  });
-}
-
-// src/routers/mux-provider.ts
-var MUX_PROVIDER = "oriro-mux";
-var MUX_MODEL = "oriro-free";
-function errToCallError(msg) {
-  const text = msg.errorMessage ?? "";
-  return /\b429\b|rate.?limit|too many requests/i.test(text) ? { status: 429 } : {};
-}
-function buildErrorMessage(message) {
-  return {
-    role: "assistant",
-    content: [],
-    api: "openai-completions",
-    provider: MUX_PROVIDER,
-    model: MUX_MODEL,
-    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
-    stopReason: "error",
-    timestamp: Date.now(),
-    errorMessage: message
-  };
-}
-async function driveMux(out, mux, byId, context, options) {
-  let lastError;
-  for (const id of mux.ranked()) {
-    const router = byId.get(id);
-    if (!router) continue;
-    const t0 = Date.now();
-    let committed = false;
-    let lastPartial;
-    try {
-      const inner = piStreamSimple(routerModel(router), context, {
-        ...options ?? {},
-        apiKey: router.apiKey
-      });
-      let failedBeforeContent = false;
-      for await (const ev of inner) {
-        if (ev.type === "error") {
-          mux.recordFailure(id, errToCallError(ev.error));
-          if (!committed) {
-            lastError = ev.error;
-            failedBeforeContent = true;
-            break;
-          }
-          out.push(ev);
-          out.end(ev.error);
-          return;
-        }
-        committed = true;
-        if (ev.type === "done") {
-          mux.recordSuccess(id, Date.now() - t0);
-          const clean = sanitizeMessageToolCalls(scrubMessageIdentity(ev.message));
-          out.push({ type: "done", reason: ev.reason, message: clean });
-          out.end(clean);
-          return;
-        }
-        lastPartial = ev.partial;
-        out.push(sanitizeEventToolCalls(ev));
-      }
-      if (failedBeforeContent) continue;
-      if (!committed) {
-        mux.recordFailure(id, {});
-        lastError ??= buildErrorMessage("Router returned no output.");
-        continue;
-      }
-      mux.recordSuccess(id, Date.now() - t0);
-      out.end(lastPartial ? sanitizeMessageToolCalls(scrubMessageIdentity(lastPartial)) : void 0);
-      return;
-    } catch (e) {
-      mux.recordFailure(id, e);
-    }
-  }
-  const msg = lastError ?? buildErrorMessage(
-    "All keyless routers are unavailable. Add a BYOK key, select more free routers, or retry shortly."
-  );
-  out.push({ type: "error", reason: "error", error: msg });
-  out.end(msg);
-}
-function registerOriroMux(registry, opts = {}) {
-  registerOpenAICompletions();
-  const pooled = resolvePool();
-  const routers = opts.routers ?? (pooled.length > 0 ? pooled : KEYLESS_FLOOR);
-  const byId = new Map(routers.map((r) => [r.id, r]));
-  const mux = new RouterMux(routers.map((r) => r.id));
-  try {
-    mux.load(loadMuxState(oriroDir()));
-  } catch {
-  }
-  registry.registerProvider(MUX_PROVIDER, {
-    name: "ORIRO Free (keyless Mux)",
-    api: "openai-completions",
-    apiKey: "oriro-keyless",
-    // Placeholder — required by registry validation but never used: our custom streamSimple
-    // routes to the real keyless floor endpoints itself (see driveMux).
-    baseUrl: "http://oriro-mux.local",
-    models: [
-      {
-        id: MUX_MODEL,
-        name: "ORIRO Free (best-router)",
-        api: "openai-completions",
-        baseUrl: "http://oriro-mux.local",
-        reasoning: false,
-        input: ["text"],
-        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-        contextWindow: 128e3,
-        maxTokens: 4096
-      }
-    ],
-    streamSimple: (_model, context, options) => {
-      const out = createAssistantMessageEventStream();
-      const ctx = applyIdentity(context);
-      const memory = buildScribeContext();
-      const withMemory = memory ? { ...ctx, systemPrompt: `${ctx.systemPrompt}
-
-${memory}` } : ctx;
-      void driveMux(out, mux, byId, withMemory, options).finally(() => {
-        try {
-          saveMuxState(oriroDir(), mux.snapshot());
-        } catch {
-        }
-      });
-      return out;
-    }
-  });
-  return registry.find(MUX_PROVIDER, MUX_MODEL);
-}
-
-// src/head/pi-tool.ts
-import { Type as Type2 } from "typebox";
-
-// src/head/comparison-engine.ts
-var SECTION_RULES = [
-  {
-    type: "hero",
-    label: "Hero",
-    priority: "CRITICAL",
-    markup: [/<h1[\s>]/],
-    recommend: "Add a clear above-the-fold hero \u2014 one headline that states the value + one primary CTA."
-  },
-  {
-    type: "navigation",
-    label: "Navigation",
-    priority: "CRITICAL",
-    markup: [/<nav[\s>]/, /role=["']navigation["']/],
-    recommend: "Add a top navigation so visitors can reach key sections."
-  },
-  {
-    type: "features",
-    label: "Features",
-    priority: "CRITICAL",
-    text: [/\bfeatures?\b/, /\bwhat you (?:can|get)\b/, /\bcapabilit/],
-    recommend: "Add a features section that spells out concrete capabilities, not adjectives."
-  },
-  {
-    type: "pricing",
-    label: "Pricing",
-    priority: "CRITICAL",
-    text: [/\bpricing\b/, /\bper month\b/, /\b\/mo\b/, /\bfree plan\b/, /\$\d/, /₹\d/, /€\d/],
-    recommend: 'Add transparent pricing \u2014 a critical conversion element; even a single "Free" tier helps.'
-  },
-  {
-    type: "cta",
-    label: "Call-to-Action",
-    priority: "CRITICAL",
-    text: [/\bget started\b/, /\bsign up\b/, /\bstart (?:free|now|building)\b/, /\btry (?:it|now|free)\b/, /\bbook a demo\b/, /\bget a demo\b/],
-    recommend: 'Add a strong, repeated primary CTA ("Get started") so the next step is obvious.'
-  },
-  {
-    type: "testimonials",
-    label: "Testimonials",
-    priority: "HIGH",
-    text: [/\btestimonial/, /\bwhat (?:our )?(?:customers|users) say\b/, /\bloved by\b/, /\breview(?:s|ed)\b/],
-    recommend: "Add 2\u20133 customer testimonials with names/photos to build trust."
-  },
-  {
-    type: "stats",
-    label: "Stats / Metrics",
-    priority: "HIGH",
-    text: [/\b\d[\d,.]*\s*[kkmm]\+?\s*(?:users|customers|developers|downloads|teams)\b/, /\b9\d(?:\.\d+)?%\b/, /\buptime\b/],
-    recommend: 'Add impressive metrics ("10K+ users", "99.9% uptime") as social proof.'
-  },
-  {
-    type: "video",
-    label: "Video",
-    priority: "HIGH",
-    markup: [/<video[\s>]/, /youtube\.com\/embed/, /player\.vimeo\.com/, /<iframe[^>]+(?:youtube|vimeo)/],
-    text: [/\bwatch the (?:video|demo)\b/],
-    recommend: "Add a short explainer/demo video \u2014 it lifts conversion on landing pages."
-  },
-  {
-    type: "demo",
-    label: "Live Demo",
-    priority: "HIGH",
-    text: [/\btry it (?:now|live|free)\b/, /\bplayground\b/, /\binteractive demo\b/, /\blive demo\b/],
-    recommend: 'Add a "try it" live demo or playground so visitors experience the product immediately.'
-  },
-  {
-    type: "socialProof",
-    label: "Social Proof",
-    priority: "HIGH",
-    text: [/\btrusted by\b/, /\bbacked by\b/, /\bused by\b/, /\bas seen (?:in|on)\b/, /\bcustomers include\b/],
-    recommend: 'Add social proof (customer/investor logos, "trusted by \u2026") near the hero.'
-  },
-  {
-    type: "faq",
-    label: "FAQ",
-    priority: "MEDIUM",
-    text: [/\bfaq\b/, /\bfrequently asked\b/],
-    markup: [/<details[\s>]/],
-    recommend: "Add an FAQ that answers the top objections before they become exits."
-  },
-  {
-    type: "integrations",
-    label: "Integrations",
-    priority: "MEDIUM",
-    text: [/\bintegrations?\b/, /\bworks with\b/, /\bconnect your\b/],
-    recommend: "Add an integrations section showing what the product connects to."
-  },
-  {
-    type: "newsletter",
-    label: "Newsletter / Capture",
-    priority: "MEDIUM",
-    text: [/\bsubscribe\b/, /\bnewsletter\b/, /\bjoin (?:the )?waitlist\b/],
-    markup: [/type=["']email["']/],
-    recommend: "Add an email capture (newsletter/waitlist) so non-converting visitors are not lost."
-  },
-  {
-    type: "comparison",
-    label: "Comparison",
-    priority: "MEDIUM",
-    text: [/\bcompare\b/, /\bcomparison\b/, /\b vs\.? \b/, /\bwhy choose\b/],
-    recommend: 'Add a comparison ("us vs alternatives") to win evaluators who are shopping around.'
-  },
-  {
-    type: "team",
-    label: "Team / About",
-    priority: "LOW",
-    text: [/\bour team\b/, /\bmeet the team\b/, /\bfounders?\b/, /\babout us\b/],
-    recommend: "Add a brief team/about section to humanize the brand."
-  }
-];
-var PRIORITY_RANK = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
-var PRIORITY_EFFORT = { CRITICAL: "L", HIGH: "M", MEDIUM: "M", LOW: "S" };
-var FETCH_TIMEOUT_MS = 12e3;
-var UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 ORIRO-Inspector";
-async function fetchPage(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  const start = Date.now();
-  try {
-    const res = await fetch(url, {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: { "user-agent": UA, accept: "text/html,application/xhtml+xml" }
-    });
-    const html = await res.text();
-    return { html, ms: Date.now() - start, status: res.status, ok: res.ok, error: "" };
-  } catch (err) {
-    return { html: "", ms: Date.now() - start, status: 0, ok: false, error: err instanceof Error ? err.message : "fetch failed" };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-function toText(html) {
-  return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").toLowerCase().trim();
-}
-function firstMatch(re, hay) {
-  const m = re.exec(hay);
-  if (!m) return "";
-  const slice = (m[0] ?? "").trim();
-  return slice.length > 80 ? `${slice.slice(0, 77)}\u2026` : slice;
-}
-function detectSections(rawHtmlLower, text) {
-  const found = [];
-  for (const rule of SECTION_RULES) {
-    let evidence = "";
-    for (const re of rule.markup ?? []) {
-      const hit = firstMatch(re, rawHtmlLower);
-      if (hit) {
-        evidence = hit;
-        break;
-      }
-    }
-    if (!evidence) {
-      for (const re of rule.text ?? []) {
-        const hit = firstMatch(re, text);
-        if (hit) {
-          evidence = hit;
-          break;
-        }
-      }
-    }
-    if (evidence) found.push({ type: rule.type, label: rule.label, priority: rule.priority, evidence });
-  }
-  return found;
-}
-function extractMatches(re, html, max) {
-  const out = [];
-  for (const m of html.matchAll(re)) {
-    const inner = (m[1] ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    if (inner && !out.includes(inner)) out.push(inner);
-    if (out.length >= max) break;
-  }
-  return out;
-}
-var CTA_WORDS = /\b(get started|sign up|start free|start now|start building|try (?:it|now|free)|book a demo|get a demo|request access|join (?:the )?waitlist|download)\b/i;
-function extractStructure(url, fr) {
-  const html = fr.html;
-  const lowerHtml = html.toLowerCase();
-  const text = toText(html);
-  const titleM = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
-  const title = (titleM?.[1] ?? "").replace(/\s+/g, " ").trim();
-  const descM = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i.exec(html) ?? /<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i.exec(html);
-  const description = (descM?.[1] ?? "").replace(/\s+/g, " ").trim();
-  const headings = extractMatches(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi, html, 12);
-  const ctaAll = extractMatches(/<(?:a|button)[^>]*>([\s\S]*?)<\/(?:a|button)>/gi, html, 80);
-  const ctas = [];
-  for (const c of ctaAll) {
-    if (CTA_WORDS.test(c) && !ctas.includes(c)) ctas.push(c);
-    if (ctas.length >= 10) break;
-  }
-  const forms = (lowerHtml.match(/<form[\s>]/g) ?? []).length;
-  const links = (lowerHtml.match(/<a[\s>]/g) ?? []).length;
-  const images = (lowerHtml.match(/<img[\s>]/g) ?? []).length;
-  const hasVideo = /<video[\s>]/.test(lowerHtml) || /(?:youtube\.com\/embed|player\.vimeo\.com)/.test(lowerHtml);
-  const domNodes = (html.match(/<[a-z!\/]/gi) ?? []).length;
-  let note = "";
-  if (fr.ok && text.length < 400 && domNodes < 60) {
-    note = "Sparse HTML \u2014 likely a client-rendered (SPA) page; structure may be under-detected without a JS render.";
-  }
-  return {
-    url,
-    title,
-    description,
-    sections: detectSections(lowerHtml, text),
-    headings,
-    ctas,
-    forms,
-    links,
-    images,
-    hasVideo,
-    metrics: { htmlBytes: html.length, domNodes, fetchMs: fr.ms, status: fr.status },
-    ok: fr.ok && html.length > 0,
-    note: fr.ok ? note : `Could not load: ${fr.error || `HTTP ${fr.status}`}`
-  };
-}
-function ruleFor(type) {
-  return SECTION_RULES.find((r) => r.type === type) ?? SECTION_RULES[0];
-}
-function analyzeGaps(target, competitors) {
-  const targetTypes = new Set(target.sections.map((s) => s.type));
-  const compPresence = /* @__PURE__ */ new Map();
-  for (const comp of competitors) {
-    if (!comp.ok) continue;
-    for (const s of comp.sections) {
-      const list = compPresence.get(s.type) ?? [];
-      if (!list.includes(comp.url)) list.push(comp.url);
-      compPresence.set(s.type, list);
-    }
-  }
-  const missing = [];
-  const parity = [];
-  for (const [type, presentOn] of compPresence) {
-    if (targetTypes.has(type)) {
-      parity.push(type);
-    } else {
-      const rule = ruleFor(type);
-      missing.push({ section: type, label: rule.label, priority: rule.priority, presentOn, recommendation: rule.recommend });
-    }
-  }
-  missing.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || b.presentOn.length - a.presentOn.length);
-  const advantages = target.sections.filter((s) => !compPresence.has(s.type));
-  return { missing, advantages, parity };
-}
-function generateActionItems(missing) {
-  return missing.map((g) => ({
-    title: `Add a ${g.label} section`,
-    priority: g.priority,
-    effort: PRIORITY_EFFORT[g.priority],
-    rationale: `${g.presentOn.length} of the compared page(s) have it; you don't. ${g.recommendation}`
-  }));
-}
-function hostOf(url) {
-  try {
-    return new URL(url).host.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
-}
-function generateSummary(target, competitors, gaps) {
-  const okComps = competitors.filter((c) => c.ok);
-  const tName = hostOf(target.url);
-  if (!target.ok) return `Could not load ${tName} (${target.note}). Nothing to compare against yet.`;
-  if (okComps.length === 0) return `Loaded ${tName} (${target.sections.length} sections) but none of the comparison URLs could be loaded.`;
-  const crit = gaps.missing.filter((m) => m.priority === "CRITICAL").map((m) => m.label);
-  const high = gaps.missing.filter((m) => m.priority === "HIGH").map((m) => m.label);
-  const parts = [];
-  parts.push(`${tName} has ${target.sections.length} detectable sections; compared against ${okComps.length} page(s).`);
-  if (gaps.missing.length === 0) {
-    parts.push("No structural gaps found \u2014 you cover everything they do.");
-  } else {
-    parts.push(`${gaps.missing.length} gap(s) found.`);
-    if (crit.length) parts.push(`Critical: ${crit.join(", ")}.`);
-    if (high.length) parts.push(`High: ${high.join(", ")}.`);
-  }
-  if (gaps.advantages.length) parts.push(`Your edge: ${gaps.advantages.map((a) => a.label).join(", ")}.`);
-  return parts.join(" ");
-}
-function normalizeUrl(u) {
-  const t = (u || "").trim();
-  if (!t) return t;
-  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
-}
-async function comparePages(opts) {
-  const targetUrl = normalizeUrl(opts.targetUrl);
-  const competitorUrls = (opts.competitorUrls ?? []).map(normalizeUrl).filter((u) => u.length > 0).slice(0, 30);
-  const [targetFetch, ...compFetches] = await Promise.all([
-    fetchPage(targetUrl),
-    ...competitorUrls.map((u) => fetchPage(u))
-  ]);
-  const target = extractStructure(targetUrl, targetFetch ?? { html: "", ms: 0, status: 0, ok: false, error: "no fetch" });
-  const competitors = competitorUrls.map(
-    (u, i) => extractStructure(u, compFetches[i] ?? { html: "", ms: 0, status: 0, ok: false, error: "no fetch" })
-  );
-  const gaps = analyzeGaps(target, competitors);
-  return {
-    target,
-    competitors,
-    missing: gaps.missing,
-    advantages: gaps.advantages,
-    parity: gaps.parity,
-    actionItems: generateActionItems(gaps.missing),
-    summary: generateSummary(target, competitors, gaps)
-  };
-}
-
-// src/head/pi-tool.ts
-function summarizeForCoder(report) {
-  const lines = [report.summary];
-  const page = (p) => `  \u2022 ${p.url} \u2014 ${p.ok ? `${p.sections.length} sections: ${p.sections.map((s) => s.type).join(", ")}` : `not readable (${p.note})`}`;
-  lines.push("Pages seen:");
-  lines.push(page(report.target));
-  for (const c of report.competitors) if (c.url !== report.target.url) lines.push(page(c));
-  if (report.missing.length) {
-    lines.push("Missing on the target (gaps to build):");
-    for (const g of report.missing.slice(0, 12)) lines.push(`  \u2022 ${g.label} (${g.priority}) \u2014 ${g.recommendation}`);
-  }
-  if (report.actionItems.length) {
-    lines.push("Suggested action items:");
-    for (const a of report.actionItems.slice(0, 12)) lines.push(`  \u2192 ${a.title} [${a.priority}/${a.effort}] \u2014 ${a.rationale}`);
-  }
-  return lines.join("\n");
-}
-var InspectSiteParams = Type2.Object({
-  url: Type2.String({ description: "The target website URL to inspect or rebuild from." }),
-  competitors: Type2.Optional(
-    Type2.Array(Type2.String(), { description: "Optional competitor/reference URLs to compare the target against." })
-  )
-});
-function registerHead(pi) {
-  pi.registerTool({
-    name: "inspect_site",
-    label: "ORIRO Head",
-    description: "Go out to a live website and SEE it: its sections, CTAs, structure, and any gaps versus competitor URLs. Returns a structured report to build from. Call this whenever the user wants to look at, compare against, or rebuild a website/page.",
-    parameters: InspectSiteParams,
-    async execute(_toolCallId, params) {
-      const target = params.url;
-      const competitors = params.competitors?.length ? params.competitors : [target];
-      const report = await comparePages({ targetUrl: target, competitorUrls: competitors });
-      return { content: [{ type: "text", text: summarizeForCoder(report) }], details: report };
-    }
-  });
-}
-
-// src/orchestrate.ts
-import { createAgentSession, AuthStorage, ModelRegistry, SessionManager } from "@earendil-works/pi-coding-agent";
-import { Type as Type3 } from "typebox";
-var MAX_AGENTS = 8;
-var MAX_CONCURRENCY = 4;
-async function runOnce(spec) {
-  const authStorage = AuthStorage.inMemory();
-  const modelRegistry = ModelRegistry.inMemory(authStorage);
-  const model = registerOriroMux(modelRegistry);
-  if (!model) return { ...spec, ok: false, output: "no free model available" };
-  const { session } = await createAgentSession({
-    model,
-    authStorage,
-    modelRegistry,
-    sessionManager: SessionManager.inMemory(),
-    noTools: "all"
-  });
-  let out = "";
-  const unsub = session.subscribe((e) => {
-    if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") out += e.assistantMessageEvent.delta ?? "";
-  });
-  try {
-    await session.prompt(`You are the ${spec.role} sub-agent. ${spec.task}`);
-  } catch (e) {
-    return { ...spec, ok: false, output: e instanceof Error ? e.message : String(e) };
-  } finally {
-    unsub();
-    session.dispose();
-  }
-  return { ...spec, ok: out.trim().length > 0, output: out.trim() };
-}
-async function runAgent(spec) {
-  let last = await runOnce(spec);
-  if (!last.ok) last = await runOnce(spec);
-  return last;
-}
-async function runPool(items, n, fn) {
-  const results = new Array(items.length);
-  let i = 0;
-  async function worker() {
-    while (i < items.length) {
-      const idx = i++;
-      const item = items[idx];
-      if (item === void 0) continue;
-      results[idx] = await fn(item);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(n, items.length) }, () => worker()));
-  return results;
-}
-async function orchestrate(opts) {
-  const agents = opts.agents.slice(0, MAX_AGENTS);
-  if ((opts.mode ?? "parallel") === "chain") {
-    const results = [];
-    let prev = "";
-    for (const a of agents) {
-      const r = await runAgent({ role: a.role, task: prev ? `${a.task}
-
-Previous result:
-${prev}` : a.task });
-      results.push(r);
-      prev = r.output;
-    }
-    return results;
-  }
-  return runPool(agents, MAX_CONCURRENCY, runAgent);
-}
-function registerOrchestrator(pi) {
-  pi.registerTool({
-    name: "deploy_agents",
-    label: "ORIRO Orchestrator",
-    description: "Deploy multiple sub-agents in parallel (or chained) to do work \u2014 e.g. 'spawn 4 QA + 2 coders, run the tests'. Each sub-agent runs FREE on the router pool. Give each agent a role and a task.",
-    parameters: Type3.Object({
-      agents: Type3.Array(Type3.Object({ role: Type3.String(), task: Type3.String() }), {
-        description: "The sub-agents to deploy (max 8)."
-      }),
-      mode: Type3.Optional(Type3.Union([Type3.Literal("parallel"), Type3.Literal("chain")]))
-    }),
-    async execute(_id, params) {
-      const results = await orchestrate({ agents: params.agents, mode: params.mode });
-      const text = results.map((r) => `[${r.role}] ${r.ok ? "\u2713" : "\u2717"} ${r.output.slice(0, 300)}`).join("\n");
-      return { content: [{ type: "text", text }], details: { results } };
-    }
-  });
-}
 
 // src/skills/loader.ts
 import { loadSkills, formatSkillsForPrompt } from "@earendil-works/pi-coding-agent";
 import { fileURLToPath } from "url";
-import { existsSync as existsSync11 } from "fs";
-import { dirname as dirname2, join as join18 } from "path";
+import { existsSync as existsSync5 } from "fs";
+import { dirname as dirname2, join as join13 } from "path";
 function packageRoot(start) {
   let dir = start;
   for (let i = 0; i < 10; i++) {
-    if (existsSync11(join18(dir, "package.json"))) return dir;
+    if (existsSync5(join13(dir, "package.json"))) return dir;
     const parent = dirname2(dir);
     if (parent === dir) break;
     dir = parent;
@@ -3281,13 +2137,23 @@ function packageRoot(start) {
 }
 function skillsDir() {
   if (process.env.ORIRO_SKILLS_DIR) return process.env.ORIRO_SKILLS_DIR;
-  return join18(packageRoot(dirname2(fileURLToPath(import.meta.url))), "skills");
+  return join13(packageRoot(dirname2(fileURLToPath(import.meta.url))), "skills");
+}
+function userSkillsDir() {
+  return process.env.ORIRO_USER_SKILLS_DIR ?? join13(oriroDir(), "skills");
+}
+function skillRoots() {
+  const roots = [skillsDir()];
+  const user = userSkillsDir();
+  if (existsSync5(user) && user !== roots[0]) roots.push(user);
+  return roots;
 }
 async function loadOriroSkills(dir = skillsDir()) {
+  const paths = dir === skillsDir() ? skillRoots() : [dir];
   const result = await loadSkills({
     cwd: dir,
     agentDir: dir,
-    skillPaths: [dir],
+    skillPaths: paths,
     includeDefaults: false
   });
   const all = Array.isArray(result) ? result : result.skills ?? [];
@@ -3299,730 +2165,9 @@ async function loadOriroSkills(dir = skillsDir()) {
   };
 }
 
-// src/onboarding/assemble.ts
-async function assembleOriroSession(opts = {}) {
-  const cwd = opts.cwd ?? process.cwd();
-  const authStorage = AuthStorage2.inMemory();
-  const modelRegistry = ModelRegistry2.inMemory(authStorage);
-  const settingsManager = SettingsManager.create(cwd);
-  const model = registerOriroMux(modelRegistry);
-  if (!model) throw new Error("ORIRO keyless model unavailable");
-  const resourceLoader = new DefaultResourceLoader({
-    cwd,
-    agentDir: getAgentDir(),
-    settingsManager,
-    additionalSkillPaths: [skillsDir()],
-    extensionFactories: [registerGuardian, registerHead, registerScribe, registerOrchestrator]
-  });
-  await resourceLoader.reload();
-  const { session, extensionsResult } = await createAgentSession2({
-    model,
-    authStorage,
-    modelRegistry,
-    settingsManager,
-    sessionManager: SessionManager2.inMemory(),
-    resourceLoader
-  });
-  attachScribe(session);
-  return { session, extensionsResult };
-}
-
-// src/language/nllb-translator.ts
-var NLLB_CODE = {
-  en: "eng_Latn",
-  zh: "zho_Hans",
-  de: "deu_Latn",
-  es: "spa_Latn",
-  ru: "rus_Cyrl",
-  ko: "kor_Hang",
-  fr: "fra_Latn",
-  ja: "jpn_Jpan",
-  pt: "por_Latn",
-  tr: "tur_Latn",
-  pl: "pol_Latn",
-  ca: "cat_Latn",
-  nl: "nld_Latn",
-  ar: "arb_Arab",
-  sv: "swe_Latn",
-  it: "ita_Latn",
-  id: "ind_Latn",
-  hi: "hin_Deva",
-  fi: "fin_Latn",
-  vi: "vie_Latn",
-  he: "heb_Hebr",
-  uk: "ukr_Cyrl",
-  el: "ell_Grek",
-  ms: "zsm_Latn",
-  cs: "ces_Latn",
-  ro: "ron_Latn",
-  da: "dan_Latn",
-  hu: "hun_Latn",
-  ta: "tam_Taml",
-  no: "nob_Latn",
-  th: "tha_Thai",
-  ur: "urd_Arab",
-  hr: "hrv_Latn",
-  bg: "bul_Cyrl",
-  lt: "lit_Latn",
-  mi: "mri_Latn",
-  ml: "mal_Mlym",
-  cy: "cym_Latn",
-  sk: "slk_Latn",
-  te: "tel_Telu",
-  fa: "pes_Arab",
-  lv: "lvs_Latn",
-  bn: "ben_Beng",
-  sr: "srp_Cyrl",
-  az: "azj_Latn",
-  sl: "slv_Latn",
-  kn: "kan_Knda",
-  et: "est_Latn",
-  mk: "mkd_Cyrl",
-  eu: "eus_Latn",
-  is: "isl_Latn",
-  hy: "hye_Armn",
-  ne: "npi_Deva",
-  mn: "khk_Cyrl",
-  bs: "bos_Latn",
-  kk: "kaz_Cyrl",
-  sq: "als_Latn",
-  sw: "swh_Latn",
-  gl: "glg_Latn",
-  mr: "mar_Deva",
-  pa: "pan_Guru",
-  si: "sin_Sinh",
-  km: "khm_Khmr",
-  sn: "sna_Latn",
-  yo: "yor_Latn",
-  so: "som_Latn",
-  af: "afr_Latn",
-  oc: "oci_Latn",
-  ka: "kat_Geor",
-  be: "bel_Cyrl",
-  tg: "tgk_Cyrl",
-  sd: "snd_Arab",
-  gu: "guj_Gujr",
-  am: "amh_Ethi",
-  yi: "ydd_Hebr",
-  lo: "lao_Laoo",
-  uz: "uzn_Latn",
-  fo: "fao_Latn",
-  ht: "hat_Latn",
-  ps: "pbt_Arab",
-  tk: "tuk_Latn",
-  nn: "nno_Latn",
-  mt: "mlt_Latn",
-  sa: "san_Deva",
-  lb: "ltz_Latn",
-  my: "mya_Mymr",
-  bo: "bod_Tibt",
-  tl: "tgl_Latn",
-  mg: "plt_Latn",
-  as: "asm_Beng",
-  tt: "tat_Cyrl",
-  ln: "lin_Latn",
-  ha: "hau_Latn",
-  ba: "bak_Cyrl",
-  jw: "jav_Latn",
-  su: "sun_Latn",
-  yue: "yue_Hant"
-};
-var ENG = "eng_Latn";
-var toNllb = (iso) => NLLB_CODE[(iso || "").toLowerCase()] ?? ENG;
-var NllbTranslator = class {
-  pipe = null;
-  loading = null;
-  ready() {
-    return this.pipe !== null;
-  }
-  /** Lazy-load NLLB-200 once (first-use download + cache). Idempotent. */
-  async load(modelId = "Xenova/nllb-200-distilled-600M") {
-    if (this.pipe) return;
-    if (this.loading) return this.loading;
-    this.loading = (async () => {
-      const { pipeline } = await import("@huggingface/transformers");
-      this.pipe = await pipeline("translation", modelId);
-    })();
-    return this.loading;
-  }
-  async run(text, src, tgt) {
-    if (!this.pipe) await this.load();
-    if (!this.pipe) return text;
-    const out = await this.pipe(text, { src_lang: src, tgt_lang: tgt });
-    return out?.[0]?.translation_text?.trim() || text;
-  }
-  toEnglish(text, fromLang) {
-    return this.run(text, toNllb(fromLang), ENG);
-  }
-  fromEnglish(english, toLang) {
-    return this.run(english, ENG, toNllb(toLang));
-  }
-};
-var instance = null;
-function setupNllbTranslator(opts) {
-  if (!instance) {
-    instance = new NllbTranslator();
-    registerTranslator(instance);
-  }
-  if (opts?.preload) void instance.load();
-  return instance;
-}
-
-// src/language/gateway.ts
-var isEnglish2 = (code) => !code || code.toLowerCase().startsWith("en");
-var isCommand = (text) => text.trimStart().startsWith("/");
-async function ensureReady() {
-  try {
-    await setupNllbTranslator().load();
-  } catch {
-  }
-}
-async function translateIncoming(message) {
-  const lang = getTerminalLanguage().code;
-  if (isEnglish2(lang) || !message.trim() || isCommand(message)) return message;
-  await ensureReady();
-  return translateForCoder(message, lang);
-}
-async function translateOutgoing(text) {
-  const lang = getTerminalLanguage().code;
-  if (isEnglish2(lang) || !text.trim()) return text;
-  await ensureReady();
-  return translateForUser(text, lang);
-}
-
-// src/repl-ui/tui-repl.ts
-import { ProcessTerminal, TUI, Editor, Text, Container } from "@earendil-works/pi-tui";
-
-// src/repl-ui/permission.ts
-var MODES = ["manual", "accept_edits", "auto", "plan"];
-var MODE_META = {
-  manual: { label: "Manual", indicator: "\u25CF" },
-  accept_edits: { label: "Accept Edits", indicator: "\u270E" },
-  auto: { label: "Auto", indicator: "\u23F5\u23F5" },
-  plan: { label: "Plan", indicator: "\u25A2" }
-};
-var current = "manual";
-function getMode() {
-  return current;
-}
-function cycleMode() {
-  const i = MODES.indexOf(current);
-  current = MODES[(i + 1) % MODES.length];
-  return current;
-}
-
-// src/repl-ui/tui-repl.ts
-var editorTheme = {
-  borderColor: (s) => dim(s),
-  selectList: {
-    selectedPrefix: (s) => accent(s),
-    selectedText: (s) => accent(s),
-    description: (s) => dim(s),
-    scrollInfo: (s) => dim(s),
-    noMatch: (s) => dim(s)
-  }
-};
-function footerText() {
-  const cur = getMode();
-  const bar = MODES.map((m) => {
-    const meta = MODE_META[m];
-    const s = `${meta.indicator} ${meta.label}`;
-    return m === cur ? accent(s) : dim(s);
-  }).join(dim(" \xB7 "));
-  return `${bar}   ${dim("Shift+Tab to switch \xB7 /exit")}`;
-}
-async function runTuiRepl(session) {
-  const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
-  const term = new ProcessTerminal();
-  const tui = new TUI(term, true);
-  const chat = new Container();
-  const editor = new Editor(tui, editorTheme, { paddingX: 1 });
-  const sep = new Text(dim("\u2500".repeat(Math.max(8, term.columns))), 0, 0);
-  const footer = new Text(footerText(), 0, 0);
-  tui.addChild(chat);
-  tui.addChild(editor);
-  tui.addChild(sep);
-  tui.addChild(footer);
-  tui.setFocus(editor);
-  const refreshFooter = () => {
-    sep.setText(dim("\u2500".repeat(Math.max(8, term.columns))));
-    footer.setText(footerText());
-    tui.requestRender();
-  };
-  const removeListener = tui.addInputListener((data) => {
-    if (data === "\x1B[Z") {
-      cycleMode();
-      refreshFooter();
-      return { consume: true };
-    }
-    return void 0;
-  });
-  let stopped = false;
-  const cleanup = () => {
-    if (stopped) return;
-    stopped = true;
-    try {
-      removeListener();
-    } catch {
-    }
-    try {
-      session.dispose();
-    } catch {
-    }
-    try {
-      tui.stop();
-    } catch {
-    }
-    process.stdout.write(dim("\nBye.\n"));
-    process.exit(0);
-  };
-  process.on("SIGINT", cleanup);
-  let busy = false;
-  editor.onSubmit = (raw) => {
-    const text = raw.trim();
-    if (!text || busy) return;
-    const slash = text.toLowerCase();
-    if (slash === "/exit" || slash === "/quit") return cleanup();
-    if (slash === "/help" || slash === "/?") {
-      chat.addChild(new Text(dim("  Just type to chat. Shift+Tab cycles posture. /exit to leave."), 0, 0));
-      editor.setText("");
-      tui.requestRender();
-      return;
-    }
-    editor.addToHistory(text);
-    editor.setText("");
-    chat.addChild(new Text(`${accent("\u203A")} ${text}`, 0, 1));
-    const streaming = new Text(dim("\u2026"), 0, 0);
-    chat.addChild(streaming);
-    tui.requestRender();
-    busy = true;
-    void (async () => {
-      const english = await translateIncoming(text);
-      noteUserInput(text);
-      let out = "";
-      const unsub = session.subscribe(
-        (e) => {
-          if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
-            out += e.assistantMessageEvent.delta ?? "";
-            if (isEnglish3) {
-              streaming.setText(out);
-              tui.requestRender();
-            }
-          }
-        }
-      );
-      try {
-        await session.prompt(english);
-      } catch {
-        streaming.setText(dim("(every free router is busy right now \u2014 give it a moment and try again)"));
-        tui.requestRender();
-        busy = false;
-        unsub();
-        return;
-      }
-      unsub();
-      const finalText = isEnglish3 ? out.trim() : await translateOutgoing(out.trim());
-      streaming.setText(finalText || dim("(no response)"));
-      tui.requestRender();
-      busy = false;
-    })();
-  };
-  tui.start();
-  refreshFooter();
-  await new Promise(() => {
-  });
-}
-
-// src/repl.ts
-function replHelp() {
-  return `
-  ${accent("ORIRO terminal \u2014 help")}
-  ${dim("Just type to chat; ORIRO writes and runs code for you (keyless, free).")}
-
-  ${accent("/help")}  this help     ${accent("/exit")} or ${accent("/quit")}  leave     ${dim("Ctrl-D / Ctrl-C also exit")}
-  ${dim("Run these OUTSIDE the chat (in your shell):")}
-  ${dim("oriro skills \xB7 routers \xB7 connectors \xB7 channels \xB7 scribe \xB7 language \xB7 avatar")}
-
-`;
-}
-async function runRepl() {
-  if (isFirstRun()) await runOnboarding();
-  else stdout6.write(banner());
-  const { session } = await assembleOriroSession();
-  if (stdin5.isTTY && stdout6.isTTY) {
-    await runTuiRepl(session);
-    return;
-  }
-  await runReadlineRepl(session);
-}
-async function runReadlineRepl(session) {
-  const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
-  const rl = createInterface5({ input: stdin5, output: stdout6 });
-  let closing = false;
-  const onSigint = () => {
-    if (closing) return;
-    closing = true;
-    stdout6.write(dim("\nBye.\n"));
-    try {
-      rl.close();
-    } catch {
-    }
-    try {
-      session.dispose();
-    } catch {
-    }
-    process.exit(0);
-  };
-  process.on("SIGINT", onSigint);
-  try {
-    for (; ; ) {
-      let line;
-      try {
-        line = (await rl.question("\u203A ")).trim();
-      } catch {
-        break;
-      }
-      if (!line) continue;
-      const slash = line.toLowerCase();
-      if (slash === "/exit" || slash === "/quit") break;
-      if (slash === "/help" || slash === "/?") {
-        stdout6.write(replHelp());
-        continue;
-      }
-      const english = await translateIncoming(line);
-      noteUserInput(line);
-      let out = "";
-      const unsub = session.subscribe(
-        (e) => {
-          if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
-            const d = e.assistantMessageEvent.delta ?? "";
-            out += d;
-            if (isEnglish3) stdout6.write(d);
-          }
-        }
-      );
-      try {
-        await session.prompt(english);
-      } finally {
-        unsub();
-      }
-      if (isEnglish3) stdout6.write("\n\n");
-      else stdout6.write(`${await translateOutgoing(out.trim())}
-
-`);
-    }
-  } finally {
-    process.removeListener("SIGINT", onSigint);
-    if (!closing) {
-      rl.close();
-      session.dispose();
-      stdout6.write(dim("\nBye.\n"));
-    }
-  }
-}
-
-// src/commands/ui.ts
-var ok = (s) => {
-  process.stdout.write(`${fgHex(PALETTE.success, "\u2713")} ${s}
-`);
-};
-var fail = (s) => {
-  process.stderr.write(`${fgHex(PALETTE.error, "\u2717")} ${s}
-`);
-};
-var info = (s) => {
-  process.stdout.write(`${dim("\xB7")} ${s}
-`);
-};
-var heading = (s) => {
-  process.stdout.write(`
-${bold(accent(s))}
-`);
-};
-var DieError = class extends Error {
-};
-function die(msg) {
-  fail(msg);
-  process.exitCode = 1;
-  throw new DieError(msg);
-}
-
-// src/commands/routers.ts
-function registerRoutersCommand(program2) {
-  const routers = program2.command("routers").description("manage the free-router pool the model runs on");
-  routers.command("list").description("list the router catalog and the active pool").action(() => {
-    heading("Routers");
-    for (const r of ROUTER_CATALOG) {
-      if (r.comingSoon) {
-        process.stdout.write(`  ${dim(`${r.id}  ${r.displayName}  (coming soon)`)}
-`);
-        continue;
-      }
-      const tier = r.keyless ? fgHex(PALETTE.success, "keyless") : dim(r.tier);
-      process.stdout.write(`  ${accent(r.id.padEnd(22))} ${r.displayName.padEnd(24)} ${tier}
-`);
-    }
-    const custom = registeredRouters().filter((r) => !ROUTER_CATALOG.some((c) => c.id === r.id));
-    if (custom.length) {
-      process.stdout.write(`
-  ${accent("your custom routers")}
-`);
-      for (const r of custom) {
-        const type = r.apiKey && r.apiKey !== KEYLESS_SENTINEL ? dim("BYOK") : fgHex(PALETTE.success, "keyless");
-        process.stdout.write(`  ${accent(r.id.padEnd(22))} ${dim(r.baseUrl.padEnd(40))} ${type}
-`);
-      }
-    }
-    const pool = resolvePool();
-    info(pool.length ? `active pool: ${pool.map((p) => p.id).join(", ")}` : "active pool: empty \u2192 using the keyless floor");
-  });
-  routers.command("add <name>").description("live-validate a router and add it to the pool \u2014 a catalog name, OR any custom endpoint via --url").option("-k, --key <key>", "API key (BYOK) \u2014 omit for a keyless free router").option("-m, --model <id>", "model id to run (REQUIRED for a custom --url router)").option("--url <baseUrl>", "add ANY custom free/BYOK router by its OpenAI-compatible base URL (the part BEFORE /chat/completions)").option("--api <api>", "custom router API: 'openai' (default) or 'google'", "openai").action(async (name, opts) => {
-    let entry;
-    if (opts.url) {
-      if (!opts.model) die("a custom --url router needs --model <id> (the model to run on that endpoint)");
-      const baseUrl = opts.url.replace(/\/(?:chat\/completions)\/?$/i, "").replace(/\/$/, "");
-      entry = {
-        id: name,
-        displayName: name,
-        baseUrl,
-        api: opts.api === "google" ? "google-generative-ai" : "openai-completions",
-        freeModels: [opts.model],
-        keyless: !opts.key,
-        tier: "free",
-        kind: "chat"
-      };
-    } else {
-      entry = routerById(name);
-      if (!entry) die(`unknown router '${name}' \u2014 run \`oriro routers list\`, or add any custom endpoint with: oriro routers add <name> --url <baseUrl> --model <id> [--key <key>]`);
-    }
-    const res = await addRouter(entry, { ...opts.key ? { key: opts.key } : {}, ...opts.model ? { modelId: opts.model } : {} });
-    if (!res.ok) die(`could not add '${name}': ${res.validation.error ?? "validation failed"}`);
-    ok(`added ${accent(name)} (${res.validation.latencyMs}ms, model ${res.validation.model}${opts.key ? ", BYOK" : ", keyless"}) \u2192 active pool`);
-  });
-  routers.command("use <slugs...>").description("set the active router pool (ids must be added first)").action((slugs) => {
-    const { applied, unknown } = useRouters(slugs);
-    if (!applied.length) {
-      die(`none of those are added yet: ${unknown.join(", ")} \u2014 run \`oriro routers add <slug>\` first`);
-    }
-    ok(`pool set: ${applied.join(", ")}`);
-    if (unknown.length) info(`skipped (not added yet \u2014 run \`oriro routers add\`): ${unknown.join(", ")}`);
-  });
-}
-
-// src/commands/scribe.ts
-import { readFileSync as readFileSync18 } from "fs";
-
-// src/scribe/transcript.ts
-import { existsSync as existsSync12, readFileSync as readFileSync17 } from "fs";
-function parseHookStdin(raw) {
-  try {
-    const j = JSON.parse(raw);
-    return {
-      transcriptPath: typeof j.transcript_path === "string" ? j.transcript_path : void 0,
-      cwd: typeof j.cwd === "string" ? j.cwd : void 0,
-      sessionId: typeof j.session_id === "string" ? j.session_id : void 0,
-      stopHookActive: j.stop_hook_active === true
-    };
-  } catch {
-    return { stopHookActive: false };
-  }
-}
-function shouldCapture(cwd) {
-  if (process.env.ORIRO_SCRIBE_ONLY !== "1") return true;
-  if (!cwd) return false;
-  return /oriro/i.test(cwd.replace(/\\/g, "/"));
-}
-function textOf(content) {
-  if (!content) return "";
-  if (typeof content === "string") return content;
-  return content.filter((b) => b.type === "text" && typeof b.text === "string").map((b) => b.text).join("\n").trim();
-}
-function isHumanUser(e) {
-  if (e.type !== "user" && e.message?.role !== "user") return false;
-  const c = e.message?.content;
-  if (typeof c === "string") return c.trim().length > 0;
-  if (Array.isArray(c)) return c.some((b) => b.type === "text" && (b.text ?? "").trim().length > 0);
-  return false;
-}
-var FILE_KEYS = ["file_path", "path", "notebook_path", "filePath"];
-function lastTurnFromTranscript(path) {
-  if (!existsSync12(path)) return null;
-  const raw = readFileSync17(path, "utf8");
-  const entries = [];
-  for (const line of raw.split("\n")) {
-    if (!line.trim()) continue;
-    try {
-      entries.push(JSON.parse(line));
-    } catch {
-    }
-  }
-  if (entries.length === 0) return null;
-  let anchor;
-  let start = -1;
-  for (let i = entries.length - 1; i >= 0; i--) {
-    const e = entries[i];
-    if (e && isHumanUser(e)) {
-      start = i;
-      anchor = e;
-      break;
-    }
-  }
-  const slice = start === -1 ? entries : entries.slice(start);
-  const user = anchor ? textOf(anchor.message?.content) : "";
-  const noteParts = [];
-  const tools = /* @__PURE__ */ new Set();
-  const files = /* @__PURE__ */ new Set();
-  let ts;
-  for (const e of slice) {
-    if (e.timestamp) ts = e.timestamp;
-    const role = e.type ?? e.message?.role;
-    const content = e.message?.content;
-    if (role === "assistant") {
-      const t = textOf(content);
-      if (t) noteParts.push(t);
-    }
-    if (Array.isArray(content)) {
-      for (const b of content) {
-        if (b.type === "tool_use" && b.name) {
-          tools.add(b.name);
-          const input = b.input ?? {};
-          for (const k of FILE_KEYS) {
-            const v = input[k];
-            if (typeof v === "string" && v.trim()) files.add(v.trim());
-          }
-        }
-      }
-    }
-  }
-  const note = noteParts.join("\n\n").trim();
-  if (!user && !note && tools.size === 0) return null;
-  return {
-    user: user || void 0,
-    note: note || void 0,
-    tools: tools.size ? [...tools] : void 0,
-    files: files.size ? [...files] : void 0,
-    ts
-  };
-}
-
-// src/commands/scribe.ts
-function readStdin() {
-  try {
-    return readFileSync18(0, "utf8");
-  } catch {
-    return "";
-  }
-}
-function csv(v) {
-  if (typeof v !== "string") return void 0;
-  const arr = v.split(",").map((s) => s.trim()).filter(Boolean);
-  return arr.length ? arr : void 0;
-}
-function hasContent(rec) {
-  return Boolean(rec.user?.trim() || rec.note?.trim() || rec.tools?.length || rec.files?.length);
-}
-function registerScribeCommand(program2) {
-  const scribe = program2.command("scribe").description("the consent-gated local work journal (off by default)");
-  scribe.command("on").description("enable the journal (recorded locally at ~/.oriro/scribe, never leaves your machine)").action(() => {
-    setScribeConsent(true);
-    ok("Scriber is ON \u2014 turns are journaled locally (redacted) and recalled across sessions.");
-    info(dim("everything stays on this machine; turn off any time with `oriro scribe off`"));
-  });
-  scribe.command("off").description("disable the journal").action(() => {
-    setScribeConsent(false);
-    ok("Scriber is OFF \u2014 no new turns are recorded or injected.");
-  });
-  scribe.command("status").description("show whether the journal is on or off").action(() => {
-    info(isScribeEnabled() ? "Scriber: ON" : "Scriber: OFF (default)");
-  });
-  scribe.command("capture").description("capture one turn into the journal (used by the Claude Code Stop hook + /scribe skill)").option("--hook", "read the Claude Code Stop-hook JSON from stdin and capture the latest turn").option("--json <record>", "capture an explicit TurnRecord (JSON)").option("--user <text>", "the user/request text for this turn").option("--note <text>", "a note / assistant summary for this turn").option("--router <name>", "which router/model produced the turn").option("--files <list>", "comma-separated file paths touched").option("--tools <list>", "comma-separated tool names used").action((opts) => {
-    try {
-      if (!isScribeEnabled()) {
-        if (!opts.hook) info("Scriber is OFF \u2014 run `oriro scribe on` first.");
-        return;
-      }
-      const now = (/* @__PURE__ */ new Date()).toISOString();
-      let rec = null;
-      if (opts.hook) {
-        const hook = parseHookStdin(readStdin());
-        if (hook.stopHookActive) return;
-        if (!shouldCapture(hook.cwd)) return;
-        if (!hook.transcriptPath) return;
-        const turn = lastTurnFromTranscript(hook.transcriptPath);
-        if (!turn) return;
-        const ts = turn.ts ?? now;
-        rec = {
-          ts,
-          date: ts.slice(0, 10),
-          user: turn.user,
-          note: turn.note,
-          tools: turn.tools,
-          files: turn.files,
-          router: opts.router ?? "claude-code",
-          context: hook.cwd ? `cwd: ${hook.cwd}` : void 0
-        };
-      } else if (opts.json) {
-        const parsed = JSON.parse(opts.json);
-        const ts = parsed.ts ?? now;
-        rec = { ...parsed, ts, date: parsed.date ?? ts.slice(0, 10) };
-      } else {
-        rec = {
-          ts: now,
-          date: now.slice(0, 10),
-          user: opts.user,
-          note: opts.note,
-          router: opts.router,
-          files: csv(opts.files),
-          tools: csv(opts.tools)
-        };
-      }
-      if (!rec || !hasContent(rec)) {
-        if (!opts.hook) info("nothing to capture.");
-        return;
-      }
-      const res = supervisedCapture(rec);
-      if (!opts.hook) {
-        if (res) {
-          const red = res.redactions.length ? ` (redacted: ${res.redactions.map((r) => `${r.label}\xD7${r.count}`).join(", ")})` : "";
-          ok(`captured \u2192 ${res.journalDate}.md${red}`);
-        } else {
-          info("capture deferred (logged); will retry next turn.");
-        }
-      }
-    } catch (err) {
-      if (!opts.hook) fail(`scribe capture: ${err instanceof Error ? err.message : String(err)}`);
-    }
-  });
-  scribe.command("recall <query>").description("full-text search across every day's journal").option("-n, --limit <n>", "max matches", "50").action((query, opts) => {
-    const limit = Math.max(1, Number(opts.limit) || 50);
-    const hits = searchScribe(query, limit);
-    if (!hits.length) {
-      info(`no matches for "${query}".`);
-      return;
-    }
-    heading(`Scribe \u2014 ${hits.length} match(es) for "${query}"`);
-    for (const h of hits) info(`${h.date}:${h.line} \xB7 ${h.text}`);
-  });
-  scribe.command("digest").description("print the rolling digest (recent context, injectable in a flash)").action(() => {
-    const d = readDigest();
-    process.stdout.write(d?.trim() ? `${d.trim()}
-` : "\xB7 digest empty (nothing captured yet).\n");
-  });
-  scribe.command("timeline").description("print the full-history timeline (one line per day)").action(() => {
-    const t = readTimeline();
-    process.stdout.write(t?.trim() ? `${t.trim()}
-` : "\xB7 timeline empty (nothing captured yet).\n");
-  });
-  scribe.command("health").description("show the scribe writer's health (last write, fault count)").action(() => {
-    const h = readHealth();
-    info(`last write: ${h.lastWriteAt ?? "never"}`);
-    info(`faults: ${h.faultCount}${h.lastFault ? ` (last: ${h.lastFault})` : ""}`);
-  });
-}
-
 // src/connectors/connectors.ts
-import { readFileSync as readFileSync19, writeFileSync as writeFileSync14 } from "fs";
-import { join as join19 } from "path";
+import { readFileSync as readFileSync10, writeFileSync as writeFileSync10 } from "fs";
+import { join as join14 } from "path";
 
 // src/connectors/catalog.ts
 var CONNECTOR_CATALOG = [
@@ -5012,18 +3157,18 @@ function connectorBySlug(slug) {
 
 // src/connectors/connectors.ts
 function file2() {
-  return join19(oriroDir(), "connectors.json");
+  return join14(oriroDir(), "connectors.json");
 }
 function readAdded() {
   try {
-    const v = JSON.parse(readFileSync19(file2(), "utf8"));
+    const v = JSON.parse(readFileSync10(file2(), "utf8"));
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
   }
 }
 function writeAdded(slugs) {
-  writeFileSync14(join19(ensureOriroDir(), "connectors.json"), JSON.stringify([...new Set(slugs)], null, 2), "utf8");
+  writeFileSync10(join14(ensureOriroDir(), "connectors.json"), JSON.stringify([...new Set(slugs)], null, 2), "utf8");
 }
 function listConnectors(category) {
   return category ? CONNECTOR_CATALOG.filter((c) => c.category === category) : CONNECTOR_CATALOG;
@@ -5051,6 +3196,3076 @@ function removeConnector(slug) {
   if (!before.includes(slug)) return false;
   writeAdded(before.filter((s) => s !== slug));
   return true;
+}
+
+// src/onboarding/steps.ts
+function markerFile2(name) {
+  return join15(oriroDir(), name);
+}
+function settled(name) {
+  try {
+    return existsSync6(markerFile2(name));
+  } catch {
+    return false;
+  }
+}
+function settle(name, data = {}) {
+  try {
+    mkdirSync8(oriroDir(), { recursive: true });
+    writeFileSync11(markerFile2(name), `${JSON.stringify({ at: (/* @__PURE__ */ new Date()).toISOString(), ...data }, null, 2)}
+`, "utf8");
+  } catch {
+  }
+}
+var WELCOME = {
+  en: "Welcome to ORIRO-CLI",
+  es: "Bienvenido a ORIRO-CLI",
+  fr: "Bienvenue sur ORIRO-CLI",
+  de: "Willkommen bei ORIRO-CLI",
+  pt: "Bem-vindo ao ORIRO-CLI",
+  it: "Benvenuto in ORIRO-CLI",
+  nl: "Welkom bij ORIRO-CLI",
+  hi: "ORIRO-CLI \u092E\u0947\u0902 \u0906\u092A\u0915\u093E \u0938\u094D\u0935\u093E\u0917\u0924 \u0939\u0948",
+  zh: "\u6B22\u8FCE\u4F7F\u7528 ORIRO-CLI",
+  ja: "ORIRO-CLI \u3078\u3088\u3046\u3053\u305D",
+  ko: "ORIRO-CLI\uC5D0 \uC624\uC2E0 \uAC83\uC744 \uD658\uC601\uD569\uB2C8\uB2E4",
+  ru: "\u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 ORIRO-CLI",
+  ar: "\u0645\u0631\u062D\u0628\u064B\u0627 \u0628\u0643 \u0641\u064A ORIRO-CLI",
+  tr: "ORIRO-CLI'ye ho\u015F geldiniz",
+  pl: "Witamy w ORIRO-CLI",
+  uk: "\u041B\u0430\u0441\u043A\u0430\u0432\u043E \u043F\u0440\u043E\u0441\u0438\u043C\u043E \u0434\u043E ORIRO-CLI",
+  vi: "Ch\xE0o m\u1EEBng \u0111\u1EBFn v\u1EDBi ORIRO-CLI",
+  id: "Selamat datang di ORIRO-CLI",
+  th: "\u0E22\u0E34\u0E19\u0E14\u0E35\u0E15\u0E49\u0E2D\u0E19\u0E23\u0E31\u0E1A\u0E2A\u0E39\u0E48 ORIRO-CLI",
+  sv: "V\xE4lkommen till ORIRO-CLI",
+  bn: "ORIRO-CLI \u09A4\u09C7 \u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE",
+  ta: "ORIRO-CLI \u0B95\u0BCD\u0B95\u0BC1 \u0BB5\u0BB0\u0BB5\u0BC7\u0BB1\u0BCD\u0B95\u0BBF\u0BB1\u0BCB\u0BAE\u0BCD",
+  te: "ORIRO-CLI \u0C15\u0C3F \u0C38\u0C4D\u0C35\u0C3E\u0C17\u0C24\u0C02",
+  mr: "ORIRO-CLI \u092E\u0927\u094D\u092F\u0947 \u0906\u092A\u0932\u0947 \u0938\u094D\u0935\u093E\u0917\u0924 \u0906\u0939\u0947"
+};
+function welcomeIn(code) {
+  return WELCOME[(code || "en").toLowerCase().slice(0, 2)] ?? WELCOME.en ?? "Welcome to ORIRO-CLI";
+}
+function hasSkillsChoice() {
+  return settled("skills-onboarded.json");
+}
+async function runSkillsStep() {
+  const s = await loadOriroSkills();
+  stdout5.write(
+    `
+  ${accent("Skills")} \u2014 ${accent(String(s.all.length))} are bundled and ${accent("already active")} ${dim(`(${s.core.length} model-visible \xB7 ${s.tail.length} on-demand via /name)`)}.
+  ${dim("Nothing to install. Browse them anytime with ")}${accent("oriro skills list")}${dim(" or ")}${accent("/skill")}${dim(" in chat.")}
+`
+  );
+  const rl = createInterface4({ input: stdin4, output: stdout5 });
+  try {
+    await ask(rl, `  ${dim("Press Enter to keep all active\u2026")} `);
+  } finally {
+    rl.close();
+  }
+  settle("skills-onboarded.json", { count: s.all.length });
+}
+function hasConnectorsChoice() {
+  return settled("connectors-onboarded.json");
+}
+async function runConnectorsStep() {
+  const addable = listConnectors().filter((c) => c.mcpUrl).length;
+  stdout5.write(
+    `
+  ${accent("Connectors")} \u2014 ${accent(String(addable))} MCP integrations available ${dim("(Slack, GitHub, Notion, Linear, \u2026)")}.
+  ${dim("Add one now (type its slug), or press Enter to skip \u2014 add anytime with ")}${accent("/connector")}${dim(" or ")}${accent("oriro connectors")}${dim(".")}
+`
+  );
+  const rl = createInterface4({ input: stdin4, output: stdout5 });
+  try {
+    const slug = (await ask(rl, `  ${accent("\u203A")} Connector slug ${dim("(or Enter to skip)")}: `)).trim();
+    if (slug) {
+      const res = addConnector(slug);
+      stdout5.write(res.ok ? `  ${accent("\u2713")} added ${accent(slug)} \u2014 recorded locally.
+` : `  ${dim(res.error ?? "skipped")}
+`);
+    } else {
+      stdout5.write(`  ${dim("Skipped \u2014 none added. You can add your own MCP server with `oriro connectors setup`.")}
+`);
+    }
+  } finally {
+    rl.close();
+  }
+  settle("connectors-onboarded.json", {});
+}
+function hasModelsChoice() {
+  return settled("models-onboarded.json");
+}
+async function runModelsStep() {
+  stdout5.write(
+    `
+  ${bold(accent("ORIRO Gauss + Avila"))} ${dim("(V2.4)")} \u2014 your own ${accent("on-device")} models.
+  ${dim("Status:")} ${accent("completing training")} ${dim("\u2014 currently baking. When they land they'll:")}
+    ${dim("\u2022")} join your ${accent("router race")} alongside the free routers ${dim("(and your BYOK)")}
+    ${dim("\u2022")} run ${accent("fully on this machine")} ${dim("\u2014 $0, no key, private")}
+    ${dim("\u2022")} learn from your accepted edits via a ${accent("nightly on-device pass")} ${dim("(opt-in, with consent)")}
+  ${accent("\u25F7 Coming soon")} ${dim("\u2014 you'll be prompted to download + enable them when they're ready.")}
+`
+  );
+  const rl = createInterface4({ input: stdin4, output: stdout5 });
+  try {
+    await ask(rl, `  ${dim("Press Enter to continue\u2026")} `);
+  } finally {
+    rl.close();
+  }
+  settle("models-onboarded.json", { status: "training", version: "2.4" });
+}
+
+// src/onboarding/wrapper.ts
+function isFirstRun() {
+  return !isLanguageConfigured() || !hasScribeChoice();
+}
+async function askYesNo(question) {
+  const rl = createInterface5({ input: stdin5, output: stdout6 });
+  try {
+    const a = (await ask(rl, `${question} ${dim("[Y/n]")} `)).trim().toLowerCase();
+    return a === "" || a === "y" || a === "yes";
+  } finally {
+    rl.close();
+  }
+}
+async function runOnboarding() {
+  stdout6.write(banner());
+  await runLanguageOnboarding();
+  await activateGuardian();
+  stdout6.write(`  ${accent("\u{1F6E1} Guardian V3")} is on by default. ${accent("\u{1F9ED} Head")} is ready.
+
+`);
+  if (!isAvatarConfigured()) await runAvatarOnboarding();
+  stdout6.write(`
+  ${bold(accent(welcomeIn(getTerminalLanguage().code)))}
+`);
+  if (!hasSkillsChoice()) await runSkillsStep();
+  if (!hasConnectorsChoice()) await runConnectorsStep();
+  if (!hasRouterChoice()) await runRouterOnboarding();
+  if (!hasModelsChoice()) await runModelsStep();
+  if (!hasScribeChoice()) {
+    const yes = await askYesNo(
+      "Remember with me? The Scriber keeps your work in context on THIS machine only \u2014 it never leaves it."
+    );
+    setScribeConsent(yes);
+    stdout6.write(yes ? `  ${accent("\u{1F4D3} Scriber")} on.
+` : `  ${dim("Scriber off \u2014 `oriro scribe on` anytime.")}
+`);
+  }
+  stdout6.write(`
+  ${accent("ORIRO is ready.")} ${dim("Type to chat \xB7 /exit to leave")}
+
+`);
+}
+
+// src/onboarding/assemble.ts
+import {
+  createAgentSession as createAgentSession2,
+  AuthStorage as AuthStorage2,
+  ModelRegistry as ModelRegistry2,
+  SessionManager as SessionManager2,
+  SettingsManager,
+  DefaultResourceLoader,
+  getAgentDir
+} from "@earendil-works/pi-coding-agent";
+
+// src/routers/mux-provider.ts
+import { streamSimple as piStreamSimple, createAssistantMessageEventStream } from "@earendil-works/pi-ai";
+import { register as registerOpenAICompletions } from "@earendil-works/pi-ai/openai-completions";
+
+// src/routers/mux.ts
+import { existsSync as existsSync7, mkdirSync as mkdirSync9, readFileSync as readFileSync11, writeFileSync as writeFileSync12 } from "fs";
+import { join as join16 } from "path";
+var COOLDOWN_DEFAULT_MS = 6e4;
+var UNHEALTHY_AFTER = 3;
+var RouterMux = class {
+  stats = /* @__PURE__ */ new Map();
+  now;
+  constructor(routerIds, now = () => Date.now()) {
+    this.now = now;
+    for (const id of routerIds) {
+      this.stats.set(id, {
+        id,
+        latencyMs: Number.POSITIVE_INFINITY,
+        healthy: true,
+        cooldownUntil: 0,
+        consecutiveErrors: 0
+      });
+    }
+  }
+  /** Available routers, best-first (healthy, not cooling down, lowest latency). */
+  ranked() {
+    const t = this.now();
+    return [...this.stats.values()].filter((s) => s.healthy && s.cooldownUntil <= t).sort((a, b) => a.latencyMs - b.latencyMs).map((s) => s.id);
+  }
+  recordSuccess(id, latencyMs) {
+    const s = this.stats.get(id);
+    if (!s) return;
+    s.latencyMs = s.latencyMs === Number.POSITIVE_INFINITY ? latencyMs : 0.7 * s.latencyMs + 0.3 * latencyMs;
+    s.consecutiveErrors = 0;
+    s.healthy = true;
+  }
+  recordFailure(id, err) {
+    const s = this.stats.get(id);
+    if (!s) return;
+    s.consecutiveErrors += 1;
+    if (err?.status === 429) {
+      s.cooldownUntil = this.now() + (err.retryAfterMs ?? COOLDOWN_DEFAULT_MS);
+    }
+    if (s.consecutiveErrors >= UNHEALTHY_AFTER) s.healthy = false;
+  }
+  /** Run a call through the best router, failing over on error. Throws only if all exhausted. */
+  async run(call) {
+    const order = this.ranked();
+    if (order.length === 0) {
+      throw new Error(
+        "All selected routers are rate-limited or unavailable. Add a BYOK key, select more free routers, or retry shortly."
+      );
+    }
+    let lastErr;
+    for (const id of order) {
+      const t0 = this.now();
+      try {
+        const result = await call(id);
+        this.recordSuccess(id, this.now() - t0);
+        return { result, routerId: id };
+      } catch (e) {
+        const err = e;
+        this.recordFailure(id, { status: err?.status, retryAfterMs: err?.retryAfterMs });
+        lastErr = e;
+      }
+    }
+    throw lastErr instanceof Error ? lastErr : new Error("All selected routers failed this request.");
+  }
+  snapshot() {
+    return [...this.stats.values()].map((s) => ({ ...s }));
+  }
+  load(stats) {
+    for (const s of stats) if (this.stats.has(s.id)) this.stats.set(s.id, { ...s });
+  }
+};
+function healthStatePath(dir) {
+  return join16(dir, "routers", "health.json");
+}
+function saveMuxState(dir, stats) {
+  const p = healthStatePath(dir);
+  mkdirSync9(join16(dir, "routers"), { recursive: true });
+  writeFileSync12(p, JSON.stringify(stats, null, 2), "utf8");
+}
+function loadMuxState(dir) {
+  const p = healthStatePath(dir);
+  if (!existsSync7(p)) return [];
+  try {
+    const stats = JSON.parse(readFileSync11(p, "utf8"));
+    return stats.map((s) => ({ ...s, latencyMs: Number.isFinite(s.latencyMs) ? s.latencyMs : Number.POSITIVE_INFINITY }));
+  } catch {
+    return [];
+  }
+}
+
+// src/identity/filter.ts
+var ORIRO_IDENTITY = "You are ORIRO, a free on-device AI assistant in the user's terminal. You are ORIRO and only ORIRO. Never state, imply, or reveal that you are, or are built on, any other model or company (such as GPT, Claude, Gemini, Qwen, Llama, Mistral, DeepSeek, OpenAI, Anthropic, Google, or Meta). If asked what you are, you are ORIRO.";
+var BANNED_TEST = /\b(qwen|llama|mistral|mixtral|deepseek|gpt(?:-?\d(?:\.\d)?)?|claude|gemini|openai|anthropic|google|meta\s?ai|alibaba)\b/i;
+var BANNED_REPLACE = new RegExp(BANNED_TEST.source, "gi");
+var SELF_REF = /\b(i am|i'm|i was|based on|powered by|my name|my model|my architecture|trained|created by|made by|built (?:on|by)|developed by)\b/i;
+var SELF_INTRO = /\b(i am|i'm)\s+(a|an)\b/i;
+var AI_NOUN = /\b(assistant|ai|model|language model|bot|agent|chatbot)\b/i;
+function applyIdentity(context) {
+  const sys = context.systemPrompt ? `${ORIRO_IDENTITY}
+
+${context.systemPrompt}` : ORIRO_IDENTITY;
+  return { ...context, systemPrompt: sys };
+}
+function scrubIdentity(text) {
+  return text.replace(/[^.?!\n]+[.?!]?/g, (sentence) => {
+    let s = SELF_REF.test(sentence) && BANNED_TEST.test(sentence) ? sentence.replace(BANNED_REPLACE, "ORIRO") : sentence;
+    if (!/\boriro\b/i.test(s) && SELF_INTRO.test(s) && AI_NOUN.test(s)) {
+      s = s.replace(SELF_INTRO, "I am ORIRO, $2");
+    }
+    return s;
+  });
+}
+var PROVIDER_AD = /(?:\n+[ \t]*-{2,}[ \t]*)*\n*[ \t]*(?:\*\*)?(?:🌸[^\n]*|(?:\*\*)?Ad(?:\*\*)?[ \t]*🌸?|Support\s+Pollinations|Powered by\s+Pollinations)[\s\S]*$/i;
+function stripProviderNoise(text) {
+  let t = text.replace(PROVIDER_AD, "");
+  t = t.replace(/\[[^\]]*\]\(https?:\/\/[^)]*(?:pollinations\.ai\/redirect|\/redirect\/kofi|ko-?fi\.com)[^)]*\)/gi, "");
+  return t.replace(/\n{3,}/g, "\n\n").replace(/[ \t]*-{3,}[ \t]*$/g, "").trimEnd();
+}
+function scrubOutput(text) {
+  return stripProviderNoise(scrubIdentity(text));
+}
+function scrubMessageIdentity(msg) {
+  return {
+    ...msg,
+    content: msg.content.map(
+      (c) => c.type === "text" ? { ...c, text: scrubOutput(c.text) } : c
+    )
+  };
+}
+
+// src/routers/tool-sanitize.ts
+var CONTROL_TOKEN = /<\|[^|]*\|>/g;
+var RECIPIENT_PREFIX = /^(?:to=)?(?:functions?|tools?|recipient)[.=]/i;
+var RECIPIENT = /(?:to=)?(?:functions?|tools?|recipient)[.=]([A-Za-z0-9_.:-]+)/i;
+var CLEAN_NAME = /^[A-Za-z0-9_.:-]+$/;
+function sanitizeToolName(raw) {
+  if (!raw) return raw;
+  if (!raw.includes("<|") && !RECIPIENT_PREFIX.test(raw)) return raw;
+  const base = (raw.split("<|")[0] ?? "").replace(RECIPIENT_PREFIX, "").trim();
+  if (base && CLEAN_NAME.test(base)) return base;
+  const recip = raw.match(RECIPIENT);
+  if (recip?.[1]) return recip[1];
+  const m = raw.replace(CONTROL_TOKEN, " ").match(/[A-Za-z_][A-Za-z0-9_.:-]*/);
+  return m ? m[0] : raw;
+}
+function sanitizeMessageToolCalls(msg) {
+  let changed = false;
+  const content = msg.content.map((c) => {
+    if (c.type === "toolCall") {
+      const name = sanitizeToolName(c.name);
+      if (name !== c.name) {
+        changed = true;
+        return { ...c, name };
+      }
+    }
+    return c;
+  });
+  return changed ? { ...msg, content } : msg;
+}
+function sanitizeEventToolCalls(ev) {
+  let next = ev;
+  if ("partial" in next && next.partial) {
+    const partial = sanitizeMessageToolCalls(next.partial);
+    if (partial !== next.partial) next = { ...next, partial };
+  }
+  if (next.type === "toolcall_end" && next.toolCall) {
+    const name = sanitizeToolName(next.toolCall.name);
+    if (name !== next.toolCall.name) next = { ...next, toolCall: { ...next.toolCall, name } };
+  }
+  return next;
+}
+
+// src/scribe/scribe-pi.ts
+import { existsSync as existsSync12, readFileSync as readFileSync17 } from "fs";
+import { Type } from "typebox";
+
+// src/scribe/capture.ts
+import { closeSync as closeSync2, fsyncSync as fsyncSync2, mkdirSync as mkdirSync12, openSync as openSync2, writeSync as writeSync2 } from "fs";
+import { join as join18 } from "path";
+
+// src/scribe/digest.ts
+import { existsSync as existsSync8, mkdirSync as mkdirSync10, readFileSync as readFileSync12, writeFileSync as writeFileSync13 } from "fs";
+
+// src/scribe/paths.ts
+import { join as join17 } from "path";
+function scribeDir() {
+  const override = process.env.ORIRO_SCRIBE_DIR?.trim();
+  return override && override.length > 0 ? override : join17(CONFIG_DIR, "scribe");
+}
+function journalFile(date) {
+  return join17(scribeDir(), `${date}.md`);
+}
+function digestFile() {
+  return join17(scribeDir(), "_digest.md");
+}
+function timelineFile() {
+  return join17(scribeDir(), "_timeline.md");
+}
+function artifactsDir() {
+  return join17(scribeDir(), "artifacts");
+}
+
+// src/scribe/digest.ts
+var DIGEST_CAP = 8192;
+var TIMELINE_DAY_CAP = 400;
+function read(file5) {
+  return existsSync8(file5) ? readFileSync12(file5, "utf8") : "";
+}
+function updateDigest(summary, context) {
+  mkdirSync10(scribeDir(), { recursive: true });
+  const existing = read(digestFile());
+  let contextBlock = context?.trim();
+  if (!contextBlock) {
+    const m = existing.match(/## Context\n([\s\S]*?)\n## /);
+    contextBlock = m?.[1]?.trim() ?? "_(not set yet)_";
+  }
+  const recentMatch = existing.match(/## Recent activity[^\n]*\n([\s\S]*)$/);
+  const priorRecent = recentMatch?.[1]?.trim() ?? "";
+  let recent = summary.trim() ? `- ${summary.trim()}
+${priorRecent}` : priorRecent;
+  const header2 = `# ORIRO Scribe \u2014 Digest
+
+## Context
+${contextBlock}
+
+## Recent activity (newest first)
+`;
+  let out = header2 + recent;
+  while (Buffer.byteLength(out, "utf8") > DIGEST_CAP && recent.includes("\n")) {
+    recent = recent.slice(0, recent.lastIndexOf("\n")).trimEnd();
+    out = header2 + recent;
+  }
+  writeFileSync13(digestFile(), out, "utf8");
+}
+function updateTimeline(date, topic) {
+  mkdirSync10(scribeDir(), { recursive: true });
+  const clean = topic.replace(/\s+/g, " ").trim();
+  if (!clean) return;
+  const lines = read(timelineFile()).split("\n").filter(Boolean);
+  const header2 = "# ORIRO Scribe \u2014 Timeline";
+  const body = lines.filter((l) => l !== header2);
+  const idx = body.findIndex((l) => l.startsWith(`- ${date} \xB7`));
+  if (idx === -1) {
+    body.push(`- ${date} \xB7 ${clean}`.slice(0, TIMELINE_DAY_CAP + date.length + 6));
+  } else {
+    let merged = `${body[idx]}; ${clean}`;
+    if (merged.length > TIMELINE_DAY_CAP) merged = `${merged.slice(0, TIMELINE_DAY_CAP)}\u2026`;
+    body[idx] = merged;
+  }
+  body.sort();
+  writeFileSync13(timelineFile(), `${header2}
+${body.join("\n")}
+`, "utf8");
+}
+function readDigest() {
+  return read(digestFile());
+}
+function readTimeline() {
+  return read(timelineFile());
+}
+
+// src/scribe/journal.ts
+import {
+  closeSync,
+  existsSync as existsSync9,
+  fsyncSync,
+  mkdirSync as mkdirSync11,
+  openSync,
+  readFileSync as readFileSync13,
+  writeSync
+} from "fs";
+function appendJournal(date, content) {
+  mkdirSync11(scribeDir(), { recursive: true });
+  const fd = openSync(journalFile(date), "a");
+  try {
+    writeSync(fd, content.endsWith("\n") ? content : `${content}
+`);
+    fsyncSync(fd);
+  } finally {
+    closeSync(fd);
+  }
+}
+function readJournal(date) {
+  const f = journalFile(date);
+  return existsSync9(f) ? readFileSync13(f, "utf8") : "";
+}
+
+// src/scribe/redact.ts
+var RULES = [
+  {
+    label: "private-key",
+    re: /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/g
+  },
+  // Lone PEM markers — a key SPLIT across fields/turns leaves only a BEGIN-head or an END-tail in
+  // one field. A field carrying either marker is key material: redact the marker + its adjacent body
+  // (forward from BEGIN, backward to END) so no sub-threshold fragment can ever sit on disk.
+  { label: "private-key", re: /-----BEGIN[A-Z ]*PRIVATE KEY-----[\s\S]*/g },
+  { label: "private-key", re: /[\s\S]*-----END[A-Z ]*PRIVATE KEY-----/g },
+  { label: "anthropic-key", re: /sk-ant-[A-Za-z0-9_-]{20,}/g },
+  { label: "openrouter-key", re: /sk-or-v1-[A-Za-z0-9]{20,}/g },
+  // Stripe-style keys (sk_live_/pk_live_/rk_test_/…), underscore segments.
+  { label: "stripe-key", re: /\b[srp]k_(?:live|test)_[A-Za-z0-9]{16,}/g },
+  // Generic sk- secret keys — allow hyphenated segments (sk-live-…, sk-proj-…) so a second
+  // hyphen no longer breaks the match (the gap the Scriber spike caught).
+  { label: "secret-key-sk", re: /sk[-_][A-Za-z0-9][A-Za-z0-9-]{14,}/g },
+  { label: "google-key", re: /AIza[0-9A-Za-z_-]{30,}/g },
+  { label: "groq-key", re: /gsk_[A-Za-z0-9]{20,}/g },
+  { label: "github-pat", re: /github_pat_[A-Za-z0-9_]{20,}/g },
+  { label: "github-token", re: /gh[posr]_[A-Za-z0-9]{30,}/g },
+  { label: "xai-key", re: /xai-[A-Za-z0-9]{20,}/g },
+  { label: "aws-key", re: /AKIA[0-9A-Z]{16}/g },
+  { label: "jwt", re: /eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{6,}/g },
+  { label: "telegram-token", re: /\b\d{8,10}:[A-Za-z0-9_-]{30,}\b/g },
+  // Auth headers / inline credentials (any provider) — the audit found these leaked.
+  { label: "bearer-token", re: /\bbearer\s+[A-Za-z0-9._~+/=-]{12,}/gi },
+  { label: "basic-auth", re: /\bbasic\s+[A-Za-z0-9+/=]{12,}/gi },
+  // key: value / key=value secrets (password, token, secret, api_key, access_key, …).
+  { label: "secret-kv", re: /\b(?:pass(?:word|wd)?|pwd|secret|token|api[_-]?key|access[_-]?key|auth)\s*[:=]\s*\S{3,}/gi },
+  // Credentials embedded in a URL: scheme://user:PASSWORD@host  → redact the password.
+  { label: "url-credential", re: /\b([a-z][a-z0-9+.-]*:\/\/[^/\s:@]+:)[^/\s@]+(@)/gi },
+  { label: "email", re: /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g },
+  { label: "phone", re: /(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}/g }
+];
+function marker(label) {
+  return `\u27E8REDACTED:${label}\u27E9`;
+}
+function entropy(s) {
+  const freq = /* @__PURE__ */ new Map();
+  for (const ch of s) freq.set(ch, (freq.get(ch) ?? 0) + 1);
+  let h = 0;
+  for (const n of freq.values()) {
+    const p = n / s.length;
+    h -= p * Math.log2(p);
+  }
+  return h;
+}
+function looksLikeUnknownSecret(token) {
+  if (token.length < 32) return false;
+  if (token.includes("\u27E8REDACTED:")) return false;
+  if (/^[0-9a-f]+$/i.test(token)) return false;
+  const classes = (/[a-z]/.test(token) ? 1 : 0) + (/[A-Z]/.test(token) ? 1 : 0) + (/[0-9]/.test(token) ? 1 : 0);
+  if (classes < 2) return false;
+  return entropy(token) >= 4.2;
+}
+function redact(input) {
+  const counts = /* @__PURE__ */ new Map();
+  let text = input;
+  for (const rule of RULES) {
+    text = text.replace(rule.re, () => {
+      counts.set(rule.label, (counts.get(rule.label) ?? 0) + 1);
+      return marker(rule.label);
+    });
+  }
+  text = text.split(/(\s+)/).map((tok) => {
+    if (looksLikeUnknownSecret(tok)) {
+      counts.set("high-entropy", (counts.get("high-entropy") ?? 0) + 1);
+      return marker("high-entropy");
+    }
+    return tok;
+  }).join("");
+  const redactions = [...counts.entries()].map(([label, count]) => ({
+    label,
+    count
+  }));
+  return { text, redactions };
+}
+function containsSecret(text) {
+  for (const rule of RULES) {
+    rule.re.lastIndex = 0;
+    if (rule.re.test(text)) return true;
+  }
+  for (const tok of text.split(/\s+/)) {
+    if (looksLikeUnknownSecret(tok)) return true;
+  }
+  return false;
+}
+
+// src/scribe/capture.ts
+var INLINE_CAP = 4e3;
+function sideFile(date, ts, kind, full) {
+  mkdirSync12(artifactsDir(), { recursive: true });
+  const name = `${date}_${ts.replace(/[:.]/g, "-")}_${kind}.md`;
+  const p = join18(artifactsDir(), name);
+  const fd = openSync2(p, "w");
+  try {
+    writeSync2(fd, full);
+    fsyncSync2(fd);
+  } finally {
+    closeSync2(fd);
+  }
+  return p;
+}
+function field(date, ts, label, value) {
+  if (!value || !value.trim()) return "";
+  if (value.length > INLINE_CAP) {
+    const ref = sideFile(date, ts, label.toLowerCase().replace(/\s+/g, "-"), value);
+    return `**${label}** (full \u2192 ${ref}):
+${value.slice(0, INLINE_CAP)}
+\u2026(truncated; full content in artifact)
+
+`;
+  }
+  return `**${label}:**
+${value}
+
+`;
+}
+function renderTurn(rec) {
+  let md = `## ${rec.ts}
+
+`;
+  md += field(rec.date, rec.ts, "User", rec.user);
+  md += field(rec.date, rec.ts, "Router", rec.router);
+  if (rec.tools?.length) md += `**Tools:** ${rec.tools.join(", ")}
+
+`;
+  if (rec.files?.length) md += `**Files:** ${rec.files.join(", ")}
+
+`;
+  md += field(rec.date, rec.ts, "Note", rec.note);
+  return `${md}---
+`;
+}
+function oneLineSummary(rec) {
+  const bits = [];
+  if (rec.user) bits.push(rec.user.replace(/\s+/g, " ").slice(0, 80));
+  if (rec.files?.length) bits.push(`files: ${rec.files.slice(0, 3).join(", ")}`);
+  if (rec.note) bits.push(rec.note.replace(/\s+/g, " ").slice(0, 60));
+  return bits.join(" \xB7 ") || "(activity)";
+}
+function redactRecord(rec) {
+  const tally = /* @__PURE__ */ new Map();
+  const rd = (s) => {
+    if (!s) return s;
+    const r = redact(s);
+    for (const x of r.redactions) tally.set(x.label, (tally.get(x.label) ?? 0) + x.count);
+    return r.text;
+  };
+  const safeRec = {
+    ...rec,
+    user: rd(rec.user),
+    note: rd(rec.note),
+    router: rd(rec.router),
+    context: rd(rec.context),
+    files: rec.files?.map((f) => rd(f) ?? f)
+  };
+  return { rec: safeRec, redactions: [...tally.entries()].map(([label, count]) => ({ label, count })) };
+}
+function captureTurn(rec) {
+  const { rec: safeRec, redactions } = redactRecord(rec);
+  const journal = renderTurn(safeRec);
+  appendJournal(rec.date, `${journal}
+`);
+  updateDigest(`${safeRec.ts} \xB7 ${oneLineSummary(safeRec)}`, safeRec.context);
+  updateTimeline(safeRec.date, oneLineSummary(safeRec));
+  const auditClean = !containsSecret(readJournal(rec.date)) && !containsSecret(readDigest() ?? "");
+  return {
+    journalDate: rec.date,
+    redactions,
+    bytes: Buffer.byteLength(journal, "utf8"),
+    auditClean
+  };
+}
+
+// src/scribe/health.ts
+import {
+  closeSync as closeSync3,
+  fsyncSync as fsyncSync3,
+  mkdirSync as mkdirSync13,
+  openSync as openSync3,
+  readFileSync as readFileSync14,
+  writeFileSync as writeFileSync14,
+  writeSync as writeSync3
+} from "fs";
+import { join as join19 } from "path";
+function healthFile() {
+  return join19(scribeDir(), "_health.json");
+}
+function faultLogFile() {
+  return join19(scribeDir(), "_faults.log");
+}
+function read2() {
+  try {
+    return JSON.parse(readFileSync14(healthFile(), "utf8"));
+  } catch {
+    return { faultCount: 0 };
+  }
+}
+function write(h) {
+  mkdirSync13(scribeDir(), { recursive: true });
+  writeFileSync14(healthFile(), `${JSON.stringify(h, null, 2)}
+`, "utf8");
+}
+function recordHealth() {
+  const h = read2();
+  h.lastWriteAt = (/* @__PURE__ */ new Date()).toISOString();
+  write(h);
+}
+function recordFault(role, err) {
+  try {
+    mkdirSync13(scribeDir(), { recursive: true });
+    const msg = `${(/* @__PURE__ */ new Date()).toISOString()} [${role}] ${err instanceof Error ? err.message : String(err)}`;
+    const fd = openSync3(faultLogFile(), "a");
+    try {
+      writeSync3(fd, `${msg}
+`);
+      fsyncSync3(fd);
+    } finally {
+      closeSync3(fd);
+    }
+    const h = read2();
+    h.faultCount = (h.faultCount ?? 0) + 1;
+    h.lastFault = msg;
+    write(h);
+  } catch {
+  }
+}
+function readHealth() {
+  return read2();
+}
+
+// src/scribe/wal.ts
+import {
+  closeSync as closeSync4,
+  existsSync as existsSync10,
+  fsyncSync as fsyncSync4,
+  mkdirSync as mkdirSync14,
+  openSync as openSync4,
+  readFileSync as readFileSync15,
+  writeFileSync as writeFileSync15,
+  writeSync as writeSync4
+} from "fs";
+import { join as join20 } from "path";
+function walFile() {
+  return join20(scribeDir(), "_wal.jsonl");
+}
+function appendLine(obj) {
+  mkdirSync14(scribeDir(), { recursive: true });
+  const fd = openSync4(walFile(), "a");
+  try {
+    writeSync4(fd, `${JSON.stringify(obj)}
+`);
+    fsyncSync4(fd);
+  } finally {
+    closeSync4(fd);
+  }
+}
+function walAppend(id, rec) {
+  appendLine({ t: "add", id, rec });
+}
+function walCommit(id) {
+  appendLine({ t: "commit", id });
+}
+function walPending() {
+  if (!existsSync10(walFile())) return [];
+  const committed = /* @__PURE__ */ new Set();
+  const adds = /* @__PURE__ */ new Map();
+  for (const line of readFileSync15(walFile(), "utf8").split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      const e = JSON.parse(line);
+      if (e.t === "commit") committed.add(e.id);
+      else if (e.t === "add" && e.rec) adds.set(e.id, e.rec);
+    } catch {
+    }
+  }
+  const out = [];
+  for (const [id, rec] of adds) {
+    if (!committed.has(id)) out.push({ id, rec });
+  }
+  return out;
+}
+function walCompact() {
+  if (!existsSync10(walFile())) return;
+  const pending = walPending();
+  const body = pending.map((p) => JSON.stringify({ t: "add", id: p.id, rec: p.rec })).join("\n");
+  writeFileSync15(walFile(), body ? `${body}
+` : "", "utf8");
+}
+
+// src/scribe/supervisor.ts
+var draining = false;
+function uid(ts) {
+  return `${ts}-${Math.random().toString(36).slice(2, 9)}`;
+}
+function drainBacklog() {
+  if (draining) return;
+  draining = true;
+  try {
+    let drained = 0;
+    for (const e of walPending()) {
+      try {
+        captureTurn(e.rec);
+        walCommit(e.id);
+        drained++;
+      } catch (err) {
+        recordFault("standby-replay", err);
+        break;
+      }
+    }
+    if (drained > 0) walCompact();
+  } finally {
+    draining = false;
+  }
+}
+function supervisedCapture(rec) {
+  try {
+    drainBacklog();
+    const id = uid(rec.ts);
+    const safe = redactRecord(rec).rec;
+    walAppend(id, safe);
+    try {
+      const res = captureTurn(safe);
+      walCommit(id);
+      walCompact();
+      recordHealth();
+      return res;
+    } catch (primaryErr) {
+      recordFault("primary", primaryErr);
+      try {
+        const res = captureTurn(safe);
+        walCommit(id);
+        walCompact();
+        recordHealth();
+        return res;
+      } catch (standbyErr) {
+        recordFault("standby", standbyErr);
+        return null;
+      }
+    }
+  } catch (fatal) {
+    recordFault("supervisor", fatal);
+    return null;
+  }
+}
+
+// src/scribe/retrieval.ts
+import { existsSync as existsSync11, readFileSync as readFileSync16, readdirSync } from "fs";
+function listDays() {
+  const dir = scribeDir();
+  if (!existsSync11(dir)) return [];
+  return readdirSync(dir).filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f)).map((f) => f.replace(/\.md$/, "")).sort();
+}
+function readDay(date) {
+  const f = journalFile(date);
+  return existsSync11(f) ? readFileSync16(f, "utf8") : "";
+}
+function searchScribe(query, limit = 100) {
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
+  const hits = [];
+  for (const date of listDays().reverse()) {
+    const lines = readDay(date).split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const ln = lines[i];
+      if (ln && ln.toLowerCase().includes(q)) {
+        hits.push({ date, line: i + 1, text: ln.trim().slice(0, 200) });
+        if (hits.length >= limit) return hits;
+      }
+    }
+  }
+  return hits;
+}
+
+// src/scribe/scribe-pi.ts
+function scribeTurn(input) {
+  if (!isScribeEnabled()) return;
+  const ts = (/* @__PURE__ */ new Date()).toISOString();
+  supervisedCapture({ ts, date: ts.slice(0, 10), ...input });
+}
+var pendingUserInput = "";
+function noteUserInput(text) {
+  pendingUserInput = text;
+}
+function takePendingUserInput() {
+  const u = pendingUserInput;
+  pendingUserInput = "";
+  return u;
+}
+function buildScribeContext() {
+  if (!isScribeEnabled()) return "";
+  const parts = [];
+  try {
+    const t = timelineFile();
+    if (existsSync12(t)) parts.push(`# Work history \u2014 every day so far
+${readFileSync17(t, "utf8").trim()}`);
+  } catch {
+  }
+  try {
+    const d = readDigest();
+    if (d?.trim()) parts.push(`# Current context (recent)
+${d.trim()}`);
+  } catch {
+  }
+  if (!parts.length) return "";
+  return `${parts.join("\n\n")}
+
+(Call scribe_recall to fetch the full text of any past day or topic.)`;
+}
+function registerScribe(pi) {
+  pi.registerTool({
+    name: "scribe_recall",
+    label: "ORIRO Scribe",
+    description: "Recall the user's past work from the on-device journal: search by keyword, or read a specific day (YYYY-MM-DD). Use to recover decisions, code, files, and context from earlier sessions.",
+    parameters: Type.Object({
+      query: Type.Optional(Type.String({ description: "Keyword/topic to search across all journals." })),
+      day: Type.Optional(Type.String({ description: "A specific day YYYY-MM-DD to read in full." }))
+    }),
+    async execute(_id, params) {
+      let text;
+      const details = {};
+      if (!isScribeEnabled()) {
+        text = "Scribe is off (the user has not enabled it).";
+      } else if (params.day) {
+        text = readDay(params.day) || `No journal for ${params.day}. Days: ${listDays().join(", ") || "none"}`;
+        details.day = params.day;
+      } else {
+        const hits = params.query ? searchScribe(params.query) : [];
+        details.hits = hits;
+        text = hits.length ? hits.map((h) => `${h.date}:${h.line}  ${h.text}`).join("\n") : `No matches${params.query ? ` for "${params.query}"` : ""}. Days recorded: ${listDays().join(", ") || "none"}`;
+      }
+      return { content: [{ type: "text", text }], details };
+    }
+  });
+}
+function attachScribe(session) {
+  let user = "";
+  let assistant = "";
+  const tools = /* @__PURE__ */ new Set();
+  session.subscribe((e) => {
+    if (!isScribeEnabled()) return;
+    if (e?.type === "user_message" || e?.type === "session_user_message") user = String(e.text ?? e.message ?? user);
+    if (e?.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") assistant += e.assistantMessageEvent.delta ?? "";
+    if ((e?.type === "tool_call" || e?.type === "tool_execution_start") && e.toolName) tools.add(String(e.toolName));
+    if (e?.type === "agent_end") {
+      const userText = takePendingUserInput() || user;
+      scribeTurn({ user: userText || void 0, router: "oriro-free", tools: [...tools], note: assistant.slice(0, 4e3) || void 0 });
+      user = "";
+      assistant = "";
+      tools.clear();
+    }
+  });
+}
+
+// src/routers/mux-provider.ts
+var MUX_PROVIDER = "oriro-mux";
+var MUX_MODEL = "oriro-free";
+function errToCallError(msg) {
+  const text = msg.errorMessage ?? "";
+  return /\b429\b|rate.?limit|too many requests/i.test(text) ? { status: 429 } : {};
+}
+function buildErrorMessage(message) {
+  return {
+    role: "assistant",
+    content: [],
+    api: "openai-completions",
+    provider: MUX_PROVIDER,
+    model: MUX_MODEL,
+    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
+    stopReason: "error",
+    timestamp: Date.now(),
+    errorMessage: message
+  };
+}
+async function driveMux(out, mux, byId, context, options) {
+  let lastError;
+  for (const id of mux.ranked()) {
+    const router = byId.get(id);
+    if (!router) continue;
+    const t0 = Date.now();
+    let committed = false;
+    let lastPartial;
+    try {
+      const inner = piStreamSimple(routerModel(router), context, {
+        ...options ?? {},
+        apiKey: router.apiKey
+      });
+      let failedBeforeContent = false;
+      for await (const ev of inner) {
+        if (ev.type === "error") {
+          mux.recordFailure(id, errToCallError(ev.error));
+          if (!committed) {
+            lastError = ev.error;
+            failedBeforeContent = true;
+            break;
+          }
+          out.push(ev);
+          out.end(ev.error);
+          return;
+        }
+        committed = true;
+        if (ev.type === "done") {
+          mux.recordSuccess(id, Date.now() - t0);
+          const clean = sanitizeMessageToolCalls(scrubMessageIdentity(ev.message));
+          out.push({ type: "done", reason: ev.reason, message: clean });
+          out.end(clean);
+          return;
+        }
+        lastPartial = ev.partial;
+        out.push(sanitizeEventToolCalls(ev));
+      }
+      if (failedBeforeContent) continue;
+      if (!committed) {
+        mux.recordFailure(id, {});
+        lastError ??= buildErrorMessage("Router returned no output.");
+        continue;
+      }
+      mux.recordSuccess(id, Date.now() - t0);
+      out.end(lastPartial ? sanitizeMessageToolCalls(scrubMessageIdentity(lastPartial)) : void 0);
+      return;
+    } catch (e) {
+      mux.recordFailure(id, e);
+    }
+  }
+  const msg = lastError ?? buildErrorMessage(
+    "All keyless routers are unavailable. Add a BYOK key, select more free routers, or retry shortly."
+  );
+  out.push({ type: "error", reason: "error", error: msg });
+  out.end(msg);
+}
+function registerOriroMux(registry, opts = {}) {
+  registerOpenAICompletions();
+  const pooled = resolvePool();
+  const routers = opts.routers ?? (pooled.length > 0 ? pooled : KEYLESS_FLOOR);
+  const byId = new Map(routers.map((r) => [r.id, r]));
+  const mux = new RouterMux(routers.map((r) => r.id));
+  try {
+    mux.load(loadMuxState(oriroDir()));
+  } catch {
+  }
+  registry.registerProvider(MUX_PROVIDER, {
+    name: "ORIRO Free (keyless Mux)",
+    api: "openai-completions",
+    apiKey: "oriro-keyless",
+    // Placeholder — required by registry validation but never used: our custom streamSimple
+    // routes to the real keyless floor endpoints itself (see driveMux).
+    baseUrl: "http://oriro-mux.local",
+    models: [
+      {
+        id: MUX_MODEL,
+        name: "ORIRO Free (best-router)",
+        api: "openai-completions",
+        baseUrl: "http://oriro-mux.local",
+        reasoning: false,
+        input: ["text"],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 128e3,
+        maxTokens: 4096
+      }
+    ],
+    streamSimple: (_model, context, options) => {
+      const out = createAssistantMessageEventStream();
+      const ctx = applyIdentity(context);
+      const memory = buildScribeContext();
+      const withMemory = memory ? { ...ctx, systemPrompt: `${ctx.systemPrompt}
+
+${memory}` } : ctx;
+      void driveMux(out, mux, byId, withMemory, options).finally(() => {
+        try {
+          saveMuxState(oriroDir(), mux.snapshot());
+        } catch {
+        }
+      });
+      return out;
+    }
+  });
+  return registry.find(MUX_PROVIDER, MUX_MODEL);
+}
+
+// src/head/pi-tool.ts
+import { Type as Type2 } from "typebox";
+
+// src/head/comparison-engine.ts
+var SECTION_RULES = [
+  {
+    type: "hero",
+    label: "Hero",
+    priority: "CRITICAL",
+    markup: [/<h1[\s>]/],
+    recommend: "Add a clear above-the-fold hero \u2014 one headline that states the value + one primary CTA."
+  },
+  {
+    type: "navigation",
+    label: "Navigation",
+    priority: "CRITICAL",
+    markup: [/<nav[\s>]/, /role=["']navigation["']/],
+    recommend: "Add a top navigation so visitors can reach key sections."
+  },
+  {
+    type: "features",
+    label: "Features",
+    priority: "CRITICAL",
+    text: [/\bfeatures?\b/, /\bwhat you (?:can|get)\b/, /\bcapabilit/],
+    recommend: "Add a features section that spells out concrete capabilities, not adjectives."
+  },
+  {
+    type: "pricing",
+    label: "Pricing",
+    priority: "CRITICAL",
+    text: [/\bpricing\b/, /\bper month\b/, /\b\/mo\b/, /\bfree plan\b/, /\$\d/, /₹\d/, /€\d/],
+    recommend: 'Add transparent pricing \u2014 a critical conversion element; even a single "Free" tier helps.'
+  },
+  {
+    type: "cta",
+    label: "Call-to-Action",
+    priority: "CRITICAL",
+    text: [/\bget started\b/, /\bsign up\b/, /\bstart (?:free|now|building)\b/, /\btry (?:it|now|free)\b/, /\bbook a demo\b/, /\bget a demo\b/],
+    recommend: 'Add a strong, repeated primary CTA ("Get started") so the next step is obvious.'
+  },
+  {
+    type: "testimonials",
+    label: "Testimonials",
+    priority: "HIGH",
+    text: [/\btestimonial/, /\bwhat (?:our )?(?:customers|users) say\b/, /\bloved by\b/, /\breview(?:s|ed)\b/],
+    recommend: "Add 2\u20133 customer testimonials with names/photos to build trust."
+  },
+  {
+    type: "stats",
+    label: "Stats / Metrics",
+    priority: "HIGH",
+    text: [/\b\d[\d,.]*\s*[kkmm]\+?\s*(?:users|customers|developers|downloads|teams)\b/, /\b9\d(?:\.\d+)?%\b/, /\buptime\b/],
+    recommend: 'Add impressive metrics ("10K+ users", "99.9% uptime") as social proof.'
+  },
+  {
+    type: "video",
+    label: "Video",
+    priority: "HIGH",
+    markup: [/<video[\s>]/, /youtube\.com\/embed/, /player\.vimeo\.com/, /<iframe[^>]+(?:youtube|vimeo)/],
+    text: [/\bwatch the (?:video|demo)\b/],
+    recommend: "Add a short explainer/demo video \u2014 it lifts conversion on landing pages."
+  },
+  {
+    type: "demo",
+    label: "Live Demo",
+    priority: "HIGH",
+    text: [/\btry it (?:now|live|free)\b/, /\bplayground\b/, /\binteractive demo\b/, /\blive demo\b/],
+    recommend: 'Add a "try it" live demo or playground so visitors experience the product immediately.'
+  },
+  {
+    type: "socialProof",
+    label: "Social Proof",
+    priority: "HIGH",
+    text: [/\btrusted by\b/, /\bbacked by\b/, /\bused by\b/, /\bas seen (?:in|on)\b/, /\bcustomers include\b/],
+    recommend: 'Add social proof (customer/investor logos, "trusted by \u2026") near the hero.'
+  },
+  {
+    type: "faq",
+    label: "FAQ",
+    priority: "MEDIUM",
+    text: [/\bfaq\b/, /\bfrequently asked\b/],
+    markup: [/<details[\s>]/],
+    recommend: "Add an FAQ that answers the top objections before they become exits."
+  },
+  {
+    type: "integrations",
+    label: "Integrations",
+    priority: "MEDIUM",
+    text: [/\bintegrations?\b/, /\bworks with\b/, /\bconnect your\b/],
+    recommend: "Add an integrations section showing what the product connects to."
+  },
+  {
+    type: "newsletter",
+    label: "Newsletter / Capture",
+    priority: "MEDIUM",
+    text: [/\bsubscribe\b/, /\bnewsletter\b/, /\bjoin (?:the )?waitlist\b/],
+    markup: [/type=["']email["']/],
+    recommend: "Add an email capture (newsletter/waitlist) so non-converting visitors are not lost."
+  },
+  {
+    type: "comparison",
+    label: "Comparison",
+    priority: "MEDIUM",
+    text: [/\bcompare\b/, /\bcomparison\b/, /\b vs\.? \b/, /\bwhy choose\b/],
+    recommend: 'Add a comparison ("us vs alternatives") to win evaluators who are shopping around.'
+  },
+  {
+    type: "team",
+    label: "Team / About",
+    priority: "LOW",
+    text: [/\bour team\b/, /\bmeet the team\b/, /\bfounders?\b/, /\babout us\b/],
+    recommend: "Add a brief team/about section to humanize the brand."
+  }
+];
+var PRIORITY_RANK = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+var PRIORITY_EFFORT = { CRITICAL: "L", HIGH: "M", MEDIUM: "M", LOW: "S" };
+var FETCH_TIMEOUT_MS = 12e3;
+var UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36 ORIRO-Inspector";
+async function fetchPage(url) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  const start = Date.now();
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: { "user-agent": UA, accept: "text/html,application/xhtml+xml" }
+    });
+    const html = await res.text();
+    return { html, ms: Date.now() - start, status: res.status, ok: res.ok, error: "" };
+  } catch (err) {
+    return { html: "", ms: Date.now() - start, status: 0, ok: false, error: err instanceof Error ? err.message : "fetch failed" };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+function toText(html) {
+  return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").toLowerCase().trim();
+}
+function firstMatch(re, hay) {
+  const m = re.exec(hay);
+  if (!m) return "";
+  const slice = (m[0] ?? "").trim();
+  return slice.length > 80 ? `${slice.slice(0, 77)}\u2026` : slice;
+}
+function detectSections(rawHtmlLower, text) {
+  const found = [];
+  for (const rule of SECTION_RULES) {
+    let evidence = "";
+    for (const re of rule.markup ?? []) {
+      const hit = firstMatch(re, rawHtmlLower);
+      if (hit) {
+        evidence = hit;
+        break;
+      }
+    }
+    if (!evidence) {
+      for (const re of rule.text ?? []) {
+        const hit = firstMatch(re, text);
+        if (hit) {
+          evidence = hit;
+          break;
+        }
+      }
+    }
+    if (evidence) found.push({ type: rule.type, label: rule.label, priority: rule.priority, evidence });
+  }
+  return found;
+}
+function extractMatches(re, html, max) {
+  const out = [];
+  for (const m of html.matchAll(re)) {
+    const inner = (m[1] ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    if (inner && !out.includes(inner)) out.push(inner);
+    if (out.length >= max) break;
+  }
+  return out;
+}
+var CTA_WORDS = /\b(get started|sign up|start free|start now|start building|try (?:it|now|free)|book a demo|get a demo|request access|join (?:the )?waitlist|download)\b/i;
+function extractStructure(url, fr) {
+  const html = fr.html;
+  const lowerHtml = html.toLowerCase();
+  const text = toText(html);
+  const titleM = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
+  const title = (titleM?.[1] ?? "").replace(/\s+/g, " ").trim();
+  const descM = /<meta[^>]+name=["']description["'][^>]+content=["']([^"']*)["']/i.exec(html) ?? /<meta[^>]+content=["']([^"']*)["'][^>]+name=["']description["']/i.exec(html);
+  const description = (descM?.[1] ?? "").replace(/\s+/g, " ").trim();
+  const headings = extractMatches(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi, html, 12);
+  const ctaAll = extractMatches(/<(?:a|button)[^>]*>([\s\S]*?)<\/(?:a|button)>/gi, html, 80);
+  const ctas = [];
+  for (const c of ctaAll) {
+    if (CTA_WORDS.test(c) && !ctas.includes(c)) ctas.push(c);
+    if (ctas.length >= 10) break;
+  }
+  const forms = (lowerHtml.match(/<form[\s>]/g) ?? []).length;
+  const links = (lowerHtml.match(/<a[\s>]/g) ?? []).length;
+  const images = (lowerHtml.match(/<img[\s>]/g) ?? []).length;
+  const hasVideo = /<video[\s>]/.test(lowerHtml) || /(?:youtube\.com\/embed|player\.vimeo\.com)/.test(lowerHtml);
+  const domNodes = (html.match(/<[a-z!\/]/gi) ?? []).length;
+  let note = "";
+  if (fr.ok && text.length < 400 && domNodes < 60) {
+    note = "Sparse HTML \u2014 likely a client-rendered (SPA) page; structure may be under-detected without a JS render.";
+  }
+  return {
+    url,
+    title,
+    description,
+    sections: detectSections(lowerHtml, text),
+    headings,
+    ctas,
+    forms,
+    links,
+    images,
+    hasVideo,
+    metrics: { htmlBytes: html.length, domNodes, fetchMs: fr.ms, status: fr.status },
+    ok: fr.ok && html.length > 0,
+    note: fr.ok ? note : `Could not load: ${fr.error || `HTTP ${fr.status}`}`
+  };
+}
+function ruleFor(type) {
+  return SECTION_RULES.find((r) => r.type === type) ?? SECTION_RULES[0];
+}
+function analyzeGaps(target, competitors) {
+  const targetTypes = new Set(target.sections.map((s) => s.type));
+  const compPresence = /* @__PURE__ */ new Map();
+  for (const comp of competitors) {
+    if (!comp.ok) continue;
+    for (const s of comp.sections) {
+      const list = compPresence.get(s.type) ?? [];
+      if (!list.includes(comp.url)) list.push(comp.url);
+      compPresence.set(s.type, list);
+    }
+  }
+  const missing = [];
+  const parity = [];
+  for (const [type, presentOn] of compPresence) {
+    if (targetTypes.has(type)) {
+      parity.push(type);
+    } else {
+      const rule = ruleFor(type);
+      missing.push({ section: type, label: rule.label, priority: rule.priority, presentOn, recommendation: rule.recommend });
+    }
+  }
+  missing.sort((a, b) => PRIORITY_RANK[a.priority] - PRIORITY_RANK[b.priority] || b.presentOn.length - a.presentOn.length);
+  const advantages = target.sections.filter((s) => !compPresence.has(s.type));
+  return { missing, advantages, parity };
+}
+function generateActionItems(missing) {
+  return missing.map((g) => ({
+    title: `Add a ${g.label} section`,
+    priority: g.priority,
+    effort: PRIORITY_EFFORT[g.priority],
+    rationale: `${g.presentOn.length} of the compared page(s) have it; you don't. ${g.recommendation}`
+  }));
+}
+function hostOf(url) {
+  try {
+    return new URL(url).host.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+function generateSummary(target, competitors, gaps) {
+  const okComps = competitors.filter((c) => c.ok);
+  const tName = hostOf(target.url);
+  if (!target.ok) return `Could not load ${tName} (${target.note}). Nothing to compare against yet.`;
+  if (okComps.length === 0) return `Loaded ${tName} (${target.sections.length} sections) but none of the comparison URLs could be loaded.`;
+  const crit = gaps.missing.filter((m) => m.priority === "CRITICAL").map((m) => m.label);
+  const high = gaps.missing.filter((m) => m.priority === "HIGH").map((m) => m.label);
+  const parts = [];
+  parts.push(`${tName} has ${target.sections.length} detectable sections; compared against ${okComps.length} page(s).`);
+  if (gaps.missing.length === 0) {
+    parts.push("No structural gaps found \u2014 you cover everything they do.");
+  } else {
+    parts.push(`${gaps.missing.length} gap(s) found.`);
+    if (crit.length) parts.push(`Critical: ${crit.join(", ")}.`);
+    if (high.length) parts.push(`High: ${high.join(", ")}.`);
+  }
+  if (gaps.advantages.length) parts.push(`Your edge: ${gaps.advantages.map((a) => a.label).join(", ")}.`);
+  return parts.join(" ");
+}
+function normalizeUrl(u) {
+  const t = (u || "").trim();
+  if (!t) return t;
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+}
+async function comparePages(opts) {
+  const targetUrl = normalizeUrl(opts.targetUrl);
+  const competitorUrls = (opts.competitorUrls ?? []).map(normalizeUrl).filter((u) => u.length > 0).slice(0, 30);
+  const [targetFetch, ...compFetches] = await Promise.all([
+    fetchPage(targetUrl),
+    ...competitorUrls.map((u) => fetchPage(u))
+  ]);
+  const target = extractStructure(targetUrl, targetFetch ?? { html: "", ms: 0, status: 0, ok: false, error: "no fetch" });
+  const competitors = competitorUrls.map(
+    (u, i) => extractStructure(u, compFetches[i] ?? { html: "", ms: 0, status: 0, ok: false, error: "no fetch" })
+  );
+  const gaps = analyzeGaps(target, competitors);
+  return {
+    target,
+    competitors,
+    missing: gaps.missing,
+    advantages: gaps.advantages,
+    parity: gaps.parity,
+    actionItems: generateActionItems(gaps.missing),
+    summary: generateSummary(target, competitors, gaps)
+  };
+}
+
+// src/head/run.ts
+import { writeFile } from "fs/promises";
+import { join as join21 } from "path";
+
+// src/head/inspection-html.ts
+var PRIORITY_COLOR = {
+  CRITICAL: "#f43f5e",
+  // rose
+  HIGH: "#f59e0b",
+  // amber
+  MEDIUM: "#0ea5e9",
+  // sky
+  LOW: "#64748b"
+  // slate
+};
+var SECTION_ORDER = [
+  "navigation",
+  "hero",
+  "socialProof",
+  "stats",
+  "features",
+  "demo",
+  "video",
+  "integrations",
+  "comparison",
+  "pricing",
+  "testimonials",
+  "faq",
+  "newsletter",
+  "cta",
+  "team"
+];
+function esc(s) {
+  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function hostOf2(url) {
+  try {
+    return new URL(url).host.replace(/^www\./, "");
+  } catch {
+    return url;
+  }
+}
+function pathOf(url) {
+  try {
+    const u = new URL(url);
+    return (u.pathname || "/") + (u.search || "");
+  } catch {
+    return url;
+  }
+}
+function orderedSections(sections) {
+  return [...sections].sort((a, b) => {
+    const ia = SECTION_ORDER.indexOf(a.type);
+    const ib = SECTION_ORDER.indexOf(b.type);
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+  });
+}
+function sectionBlock(s) {
+  const color = PRIORITY_COLOR[s.priority];
+  return `
+    <div class="blk" style="border-left:4px solid ${color}">
+      <div class="blk-row">
+        <span class="dot" style="background:${color}"></span>
+        <span class="blk-label">${esc(s.label)}</span>
+        <span class="blk-pri" style="color:${color}">${esc(s.priority)}</span>
+      </div>
+      <code class="blk-ev">${esc(s.evidence)}</code>
+    </div>`;
+}
+function pageCard(p, isTarget) {
+  const statusOk = p.ok && p.metrics.status >= 200 && p.metrics.status < 400;
+  const badge = statusOk ? `<span class="pill pill-ok">${p.metrics.status || 200} OK</span>` : `<span class="pill pill-bad">${p.metrics.status || "FAILED"}</span>`;
+  const blocks = p.sections.length ? orderedSections(p.sections).map(sectionBlock).join("") : `<div class="blk-empty">No sections detected${p.note ? "" : " (sparse / client-rendered?)"}</div>`;
+  const kb = Math.round(p.metrics.htmlBytes / 1024);
+  return `
+    <div class="card${isTarget ? " card-target" : ""}">
+      <div class="chrome">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span class="addr" title="${esc(p.url)}">${esc(hostOf2(p.url))}<span class="path">${esc(pathOf(p.url))}</span></span>
+        ${badge}
+      </div>
+      ${isTarget ? '<div class="tag-you">YOUR PAGE</div>' : ""}
+      <div class="title">${esc(p.title || "(untitled)")}</div>
+      <div class="stack">${blocks}</div>
+      <div class="meta">
+        <span title="headings">H ${p.headings.length}</span>
+        <span title="CTAs">CTA ${p.ctas.length}</span>
+        <span title="links">\u21A9 ${p.metrics ? p.links : 0}</span>
+        <span title="images">\u25A6 ${p.images}</span>
+        <span title="video">${p.hasVideo ? "\u25B6 video" : "\u25B7 no video"}</span>
+        <span title="page size">${kb} KB</span>
+        <span title="DOM nodes">${p.metrics.domNodes} nodes</span>
+        <span title="fetch time">${p.metrics.fetchMs} ms</span>
+      </div>
+      ${p.note ? `<div class="note">\u26A0 ${esc(p.note)}</div>` : ""}
+    </div>`;
+}
+function gapsPanel(report) {
+  if (!report.missing.length && !report.advantages.length) return "";
+  const missing = report.missing.map((g) => {
+    const color = PRIORITY_COLOR[g.priority];
+    return `<li><span class="dot" style="background:${color}"></span><b>${esc(g.label)}</b>
+      <span class="gap-pri" style="color:${color}">${esc(g.priority)}</span>
+      <div class="gap-rec">${esc(g.recommendation)}</div>
+      <div class="gap-on">on: ${g.presentOn.map((u) => esc(hostOf2(u))).join(", ")}</div></li>`;
+  }).join("");
+  const adv = report.advantages.map((s) => `<span class="chip">${esc(s.label)}</span>`).join("");
+  return `
+    <div class="gaps">
+      ${report.missing.length ? `<div class="gaps-col"><h2>Missing from your page</h2><ul class="gap-list">${missing}</ul></div>` : ""}
+      ${report.advantages.length ? `<div class="gaps-col"><h2>Your advantages</h2><div class="chips">${adv}</div></div>` : ""}
+    </div>`;
+}
+function buildInspectionHtml(report) {
+  const pages = [report.target, ...report.competitors];
+  const ok2 = pages.filter((p) => p.ok).length;
+  const cards = pages.map((p, i) => pageCard(p, i === 0)).join("");
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ORIRO Inspector \u2014 what it saw</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0b0b12;color:#e2e8f0;font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:24px}
+  .head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .head h1{font-size:20px;font-weight:700;letter-spacing:-.02em;background:linear-gradient(90deg,#2dd4bf,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:#94a3b8;font-size:13px;margin-bottom:18px}
+  .summary{background:#11111c;border:1px solid #1e293b;border-radius:12px;padding:12px 14px;margin-bottom:20px;color:#cbd5e1}
+  .row{display:flex;gap:16px;overflow-x:auto;padding-bottom:10px}
+  .card{flex:0 0 300px;background:#0f0f1a;border:1px solid #1e293b;border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .card-target{border-color:#2dd4bf;box-shadow:0 0 0 1px rgba(45,212,191,.25)}
+  .chrome{display:flex;align-items:center;gap:8px;background:#15151f;padding:8px 10px;border-bottom:1px solid #1e293b}
+  .dots{display:flex;gap:4px}.dots i{width:8px;height:8px;border-radius:50%;background:#334155;display:block}
+  .addr{flex:1;font-size:11px;color:#cbd5e1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .addr .path{color:#64748b;font-weight:400}
+  .pill{font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px}
+  .pill-ok{background:rgba(34,197,94,.15);color:#4ade80}.pill-bad{background:rgba(244,63,94,.15);color:#fb7185}
+  .tag-you{font-size:9px;font-weight:800;letter-spacing:.08em;color:#2dd4bf;padding:6px 12px 0}
+  .title{font-size:13px;font-weight:600;color:#f1f5f9;padding:8px 12px 4px}
+  .stack{display:flex;flex-direction:column;gap:6px;padding:8px 12px}
+  .blk{background:#13131f;border-radius:8px;padding:7px 9px}
+  .blk-row{display:flex;align-items:center;gap:7px}
+  .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .blk-label{font-weight:600;font-size:12px;flex:1;color:#e2e8f0}
+  .blk-pri{font-size:9px;font-weight:700;letter-spacing:.04em}
+  .blk-ev{display:block;font-size:10px;color:#64748b;font-family:ui-monospace,monospace;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .blk-empty{color:#64748b;font-size:12px;padding:10px;text-align:center;font-style:italic}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;padding:8px 12px;border-top:1px solid #1e293b;color:#94a3b8;font-size:11px;margin-top:auto}
+  .note{background:rgba(245,158,11,.1);color:#fbbf24;font-size:11px;padding:7px 12px;border-top:1px solid rgba(245,158,11,.2)}
+  .gaps{display:flex;gap:24px;flex-wrap:wrap;margin-top:24px}
+  .gaps-col{flex:1;min-width:260px}
+  .gaps h2{font-size:14px;color:#f1f5f9;margin-bottom:10px}
+  .gap-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .gap-list li{background:#0f0f1a;border:1px solid #1e293b;border-radius:10px;padding:10px 12px}
+  .gap-list b{font-size:13px}.gap-pri{font-size:10px;font-weight:700;margin-left:6px}
+  .gap-rec{color:#94a3b8;font-size:12px;margin-top:4px}.gap-on{color:#64748b;font-size:10px;margin-top:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{background:rgba(45,212,191,.12);color:#5eead4;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600}
+  .foot{margin-top:26px;color:#475569;font-size:11px;border-top:1px solid #1e293b;padding-top:12px}
+</style></head>
+<body>
+  <div class="head"><h1>ORIRO Inspector</h1><span class="sub">what the head saw \u2014 ${ok2}/${pages.length} pages crawled</span></div>
+  <div class="summary">${esc(report.summary)}</div>
+  <div class="row">${cards}</div>
+  ${gapsPanel(report)}
+  <div class="foot">ORIRO Inspector \xB7 structural read (server-side HTML) \xB7 each block = a section the head detected, coloured by priority.</div>
+</body></html>`;
+}
+
+// src/head/media.ts
+var IMAGE_MIME_BY_SUFFIX = Object.freeze({
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".bmp": "image/bmp",
+  ".tif": "image/tiff",
+  ".tiff": "image/tiff",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".heic": "image/heic",
+  ".heif": "image/heif",
+  ".avif": "image/avif"
+});
+var VIDEO_MIME_BY_SUFFIX = Object.freeze({
+  ".mp4": "video/mp4",
+  ".mpg": "video/mpeg",
+  ".mpeg": "video/mpeg",
+  ".mkv": "video/x-matroska",
+  ".avi": "video/x-msvideo",
+  ".mov": "video/quicktime",
+  ".ogv": "video/ogg",
+  ".wmv": "video/x-ms-wmv",
+  ".webm": "video/webm",
+  ".m4v": "video/x-m4v",
+  ".flv": "video/x-flv",
+  ".3gp": "video/3gpp",
+  ".3g2": "video/3gpp2"
+});
+function suffixOf(nameOrPath) {
+  const base = (nameOrPath || "").split(/[\\/]/).pop() ?? "";
+  const i = base.lastIndexOf(".");
+  return i < 0 ? "" : base.slice(i).toLowerCase();
+}
+function sniff(head) {
+  if (!head || head.length < 12) return null;
+  const b = (i) => head[i] ?? -1;
+  if (b(0) === 26 && b(1) === 69 && b(2) === 223 && b(3) === 163) return { kind: "video", mimeType: "video/webm" };
+  if (b(4) === 102 && b(5) === 116 && b(6) === 121 && b(7) === 112) return { kind: "video", mimeType: "video/mp4" };
+  if (b(0) === 137 && b(1) === 80 && b(2) === 78 && b(3) === 71) return { kind: "image", mimeType: "image/png" };
+  if (b(0) === 255 && b(1) === 216 && b(2) === 255) return { kind: "image", mimeType: "image/jpeg" };
+  if (b(0) === 71 && b(1) === 73 && b(2) === 70) return { kind: "image", mimeType: "image/gif" };
+  return null;
+}
+function detectMediaType(nameOrPath, head) {
+  const sniffed = sniff(head);
+  if (sniffed) return sniffed;
+  const suf = suffixOf(nameOrPath);
+  const v = VIDEO_MIME_BY_SUFFIX[suf];
+  if (v) return { kind: "video", mimeType: v };
+  const img = IMAGE_MIME_BY_SUFFIX[suf];
+  if (img) return { kind: "image", mimeType: img };
+  return { kind: "unknown", mimeType: "application/octet-stream" };
+}
+
+// src/head/video-to-code.ts
+var WATCH_PROMPT = `You are watching a screen recording of a web UI. Produce a precise, build-ready SPECIFICATION to reconstruct it exactly \u2014 another engineer must rebuild it from your spec alone. Cover, in order:
+1. Overall layout & structure (header/nav, hero, content sections in order, footer).
+2. Each section: its components, exact text/copy, and visual hierarchy.
+3. Styling: colors (hex if discernible), typography (family/weight/scale), spacing, radius, shadows.
+4. Behavior visible across the recording: hover/focus states, scroll reveals, modals, carousels, tabs, animations, transitions \u2014 note the trigger and the effect.
+5. Responsive behavior if the recording shows resizing.
+Be concrete and exhaustive. Output a structured spec, not prose.`;
+var CODE_PROMPT_PREFIX = `You are an expert front-end engineer. Build COMPLETE, working, production-quality code that reproduces the following UI specification EXACTLY \u2014 correct layout, components, copy, colors, typography, spacing, and the described interactions. No placeholders, no TODOs, no "...". Return ONLY the code.`;
+async function videoToCode(input, models, opts = {}) {
+  if (!input.videoPath && !(input.frames && input.frames.length)) {
+    throw new Error("videoToCode needs input.videoPath or input.frames.");
+  }
+  const mimeType = input.mimeType ?? (input.videoPath ? detectMediaType(input.videoPath).mimeType : void 0);
+  const watchPrompt = `${opts.watchPrompt ?? WATCH_PROMPT}${input.goal ? `
+
+User goal: ${input.goal}` : ""}`;
+  const spec = (await models.watch({ videoPath: input.videoPath, frames: input.frames, mimeType, prompt: watchPrompt })).trim();
+  const stack = input.stack ?? "a single self-contained HTML file with inline CSS + vanilla JS (no build step)";
+  const codePrompt = `${opts.codePromptPrefix ?? CODE_PROMPT_PREFIX}
+
+Target stack: ${stack}
+
+=== UI SPECIFICATION ===
+${spec}`;
+  const code = (await models.code(codePrompt)).trim();
+  return { spec, code };
+}
+var REVERSE_PROMPT = `You are an expert front-end engineer. Below is the captured RENDERED HTML of a live web page (optionally with visual notes from a screenshot). REVERSE-ENGINEER it into CLEAN, COMPLETE, PRODUCTION-QUALITY, RUNNABLE code that a developer can PASTE AND BUILD with no edits.
+
+Requirements:
+\u2022 Reproduce the page EXACTLY: every meaningful section/component in order, the real text/copy, layout, and visual design \u2014 colors as hex, typography (family/weight/size), spacing, radius, shadows, borders.
+\u2022 Strip tracking/ads/analytics/third-party cruft and dead markup; keep the real content.
+\u2022 Output COMPLETE file(s) for the target stack: include EVERY import, the entry/mount point (e.g. ReactDOM render / index), all components, and all styles. If multiple files are needed, emit each prefixed with a "// FILE: <path>" header so it can be split out.
+\u2022 Use the REAL extracted content/data (titles, labels, links, values) \u2014 never lorem ipsum or dummy data.
+\u2022 NO placeholders, NO TODOs, NO "...", NO truncation, NO commentary or explanation. Every component fully implemented and wired.
+\u2022 It must be immediately runnable and visually faithful.
+Return ONLY the code.`;
+var SCREENSHOT_DESC_PROMPT = `Describe this screenshot of a web page for FAITHFUL pixel-level reconstruction. Be concrete and exhaustive: overall layout & grid, each section top\u2192bottom, every component, exact colors (hex if discernible), typography (family/weight/size/line-height), spacing/padding/margins, border radius, shadows, alignment, and any icons/imagery. This description will be used to rebuild the page, so omit nothing visually significant.`;
+async function htmlToCode(input, models) {
+  if (!input.html || !input.html.trim()) throw new Error("htmlToCode needs input.html.");
+  let visualNotes = "";
+  if (input.screenshot && models.watch) {
+    visualNotes = (await models.watch({ frames: [input.screenshot], mimeType: "image/png", prompt: SCREENSHOT_DESC_PROMPT })).trim();
+  }
+  const stack = input.stack ?? "a single clean self-contained HTML file with inline CSS (no build step)";
+  const prompt = `${REVERSE_PROMPT}
+
+Target stack: ${stack}${input.goal ? `
+Goal: ${input.goal}` : ""}${visualNotes ? `
+
+=== VISUAL (from screenshot) ===
+${visualNotes}` : ""}
+
+=== CAPTURED HTML ===
+${input.html}`;
+  const code = (await models.code(prompt)).trim();
+  return { code, visualNotes: visualNotes || void 0 };
+}
+async function urlToCode(url, models, opts = {}) {
+  const { captureScreens: captureScreens2 } = await Promise.resolve().then(() => (init_screenshot_flow(), screenshot_flow_exports));
+  const caps = await captureScreens2([url], { viewport: opts.viewport });
+  const cap = caps[0];
+  if (!cap || !cap.ok || !cap.html) {
+    throw new Error(`urlToCode: could not capture ${url}${cap?.note ? ` (${cap.note})` : ""}.`);
+  }
+  const { code } = await htmlToCode(
+    { html: cap.html, screenshot: cap.png ?? void 0, goal: opts.goal, stack: opts.stack },
+    models
+  );
+  return { url, html: cap.html, screenshot: cap.png, code };
+}
+var SPEC_YAML_PROMPT = `You are a senior front-end engineer reverse-engineering a live web page so ANOTHER engineer can rebuild it from your spec ALONE. Below is the page's captured RENDERED HTML (optionally with visual notes from a screenshot). Strip tracking/ads/analytics/dead markup; keep the meaningful structure. Output a precise, exhaustive, build-ready spec as VALID YAML ONLY \u2014 no prose, no markdown, no code fences. Use exactly this top-level schema:
+page:            # url, title, purpose (one line: what this page is for)
+design_tokens:   # colors: {name: hex}; typography: {fontFamily, weights, scale}; spacing; radius; shadows
+layout:          # ordered list of regions top\u2192bottom; each: {region, role, components: [names]}
+components:      # reusable components; each: {name, description, structure (element tree), styling (key css/classes), content_example}
+data_model:      # entities the page renders; each: {entity, fields: [..]}
+interactions:    # list of {trigger, effect}
+responsive:      # notable breakpoints/behavior
+build_notes:     # how to assemble it, stack-agnostic
+Be concrete (real colors as hex, real copy, real fields). Output ONLY YAML.`;
+async function htmlToSpec(input, models) {
+  if (!input.html || !input.html.trim()) throw new Error("htmlToSpec needs input.html.");
+  let visualNotes = "";
+  if (input.screenshot && models.watch) {
+    visualNotes = (await models.watch({ frames: [input.screenshot], mimeType: "image/png", prompt: SCREENSHOT_DESC_PROMPT })).trim();
+  }
+  const prompt = `${SPEC_YAML_PROMPT}${input.goal ? `
+Goal: ${input.goal}` : ""}${visualNotes ? `
+
+=== VISUAL (from screenshot) ===
+${visualNotes}` : ""}
+
+=== CAPTURED HTML ===
+${input.html}`;
+  let spec = (await models.code(prompt)).trim();
+  spec = spec.replace(/^```ya?ml\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
+  return { spec, visualNotes: visualNotes || void 0 };
+}
+async function urlToSpec(url, models, opts = {}) {
+  const { captureScreens: captureScreens2 } = await Promise.resolve().then(() => (init_screenshot_flow(), screenshot_flow_exports));
+  const caps = await captureScreens2([url], { viewport: opts.viewport });
+  const cap = caps[0];
+  if (!cap || !cap.ok || !cap.html) {
+    throw new Error(`urlToSpec: could not capture ${url}${cap?.note ? ` (${cap.note})` : ""}.`);
+  }
+  const { spec } = await htmlToSpec(
+    { html: cap.html, screenshot: cap.png ?? void 0, goal: opts.goal },
+    models
+  );
+  return { url, html: cap.html, screenshot: cap.png, spec };
+}
+async function extractFrames(videoPath, opts = {}) {
+  const [{ spawn: spawn4 }, os, path, fs] = await Promise.all([
+    import("child_process"),
+    import("os"),
+    import("path"),
+    import("fs/promises")
+  ]);
+  const count = opts.count ?? 8;
+  const ffmpeg = opts.ffmpegPath ?? "ffmpeg";
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), "oriro-head-frames-"));
+  const pattern = path.join(dir, "f-%03d.png");
+  await new Promise((resolve3, reject) => {
+    const p = spawn4(ffmpeg, ["-hide_banner", "-loglevel", "error", "-i", videoPath, "-vf", "thumbnail", "-frames:v", String(count), "-y", pattern], { stdio: "ignore" });
+    p.on("error", () => reject(new Error("ffmpeg not found \u2014 pass frames yourself or a video-capable model, or set ffmpegPath.")));
+    p.on("close", (code) => code === 0 ? resolve3() : reject(new Error(`ffmpeg exited ${code}`)));
+  });
+  const files = (await fs.readdir(dir)).filter((f) => f.endsWith(".png")).sort();
+  const frames = [];
+  for (const f of files.slice(0, count)) frames.push(new Uint8Array(await fs.readFile(path.join(dir, f))));
+  return frames;
+}
+
+// src/head/model.ts
+import { register as registerOpenAICompletions2 } from "@earendil-works/pi-ai/openai-completions";
+
+// src/routers/keyless-complete.ts
+import { complete } from "@earendil-works/pi-ai";
+async function completeViaRouter(router, context, maxTokens = 1024) {
+  const reply = await complete(routerModel(router), context, {
+    apiKey: router.apiKey,
+    maxTokens
+  });
+  if (reply.stopReason === "error") {
+    const msg = reply.errorMessage ?? "router error";
+    const err = new Error(msg);
+    if (/\b429\b|rate.?limit|too many requests/i.test(msg)) err.status = 429;
+    throw err;
+  }
+  const text = reply.content.filter((c) => c.type === "text").map((c) => c.text).join("");
+  if (!text.trim()) throw new Error("empty completion");
+  return text;
+}
+
+// src/head/model.ts
+var HEAD_CODER_SYSTEM = "You are ORIRO Head's senior front-end engineer. Reproduce UIs faithfully and output exactly what the instruction asks for (clean, working code or a structured spec). No preamble.";
+function buildHeadCoderModel(routers = KEYLESS_FLOOR) {
+  registerOpenAICompletions2();
+  const byId = new Map(routers.map((r) => [r.id, r]));
+  const mux = new RouterMux(routers.map((r) => r.id));
+  return async (prompt) => {
+    const context = {
+      systemPrompt: HEAD_CODER_SYSTEM,
+      messages: [{ role: "user", content: prompt, timestamp: Date.now() }]
+    };
+    const { result } = await mux.run(async (id) => {
+      const r = byId.get(id);
+      if (!r) throw new Error(`unknown router ${id}`);
+      return completeViaRouter(r, context, 8192);
+    });
+    return result;
+  };
+}
+function headModels(routers = KEYLESS_FLOOR) {
+  return { code: buildHeadCoderModel(routers) };
+}
+var HEAD_WATCH_SYSTEM = "You are ORIRO Head's UI analyst. From the described/attached media, produce a precise, build-ready specification of the interface. Be concrete and exhaustive. No preamble.";
+function buildHeadWatchModel(routers = KEYLESS_FLOOR) {
+  registerOpenAICompletions2();
+  const byId = new Map(routers.map((r) => [r.id, r]));
+  const mux = new RouterMux(routers.map((r) => r.id));
+  return async ({ prompt }) => {
+    const context = {
+      systemPrompt: HEAD_WATCH_SYSTEM,
+      messages: [{ role: "user", content: prompt, timestamp: Date.now() }]
+    };
+    const { result } = await mux.run(async (id) => {
+      const r = byId.get(id);
+      if (!r) throw new Error(`unknown router ${id}`);
+      return completeViaRouter(r, context, 8192);
+    });
+    return result;
+  };
+}
+function headVideoModels(routers = KEYLESS_FLOOR) {
+  return { watch: buildHeadWatchModel(routers), code: buildHeadCoderModel(routers) };
+}
+
+// src/head/intent.ts
+var TRIGGERS = [
+  /\bgo (and )?(look|check|see|visit|inspect)\b/i,
+  /\binspect\b/i,
+  /\bcompare\b/i,
+  /\bvs\.?\b/i,
+  /\bgap analysis\b/i,
+  /\bcompetitive analysis\b/i,
+  /\bwhat (do|does) .* have that we (don'?t|do not|lack)\b/i,
+  /\b(build|make) .* like .+'s\b/i,
+  // "build a pricing page like stripe's"
+  /\blook at (this )?(url|site|page|https?:\/\/)/i
+];
+var SELF = /\b(us|our|ours|my|mine|this (site|page|app))\b/i;
+var SHOTS = /\bscreenshots?\b|\bshow me\b|--shots\b|\bvisual(s|ly)?\b/i;
+var URL_RE = /\b((?:https?:\/\/)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?:\/[^\s)]*)?)\b/gi;
+function normalize(u) {
+  const t = u.replace(/[).,;]+$/, "").trim();
+  if (!t) return "";
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+}
+function extractUrls(text) {
+  const seen = /* @__PURE__ */ new Set();
+  for (const m of text.matchAll(URL_RE)) {
+    const u = normalize(m[1] ?? "");
+    if (u && /\.[a-z]{2,}/i.test(u)) seen.add(u);
+  }
+  return [...seen];
+}
+function detectInspectIntent(text) {
+  const urls = extractUrls(text);
+  const phraseHit = TRIGGERS.some((re) => re.test(text));
+  const isInspect = phraseHit || urls.length >= 2;
+  const targetIsSelf = SELF.test(text);
+  const wantsShots = SHOTS.test(text);
+  if (!isInspect || urls.length === 0) {
+    return { isInspect: isInspect && urls.length > 0, targetIsSelf, competitors: [], wantsShots };
+  }
+  if (targetIsSelf) {
+    return { isInspect: true, targetIsSelf: true, competitors: urls, wantsShots };
+  }
+  const [target, ...competitors] = urls;
+  return { isInspect: true, targetIsSelf: false, target, competitors, wantsShots };
+}
+
+// src/head/run.ts
+function hostSlug(url) {
+  try {
+    return new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`).host.replace(/^www\./, "").replace(/[^a-z0-9.-]/gi, "_");
+  } catch {
+    return "site";
+  }
+}
+function extForStack(stack) {
+  const s = (stack ?? "").toLowerCase();
+  if (/\btsx?\b|react|next/.test(s)) return s.includes("ts") ? ".tsx" : ".jsx";
+  if (/\bvue\b/.test(s)) return ".vue";
+  if (/\bsvelte\b/.test(s)) return ".svelte";
+  return ".html";
+}
+function summarizeReport(report) {
+  const lines = [report.summary];
+  const page = (p) => `  \u2022 ${p.url} \u2014 ${p.ok ? `${p.sections.length} sections: ${p.sections.map((s) => s.type).join(", ")}` : `not readable (${p.note})`}`;
+  lines.push("Pages seen:");
+  lines.push(page(report.target));
+  for (const c of report.competitors) if (c.url !== report.target.url) lines.push(page(c));
+  if (report.missing.length) {
+    lines.push("Missing on the target (gaps to build):");
+    for (const g of report.missing.slice(0, 12)) lines.push(`  \u2022 ${g.label} (${g.priority}) \u2014 ${g.recommendation}`);
+  }
+  if (report.actionItems.length) {
+    lines.push("Suggested action items:");
+    for (const a of report.actionItems.slice(0, 12)) lines.push(`  \u2192 ${a.title} [${a.priority}/${a.effort}] \u2014 ${a.rationale}`);
+  }
+  return lines.join("\n");
+}
+async function runInspect(target, competitors, opts = {}) {
+  const report = await comparePages({ targetUrl: target, competitorUrls: competitors.length ? competitors : [target] });
+  const files = [];
+  if (opts.html) {
+    const path = join21(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(target)}-inspect.html`);
+    await writeFile(path, buildInspectionHtml(report), "utf8");
+    files.push(path);
+  }
+  return { summary: summarizeReport(report), files, report };
+}
+function parseHeadTargets(text, selfOrigin) {
+  const intent = detectInspectIntent(text);
+  if (intent.targetIsSelf) return { target: selfOrigin ?? null, competitors: intent.competitors };
+  if (intent.target) return { target: intent.target, competitors: intent.competitors };
+  const urls = extractUrls(text);
+  return { target: urls[0] ?? null, competitors: urls.slice(1) };
+}
+async function runUrlToCode(url, opts = {}) {
+  try {
+    const res = await urlToCode(url, headModels(), { goal: opts.goal, stack: opts.stack });
+    const codePath = join21(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(url)}${extForStack(opts.stack)}`);
+    await writeFile(codePath, res.code, "utf8");
+    return { summary: `Reverse-engineered ${url} into clean code (${res.code.length} chars) \u2192 ${codePath}`, files: [codePath] };
+  } catch (e) {
+    return { summary: headCaptureError("url\u2192code", e), files: [] };
+  }
+}
+async function runUrlToSpec(url, opts = {}) {
+  try {
+    const res = await urlToSpec(url, headModels(), { goal: opts.goal });
+    const specPath = join21(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(url)}.spec.yaml`);
+    await writeFile(specPath, res.spec, "utf8");
+    return { summary: `Reverse-engineered ${url} into a YAML build spec \u2192 ${specPath}`, files: [specPath] };
+  } catch (e) {
+    return { summary: headCaptureError("url\u2192spec", e), files: [] };
+  }
+}
+async function runCapture(urls, opts = {}) {
+  try {
+    const { captureScreens: captureScreens2, buildScreenshotFlowHtml: buildScreenshotFlowHtml2 } = await Promise.resolve().then(() => (init_screenshot_flow(), screenshot_flow_exports));
+    const caps = await captureScreens2(urls, { video: opts.video });
+    const html = buildScreenshotFlowHtml2([{ name: "Captured screens", captures: caps }]);
+    const flowPath = join21(opts.outDir ?? process.cwd(), "oriro-head-flow.html");
+    await writeFile(flowPath, html, "utf8");
+    const ok2 = caps.filter((c) => c.ok).length;
+    return { summary: `Captured ${ok2}/${caps.length} full-page screenshots \u2192 ${flowPath}`, files: [flowPath] };
+  } catch (e) {
+    return { summary: headCaptureError("screenshots", e), files: [] };
+  }
+}
+async function runVideoToCode(videoPath, opts = {}) {
+  try {
+    const mime = detectMediaType(videoPath).mimeType;
+    let frames;
+    try {
+      frames = await extractFrames(videoPath, { count: 8 });
+    } catch {
+      frames = void 0;
+    }
+    const res = await videoToCode(
+      { videoPath, frames, mimeType: mime, goal: opts.goal, stack: opts.stack },
+      headVideoModels()
+    );
+    const codePath = join21(opts.outDir ?? process.cwd(), `oriro-head-video${extForStack(opts.stack)}`);
+    await writeFile(codePath, res.code, "utf8");
+    return { summary: `Watched ${videoPath} \u2192 built code (${res.code.length} chars) \u2192 ${codePath}
+(experimental on the free floor \u2014 add a vision-capable router for pixel-faithful results.)`, files: [codePath] };
+  } catch (e) {
+    return { summary: `video\u2192code failed: ${e instanceof Error ? e.message : String(e)}. This flow needs a readable video and gives best results with a vision-capable router.`, files: [] };
+  }
+}
+function headCaptureError(op, e) {
+  const msg = e instanceof Error ? e.message : String(e);
+  if (/playwright/i.test(msg)) {
+    return `${op} needs the Chromium browser. Install it once:
+  npm i playwright && npx playwright install chromium
+Then retry. (The structural read \`oriro head <url>\` needs no browser.)`;
+  }
+  return `${op} failed: ${msg}`;
+}
+
+// src/head/pi-tool.ts
+var InspectSiteParams = Type2.Object({
+  url: Type2.String({ description: "The target website URL to inspect or rebuild from." }),
+  competitors: Type2.Optional(
+    Type2.Array(Type2.String(), { description: "Optional competitor/reference URLs to compare the target against." })
+  )
+});
+var UrlParam = Type2.Object({
+  url: Type2.String({ description: "The website URL to capture and rebuild." }),
+  goal: Type2.Optional(Type2.String({ description: "Optional natural-language goal, e.g. 'rebuild the pricing page'." })),
+  stack: Type2.Optional(Type2.String({ description: "Target stack for the generated code. Default: one self-contained HTML file." }))
+});
+var CaptureParams = Type2.Object({
+  urls: Type2.Array(Type2.String(), { description: "One or more URLs to screenshot in a real browser." })
+});
+var VideoParams = Type2.Object({
+  videoPath: Type2.String({ description: "Path to a screen-recording video to rebuild the UI from." }),
+  goal: Type2.Optional(Type2.String()),
+  stack: Type2.Optional(Type2.String())
+});
+function registerHead(pi) {
+  pi.registerTool({
+    name: "inspect_site",
+    label: "ORIRO Head",
+    description: "Go out to a live website and SEE it: its sections, CTAs, structure, and any gaps versus competitor URLs. Returns a structured report to build from. Call this whenever the user wants to look at, compare against, or rebuild a website/page.",
+    parameters: InspectSiteParams,
+    async execute(_toolCallId, params) {
+      const competitors = params.competitors?.length ? params.competitors : [params.url];
+      const report = await comparePages({ targetUrl: params.url, competitorUrls: competitors });
+      return { content: [{ type: "text", text: summarizeReport(report) }], details: report };
+    }
+  });
+  pi.registerTool({
+    name: "url_to_code",
+    label: "ORIRO Head \xB7 url\u2192code",
+    description: "Go to a URL, capture the live rendered page in a real browser, and REVERSE-ENGINEER it into clean, runnable code. Use when the user wants to rebuild/clone a page. Writes the code to a file in the working directory. Needs the `playwright` peer for the browser capture.",
+    parameters: UrlParam,
+    async execute(_toolCallId, params) {
+      const out = await runUrlToCode(params.url, { goal: params.goal, stack: params.stack });
+      return { content: [{ type: "text", text: out.summary }], details: { files: out.files } };
+    }
+  });
+  pi.registerTool({
+    name: "url_to_spec",
+    label: "ORIRO Head \xB7 url\u2192spec",
+    description: "Go to a URL, capture it, and reverse-engineer a precise, stack-agnostic YAML BUILD SPEC (design tokens, layout, component tree, data model, interactions). Use when the user wants a spec to rebuild from rather than a one-shot code dump. Needs the `playwright` peer.",
+    parameters: UrlParam,
+    async execute(_toolCallId, params) {
+      const out = await runUrlToSpec(params.url, { goal: params.goal });
+      return { content: [{ type: "text", text: out.summary }], details: { files: out.files } };
+    }
+  });
+  pi.registerTool({
+    name: "capture_site",
+    label: "ORIRO Head \xB7 screenshots",
+    description: "Visit each URL in a real browser and capture full-page screenshots, assembled into one visual flow HTML file. Use when the user wants to SEE pages, not just their structure. Needs the `playwright` peer.",
+    parameters: CaptureParams,
+    async execute(_toolCallId, params) {
+      const out = await runCapture(params.urls);
+      return { content: [{ type: "text", text: out.summary }], details: { files: out.files } };
+    }
+  });
+  pi.registerTool({
+    name: "video_to_code",
+    label: "ORIRO Head \xB7 video\u2192code",
+    description: "Watch a screen-recording video of a UI and build working code from it. Experimental on the free floor (best results with a vision-capable router). Use when the user drops a recording to rebuild.",
+    parameters: VideoParams,
+    async execute(_toolCallId, params) {
+      const out = await runVideoToCode(params.videoPath, { goal: params.goal, stack: params.stack });
+      return { content: [{ type: "text", text: out.summary }], details: { files: out.files } };
+    }
+  });
+}
+
+// src/orchestrate.ts
+import { createAgentSession, AuthStorage, ModelRegistry, SessionManager } from "@earendil-works/pi-coding-agent";
+import { Type as Type3 } from "typebox";
+var MAX_AGENTS = 8;
+var MAX_CONCURRENCY = 4;
+async function runOnce(spec) {
+  const authStorage = AuthStorage.inMemory();
+  const modelRegistry = ModelRegistry.inMemory(authStorage);
+  const model = registerOriroMux(modelRegistry);
+  if (!model) return { ...spec, ok: false, output: "no free model available" };
+  const { session } = await createAgentSession({
+    model,
+    authStorage,
+    modelRegistry,
+    sessionManager: SessionManager.inMemory(),
+    noTools: "all"
+  });
+  let out = "";
+  const unsub = session.subscribe((e) => {
+    if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") out += e.assistantMessageEvent.delta ?? "";
+  });
+  try {
+    await session.prompt(`You are the ${spec.role} sub-agent. ${spec.task}`);
+  } catch (e) {
+    return { ...spec, ok: false, output: e instanceof Error ? e.message : String(e) };
+  } finally {
+    unsub();
+    session.dispose();
+  }
+  return { ...spec, ok: out.trim().length > 0, output: out.trim() };
+}
+async function runAgent(spec) {
+  let last = await runOnce(spec);
+  if (!last.ok) last = await runOnce(spec);
+  return last;
+}
+async function runPool(items, n, fn) {
+  const results = new Array(items.length);
+  let i = 0;
+  async function worker() {
+    while (i < items.length) {
+      const idx = i++;
+      const item = items[idx];
+      if (item === void 0) continue;
+      results[idx] = await fn(item);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, () => worker()));
+  return results;
+}
+async function orchestrate(opts) {
+  const agents = opts.agents.slice(0, MAX_AGENTS);
+  if ((opts.mode ?? "parallel") === "chain") {
+    const results = [];
+    let prev = "";
+    for (const a of agents) {
+      const r = await runAgent({ role: a.role, task: prev ? `${a.task}
+
+Previous result:
+${prev}` : a.task });
+      results.push(r);
+      prev = r.output;
+    }
+    return results;
+  }
+  return runPool(agents, MAX_CONCURRENCY, runAgent);
+}
+function registerOrchestrator(pi) {
+  pi.registerTool({
+    name: "deploy_agents",
+    label: "ORIRO Orchestrator",
+    description: "Deploy multiple sub-agents in parallel (or chained) to do work \u2014 e.g. 'spawn 4 QA + 2 coders, run the tests'. Each sub-agent runs FREE on the router pool. Give each agent a role and a task.",
+    parameters: Type3.Object({
+      agents: Type3.Array(Type3.Object({ role: Type3.String(), task: Type3.String() }), {
+        description: "The sub-agents to deploy (max 8)."
+      }),
+      mode: Type3.Optional(Type3.Union([Type3.Literal("parallel"), Type3.Literal("chain")]))
+    }),
+    async execute(_id, params) {
+      const results = await orchestrate({ agents: params.agents, mode: params.mode });
+      const text = results.map((r) => `[${r.role}] ${r.ok ? "\u2713" : "\u2717"} ${r.output.slice(0, 300)}`).join("\n");
+      return { content: [{ type: "text", text }], details: { results } };
+    }
+  });
+}
+
+// src/onboarding/assemble.ts
+async function assembleOriroSession(opts = {}) {
+  const cwd = opts.cwd ?? process.cwd();
+  const authStorage = AuthStorage2.inMemory();
+  const modelRegistry = ModelRegistry2.inMemory(authStorage);
+  const settingsManager = SettingsManager.create(cwd);
+  const model = registerOriroMux(modelRegistry);
+  if (!model) throw new Error("ORIRO keyless model unavailable");
+  const resourceLoader = new DefaultResourceLoader({
+    cwd,
+    agentDir: getAgentDir(),
+    settingsManager,
+    additionalSkillPaths: skillRoots(),
+    // bundled library + the user's own ~/.oriro/skills
+    extensionFactories: [registerGuardian, registerHead, registerScribe, registerOrchestrator]
+  });
+  await resourceLoader.reload();
+  const { session, extensionsResult } = await createAgentSession2({
+    model,
+    authStorage,
+    modelRegistry,
+    settingsManager,
+    sessionManager: SessionManager2.inMemory(),
+    resourceLoader
+  });
+  attachScribe(session);
+  return { session, extensionsResult };
+}
+
+// src/language/nllb-translator.ts
+var NLLB_CODE = {
+  en: "eng_Latn",
+  zh: "zho_Hans",
+  de: "deu_Latn",
+  es: "spa_Latn",
+  ru: "rus_Cyrl",
+  ko: "kor_Hang",
+  fr: "fra_Latn",
+  ja: "jpn_Jpan",
+  pt: "por_Latn",
+  tr: "tur_Latn",
+  pl: "pol_Latn",
+  ca: "cat_Latn",
+  nl: "nld_Latn",
+  ar: "arb_Arab",
+  sv: "swe_Latn",
+  it: "ita_Latn",
+  id: "ind_Latn",
+  hi: "hin_Deva",
+  fi: "fin_Latn",
+  vi: "vie_Latn",
+  he: "heb_Hebr",
+  uk: "ukr_Cyrl",
+  el: "ell_Grek",
+  ms: "zsm_Latn",
+  cs: "ces_Latn",
+  ro: "ron_Latn",
+  da: "dan_Latn",
+  hu: "hun_Latn",
+  ta: "tam_Taml",
+  no: "nob_Latn",
+  th: "tha_Thai",
+  ur: "urd_Arab",
+  hr: "hrv_Latn",
+  bg: "bul_Cyrl",
+  lt: "lit_Latn",
+  mi: "mri_Latn",
+  ml: "mal_Mlym",
+  cy: "cym_Latn",
+  sk: "slk_Latn",
+  te: "tel_Telu",
+  fa: "pes_Arab",
+  lv: "lvs_Latn",
+  bn: "ben_Beng",
+  sr: "srp_Cyrl",
+  az: "azj_Latn",
+  sl: "slv_Latn",
+  kn: "kan_Knda",
+  et: "est_Latn",
+  mk: "mkd_Cyrl",
+  eu: "eus_Latn",
+  is: "isl_Latn",
+  hy: "hye_Armn",
+  ne: "npi_Deva",
+  mn: "khk_Cyrl",
+  bs: "bos_Latn",
+  kk: "kaz_Cyrl",
+  sq: "als_Latn",
+  sw: "swh_Latn",
+  gl: "glg_Latn",
+  mr: "mar_Deva",
+  pa: "pan_Guru",
+  si: "sin_Sinh",
+  km: "khm_Khmr",
+  sn: "sna_Latn",
+  yo: "yor_Latn",
+  so: "som_Latn",
+  af: "afr_Latn",
+  oc: "oci_Latn",
+  ka: "kat_Geor",
+  be: "bel_Cyrl",
+  tg: "tgk_Cyrl",
+  sd: "snd_Arab",
+  gu: "guj_Gujr",
+  am: "amh_Ethi",
+  yi: "ydd_Hebr",
+  lo: "lao_Laoo",
+  uz: "uzn_Latn",
+  fo: "fao_Latn",
+  ht: "hat_Latn",
+  ps: "pbt_Arab",
+  tk: "tuk_Latn",
+  nn: "nno_Latn",
+  mt: "mlt_Latn",
+  sa: "san_Deva",
+  lb: "ltz_Latn",
+  my: "mya_Mymr",
+  bo: "bod_Tibt",
+  tl: "tgl_Latn",
+  mg: "plt_Latn",
+  as: "asm_Beng",
+  tt: "tat_Cyrl",
+  ln: "lin_Latn",
+  ha: "hau_Latn",
+  ba: "bak_Cyrl",
+  jw: "jav_Latn",
+  su: "sun_Latn",
+  yue: "yue_Hant"
+};
+var ENG = "eng_Latn";
+var toNllb = (iso) => NLLB_CODE[(iso || "").toLowerCase()] ?? ENG;
+var NllbTranslator = class {
+  pipe = null;
+  loading = null;
+  ready() {
+    return this.pipe !== null;
+  }
+  /** Lazy-load NLLB-200 once (first-use download + cache). Idempotent. */
+  async load(modelId = "Xenova/nllb-200-distilled-600M") {
+    if (this.pipe) return;
+    if (this.loading) return this.loading;
+    this.loading = (async () => {
+      const { pipeline } = await import("@huggingface/transformers");
+      this.pipe = await pipeline("translation", modelId);
+    })();
+    return this.loading;
+  }
+  async run(text, src, tgt) {
+    if (!this.pipe) await this.load();
+    if (!this.pipe) return text;
+    const out = await this.pipe(text, { src_lang: src, tgt_lang: tgt });
+    return out?.[0]?.translation_text?.trim() || text;
+  }
+  toEnglish(text, fromLang) {
+    return this.run(text, toNllb(fromLang), ENG);
+  }
+  fromEnglish(english, toLang) {
+    return this.run(english, ENG, toNllb(toLang));
+  }
+};
+var instance = null;
+function setupNllbTranslator(opts) {
+  if (!instance) {
+    instance = new NllbTranslator();
+    registerTranslator(instance);
+  }
+  if (opts?.preload) void instance.load();
+  return instance;
+}
+
+// src/language/gateway.ts
+var isEnglish2 = (code) => !code || code.toLowerCase().startsWith("en");
+var isCommand = (text) => text.trimStart().startsWith("/");
+async function ensureReady() {
+  try {
+    await setupNllbTranslator().load();
+  } catch {
+  }
+}
+async function translateIncoming(message) {
+  const lang = getTerminalLanguage().code;
+  if (isEnglish2(lang) || !message.trim() || isCommand(message)) return message;
+  await ensureReady();
+  return translateForCoder(message, lang);
+}
+async function translateOutgoing(text) {
+  const lang = getTerminalLanguage().code;
+  if (isEnglish2(lang) || !text.trim()) return text;
+  await ensureReady();
+  return translateForUser(text, lang);
+}
+
+// src/repl-ui/tui-repl.ts
+import { ProcessTerminal, TUI, Editor, Text, Container } from "@earendil-works/pi-tui";
+
+// src/repl-ui/permission.ts
+var MODES = ["manual", "accept_edits", "auto", "plan"];
+var MODE_META = {
+  manual: { label: "Manual", indicator: "\u25CF" },
+  accept_edits: { label: "Accept Edits", indicator: "\u270E" },
+  auto: { label: "Auto", indicator: "\u23F5\u23F5" },
+  plan: { label: "Plan", indicator: "\u25A2" }
+};
+var current = "manual";
+function getMode() {
+  return current;
+}
+function cycleMode() {
+  const i = MODES.indexOf(current);
+  current = MODES[(i + 1) % MODES.length];
+  return current;
+}
+var thinking = false;
+function getThinking() {
+  return thinking;
+}
+function toggleThinking() {
+  thinking = !thinking;
+  return thinking;
+}
+var THINKING_PRIMER = "Think step by step and plan your approach before acting. Reason carefully and check your work.";
+
+// src/repl-ui/verify-actions.ts
+import { existsSync as existsSync13 } from "fs";
+import { isAbsolute, resolve } from "path";
+var CLAIM = /\b(?:have|has)\s+been\s+created\b|\b(?:created|wrote|written|saved|generated)\b(?![ \t]*(?:by you|it yourself))/i;
+var SUGGESTION = /\byou\s+(?:can|could|should|may)\s+(?:create|add|save|make|put)\b/i;
+var PATH_RE = /(?:`|"|')?((?:[A-Za-z]:[\\/]|\.{0,2}[\\/])?[\w.\\/-]+\.(?:html?|css|json|m?[jt]sx?|py|md|txt|vue|svelte|go|rs|java|rb|php|sh|ya?ml|sql|toml|env|cpp|hpp|[ch])(?![A-Za-z0-9]))(?:`|"|')?/gi;
+function phantomFileWarning(reply, cwd = process.cwd()) {
+  if (!reply || !CLAIM.test(reply)) return "";
+  const missing = /* @__PURE__ */ new Set();
+  for (const m of reply.matchAll(PATH_RE)) {
+    const p = m[1];
+    if (!p) continue;
+    if (/^https?:|node_modules|<[^>]+>|your-|example\./i.test(p)) continue;
+    const abs = isAbsolute(p) ? p : resolve(cwd, p.replace(/^[.][\\/]/, ""));
+    if (!existsSync13(abs)) missing.add(p);
+  }
+  if (missing.size === 0) return "";
+  if (SUGGESTION.test(reply) && !/\b(?:have|has)\s+been\s+created\b/i.test(reply)) return "";
+  const list = [...missing].slice(0, 5).join(", ");
+  const plural = missing.size > 1;
+  return `
+\u26A0 ORIRO said it ${plural ? "created files" : "created a file"} (${list}), but ${plural ? "they're" : "it's"} not on disk \u2014 the free router may have described the write without actually running it. Retry, or add your own key with \`oriro routers\` for reliable coding.`;
+}
+
+// src/repl-ui/tui-repl.ts
+var editorTheme = {
+  borderColor: (s) => dim(s),
+  selectList: {
+    selectedPrefix: (s) => accent(s),
+    selectedText: (s) => accent(s),
+    description: (s) => dim(s),
+    scrollInfo: (s) => dim(s),
+    noMatch: (s) => dim(s)
+  }
+};
+function footerText() {
+  const cur = getMode();
+  const bar = MODES.map((m) => {
+    const meta = MODE_META[m];
+    const s = `${meta.indicator} ${meta.label}`;
+    return m === cur ? accent(s) : dim(s);
+  }).join(dim(" \xB7 "));
+  const think = getThinking() ? accent("\u{1F9E0} Thinking") : dim("\u{1F9E0} Thinking");
+  return `${bar}   ${think}   ${dim("Shift+Tab posture \xB7 Alt+Shift+T thinking \xB7 /exit")}`;
+}
+async function runTuiRepl(session) {
+  const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
+  const term = new ProcessTerminal();
+  const tui = new TUI(term, true);
+  const chat = new Container();
+  const editor = new Editor(tui, editorTheme, { paddingX: 1 });
+  const sep = new Text(dim("\u2500".repeat(Math.max(8, term.columns))), 0, 0);
+  const footer = new Text(footerText(), 0, 0);
+  tui.addChild(chat);
+  tui.addChild(editor);
+  tui.addChild(sep);
+  tui.addChild(footer);
+  tui.setFocus(editor);
+  const refreshFooter = () => {
+    sep.setText(dim("\u2500".repeat(Math.max(8, term.columns))));
+    footer.setText(footerText());
+    tui.requestRender();
+  };
+  const removeListener = tui.addInputListener((data) => {
+    if (data === "\x1B[Z") {
+      cycleMode();
+      refreshFooter();
+      return { consume: true };
+    }
+    if (data === "\x1BT" || data === "\x1Bt") {
+      toggleThinking();
+      refreshFooter();
+      return { consume: true };
+    }
+    return void 0;
+  });
+  let stopped = false;
+  const cleanup = () => {
+    if (stopped) return;
+    stopped = true;
+    try {
+      removeListener();
+    } catch {
+    }
+    try {
+      session.dispose();
+    } catch {
+    }
+    try {
+      tui.stop();
+    } catch {
+    }
+    process.stdout.write(dim("\nBye.\n"));
+    process.exit(0);
+  };
+  process.on("SIGINT", cleanup);
+  let busy = false;
+  editor.onSubmit = (raw) => {
+    const text = raw.trim();
+    if (!text || busy) return;
+    const slash = text.toLowerCase();
+    if (slash === "/exit" || slash === "/quit") return cleanup();
+    if (slash === "/help" || slash === "/?") {
+      chat.addChild(new Text(dim("  Just type to chat. Shift+Tab posture \xB7 Alt+Shift+T thinking \xB7 /voice to speak \xB7 /exit."), 0, 0));
+      editor.setText("");
+      tui.requestRender();
+      return;
+    }
+    if (slash === "/skill" || slash === "/skills") {
+      chat.addChild(new Text(dim("  326 skills bundled & active. Browse them: `oriro skills list --all` in your shell."), 0, 0));
+      editor.setText("");
+      tui.requestRender();
+      return;
+    }
+    if (slash === "/connector" || slash === "/connectors") {
+      chat.addChild(new Text(dim("  59 MCP connectors. Add your own: `oriro connectors setup` \xB7 or `oriro connectors add <slug>`."), 0, 0));
+      editor.setText("");
+      tui.requestRender();
+      return;
+    }
+    if (slash === "/voice") {
+      editor.setText("");
+      const status = new Text(dim("  \u{1F399} listening\u2026 (needs ffmpeg + the transformers voice peer)"), 0, 0);
+      chat.addChild(status);
+      tui.requestRender();
+      void (async () => {
+        const heard = await listen();
+        if (heard?.text) {
+          status.setText(dim(`  \u{1F399} heard [${heard.language}]:`));
+          editor.setText(heard.text);
+        } else {
+          status.setText(dim("  \u{1F399} voice input unavailable (install ffmpeg + `npm i @huggingface/transformers`)."));
+        }
+        tui.requestRender();
+      })();
+      return;
+    }
+    editor.addToHistory(text);
+    editor.setText("");
+    chat.addChild(new Text(`${accent("\u203A")} ${text}`, 0, 1));
+    const streaming = new Text(dim("\u2026"), 0, 0);
+    chat.addChild(streaming);
+    tui.requestRender();
+    busy = true;
+    void (async () => {
+      let english = await translateIncoming(text);
+      if (getThinking()) english = `${THINKING_PRIMER}
+
+${english}`;
+      noteUserInput(text);
+      let out = "";
+      const unsub = session.subscribe(
+        (e) => {
+          if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
+            out += e.assistantMessageEvent.delta ?? "";
+            if (isEnglish3) {
+              streaming.setText(out);
+              tui.requestRender();
+            }
+          }
+        }
+      );
+      try {
+        await session.prompt(english);
+      } catch {
+        streaming.setText(dim("(every free router is busy right now \u2014 give it a moment and try again)"));
+        tui.requestRender();
+        busy = false;
+        unsub();
+        return;
+      }
+      unsub();
+      const cleaned = scrubOutput(out);
+      const finalText = isEnglish3 ? cleaned.trim() : await translateOutgoing(cleaned.trim());
+      const warn = phantomFileWarning(finalText);
+      streaming.setText((finalText || dim("(no response)")) + (warn ? dim(warn) : ""));
+      tui.requestRender();
+      busy = false;
+    })();
+  };
+  tui.start();
+  refreshFooter();
+  await new Promise(() => {
+  });
+}
+
+// src/voice/mic.ts
+import { spawn as spawn3 } from "child_process";
+import { tmpdir as tmpdir3 } from "os";
+import { join as join22 } from "path";
+import { existsSync as existsSync14, statSync as statSync2 } from "fs";
+function recorders(outFile, seconds) {
+  const dur = String(seconds);
+  if (process.platform === "darwin") {
+    return [
+      { cmd: "ffmpeg", args: ["-hide_banner", "-loglevel", "error", "-f", "avfoundation", "-i", ":0", "-t", dur, "-y", outFile] },
+      { cmd: "sox", args: ["-d", outFile, "trim", "0", dur] }
+    ];
+  }
+  if (process.platform === "win32") {
+    return [
+      { cmd: "ffmpeg", args: ["-hide_banner", "-loglevel", "error", "-f", "dshow", "-i", "audio=default", "-t", dur, "-y", outFile] }
+    ];
+  }
+  return [
+    { cmd: "arecord", args: ["-q", "-f", "cd", "-d", dur, outFile] },
+    { cmd: "ffmpeg", args: ["-hide_banner", "-loglevel", "error", "-f", "alsa", "-i", "default", "-t", dur, "-y", outFile] },
+    { cmd: "sox", args: ["-d", outFile, "trim", "0", dur] }
+  ];
+}
+async function recordMic(seconds = 6) {
+  const outFile = join22(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
+  for (const r of recorders(outFile, seconds)) {
+    const okFile = await new Promise((resolve3) => {
+      const child = spawn3(r.cmd, r.args, { stdio: "ignore" });
+      child.on("error", () => resolve3(false));
+      child.on("close", (code) => resolve3(code === 0 && existsSync14(outFile) && statSync2(outFile).size > 44));
+    });
+    if (okFile) return outFile;
+  }
+  return null;
+}
+
+// src/voice/stt.ts
+async function decodePcm(path) {
+  const { spawn: spawn4 } = await import("child_process");
+  return await new Promise((resolve3, reject) => {
+    const chunks = [];
+    const p = spawn4(
+      "ffmpeg",
+      ["-hide_banner", "-loglevel", "error", "-i", path, "-ac", "1", "-ar", "16000", "-f", "f32le", "pipe:1"],
+      { stdio: ["ignore", "pipe", "ignore"] }
+    );
+    p.stdout.on("data", (c) => chunks.push(c));
+    p.on("error", () => reject(new Error("ffmpeg not found \u2014 install ffmpeg to decode audio for speech-to-text.")));
+    p.on("close", (code) => {
+      if (code !== 0) return reject(new Error(`ffmpeg exited ${code ?? "?"} decoding ${path}`));
+      const buf = Buffer.concat(chunks);
+      if (!buf.length) return reject(new Error(`no audio decoded from ${path}`));
+      resolve3(new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.length / 4)));
+    });
+  });
+}
+var asr = null;
+async function loadAsr(modelId = "Xenova/whisper-base") {
+  if (asr) return asr;
+  const { pipeline } = await import("@huggingface/transformers");
+  asr = await pipeline("automatic-speech-recognition", modelId);
+  return asr;
+}
+async function transcribeAudioFile(path, opts = {}) {
+  const pcm = await decodePcm(path);
+  const model = await loadAsr();
+  const out = await model(pcm, {
+    task: opts.translate ? "translate" : "transcribe",
+    return_language: true,
+    chunk_length_s: 30
+  });
+  return { text: (out?.text ?? "").trim(), language: out?.language ?? "en" };
+}
+
+// src/voice/setup.ts
+var wired2 = false;
+function setupVoiceInput() {
+  if (wired2) return;
+  wired2 = true;
+  registerVoiceListen(async () => {
+    const clip = await recordMic();
+    if (!clip) throw new Error("no microphone recorder available");
+    const t = await transcribeAudioFile(clip, { translate: true });
+    return { text: t.text, language: t.language };
+  });
+}
+
+// src/repl.ts
+function replHelp() {
+  return `
+  ${accent("ORIRO terminal \u2014 help")}
+  ${dim("Just type to chat; ORIRO writes and runs code for you (keyless, free).")}
+
+  ${accent("/help")}  this help     ${accent("/exit")} or ${accent("/quit")}  leave     ${dim("Ctrl-D / Ctrl-C also exit")}
+  ${dim("Run these OUTSIDE the chat (in your shell):")}
+  ${dim("oriro skills \xB7 routers \xB7 connectors \xB7 channels \xB7 scribe \xB7 language \xB7 avatar")}
+
+`;
+}
+async function runRepl() {
+  if (isFirstRun()) await runOnboarding();
+  else stdout7.write(banner());
+  const { session } = await assembleOriroSession();
+  setupVoiceInput();
+  if (stdin6.isTTY && stdout7.isTTY) {
+    await runTuiRepl(session);
+    return;
+  }
+  await runReadlineRepl(session);
+}
+async function runReadlineRepl(session) {
+  const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
+  const rl = createInterface6({ input: stdin6, output: stdout7 });
+  let closing = false;
+  const onSigint = () => {
+    if (closing) return;
+    closing = true;
+    stdout7.write(dim("\nBye.\n"));
+    try {
+      rl.close();
+    } catch {
+    }
+    try {
+      session.dispose();
+    } catch {
+    }
+    process.exit(0);
+  };
+  process.on("SIGINT", onSigint);
+  try {
+    for (; ; ) {
+      let line;
+      try {
+        line = (await rl.question("\u203A ")).trim();
+      } catch {
+        break;
+      }
+      if (!line) continue;
+      const slash = line.toLowerCase();
+      if (slash === "/exit" || slash === "/quit") break;
+      if (slash === "/help" || slash === "/?") {
+        stdout7.write(replHelp());
+        continue;
+      }
+      if (slash === "/skill" || slash === "/skills") {
+        stdout7.write(`  ${dim("326 skills bundled & active. Browse: oriro skills list --all")}
+`);
+        continue;
+      }
+      if (slash === "/connector" || slash === "/connectors") {
+        stdout7.write(`  ${dim("59 MCP connectors. Add: oriro connectors setup \xB7 or oriro connectors add <slug>")}
+`);
+        continue;
+      }
+      const english = await translateIncoming(line);
+      noteUserInput(line);
+      let out = "";
+      const unsub = session.subscribe(
+        (e) => {
+          if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
+            out += e.assistantMessageEvent.delta ?? "";
+          }
+        }
+      );
+      try {
+        await session.prompt(english);
+      } finally {
+        unsub();
+      }
+      const cleaned = scrubOutput(out);
+      const shown = isEnglish3 ? cleaned.trim() : await translateOutgoing(cleaned.trim());
+      stdout7.write(`${shown}${phantomFileWarning(shown)}
+
+`);
+    }
+  } finally {
+    process.removeListener("SIGINT", onSigint);
+    if (!closing) {
+      rl.close();
+      session.dispose();
+      stdout7.write(dim("\nBye.\n"));
+    }
+  }
+}
+
+// src/commands/ui.ts
+var ok = (s) => {
+  process.stdout.write(`${fgHex(PALETTE.success, "\u2713")} ${s}
+`);
+};
+var fail = (s) => {
+  process.stderr.write(`${fgHex(PALETTE.error, "\u2717")} ${s}
+`);
+};
+var info = (s) => {
+  process.stdout.write(`${dim("\xB7")} ${s}
+`);
+};
+var heading = (s) => {
+  process.stdout.write(`
+${bold(accent(s))}
+`);
+};
+var DieError = class extends Error {
+};
+function die(msg) {
+  fail(msg);
+  process.exitCode = 1;
+  throw new DieError(msg);
+}
+
+// src/commands/routers.ts
+function registerRoutersCommand(program2) {
+  const routers = program2.command("routers").description("manage the free-router pool the model runs on");
+  routers.command("list").description("list the router catalog and the active pool").action(() => {
+    heading("Routers");
+    for (const r of ROUTER_CATALOG) {
+      if (r.comingSoon) {
+        process.stdout.write(`  ${dim(`${r.id}  ${r.displayName}  (coming soon)`)}
+`);
+        continue;
+      }
+      const tier = r.keyless ? fgHex(PALETTE.success, "keyless") : dim(r.tier);
+      process.stdout.write(`  ${accent(r.id.padEnd(22))} ${r.displayName.padEnd(24)} ${tier}
+`);
+    }
+    const custom = registeredRouters().filter((r) => !ROUTER_CATALOG.some((c) => c.id === r.id));
+    if (custom.length) {
+      process.stdout.write(`
+  ${accent("your custom routers")}
+`);
+      for (const r of custom) {
+        const type = r.apiKey && r.apiKey !== KEYLESS_SENTINEL ? dim("BYOK") : fgHex(PALETTE.success, "keyless");
+        process.stdout.write(`  ${accent(r.id.padEnd(22))} ${dim(r.baseUrl.padEnd(40))} ${type}
+`);
+      }
+    }
+    const pool = resolvePool();
+    info(pool.length ? `active pool: ${pool.map((p) => p.id).join(", ")}` : "active pool: empty \u2192 using the keyless floor");
+  });
+  routers.command("add <name>").description("live-validate a router and add it to the pool \u2014 a catalog name, OR any custom endpoint via --url").option("-k, --key <key>", "API key (BYOK) \u2014 omit for a keyless free router").option("-m, --model <id>", "model id to run (REQUIRED for a custom --url router)").option("--url <baseUrl>", "add ANY custom free/BYOK router by its OpenAI-compatible base URL (the part BEFORE /chat/completions)").option("--api <api>", "custom router API: 'openai' (default) or 'google'", "openai").action(async (name, opts) => {
+    let entry;
+    if (opts.url) {
+      if (!opts.model) die("a custom --url router needs --model <id> (the model to run on that endpoint)");
+      const baseUrl = opts.url.replace(/\/(?:chat\/completions)\/?$/i, "").replace(/\/$/, "");
+      entry = {
+        id: name,
+        displayName: name,
+        baseUrl,
+        api: opts.api === "google" ? "google-generative-ai" : "openai-completions",
+        freeModels: [opts.model],
+        keyless: !opts.key,
+        tier: "free",
+        kind: "chat"
+      };
+    } else {
+      entry = routerById(name);
+      if (!entry) die(`unknown router '${name}' \u2014 run \`oriro routers list\`, or add any custom endpoint with: oriro routers add <name> --url <baseUrl> --model <id> [--key <key>]`);
+    }
+    const res = await addRouter(entry, { ...opts.key ? { key: opts.key } : {}, ...opts.model ? { modelId: opts.model } : {} });
+    if (!res.ok) die(`could not add '${name}': ${res.validation.error ?? "validation failed"}`);
+    ok(`added ${accent(name)} (${res.validation.latencyMs}ms, model ${res.validation.model}${opts.key ? ", BYOK" : ", keyless"}) \u2192 active pool`);
+  });
+  routers.command("use <slugs...>").description("set the active router pool (ids must be added first)").action((slugs) => {
+    const { applied, unknown } = useRouters(slugs);
+    if (!applied.length) {
+      die(`none of those are added yet: ${unknown.join(", ")} \u2014 run \`oriro routers add <slug>\` first`);
+    }
+    ok(`pool set: ${applied.join(", ")}`);
+    if (unknown.length) info(`skipped (not added yet \u2014 run \`oriro routers add\`): ${unknown.join(", ")}`);
+  });
+}
+
+// src/commands/scribe.ts
+import { readFileSync as readFileSync19 } from "fs";
+
+// src/scribe/transcript.ts
+import { existsSync as existsSync15, readFileSync as readFileSync18 } from "fs";
+function parseHookStdin(raw) {
+  try {
+    const j = JSON.parse(raw);
+    return {
+      transcriptPath: typeof j.transcript_path === "string" ? j.transcript_path : void 0,
+      cwd: typeof j.cwd === "string" ? j.cwd : void 0,
+      sessionId: typeof j.session_id === "string" ? j.session_id : void 0,
+      stopHookActive: j.stop_hook_active === true
+    };
+  } catch {
+    return { stopHookActive: false };
+  }
+}
+function shouldCapture(cwd) {
+  if (process.env.ORIRO_SCRIBE_ONLY !== "1") return true;
+  if (!cwd) return false;
+  return /oriro/i.test(cwd.replace(/\\/g, "/"));
+}
+function textOf(content) {
+  if (!content) return "";
+  if (typeof content === "string") return content;
+  return content.filter((b) => b.type === "text" && typeof b.text === "string").map((b) => b.text).join("\n").trim();
+}
+function isHumanUser(e) {
+  if (e.type !== "user" && e.message?.role !== "user") return false;
+  const c = e.message?.content;
+  if (typeof c === "string") return c.trim().length > 0;
+  if (Array.isArray(c)) return c.some((b) => b.type === "text" && (b.text ?? "").trim().length > 0);
+  return false;
+}
+var FILE_KEYS = ["file_path", "path", "notebook_path", "filePath"];
+function lastTurnFromTranscript(path) {
+  if (!existsSync15(path)) return null;
+  const raw = readFileSync18(path, "utf8");
+  const entries = [];
+  for (const line of raw.split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      entries.push(JSON.parse(line));
+    } catch {
+    }
+  }
+  if (entries.length === 0) return null;
+  let anchor;
+  let start = -1;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const e = entries[i];
+    if (e && isHumanUser(e)) {
+      start = i;
+      anchor = e;
+      break;
+    }
+  }
+  const slice = start === -1 ? entries : entries.slice(start);
+  const user = anchor ? textOf(anchor.message?.content) : "";
+  const noteParts = [];
+  const tools = /* @__PURE__ */ new Set();
+  const files = /* @__PURE__ */ new Set();
+  let ts;
+  for (const e of slice) {
+    if (e.timestamp) ts = e.timestamp;
+    const role = e.type ?? e.message?.role;
+    const content = e.message?.content;
+    if (role === "assistant") {
+      const t = textOf(content);
+      if (t) noteParts.push(t);
+    }
+    if (Array.isArray(content)) {
+      for (const b of content) {
+        if (b.type === "tool_use" && b.name) {
+          tools.add(b.name);
+          const input = b.input ?? {};
+          for (const k of FILE_KEYS) {
+            const v = input[k];
+            if (typeof v === "string" && v.trim()) files.add(v.trim());
+          }
+        }
+      }
+    }
+  }
+  const note = noteParts.join("\n\n").trim();
+  if (!user && !note && tools.size === 0) return null;
+  return {
+    user: user || void 0,
+    note: note || void 0,
+    tools: tools.size ? [...tools] : void 0,
+    files: files.size ? [...files] : void 0,
+    ts
+  };
+}
+
+// src/commands/scribe.ts
+function readStdin() {
+  try {
+    return readFileSync19(0, "utf8");
+  } catch {
+    return "";
+  }
+}
+function csv(v) {
+  if (typeof v !== "string") return void 0;
+  const arr = v.split(",").map((s) => s.trim()).filter(Boolean);
+  return arr.length ? arr : void 0;
+}
+function hasContent(rec) {
+  return Boolean(rec.user?.trim() || rec.note?.trim() || rec.tools?.length || rec.files?.length);
+}
+function registerScribeCommand(program2) {
+  const scribe = program2.command("scribe").description("the consent-gated local work journal (off by default)");
+  scribe.command("on").description("enable the journal (recorded locally at ~/.oriro/scribe, never leaves your machine)").action(() => {
+    setScribeConsent(true);
+    ok("Scriber is ON \u2014 turns are journaled locally (redacted) and recalled across sessions.");
+    info(dim("everything stays on this machine; turn off any time with `oriro scribe off`"));
+  });
+  scribe.command("off").description("disable the journal").action(() => {
+    setScribeConsent(false);
+    ok("Scriber is OFF \u2014 no new turns are recorded or injected.");
+  });
+  scribe.command("status").description("show whether the journal is on or off").action(() => {
+    info(isScribeEnabled() ? "Scriber: ON" : "Scriber: OFF (default)");
+  });
+  scribe.command("capture").description("capture one turn into the journal (used by the Claude Code Stop hook + /scribe skill)").option("--hook", "read the Claude Code Stop-hook JSON from stdin and capture the latest turn").option("--json <record>", "capture an explicit TurnRecord (JSON)").option("--user <text>", "the user/request text for this turn").option("--note <text>", "a note / assistant summary for this turn").option("--router <name>", "which router/model produced the turn").option("--files <list>", "comma-separated file paths touched").option("--tools <list>", "comma-separated tool names used").action((opts) => {
+    try {
+      if (!isScribeEnabled()) {
+        if (!opts.hook) info("Scriber is OFF \u2014 run `oriro scribe on` first.");
+        return;
+      }
+      const now = (/* @__PURE__ */ new Date()).toISOString();
+      let rec = null;
+      if (opts.hook) {
+        const hook = parseHookStdin(readStdin());
+        if (hook.stopHookActive) return;
+        if (!shouldCapture(hook.cwd)) return;
+        if (!hook.transcriptPath) return;
+        const turn = lastTurnFromTranscript(hook.transcriptPath);
+        if (!turn) return;
+        const ts = turn.ts ?? now;
+        rec = {
+          ts,
+          date: ts.slice(0, 10),
+          user: turn.user,
+          note: turn.note,
+          tools: turn.tools,
+          files: turn.files,
+          router: opts.router ?? "claude-code",
+          context: hook.cwd ? `cwd: ${hook.cwd}` : void 0
+        };
+      } else if (opts.json) {
+        const parsed = JSON.parse(opts.json);
+        const ts = parsed.ts ?? now;
+        rec = { ...parsed, ts, date: parsed.date ?? ts.slice(0, 10) };
+      } else {
+        rec = {
+          ts: now,
+          date: now.slice(0, 10),
+          user: opts.user,
+          note: opts.note,
+          router: opts.router,
+          files: csv(opts.files),
+          tools: csv(opts.tools)
+        };
+      }
+      if (!rec || !hasContent(rec)) {
+        if (!opts.hook) info("nothing to capture.");
+        return;
+      }
+      const res = supervisedCapture(rec);
+      if (!opts.hook) {
+        if (res) {
+          const red = res.redactions.length ? ` (redacted: ${res.redactions.map((r) => `${r.label}\xD7${r.count}`).join(", ")})` : "";
+          ok(`captured \u2192 ${res.journalDate}.md${red}`);
+        } else {
+          info("capture deferred (logged); will retry next turn.");
+        }
+      }
+    } catch (err) {
+      if (!opts.hook) fail(`scribe capture: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  });
+  scribe.command("recall <query>").description("full-text search across every day's journal").option("-n, --limit <n>", "max matches", "50").action((query, opts) => {
+    const limit = Math.max(1, Number(opts.limit) || 50);
+    const hits = searchScribe(query, limit);
+    if (!hits.length) {
+      info(`no matches for "${query}".`);
+      return;
+    }
+    heading(`Scribe \u2014 ${hits.length} match(es) for "${query}"`);
+    for (const h of hits) info(`${h.date}:${h.line} \xB7 ${h.text}`);
+  });
+  scribe.command("digest").description("print the rolling digest (recent context, injectable in a flash)").action(() => {
+    const d = readDigest();
+    process.stdout.write(d?.trim() ? `${d.trim()}
+` : "\xB7 digest empty (nothing captured yet).\n");
+  });
+  scribe.command("timeline").description("print the full-history timeline (one line per day)").action(() => {
+    const t = readTimeline();
+    process.stdout.write(t?.trim() ? `${t.trim()}
+` : "\xB7 timeline empty (nothing captured yet).\n");
+  });
+  scribe.command("health").description("show the scribe writer's health (last write, fault count)").action(() => {
+    const h = readHealth();
+    info(`last write: ${h.lastWriteAt ?? "never"}`);
+    info(`faults: ${h.faultCount}${h.lastFault ? ` (last: ${h.lastFault})` : ""}`);
+  });
+}
+
+// src/commands/connectors.ts
+import { createInterface as createInterface7 } from "readline/promises";
+import { stdin as stdin7, stdout as stdout8 } from "process";
+
+// src/connectors/custom.ts
+import { readFileSync as readFileSync20, writeFileSync as writeFileSync16 } from "fs";
+import { join as join23 } from "path";
+function file3() {
+  return join23(oriroDir(), "mcp-custom.json");
+}
+function readCustomServers() {
+  try {
+    const v = JSON.parse(readFileSync20(file3(), "utf8"));
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+function saveCustomServer(server) {
+  const rest = readCustomServers().filter((s) => s.name.toLowerCase() !== server.name.toLowerCase());
+  writeFileSync16(join23(ensureOriroDir(), "mcp-custom.json"), JSON.stringify([...rest, server], null, 2), "utf8");
+}
+function removeCustomServer(name) {
+  const before = readCustomServers();
+  const after = before.filter((s) => s.name.toLowerCase() !== name.toLowerCase());
+  if (after.length === before.length) return false;
+  writeFileSync16(join23(ensureOriroDir(), "mcp-custom.json"), JSON.stringify(after, null, 2), "utf8");
+  return true;
+}
+function trustedServerNames() {
+  return readCustomServers().filter((s) => s.trusted).map((s) => s.name);
+}
+function isServerTrusted(name) {
+  return trustedServerNames().some((n) => n.toLowerCase() === name.toLowerCase());
+}
+
+// src/connectors/setup.ts
+function buildServerConfig(i) {
+  if (i.url) return { type: "http", url: i.url, ...i.headers && Object.keys(i.headers).length ? { headers: i.headers } : {} };
+  return {
+    type: "stdio",
+    command: i.command ?? "",
+    ...i.args && i.args.length ? { args: i.args } : {},
+    ...i.env && Object.keys(i.env).length ? { env: i.env } : {}
+  };
+}
+function vetServer(i) {
+  const alreadyTrusted = isServerTrusted(i.name);
+  const v = vetMcpServer(i.name, { command: i.command, args: i.args, url: i.url, env: i.env });
+  let decision = v.decision;
+  if (decision === "ask" && alreadyTrusted) decision = "allow";
+  return { decision, reason: v.reason, alreadyTrusted };
+}
+function parsePairs(s) {
+  const out = {};
+  for (const part of (s ?? "").split(",")) {
+    const t = part.trim();
+    if (!t) continue;
+    const eq = t.indexOf("=");
+    if (eq < 0) continue;
+    out[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
+  }
+  return out;
+}
+
+// src/connectors/mcp-client.ts
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+function assertSafeUrl(raw, allowLocal = false) {
+  const u = new URL(raw);
+  if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error(`unsupported scheme: ${u.protocol}`);
+  const host = u.hostname.toLowerCase();
+  const isLoopback = host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".localhost");
+  const isPrivate = /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host) || /^169\.254\./.test(host) || /^fe80:/i.test(host) || /^f[cd][0-9a-f]{2}:/i.test(host) || host === "169.254.169.254" || host === "metadata.google.internal";
+  if ((isLoopback || isPrivate) && !allowLocal) {
+    throw new Error(`blocked SSRF target ${host} (use --allow-local for loopback/LAN MCP servers)`);
+  }
+  if (u.protocol === "http:" && !isLoopback && !allowLocal) throw new Error(`refusing plaintext http to ${host} \u2014 use https`);
+  return u;
 }
 
 // src/commands/connectors.ts
@@ -5087,17 +6302,118 @@ function registerConnectorsCommand(program2) {
     if (removeConnector(slug)) ok(`removed ${accent(slug)}`);
     else info(`'${slug}' is not in your added list \u2014 nothing to remove`);
   });
+  connectors.command("setup").description("guided setup of a CUSTOM MCP server \u2014 Guardian-vetted, no JSON").option("--name <name>", "a short name for the server").option("--command <cmd>", "stdio launch command, e.g. 'npx -y @scope/mcp'").option("--args <args>", "space-separated args for --command").option("--env <pairs>", "comma-separated KEY=VAL env vars").option("--url <url>", "http(s) MCP endpoint (instead of --command)").option("--header <pairs>", "comma-separated KEY=VAL headers (with --url)").option("--allow-local", "permit loopback/LAN URL targets").option("-y, --yes", "trust and save when Guardian says 'ask'").action(async (opts) => {
+    const interactive = !!stdin7.isTTY && !!stdout8.isTTY;
+    let { name, command, url } = opts;
+    let argsStr = opts.args;
+    let envStr = opts.env;
+    if (!name || !command && !url) {
+      if (!interactive) {
+        heading("ORIRO MCP setup \u{1F6E1}");
+        info("Describe a custom MCP server; Guardian vets it before it's saved \u2014 no JSON.");
+        process.stdout.write(
+          `
+  ${accent('oriro connectors setup --name <n> --command "npx -y @scope/mcp"')}
+  ${accent("oriro connectors setup --name <n> --url https://host/mcp")}
+  ${dim('optional: --args "a b"  --env K=V,K2=V2  --header K=V  --allow-local  --yes')}
+
+  ${dim("On a real terminal, run it with no flags for a guided Q&A.")}
+`
+        );
+        return;
+      }
+      const rl = createInterface7({ input: stdin7, output: stdout8 });
+      try {
+        name = name || (await rl.question("Server name: ")).trim();
+        if (!command && !url) {
+          const t = (await rl.question("Transport \u2014 [s]tdio command or [u]rl? ")).trim().toLowerCase();
+          if (t.startsWith("u")) {
+            url = (await rl.question("URL: ")).trim();
+          } else {
+            command = (await rl.question("Command (e.g. npx -y @scope/mcp): ")).trim();
+            argsStr = (await rl.question("Args (space-separated, optional): ")).trim() || void 0;
+            envStr = (await rl.question("Env KEY=VAL,comma-separated (optional): ")).trim() || void 0;
+          }
+        }
+      } finally {
+        rl.close();
+      }
+    }
+    if (!name) die("a server name is required");
+    if (!command && !url) die("either --command or --url is required");
+    const args = argsStr ? argsStr.split(/\s+/).filter(Boolean) : void 0;
+    const env = envStr ? parsePairs(envStr) : void 0;
+    const headers = opts.header ? parsePairs(opts.header) : void 0;
+    if (url) {
+      try {
+        assertSafeUrl(url, !!opts.allowLocal);
+      } catch (e) {
+        die(e instanceof Error ? e.message : String(e));
+      }
+    }
+    const input = { name, command, args, env, url, headers };
+    const config = buildServerConfig(input);
+    const outcome = vetServer(input);
+    heading("ORIRO MCP setup \xB7 Guardian \u{1F6E1}");
+    if (outcome.decision === "block") {
+      die(`Guardian BLOCKED "${name}": ${outcome.reason}. Not saved.`);
+    }
+    let trusted = outcome.decision === "allow";
+    if (outcome.decision === "ask") {
+      info(`Guardian: ${outcome.reason}`);
+      if (opts.yes) {
+        trusted = true;
+      } else if (interactive) {
+        const rl = createInterface7({ input: stdin7, output: stdout8 });
+        try {
+          const ans = (await rl.question(`Trust and save "${name}"? [y/N] `)).trim().toLowerCase();
+          trusted = ans === "y" || ans === "yes";
+        } finally {
+          rl.close();
+        }
+      } else {
+        info(`Not saved \u2014 re-run with --yes to trust "${name}".`);
+        return;
+      }
+      if (!trusted) {
+        info("Not saved.");
+        return;
+      }
+    }
+    saveCustomServer({ name, config, trusted });
+    ok(`saved MCP server ${accent(name)} \u2014 ${trusted ? "trusted" : "untrusted"} (${config.type})`);
+    if (outcome.alreadyTrusted) info("already trusted \u2014 Guardian did not re-ask");
+  });
+  connectors.command("custom").description("list the custom MCP servers you've set up").action(() => {
+    const servers = readCustomServers();
+    heading("Custom MCP servers");
+    if (!servers.length) {
+      info("none yet \u2014 add one with `oriro connectors setup`");
+      return;
+    }
+    for (const s of servers) {
+      const where = s.config.type === "stdio" ? s.config.command : s.config.url;
+      const mark = s.trusted ? accent("\u25CF") : dim("\u25CB");
+      process.stdout.write(`  ${mark} ${accent(s.name.padEnd(20))} ${dim(`${s.config.type} \xB7 ${where}`)}
+`);
+    }
+    info(`${servers.length} custom \xB7 ${servers.filter((s) => s.trusted).length} trusted`);
+  });
+  connectors.command("forget <name>").description("remove a custom MCP server you set up").action((name) => {
+    if (removeCustomServer(name)) ok(`forgot ${accent(name)}`);
+    else info(`'${name}' is not a custom server \u2014 nothing to forget`);
+  });
 }
 
 // src/channels/config.ts
-import { readFileSync as readFileSync20, writeFileSync as writeFileSync15 } from "fs";
-import { join as join20 } from "path";
-function file3() {
-  return join20(oriroDir(), "channels.json");
+import { readFileSync as readFileSync21, writeFileSync as writeFileSync17 } from "fs";
+import { join as join24 } from "path";
+function file4() {
+  return join24(oriroDir(), "channels.json");
 }
 function readChannels() {
   try {
-    const v = JSON.parse(readFileSync20(file3(), "utf8"));
+    const v = JSON.parse(readFileSync21(file4(), "utf8"));
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
@@ -5106,10 +6422,10 @@ function readChannels() {
 function saveChannel(cfg) {
   const all = readChannels().filter((c) => c.kind !== cfg.kind);
   all.push(cfg);
-  writeFileSync15(join20(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync17(join24(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
 }
 function removeChannel(kind) {
-  writeFileSync15(join20(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
+  writeFileSync17(join24(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
 }
 
 // src/channels/telegram.ts
@@ -5143,7 +6459,7 @@ var OriroChannelHost = class {
       } finally {
         unsub();
       }
-      return scrubIdentity(out).trim() || "(ORIRO had no reply)";
+      return scrubOutput(out).trim() || "(ORIRO had no reply)";
     } catch (e) {
       return `ORIRO error: ${e instanceof Error ? e.message : String(e)}`;
     }
@@ -5194,9 +6510,9 @@ async function validateDiscordToken(token) {
   return me.username ?? me.id ?? "unknown";
 }
 async function startDiscord(token) {
-  const { Client, GatewayIntentBits, Events } = await import("discord.js");
+  const { Client: Client2, GatewayIntentBits, Events } = await import("discord.js");
   const host = new OriroChannelHost();
-  const client = new Client({
+  const client = new Client2({
     intents: [
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMessages,
@@ -5226,9 +6542,9 @@ async function startDiscord(token) {
 }
 
 // src/channels/whatsapp.ts
-import { join as join21 } from "path";
+import { join as join25 } from "path";
 function whatsappAuthDir() {
-  return join21(oriroDir(), "whatsapp-auth");
+  return join25(oriroDir(), "whatsapp-auth");
 }
 async function startWhatsApp() {
   let baileys;
@@ -5346,8 +6662,10 @@ function registerChannelsCommand(program2) {
 }
 
 // src/commands/skills.ts
+import { existsSync as existsSync16, statSync as statSync3, mkdirSync as mkdirSync15, cpSync, rmSync as rmSync3 } from "fs";
+import { resolve as resolve2, join as join26, basename, dirname as dirname3 } from "path";
 function registerSkillsCommand(program2) {
-  const skills = program2.command("skills").description("the bundled ORIRO skill library (Option-B tiered)");
+  const skills = program2.command("skills").description("the ORIRO skill library \u2014 bundled + your own");
   skills.command("list").description("show CORE / TAIL skill counts (use --all to list names)").option("-a, --all", "list every skill name").action(async (opts) => {
     const s = await loadOriroSkills();
     heading("Skills");
@@ -5359,11 +6677,42 @@ function registerSkillsCommand(program2) {
 `);
       }
     }
+    info(`Add your own: ${accent("oriro skills add <path>")} ${dim(`\u2192 ${userSkillsDir()}`)}`);
+  });
+  skills.command("add <path>").description("add your own skill \u2014 a folder containing SKILL.md, or a SKILL.md file").action((p) => {
+    const src = resolve2(p);
+    if (!existsSync16(src)) die(`not found: ${src}`);
+    const dest = userSkillsDir();
+    mkdirSync15(dest, { recursive: true });
+    const st = statSync3(src);
+    if (st.isDirectory()) {
+      if (!existsSync16(join26(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
+      const name = basename(src);
+      cpSync(src, join26(dest, name), { recursive: true });
+      ok(`added skill ${accent(name)} \u2192 ${join26(dest, name)}`);
+    } else if (basename(src).toLowerCase() === "skill.md") {
+      const name = basename(dirname3(src)) || "custom-skill";
+      mkdirSync15(join26(dest, name), { recursive: true });
+      cpSync(src, join26(dest, name, "SKILL.md"));
+      ok(`added skill ${accent(name)} \u2192 ${join26(dest, name)}`);
+    } else {
+      die("expected a folder containing SKILL.md, or a SKILL.md file");
+    }
+    info("It loads on next launch \u2014 and is available in chat via /skill.");
+  });
+  skills.command("remove <name>").description("remove a skill you added").action((name) => {
+    const target = join26(userSkillsDir(), name);
+    if (!existsSync16(target)) {
+      info(`'${name}' is not a user-added skill \u2014 nothing to remove`);
+      return;
+    }
+    rmSync3(target, { recursive: true, force: true });
+    ok(`removed ${accent(name)}`);
   });
 }
 
 // src/commands/language.ts
-import { stdin as stdin6 } from "process";
+import { stdin as stdin8 } from "process";
 function resolveLanguage(input) {
   return languageByCode(input) ?? LANGUAGES.find((l) => l.name.toLowerCase() === input.trim().toLowerCase());
 }
@@ -5385,7 +6734,7 @@ function registerLanguageCommand(program2) {
       ok(`${accent(lang.name)} is now your terminal language.`);
       return;
     }
-    if (stdin6.isTTY) {
+    if (stdin8.isTTY) {
       const lang = await selectLanguageInteractive();
       setTerminalLanguage(lang);
       ok(`${accent(lang.name)} is now your terminal language.`);
@@ -5398,7 +6747,7 @@ function registerLanguageCommand(program2) {
 }
 
 // src/commands/avatar.ts
-import { stdin as stdin7 } from "process";
+import { stdin as stdin9 } from "process";
 function registerAvatarCommand(program2) {
   program2.command("avatar").description("show or change your terminal avatar").argument("[slug]", "set directly to this avatar slug").option("-l, --list", "list every avatar by category").action(async (slug, opts) => {
     if (opts.list) {
@@ -5416,7 +6765,7 @@ function registerAvatarCommand(program2) {
       ok(`${accent(avatar.slug)} is now your terminal face.`);
       return;
     }
-    if (stdin7.isTTY) {
+    if (stdin9.isTTY) {
       const chosen = await selectAvatarInteractive();
       if (!chosen) {
         info("no change.");
@@ -5428,6 +6777,105 @@ function registerAvatarCommand(program2) {
       const cur = getSelectedAvatar();
       info(cur ? `terminal face: ${accent(cur.slug)}` : "no avatar set yet");
       info(dim("change it with `oriro avatar <slug>` or `oriro avatar --list`"));
+    }
+  });
+}
+
+// src/commands/head.ts
+function usage() {
+  heading("ORIRO Head \u{1F9ED}");
+  info("Go out to a live site and SEE it \u2014 structure, gaps, or a full rebuild. Keyless, on-device.");
+  process.stdout.write(
+    `
+  ${accent("oriro head <url> [competitor ...]")}   ${dim("structural read + gap analysis (no browser)")}
+  ${accent("oriro head <url> --html")}              ${dim("also write the visual HTML report")}
+  ${accent("oriro head <url> --code")}              ${dim("reverse-engineer clean, runnable code")}
+  ${accent("oriro head <url> --spec")}              ${dim("reverse-engineer a YAML build spec")}
+  ${accent("oriro head <url> [url ...] --shots")}   ${dim("full-page screenshots \u2192 visual flow HTML")}
+  ${accent("oriro head --video <path>")}            ${dim("rebuild a UI from a screen recording (experimental)")}
+
+  ${dim("--goal <text>  --stack <text>  --out <dir>")}
+  ${dim("code/spec/shots need Chromium once: npm i playwright && npx playwright install chromium")}
+`
+  );
+}
+function registerHeadCommand(program2) {
+  program2.command("head").description("go out to a live site and SEE it \u2014 structure, code, spec, or screenshots").argument("[url]", "the target URL (or omit when using --video)").argument("[competitors...]", "optional competitor/reference URLs").option("--code", "reverse-engineer the page into clean, runnable code").option("--spec", "reverse-engineer the page into a YAML build spec").option("--shots", "capture full-page screenshots into one visual flow HTML").option("--html", "also write the visual HTML report (structural read)").option("--video <path>", "rebuild a UI from a screen recording (experimental)").option("--goal <text>", "natural-language goal for the rebuild").option("--stack <text>", "target stack for generated code").option("--out <dir>", "directory to write artifacts into (default: current dir)").action(async (url, competitors, opts) => {
+    const outDir = opts.out;
+    if (opts.video) {
+      heading("ORIRO Head \xB7 video\u2192code");
+      const res = await runVideoToCode(opts.video, { goal: opts.goal, stack: opts.stack, outDir });
+      process.stdout.write(`${res.summary}
+`);
+      for (const f of res.files) ok(`wrote ${f}`);
+      return;
+    }
+    if (!url) {
+      usage();
+      return;
+    }
+    const looksLikeUrl = /^https?:\/\//i.test(url) || /^[a-z0-9-]+(?:\.[a-z0-9-]+)+/i.test(url);
+    let target = url;
+    let refs = competitors;
+    if (!looksLikeUrl) {
+      const parsed = parseHeadTargets([url, ...competitors].join(" "));
+      if (!parsed.target) {
+        usage();
+        return;
+      }
+      target = parsed.target;
+      refs = parsed.competitors;
+    }
+    heading("ORIRO Head \u{1F9ED}");
+    try {
+      let res;
+      if (opts.code) res = await runUrlToCode(target, { goal: opts.goal, stack: opts.stack, outDir });
+      else if (opts.spec) res = await runUrlToSpec(target, { goal: opts.goal, outDir });
+      else if (opts.shots) res = await runCapture([target, ...refs], { outDir });
+      else res = await runInspect(target, refs, { html: opts.html, outDir });
+      process.stdout.write(`${res.summary}
+`);
+      for (const f of res.files) ok(`wrote ${f}`);
+    } catch (e) {
+      die(`head failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  });
+}
+
+// src/commands/voice.ts
+import { stdin as stdin10, stdout as stdout9 } from "process";
+function registerVoiceCommand(program2) {
+  program2.command("voice").description("speech-to-text \u2014 transcribe an audio file or the mic (on-device Whisper, experimental)").argument("[file]", "audio file to transcribe (omit to record from the mic on a real terminal)").option("--translate", "translate speech to English (Whisper translate task)").option("--seconds <n>", "mic recording length in seconds", "6").action(async (file5, opts) => {
+    const interactive = !!stdin10.isTTY && !!stdout9.isTTY;
+    heading("ORIRO voice \u{1F399}");
+    let audio = file5;
+    if (!audio) {
+      if (!interactive) {
+        info("On-device speech-to-text (experimental \u2014 needs ffmpeg + the transformers voice peer).");
+        process.stdout.write(
+          `
+  ${accent("oriro voice <audiofile>")}         ${dim("transcribe an audio file")}
+  ${accent("oriro voice --translate <file>")}  ${dim("transcribe + translate to English")}
+  ${dim("On a real terminal, run `oriro voice` with no file to record from the mic.")}
+`
+        );
+        return;
+      }
+      info(`Recording ${opts.seconds ?? "6"}s from the mic\u2026 (speak now)`);
+      const clip = await recordMic(Number(opts.seconds ?? 6));
+      if (!clip) die("no microphone recorder found \u2014 install ffmpeg (or sox/arecord) to record.");
+      audio = clip;
+    }
+    try {
+      const t = await transcribeAudioFile(audio, { translate: !!opts.translate });
+      if (!t.text) {
+        info("(no speech recognized)");
+        return;
+      }
+      process.stdout.write(`  ${dim(`[${t.language}]`)} ${t.text}
+`);
+    } catch (e) {
+      die(`voice: ${e instanceof Error ? e.message : String(e)}`);
     }
   });
 }
@@ -5457,6 +6905,8 @@ registerChannelsCommand(program);
 registerSkillsCommand(program);
 registerLanguageCommand(program);
 registerAvatarCommand(program);
+registerHeadCommand(program);
+registerVoiceCommand(program);
 program.parseAsync().catch((e) => {
   if (e instanceof DieError) return;
   process.stderr.write(`

@@ -15,6 +15,9 @@ import { noteUserInput } from "./scribe/scribe-pi.js";
 import { getTerminalLanguage } from "./language/index.js";
 import { translateIncoming, translateOutgoing } from "./language/gateway.js";
 import { runTuiRepl } from "./repl-ui/tui-repl.js";
+import { setupVoiceInput } from "./voice/setup.js";
+import { scrubOutput } from "./identity/filter.js";
+import { phantomFileWarning } from "./repl-ui/verify-actions.js";
 import { dim, accent } from "./ui/theme.js";
 
 /** In-REPL help — real, not LLM-fabricated. */
@@ -33,6 +36,7 @@ export async function runRepl(): Promise<void> {
   else stdout.write(banner());
 
   const { session } = await assembleOriroSession();
+  setupVoiceInput(); // wire the on-device Whisper listener into the voice seam (graceful if absent)
 
   // Rich TUI (posture footer + Shift+Tab) on a real terminal; plain readline loop otherwise.
   if (stdin.isTTY && stdout.isTTY) {
@@ -70,6 +74,8 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       const slash = line.toLowerCase();
       if (slash === "/exit" || slash === "/quit") break;
       if (slash === "/help" || slash === "/?") { stdout.write(replHelp()); continue; }
+      if (slash === "/skill" || slash === "/skills") { stdout.write(`  ${dim("326 skills bundled & active. Browse: oriro skills list --all")}\n`); continue; }
+      if (slash === "/connector" || slash === "/connectors") { stdout.write(`  ${dim("59 MCP connectors. Add: oriro connectors setup · or oriro connectors add <slug>")}\n`); continue; }
 
       const english = await translateIncoming(line);
       noteUserInput(line);
@@ -77,9 +83,7 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       const unsub = session.subscribe(
         (e: { type: string; assistantMessageEvent?: { type: string; delta?: string } }) => {
           if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
-            const d = e.assistantMessageEvent.delta ?? "";
-            out += d;
-            if (isEnglish) stdout.write(d);
+            out += e.assistantMessageEvent.delta ?? "";
           }
         },
       );
@@ -88,8 +92,10 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       } finally {
         unsub();
       }
-      if (isEnglish) stdout.write("\n\n");
-      else stdout.write(`${await translateOutgoing(out.trim())}\n\n`);
+      // Emit the full reply once, scrubbed of any third-party router ad/promo (non-TTY: no live stream).
+      const cleaned = scrubOutput(out);
+      const shown = isEnglish ? cleaned.trim() : await translateOutgoing(cleaned.trim());
+      stdout.write(`${shown}${phantomFileWarning(shown)}\n\n`);
     }
   } finally {
     process.removeListener("SIGINT", onSigint);
