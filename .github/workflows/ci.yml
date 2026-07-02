@@ -10,9 +10,10 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        # undici 8.5 (via pi-coding-agent) needs Node's markAsUncloneable — added in 20.18.1 / 22.12.
-        node-version: ["20.18.1", "22.12.0", "24"]
+        # undici 8.5 (via pi-coding-agent) needs Node's markAsUncloneable — Node 22+.
+        node-version: ["22.12.0", "24"]
     steps:
       - uses: actions/checkout@v4
 
