@@ -22,6 +22,7 @@ function run(args, { expectExit = 0, contains } = {}) {
   if (!ok) fails++;
   const detail = !exitOk ? `exit ${r.status}≠${expectExit}` : !textOk ? `missing "${contains}"` : "";
   process.stdout.write(`${ok ? "✅" : "❌"} oriro ${args.join(" ") || "(repl)"}${detail ? `  — ${detail}` : ""}\n`);
+  if (!ok && out.trim()) process.stdout.write(`   ┆ ${out.trim().split("\n").slice(0, 4).join("\n   ┆ ")}\n`); // DIAG: show captured output on failure
 }
 
 run(["--version"], { contains: version }); // read from package.json — never drifts on a version bump
