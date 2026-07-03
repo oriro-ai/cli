@@ -4,6 +4,16 @@ All notable changes to `@oriro/orirocli` are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.12] — 2026-07-03
+### Added
+- **`oriro agents`** — workflow-automation agents as a first-class feature (alongside skills, routers, connectors, channels). An agent is a saved workflow (a task) that runs on a **router** (its brain) with **full tools behind Guardian**. It is inert until run.
+  - `agents make <name> --task "…" [--router <id>] [--schedule 1h|daily] [--cwd <path>]` — create/update.
+  - `agents list` · `agents show <name>` · `agents remove <name>`.
+  - `agents run <name> [--input …]` — run now; comes alive on its bound router (or your active pool), every tool call Guardian-gated, hard run-timeout so it can never hang.
+  - `agents add <path|url>` — import a shared/community agent (dynamic, user-extensible like skills).
+  - **Automation:** `agents tick` runs every DUE scheduled agent once (wire to OS cron / Task Scheduler); `agents daemon` stays resident and fires them as they come due.
+  - In chat, the model can invoke a saved agent via the `run_saved_agent` tool (recursion-guarded).
+
 ## [0.1.8] — 2026-07-01
 ### Added
 - `routers add --url` — register ANY custom free or BYOK endpoint into the keyless router pool.

@@ -5293,13 +5293,199 @@ function registerOrchestrator(pi) {
   });
 }
 
+// src/agents/pi-tool.ts
+import { Type as Type4 } from "typebox";
+
+// src/agents/store.ts
+import { mkdirSync as mkdirSync15, readFileSync as readFileSync18, writeFileSync as writeFileSync16, readdirSync as readdirSync2, rmSync as rmSync3, existsSync as existsSync13 } from "fs";
+import { join as join22 } from "path";
+var SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
+function isValidAgentName(name) {
+  return SLUG.test(name);
+}
+function agentsDir() {
+  return join22(oriroDir(), "agents");
+}
+function agentFile(name) {
+  return join22(agentsDir(), `${name}.json`);
+}
+function stateFile() {
+  return join22(agentsDir(), ".state.json");
+}
+function listAgents() {
+  const dir = agentsDir();
+  if (!existsSync13(dir)) return [];
+  const out = [];
+  for (const f of readdirSync2(dir)) {
+    if (!f.endsWith(".json") || f.startsWith(".")) continue;
+    try {
+      const def = JSON.parse(readFileSync18(join22(dir, f), "utf8"));
+      if (def && typeof def.name === "string" && typeof def.task === "string") out.push(def);
+    } catch {
+    }
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name));
+}
+function loadAgent(name) {
+  try {
+    return JSON.parse(readFileSync18(agentFile(name), "utf8"));
+  } catch {
+    return void 0;
+  }
+}
+function saveAgent(def) {
+  if (!isValidAgentName(def.name)) {
+    throw new Error(`invalid agent name '${def.name}' \u2014 use lowercase letters, digits and hyphens`);
+  }
+  mkdirSync15(agentsDir(), { recursive: true });
+  writeFileSync16(agentFile(def.name), JSON.stringify(def, null, 2), "utf8");
+}
+function removeAgent(name) {
+  const file5 = agentFile(name);
+  if (!existsSync13(file5)) return false;
+  rmSync3(file5, { force: true });
+  const state = loadState();
+  if (state[name]) {
+    delete state[name];
+    saveState(state);
+  }
+  return true;
+}
+function loadState() {
+  try {
+    return JSON.parse(readFileSync18(stateFile(), "utf8"));
+  } catch {
+    return {};
+  }
+}
+function saveState(state) {
+  mkdirSync15(agentsDir(), { recursive: true });
+  writeFileSync16(stateFile(), JSON.stringify(state, null, 2), "utf8");
+}
+function markRun(name, ok2, at) {
+  const state = loadState();
+  state[name] = { lastRunAt: at, lastOk: ok2 };
+  saveState(state);
+}
+function parseScheduleMs(spec) {
+  if (!spec) return void 0;
+  const s = spec.trim().toLowerCase();
+  if (s === "hourly") return 36e5;
+  if (s === "daily") return 864e5;
+  const m = /^(\d+)\s*(m|h|d)$/.exec(s);
+  if (!m) return void 0;
+  const n = Number(m[1]);
+  if (n <= 0) return void 0;
+  const mult = m[2] === "m" ? 6e4 : m[2] === "h" ? 36e5 : 864e5;
+  return n * mult;
+}
+function isDue(def, state, now) {
+  const ms = parseScheduleMs(def.schedule);
+  if (ms === void 0) return false;
+  const last = state[def.name]?.lastRunAt ?? 0;
+  return now - last >= ms;
+}
+
+// src/agents/run.ts
+var DEFAULT_TIMEOUT_MS = 3e5;
+function runTimeoutMs() {
+  const v = Number(process.env.ORIRO_AGENT_TIMEOUT_MS);
+  return Number.isFinite(v) && v > 0 ? v : DEFAULT_TIMEOUT_MS;
+}
+function resolveBoundRouter(id) {
+  return registeredRouters().find((r) => r.id === id);
+}
+async function runAgent2(def, opts = {}) {
+  const bound = def.router ? resolveBoundRouter(def.router) : void 0;
+  const routers = bound ? [bound] : void 0;
+  const cwd = opts.cwd ?? def.cwd ?? process.cwd();
+  let session;
+  try {
+    ({ session } = await assembleOriroSession({ cwd, ...routers ? { routers } : {} }));
+  } catch (e) {
+    return { ok: false, output: e instanceof Error ? e.message : String(e) };
+  }
+  let out = "";
+  const unsub = session.subscribe(
+    (e) => {
+      if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
+        out += e.assistantMessageEvent.delta ?? "";
+      }
+    }
+  );
+  const prompt = opts.input ? `${def.task}
+
+Input:
+${opts.input}` : def.task;
+  const prevDepth = process.env.ORIRO_AGENT_DEPTH;
+  process.env.ORIRO_AGENT_DEPTH = String((Number(prevDepth) || 0) + 1);
+  let timer;
+  try {
+    const timedOut = await Promise.race([
+      session.prompt(prompt).then(() => false),
+      new Promise((res) => {
+        timer = setTimeout(() => res(true), runTimeoutMs());
+      })
+    ]);
+    if (timedOut) {
+      const partial = scrubOutput(out).trim();
+      return { ok: false, output: partial || `agent timed out after ${Math.round(runTimeoutMs() / 1e3)}s` };
+    }
+  } catch (e) {
+    return { ok: false, output: e instanceof Error ? e.message : String(e) };
+  } finally {
+    if (timer) clearTimeout(timer);
+    unsub();
+    try {
+      session.dispose();
+    } catch {
+    }
+    if (prevDepth === void 0) delete process.env.ORIRO_AGENT_DEPTH;
+    else process.env.ORIRO_AGENT_DEPTH = prevDepth;
+  }
+  const cleaned = scrubOutput(out).trim();
+  return { ok: cleaned.length > 0, output: cleaned };
+}
+
+// src/agents/pi-tool.ts
+function registerAgentRunner(pi) {
+  pi.registerTool({
+    name: "run_saved_agent",
+    label: "ORIRO Agent",
+    description: "Run one of the user's SAVED automation agents by name (list them first if unsure). Each agent is a stored workflow that runs on its own router with full tools behind Guardian. Optionally pass `input` to feed the agent. Use this when the user asks to run/trigger a named agent.",
+    parameters: Type4.Object({
+      name: Type4.String({ description: "the saved agent's name" }),
+      input: Type4.Optional(Type4.String({ description: "optional input to pass to the agent" }))
+    }),
+    async execute(_id, params) {
+      if (process.env.ORIRO_AGENT_DEPTH) {
+        return { content: [{ type: "text", text: "Nested agent runs are disabled." }], details: { ok: false } };
+      }
+      const def = loadAgent(params.name);
+      if (!def) {
+        const names = listAgents().map((a) => a.name);
+        const hint = names.length ? ` Saved agents: ${names.join(", ")}.` : " No agents saved yet.";
+        return { content: [{ type: "text", text: `No agent named '${params.name}'.${hint}` }], details: { ok: false } };
+      }
+      const result = await runAgent2(def, params.input ? { input: params.input } : {});
+      markRun(def.name, result.ok, Date.now());
+      const status = result.ok ? "\u2713" : "\u2717";
+      return {
+        content: [{ type: "text", text: `[${def.name}] ${status}
+${result.output.slice(0, 4e3)}` }],
+        details: { ok: result.ok }
+      };
+    }
+  });
+}
+
 // src/onboarding/assemble.ts
 async function assembleOriroSession(opts = {}) {
   const cwd = opts.cwd ?? process.cwd();
   const authStorage = AuthStorage2.inMemory();
   const modelRegistry = ModelRegistry2.inMemory(authStorage);
   const settingsManager = SettingsManager.create(cwd);
-  const model = registerOriroMux(modelRegistry);
+  const model = registerOriroMux(modelRegistry, opts.routers ? { routers: opts.routers } : {});
   if (!model) throw new Error("ORIRO keyless model unavailable");
   const resourceLoader = new DefaultResourceLoader({
     cwd,
@@ -5307,7 +5493,7 @@ async function assembleOriroSession(opts = {}) {
     settingsManager,
     additionalSkillPaths: skillRoots(),
     // bundled library + the user's own ~/.oriro/skills
-    extensionFactories: [registerGuardian, registerHead, registerScribe, registerOrchestrator]
+    extensionFactories: [registerGuardian, registerHead, registerScribe, registerOrchestrator, registerAgentRunner]
   });
   await resourceLoader.reload();
   const { session, extensionsResult } = await createAgentSession2({
@@ -5516,7 +5702,7 @@ function toggleThinking() {
 var THINKING_PRIMER = "Think step by step and plan your approach before acting. Reason carefully and check your work.";
 
 // src/repl-ui/verify-actions.ts
-import { existsSync as existsSync13 } from "fs";
+import { existsSync as existsSync14 } from "fs";
 import { isAbsolute, resolve } from "path";
 var CLAIM = /\b(?:have|has)\s+been\s+created\b|\b(?:created|wrote|written|saved|generated)\b(?![ \t]*(?:by you|it yourself))/i;
 var SUGGESTION = /\byou\s+(?:can|could|should|may)\s+(?:create|add|save|make|put)\b/i;
@@ -5529,7 +5715,7 @@ function phantomFileWarning(reply, cwd = process.cwd()) {
     if (!p) continue;
     if (/^https?:|node_modules|<[^>]+>|your-|example\./i.test(p)) continue;
     const abs = isAbsolute(p) ? p : resolve(cwd, p.replace(/^[.][\\/]/, ""));
-    if (!existsSync13(abs)) missing.add(p);
+    if (!existsSync14(abs)) missing.add(p);
   }
   if (missing.size === 0) return "";
   if (SUGGESTION.test(reply) && !/\b(?:have|has)\s+been\s+created\b/i.test(reply)) return "";
@@ -5704,8 +5890,8 @@ ${english}`;
 // src/voice/mic.ts
 import { spawn as spawn3 } from "child_process";
 import { tmpdir as tmpdir3 } from "os";
-import { join as join22 } from "path";
-import { existsSync as existsSync14, statSync as statSync2 } from "fs";
+import { join as join23 } from "path";
+import { existsSync as existsSync15, statSync as statSync2 } from "fs";
 function recorders(outFile, seconds) {
   const dur = String(seconds);
   if (process.platform === "darwin") {
@@ -5726,12 +5912,12 @@ function recorders(outFile, seconds) {
   ];
 }
 async function recordMic(seconds = 6) {
-  const outFile = join22(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
+  const outFile = join23(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
   for (const r of recorders(outFile, seconds)) {
     const okFile = await new Promise((resolve3) => {
       const child = spawn3(r.cmd, r.args, { stdio: "ignore" });
       child.on("error", () => resolve3(false));
-      child.on("close", (code) => resolve3(code === 0 && existsSync14(outFile) && statSync2(outFile).size > 44));
+      child.on("close", (code) => resolve3(code === 0 && existsSync15(outFile) && statSync2(outFile).size > 44));
     });
     if (okFile) return outFile;
   }
@@ -5976,10 +6162,10 @@ function registerRoutersCommand(program2) {
 }
 
 // src/commands/scribe.ts
-import { readFileSync as readFileSync19 } from "fs";
+import { readFileSync as readFileSync20 } from "fs";
 
 // src/scribe/transcript.ts
-import { existsSync as existsSync15, readFileSync as readFileSync18 } from "fs";
+import { existsSync as existsSync16, readFileSync as readFileSync19 } from "fs";
 function parseHookStdin(raw) {
   try {
     const j = JSON.parse(raw);
@@ -6012,8 +6198,8 @@ function isHumanUser(e) {
 }
 var FILE_KEYS = ["file_path", "path", "notebook_path", "filePath"];
 function lastTurnFromTranscript(path) {
-  if (!existsSync15(path)) return null;
-  const raw = readFileSync18(path, "utf8");
+  if (!existsSync16(path)) return null;
+  const raw = readFileSync19(path, "utf8");
   const entries = [];
   for (const line of raw.split("\n")) {
     if (!line.trim()) continue;
@@ -6074,7 +6260,7 @@ function lastTurnFromTranscript(path) {
 // src/commands/scribe.ts
 function readStdin() {
   try {
-    return readFileSync19(0, "utf8");
+    return readFileSync20(0, "utf8");
   } catch {
     return "";
   }
@@ -6191,14 +6377,14 @@ import { createInterface as createInterface7 } from "readline/promises";
 import { stdin as stdin7, stdout as stdout8 } from "process";
 
 // src/connectors/custom.ts
-import { readFileSync as readFileSync20, writeFileSync as writeFileSync16 } from "fs";
-import { join as join23 } from "path";
+import { readFileSync as readFileSync21, writeFileSync as writeFileSync17 } from "fs";
+import { join as join24 } from "path";
 function file3() {
-  return join23(oriroDir(), "mcp-custom.json");
+  return join24(oriroDir(), "mcp-custom.json");
 }
 function readCustomServers() {
   try {
-    const v = JSON.parse(readFileSync20(file3(), "utf8"));
+    const v = JSON.parse(readFileSync21(file3(), "utf8"));
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
@@ -6206,13 +6392,13 @@ function readCustomServers() {
 }
 function saveCustomServer(server) {
   const rest = readCustomServers().filter((s) => s.name.toLowerCase() !== server.name.toLowerCase());
-  writeFileSync16(join23(ensureOriroDir(), "mcp-custom.json"), JSON.stringify([...rest, server], null, 2), "utf8");
+  writeFileSync17(join24(ensureOriroDir(), "mcp-custom.json"), JSON.stringify([...rest, server], null, 2), "utf8");
 }
 function removeCustomServer(name) {
   const before = readCustomServers();
   const after = before.filter((s) => s.name.toLowerCase() !== name.toLowerCase());
   if (after.length === before.length) return false;
-  writeFileSync16(join23(ensureOriroDir(), "mcp-custom.json"), JSON.stringify(after, null, 2), "utf8");
+  writeFileSync17(join24(ensureOriroDir(), "mcp-custom.json"), JSON.stringify(after, null, 2), "utf8");
   return true;
 }
 function trustedServerNames() {
@@ -6406,14 +6592,14 @@ function registerConnectorsCommand(program2) {
 }
 
 // src/channels/config.ts
-import { readFileSync as readFileSync21, writeFileSync as writeFileSync17 } from "fs";
-import { join as join24 } from "path";
+import { readFileSync as readFileSync22, writeFileSync as writeFileSync18 } from "fs";
+import { join as join25 } from "path";
 function file4() {
-  return join24(oriroDir(), "channels.json");
+  return join25(oriroDir(), "channels.json");
 }
 function readChannels() {
   try {
-    const v = JSON.parse(readFileSync21(file4(), "utf8"));
+    const v = JSON.parse(readFileSync22(file4(), "utf8"));
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
@@ -6422,10 +6608,10 @@ function readChannels() {
 function saveChannel(cfg) {
   const all = readChannels().filter((c) => c.kind !== cfg.kind);
   all.push(cfg);
-  writeFileSync17(join24(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync18(join25(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
 }
 function removeChannel(kind) {
-  writeFileSync17(join24(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
+  writeFileSync18(join25(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
 }
 
 // src/channels/telegram.ts
@@ -6542,9 +6728,9 @@ async function startDiscord(token) {
 }
 
 // src/channels/whatsapp.ts
-import { join as join25 } from "path";
+import { join as join26 } from "path";
 function whatsappAuthDir() {
-  return join25(oriroDir(), "whatsapp-auth");
+  return join26(oriroDir(), "whatsapp-auth");
 }
 async function startWhatsApp() {
   let baileys;
@@ -6662,8 +6848,8 @@ function registerChannelsCommand(program2) {
 }
 
 // src/commands/skills.ts
-import { existsSync as existsSync16, statSync as statSync3, mkdirSync as mkdirSync15, cpSync, rmSync as rmSync3 } from "fs";
-import { resolve as resolve2, join as join26, basename, dirname as dirname3 } from "path";
+import { existsSync as existsSync17, statSync as statSync3, mkdirSync as mkdirSync16, cpSync, rmSync as rmSync4 } from "fs";
+import { resolve as resolve2, join as join27, basename, dirname as dirname3 } from "path";
 function registerSkillsCommand(program2) {
   const skills = program2.command("skills").description("the ORIRO skill library \u2014 bundled + your own");
   skills.command("list").description("show CORE / TAIL skill counts (use --all to list names)").option("-a, --all", "list every skill name").action(async (opts) => {
@@ -6681,32 +6867,32 @@ function registerSkillsCommand(program2) {
   });
   skills.command("add <path>").description("add your own skill \u2014 a folder containing SKILL.md, or a SKILL.md file").action((p) => {
     const src = resolve2(p);
-    if (!existsSync16(src)) die(`not found: ${src}`);
+    if (!existsSync17(src)) die(`not found: ${src}`);
     const dest = userSkillsDir();
-    mkdirSync15(dest, { recursive: true });
+    mkdirSync16(dest, { recursive: true });
     const st = statSync3(src);
     if (st.isDirectory()) {
-      if (!existsSync16(join26(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
+      if (!existsSync17(join27(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
       const name = basename(src);
-      cpSync(src, join26(dest, name), { recursive: true });
-      ok(`added skill ${accent(name)} \u2192 ${join26(dest, name)}`);
+      cpSync(src, join27(dest, name), { recursive: true });
+      ok(`added skill ${accent(name)} \u2192 ${join27(dest, name)}`);
     } else if (basename(src).toLowerCase() === "skill.md") {
       const name = basename(dirname3(src)) || "custom-skill";
-      mkdirSync15(join26(dest, name), { recursive: true });
-      cpSync(src, join26(dest, name, "SKILL.md"));
-      ok(`added skill ${accent(name)} \u2192 ${join26(dest, name)}`);
+      mkdirSync16(join27(dest, name), { recursive: true });
+      cpSync(src, join27(dest, name, "SKILL.md"));
+      ok(`added skill ${accent(name)} \u2192 ${join27(dest, name)}`);
     } else {
       die("expected a folder containing SKILL.md, or a SKILL.md file");
     }
     info("It loads on next launch \u2014 and is available in chat via /skill.");
   });
   skills.command("remove <name>").description("remove a skill you added").action((name) => {
-    const target = join26(userSkillsDir(), name);
-    if (!existsSync16(target)) {
+    const target = join27(userSkillsDir(), name);
+    if (!existsSync17(target)) {
       info(`'${name}' is not a user-added skill \u2014 nothing to remove`);
       return;
     }
-    rmSync3(target, { recursive: true, force: true });
+    rmSync4(target, { recursive: true, force: true });
     ok(`removed ${accent(name)}`);
   });
 }
@@ -6880,6 +7066,181 @@ function registerVoiceCommand(program2) {
   });
 }
 
+// src/agents/catalog.ts
+import { readFileSync as readFileSync23 } from "fs";
+function parseAgentDef(raw, now) {
+  if (!raw || typeof raw !== "object") return { ok: false, error: "not a JSON object" };
+  const o = raw;
+  const name = typeof o.name === "string" ? o.name.trim().toLowerCase() : "";
+  if (!name) return { ok: false, error: "missing 'name'" };
+  if (!isValidAgentName(name)) return { ok: false, error: `invalid name '${name}' (lowercase, digits, hyphens)` };
+  const task = typeof o.task === "string" ? o.task.trim() : "";
+  if (!task) return { ok: false, error: "missing 'task'" };
+  const def = {
+    name,
+    task,
+    ...typeof o.description === "string" ? { description: o.description } : {},
+    ...typeof o.router === "string" ? { router: o.router } : {},
+    ...typeof o.cwd === "string" ? { cwd: o.cwd } : {},
+    ...typeof o.schedule === "string" ? { schedule: o.schedule } : {},
+    createdAt: now,
+    updatedAt: now
+  };
+  return { ok: true, def };
+}
+async function fetchAgentSource(pathOrUrl) {
+  if (/^https?:\/\//i.test(pathOrUrl)) {
+    const res = await fetch(pathOrUrl);
+    if (!res.ok) throw new Error(`fetch failed: HTTP ${res.status}`);
+    return await res.json();
+  }
+  return JSON.parse(readFileSync23(pathOrUrl, "utf8"));
+}
+async function addAgentFromSource(pathOrUrl, now) {
+  let raw;
+  try {
+    raw = await fetchAgentSource(pathOrUrl);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+  const parsed = parseAgentDef(raw, now);
+  if (!parsed.ok) return { ok: false, error: parsed.error };
+  const overwrote = Boolean(loadAgent(parsed.def.name));
+  saveAgent(parsed.def);
+  return { ok: true, name: parsed.def.name, overwrote };
+}
+
+// src/commands/agents.ts
+function nowIso() {
+  return (/* @__PURE__ */ new Date()).toISOString();
+}
+function printAgent(a) {
+  const brain = a.router ? accent(a.router) : dim("active pool");
+  const sched = a.schedule ? accent(a.schedule) : dim("manual");
+  process.stdout.write(`  ${accent(a.name.padEnd(22))} brain:${brain}  schedule:${sched}
+`);
+  if (a.description) process.stdout.write(`  ${dim(a.description)}
+`);
+}
+async function runAndReport(def, opts = {}) {
+  info(`running ${accent(def.name)} ${dim(`(brain: ${def.router ?? "active pool"})`)}\u2026`);
+  const res = await runAgent2(def, opts);
+  markRun(def.name, res.ok, Date.now());
+  if (res.output) process.stdout.write(`
+${res.output}
+
+`);
+  if (res.ok) ok(`${def.name} done`);
+  else info(`${def.name} produced no output${res.output ? "" : " (router unavailable?)"}`);
+  return res.ok;
+}
+var sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function registerAgentsCommand(program2) {
+  const agents = program2.command("agents").description("your workflow-automation agents \u2014 run on a router, full tools behind Guardian").action(() => {
+    heading("Agents");
+    const all = listAgents();
+    info(`${accent(String(all.length))} saved \xB7 an agent = a saved workflow that runs on a router (its brain)`);
+    info(`make one: ${accent('oriro agents make <name> --task "\u2026" [--router <id>] [--schedule 1h]')}`);
+    info(`then: ${accent("oriro agents run <name>")} ${dim("\xB7 or")} ${accent("oriro agents tick")} ${dim("for scheduled ones")}`);
+  });
+  agents.command("list").description("list your saved agents").action(() => {
+    const all = listAgents();
+    heading("Agents");
+    if (!all.length) {
+      info(`no agents yet \u2014 make one: ${accent('oriro agents make my-agent --task "\u2026"')}`);
+      return;
+    }
+    const state = loadState();
+    for (const a of all) {
+      printAgent(a);
+      const last = state[a.name]?.lastRunAt;
+      if (last) process.stdout.write(`  ${dim(`last run: ${new Date(last).toISOString()}${state[a.name]?.lastOk === false ? " (failed)" : ""}`)}
+`);
+    }
+  });
+  agents.command("make <name>").description("create or update an agent").requiredOption("-t, --task <text>", "the workflow / instructions the agent carries out").option("-d, --desc <text>", "a short description").option("-r, --router <id>", "bind a router as the brain (default: your active pool)").option("-s, --schedule <spec>", "automation cadence: Nm | Nh | Nd | hourly | daily").option("-c, --cwd <path>", "working directory for the automation").action((name, opts) => {
+    if (!isValidAgentName(name)) die(`invalid agent name '${name}' \u2014 use lowercase letters, digits and hyphens`);
+    if (opts.schedule && parseScheduleMs(opts.schedule) === void 0) {
+      die(`invalid --schedule '${opts.schedule}' \u2014 use Nm, Nh, Nd, hourly or daily`);
+    }
+    if (opts.router && !registeredRouters().some((r) => r.id === opts.router)) {
+      info(`note: router '${opts.router}' isn't added yet \u2014 add it with \`oriro routers add ${opts.router}\` or it falls back to your active pool`);
+    }
+    const existing = loadAgent(name);
+    const now = nowIso();
+    const def = {
+      name,
+      task: opts.task,
+      ...opts.desc ? { description: opts.desc } : {},
+      ...opts.router ? { router: opts.router } : {},
+      ...opts.schedule ? { schedule: opts.schedule } : {},
+      ...opts.cwd ? { cwd: opts.cwd } : {},
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now
+    };
+    saveAgent(def);
+    ok(`${existing ? "updated" : "created"} agent ${accent(name)}`);
+    if (def.schedule) info(`scheduled ${accent(def.schedule)} \u2014 run \`oriro agents tick\` (or \`daemon\`) to fire it when due`);
+    else info(`run it: ${accent(`oriro agents run ${name}`)}`);
+  });
+  agents.command("show <name>").description("print an agent's definition").action((name) => {
+    const def = loadAgent(name);
+    if (!def) die(`no agent named '${name}' \u2014 run \`oriro agents list\``);
+    process.stdout.write(`${JSON.stringify(def, null, 2)}
+`);
+  });
+  agents.command("run <name>").description("run an agent now (comes alive on its router, full tools behind Guardian)").option("-c, --cwd <path>", "working directory for this run").option("-i, --input <text>", "input to pass to the agent").action(async (name, opts) => {
+    const def = loadAgent(name);
+    if (!def) die(`no agent named '${name}' \u2014 run \`oriro agents list\``);
+    await runAndReport(def, { ...opts.cwd ? { cwd: opts.cwd } : {}, ...opts.input ? { input: opts.input } : {} });
+  });
+  agents.command("add <path-or-url>").description("import a shared/community agent from a JSON file or URL").action(async (src) => {
+    const res = await addAgentFromSource(src, nowIso());
+    if (!res.ok) die(`could not add agent: ${res.error}`);
+    ok(`${res.overwrote ? "updated" : "added"} agent ${accent(res.name ?? "")} ${dim("\u2192 ~/.oriro/agents")}`);
+    info(`run it: ${accent(`oriro agents run ${res.name}`)}`);
+  });
+  agents.command("remove <name>").description("delete an agent").action((name) => {
+    if (!removeAgent(name)) {
+      info(`'${name}' is not a saved agent \u2014 nothing to remove`);
+      return;
+    }
+    ok(`removed ${accent(name)}`);
+  });
+  agents.command("tick").description("run every DUE scheduled agent once, then exit (wire to OS cron / Task Scheduler)").action(async () => {
+    const state = loadState();
+    const now = Date.now();
+    const due = listAgents().filter((a) => isDue(a, state, now));
+    heading("Agents \xB7 tick");
+    if (!due.length) {
+      info("0 agents due");
+      return;
+    }
+    info(`${accent(String(due.length))} due: ${due.map((d) => d.name).join(", ")}`);
+    for (const def of due) await runAndReport(def);
+  });
+  agents.command("daemon").description("stay resident and run scheduled agents as they come due (Ctrl-C to stop)").option("-i, --interval <seconds>", "how often to check for due agents", "60").action(async (opts) => {
+    const everyMs = Math.max(5, Number(opts.interval) || 60) * 1e3;
+    heading("Agents \xB7 daemon");
+    info(`checking every ${accent(`${everyMs / 1e3}s`)} \u2014 Ctrl-C to stop`);
+    let stop = false;
+    process.on("SIGINT", () => {
+      stop = true;
+      info("\nstopping\u2026");
+    });
+    while (!stop) {
+      const state = loadState();
+      const now = Date.now();
+      const due = listAgents().filter((a) => isDue(a, state, now));
+      for (const def of due) {
+        if (stop) break;
+        await runAndReport(def);
+      }
+      for (let waited = 0; waited < everyMs && !stop; waited += 500) await sleep(500);
+    }
+  });
+}
+
 // src/cli.ts
 var version = createRequire(import.meta.url)("../package.json").version;
 var program = new Command();
@@ -6907,6 +7268,7 @@ registerLanguageCommand(program);
 registerAvatarCommand(program);
 registerHeadCommand(program);
 registerVoiceCommand(program);
+registerAgentsCommand(program);
 program.parseAsync().catch((e) => {
   if (e instanceof DieError) return;
   process.stderr.write(`

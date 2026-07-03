@@ -17,7 +17,9 @@ import { registerGuardian } from "../guardian/pi-gate.js";
 import { registerHead } from "../head/pi-tool.js";
 import { registerScribe, attachScribe } from "../scribe/scribe-pi.js";
 import { registerOrchestrator } from "../orchestrate.js";
+import { registerAgentRunner } from "../agents/pi-tool.js";
 import { skillRoots } from "../skills/loader.js";
+import type { KeylessRouter } from "../routers/floor.js";
 
 export interface AssembledSession {
   session: AgentSession;
@@ -30,13 +32,14 @@ export interface AssembledSession {
  * `scribe_recall` tool + turn capture (consent-gated), the `deploy_agents` orchestrator, and the
  * 322 bundled skills (CORE in-prompt / TAIL on-demand). Never a paid key.
  */
-export async function assembleOriroSession(opts: { cwd?: string } = {}): Promise<AssembledSession> {
+export async function assembleOriroSession(opts: { cwd?: string; routers?: KeylessRouter[] } = {}): Promise<AssembledSession> {
   const cwd = opts.cwd ?? process.cwd();
   const authStorage = AuthStorage.inMemory();
   const modelRegistry = ModelRegistry.inMemory(authStorage);
   const settingsManager = SettingsManager.create(cwd);
 
-  const model = registerOriroMux(modelRegistry); // free pool/floor — never a paid key
+  // Optional bound routers let an Agent run pin its own brain; omitted → the user's active pool/floor.
+  const model = registerOriroMux(modelRegistry, opts.routers ? { routers: opts.routers } : {}); // free pool/floor — never a paid key
   if (!model) throw new Error("ORIRO keyless model unavailable");
 
   const resourceLoader = new DefaultResourceLoader({
@@ -44,7 +47,7 @@ export async function assembleOriroSession(opts: { cwd?: string } = {}): Promise
     agentDir: getAgentDir(),
     settingsManager,
     additionalSkillPaths: skillRoots(), // bundled library + the user's own ~/.oriro/skills
-    extensionFactories: [registerGuardian, registerHead, registerScribe, registerOrchestrator],
+    extensionFactories: [registerGuardian, registerHead, registerScribe, registerOrchestrator, registerAgentRunner],
   });
   await resourceLoader.reload();
 

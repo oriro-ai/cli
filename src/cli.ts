@@ -15,6 +15,7 @@ import { registerLanguageCommand } from "./commands/language.js";
 import { registerAvatarCommand } from "./commands/avatar.js";
 import { registerHeadCommand } from "./commands/head.js";
 import { registerVoiceCommand } from "./commands/voice.js";
+import { registerAgentsCommand } from "./commands/agents.js";
 import { DieError } from "./commands/ui.js";
 
 const version = (createRequire(import.meta.url)("../package.json") as { version: string }).version;
@@ -45,6 +46,7 @@ registerLanguageCommand(program);
 registerAvatarCommand(program);
 registerHeadCommand(program);
 registerVoiceCommand(program);
+registerAgentsCommand(program);
 
 program.parseAsync().catch((e: unknown) => {
   // DieError already printed its message and set exitCode — just let the process drain & exit.
