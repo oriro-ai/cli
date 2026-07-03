@@ -12,3 +12,10 @@ tmp/
 *.local
 # seam/regression spikes — kept locally as contract tests, excluded from the published tree
 src/spike-*.ts
+
+# QA / OS leftovers (Coder-1 handoff hygiene 2026-07-03)
+desktop.ini
+fizzbuzz.py
+prime_check.py
+print_numbers.sh
+reverse.js
