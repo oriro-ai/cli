@@ -1,8 +1,10 @@
-<!-- Banner / demo video -->
+<!-- Banner / demo -->
 <p align="center">
-  <video src="https://github.com/oriro-ai/cli/raw/main/media/oriro-cli-demo.mp4" controls muted loop playsinline width="900"></video>
+  <a href="https://github.com/oriro-ai/cli/raw/main/media/oriro-cli-demo.mp4">
+    <img src="https://github.com/oriro-ai/cli/raw/main/media/oriro-cli-demo.gif" alt="ORIRO CLI v0.1.12 — live demo" width="900">
+  </a>
 </p>
-<p align="center"><em>▶ ORIRO CLI v0.1.12 — 55-second live demo (keyless chat · avatar · agents · Guardian). If the player doesn't load, <a href="https://github.com/oriro-ai/cli/raw/main/media/oriro-cli-demo.mp4">click to watch</a>.</em></p>
+<p align="center"><em>▶ ORIRO CLI v0.1.12 — 55-second live demo · keyless chat · avatar · agents · Guardian. <a href="https://github.com/oriro-ai/cli/raw/main/media/oriro-cli-demo.mp4">Click for full-quality MP4.</a></em></p>
 
 # ORIRO‑Terminal - **“Head | Memory | Eyeball for AI”**
 
