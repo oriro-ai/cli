@@ -1,4 +1,8 @@
-<!-- Banner: added separately by Vinay -->
+<!-- Banner / demo video -->
+<p align="center">
+  <video src="https://github.com/oriro-ai/cli/raw/main/media/oriro-cli-demo.mp4" controls muted loop playsinline width="900"></video>
+</p>
+<p align="center"><em>▶ ORIRO CLI v0.1.12 — 55-second live demo (keyless chat · avatar · agents · Guardian). If the player doesn't load, <a href="https://github.com/oriro-ai/cli/raw/main/media/oriro-cli-demo.mp4">click to watch</a>.</em></p>
 
 # ORIRO‑Terminal - **“Head | Memory | Eyeball for AI”**
 
@@ -80,7 +84,7 @@ Permission cycle / Safety │ ✅ 4 modes: Shift+Tab → │ Postures │ Manual
 
  License - **MIT License**
 
-Copyright (c) 2026 VINAY SHARMA
+Copyright (c) 2026 ORIRO
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
