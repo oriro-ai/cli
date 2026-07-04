@@ -108,7 +108,14 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
     const slash = text.toLowerCase();
     if (slash === "/exit" || slash === "/quit") return cleanup();
     if (slash === "/help" || slash === "/?") {
-      chat.addChild(new Text(dim("  Just type to chat. Shift+Tab posture · Alt+Shift+T thinking · /voice to speak · /exit."), 0, 0));
+      // Discoverable list of every in-chat command (kept in sync with repl.ts replHelp).
+      const help = [
+        "  Just type to chat — ORIRO writes and runs code for you (keyless, free).",
+        `  ${accent("/routers")} pool add·rotate   ${accent("/model")} <id…> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity`,
+        `  ${accent("/review")} artifacts from the last reply   ${accent("/save")} <n> [path]   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
+        `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`,
+      ].join("\n");
+      chat.addChild(new Text(help, 0, 0));
       editor.setText("");
       tui.requestRender();
       return;

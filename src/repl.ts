@@ -27,12 +27,17 @@ import { dim, accent } from "./ui/theme.js";
 
 /** In-REPL help — real, not LLM-fabricated. */
 function replHelp(): string {
+  // Every in-chat command is listed here so a user can DISCOVER them all from /help — never needs to
+  // know a hidden command. (Kept in sync with the slash handlers below + tui-repl's /help.)
   return (
     `\n  ${accent("ORIRO terminal — help")}\n` +
     `  ${dim("Just type to chat; ORIRO writes and runs code for you (keyless, free).")}\n\n` +
-    `  ${accent("/help")}  this help     ${accent("/exit")} or ${accent("/quit")}  leave     ${dim("Ctrl-D / Ctrl-C also exit")}\n` +
-    `  ${dim("Run these OUTSIDE the chat (in your shell):")}\n` +
-    `  ${dim("oriro skills · routers · connectors · channels · scribe · language · avatar")}\n\n`
+    `  ${dim("Models & routers")}   ${accent("/routers")} list·add·rotate the racing pool   ${accent("/model")} <id…> switch\n` +
+    `  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} show tool + router activity\n` +
+    `  ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one\n` +
+    `  ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn\n` +
+    `  ${dim("General")}           ${accent("/help")} this   ${accent("/exit")} / ${accent("/quit")} leave   ${dim("(Ctrl-D / Ctrl-C also exit)")}\n\n` +
+    `  ${dim("Full command list outside the chat:")} ${accent("oriro --help")}\n\n`
   );
 }
 
