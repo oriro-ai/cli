@@ -17,6 +17,7 @@ import { addAgentFromSource } from "../agents/catalog.js";
 import { registeredRouters } from "../routers/router-pool.js";
 import { ok, info, heading, die, confirmDestructive } from "./ui.js";
 import { renderList, isMachineOutput } from "./output.js";
+import { registerAgentsCron } from "./schedule.js";
 import { accent, dim } from "../ui/theme.js";
 
 function nowIso(): string {
@@ -165,6 +166,8 @@ export function registerAgentsCommand(program: Command): void {
       if (!removeAgent(name)) { info(`'${name}' is not a saved agent — nothing to remove`); return; }
       ok(`removed ${accent(name)}`);
     });
+
+  registerAgentsCron(agents); // `agents cron` — install the OS scheduler that fires `agents tick`
 
   agents
     .command("tick")
