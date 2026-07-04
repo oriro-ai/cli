@@ -19,6 +19,8 @@ import { setupVoiceInput } from "./voice/setup.js";
 import { scrubOutput } from "./identity/filter.js";
 import { phantomFileWarning } from "./repl-ui/verify-actions.js";
 import { isRouterSlash, handleRouterSlash } from "./repl-ui/slash-routers.js";
+import { isUsageSlash, handleUsage } from "./repl-ui/slash-usage.js";
+import { bumpTurns, toggleTrace } from "./repl-ui/repl-state.js";
 import { dim, accent } from "./ui/theme.js";
 
 /** In-REPL help — real, not LLM-fabricated. */
@@ -78,7 +80,10 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       if (slash === "/skill" || slash === "/skills") { stdout.write(`  ${dim("326 skills bundled & active. Browse: oriro skills list --all")}\n`); continue; }
       if (slash === "/connector" || slash === "/connectors") { stdout.write(`  ${dim("59 MCP connectors. Add: oriro connectors setup · or oriro connectors add <slug>")}\n`); continue; }
       if (isRouterSlash(slash)) { stdout.write((await handleRouterSlash(line)).join("\n") + "\n"); continue; }
+      if (isUsageSlash(slash)) { stdout.write(handleUsage().join("\n") + "\n"); continue; }
+      if (slash === "/trace") { stdout.write(`  ${dim(`trace ${toggleTrace() ? "ON" : "off"}`)}\n`); continue; }
 
+      bumpTurns();
       const english = await translateIncoming(line);
       noteUserInput(line);
       let out = "";

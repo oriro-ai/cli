@@ -21,6 +21,8 @@ import { listen } from "../avatar/voice.js";
 import { scrubOutput } from "../identity/filter.js";
 import { phantomFileWarning } from "./verify-actions.js";
 import { isRouterSlash, handleRouterSlash } from "./slash-routers.js";
+import { isUsageSlash, handleUsage } from "./slash-usage.js";
+import { bumpTurns, getTrace, toggleTrace } from "./repl-state.js";
 import { onRaceStatus } from "../routers/race-status.js";
 
 const editorTheme: EditorTheme = {
@@ -131,6 +133,17 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       })();
       return;
     }
+    if (isUsageSlash(slash)) {
+      chat.addChild(new Text(handleUsage().join("\n"), 0, 0));
+      editor.setText(""); tui.requestRender();
+      return;
+    }
+    if (slash === "/trace") {
+      const on = toggleTrace();
+      chat.addChild(new Text(dim(`  trace ${on ? "ON — showing tool + router activity" : "off"}`), 0, 0));
+      editor.setText(""); tui.requestRender();
+      return;
+    }
     if (slash === "/voice") {
       // Speak a turn: record the mic + transcribe on-device, then drop the text into the editor to review + send.
       editor.setText("");
@@ -171,19 +184,24 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
     tui.requestRender();
 
     busy = true;
+    bumpTurns(); // /usage turn counter
     void (async () => {
       let english = await translateIncoming(text);
       if (getThinking()) english = `${THINKING_PRIMER}\n\n${english}`; // plan-first when thinking is on
       noteUserInput(text);
       let out = "";
       const unsub = session.subscribe(
-        (e: { type: string; assistantMessageEvent?: { type: string; delta?: string } }) => {
+        (e: { type: string; assistantMessageEvent?: { type: string; delta?: string }; toolName?: string }) => {
           if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
             out += e.assistantMessageEvent.delta ?? "";
             if (isEnglish) {
               streaming.setText(out);
               tui.requestRender();
             }
+          } else if (getTrace() && (e.type === "tool_start" || e.type === "tool_end" || e.type === "toolcall_start")) {
+            // /trace: surface tool activity (normally hidden) — a lightweight trace line per tool event.
+            chat.addChild(new Text(dim(`  ⚙ ${e.type.replace("_", " ")}${e.toolName ? `: ${e.toolName}` : ""}`), 0, 0));
+            tui.requestRender();
           }
         },
       );
