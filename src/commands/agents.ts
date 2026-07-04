@@ -16,7 +16,7 @@ import { runAgent } from "../agents/run.js";
 import { addAgentFromSource } from "../agents/catalog.js";
 import { registeredRouters } from "../routers/router-pool.js";
 import { ok, info, heading, die, confirmDestructive } from "./ui.js";
-import { renderList, isMachineOutput } from "./output.js";
+import { renderList, isMachineOutput, outputError } from "./output.js";
 import { registerAgentsCron } from "./schedule.js";
 import { accent, dim } from "../ui/theme.js";
 
@@ -63,6 +63,7 @@ export function registerAgentsCommand(program: Command): void {
     .option("-o, --output <fmt>", "output format: text (default) | json | csv")
     .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
     .action((opts: { output?: string; query?: string }) => {
+      const oerr = outputError(opts); if (oerr) die(oerr); // clean error, no stack trace (QA D1)
       const all = listAgents();
       const state = loadState();
       if (isMachineOutput(opts) || opts.query) {

@@ -11,7 +11,7 @@ import { buildServerConfig, vetServer, parsePairs } from "../connectors/setup.js
 import { saveCustomServer, readCustomServers, removeCustomServer } from "../connectors/custom.js";
 import { assertSafeUrl } from "../connectors/mcp-client.js";
 import { ok, info, heading, die, confirmDestructive } from "./ui.js";
-import { renderList, isMachineOutput } from "./output.js";
+import { renderList, isMachineOutput, outputError } from "./output.js";
 import { accent, dim } from "../ui/theme.js";
 
 interface SetupOpts {
@@ -34,6 +34,7 @@ export function registerConnectorsCommand(program: Command): void {
     .option("-o, --output <fmt>", "output format: text (default) | json | csv")
     .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
     .action((category: string | undefined, opts: { output?: string; query?: string }) => {
+      const oerr = outputError(opts); if (oerr) die(oerr); // clean error, no stack trace (QA D1)
       if (category && !connectorCategories().includes(category)) {
         die(`unknown category '${category}' — categories: ${connectorCategories().join(", ")}`);
       }
@@ -52,11 +53,15 @@ export function registerConnectorsCommand(program: Command): void {
       }
       heading(category ? `Connectors · ${category}` : "Connectors");
       let addable = 0;
+      // Pad the PLAIN label (incl. the "(coming soon)" suffix) to a fixed width BEFORE colouring, so the
+      // category column stays aligned even for long names (QA D4).
+      const NAME_W = 34;
       for (const c of entries) {
         const canAdd = !!c.mcpUrl; // entries with no MCP source can't be added — show them greyed
         if (canAdd) addable++;
         const mark = !canAdd ? dim("·") : added.has(c.slug) ? accent("●") : dim("○");
-        const name = canAdd ? c.name.padEnd(22) : dim(`${c.name} (coming soon)`.padEnd(22));
+        const label = (canAdd ? c.name : `${c.name} (coming soon)`).padEnd(NAME_W);
+        const name = canAdd ? label : dim(label);
         process.stdout.write(`  ${mark} ${(canAdd ? accent : dim)(c.slug.padEnd(20))} ${name} ${dim(c.category)}\n`);
       }
       info(`${addable} addable${category ? ` in '${category}'` : ""} · ${added.size} added · ${entries.length - addable} coming soon`);

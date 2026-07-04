@@ -69,3 +69,13 @@ export function renderList(rows: Record<string, unknown>[], opts: RenderOpts = {
 export function isMachineOutput(opts: RenderOpts): boolean {
   return parseFormat(opts.output) !== "text";
 }
+
+/**
+ * Validate --output WITHOUT throwing — returns a clean one-line error, or null if valid. Commands call
+ * this first and die() on the message, so a bad value never surfaces the raw parseFormat stack trace
+ * to the top-level handler (QA D1). Honors the configured default the same way parseFormat does.
+ */
+export function outputError(opts: RenderOpts): string | null {
+  const f = (opts.output ?? configGet("output") ?? "text").toLowerCase();
+  return f === "json" || f === "csv" || f === "text" ? null : `invalid --output '${opts.output}' — use text | json | csv`;
+}

@@ -33,11 +33,20 @@ export function didYouMean(input: string, candidates: string[]): string | undefi
   return best !== undefined && bestD <= Math.max(2, Math.floor(input.length * 0.4)) ? best : undefined;
 }
 
+/** The full invocation path of a command, e.g. `oriro agents make` (walks the parent chain). */
+function fullPath(cmd: Command): string {
+  const parts: string[] = [];
+  let c: Command | null = cmd;
+  while (c && c.name() !== "oriro") { parts.unshift(c.name()); c = c.parent; }
+  return parts.length ? `oriro ${parts.join(" ")}` : "oriro <command>";
+}
+
 /** Turn on "print help + suggest after an error" for the program AND every (nested) subcommand. */
 export function enableHelpOnError(program: Command): void {
   const apply = (cmd: Command): void => {
-    const path = cmd.name() === "oriro" ? "oriro <command>" : `oriro ${cmd.name()}`;
-    cmd.showHelpAfterError(`\n(run: ${path} --help for usage)`);
+    // Full path (not just cmd.name()) so a nested error points at the REAL command — QA D3:
+    // `oriro agents make --help`, not the dead-end `oriro make --help`.
+    cmd.showHelpAfterError(`\n(run: ${fullPath(cmd)} --help for usage)`);
     cmd.showSuggestionAfterError(true); // commander's built-in did-you-mean for options/subcommands
     for (const sub of cmd.commands) apply(sub);
   };

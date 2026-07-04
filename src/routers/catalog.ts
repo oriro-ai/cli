@@ -287,13 +287,6 @@ export const ROUTER_CATALOG: readonly RouterEntry[] = [
     obtainUrl: "https://berget.ai",
   }),
   C({
-    id: "huggingface",
-    displayName: "Hugging Face",
-    baseUrl: "https://router.huggingface.co/v1",
-    freeModels: ["meta-llama/Llama-3.2-3B-Instruct"],
-    obtainUrl: "https://huggingface.co/settings/tokens",
-  }),
-  C({
     id: "replicate",
     displayName: "Replicate",
     baseUrl: "https://api.replicate.com/v1",

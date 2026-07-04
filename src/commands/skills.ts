@@ -7,7 +7,7 @@ import { resolve, join, basename, dirname } from "node:path";
 import type { Command } from "commander";
 import { loadOriroSkills, userSkillsDir } from "../skills/loader.js";
 import { info, heading, ok, die, confirmDestructive } from "./ui.js";
-import { renderList, isMachineOutput } from "./output.js";
+import { renderList, isMachineOutput, outputError } from "./output.js";
 import { accent, dim } from "../ui/theme.js";
 
 export function registerSkillsCommand(program: Command): void {
@@ -20,6 +20,7 @@ export function registerSkillsCommand(program: Command): void {
     .option("-o, --output <fmt>", "output format: text (default) | json | csv")
     .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
     .action(async (opts: { all?: boolean; output?: string; query?: string }) => {
+      const oerr = outputError(opts); if (oerr) die(oerr); // clean error, no stack trace (QA D1)
       const s = await loadOriroSkills();
       if (isMachineOutput(opts) || opts.query) {
         const rows = s.all.map((sk) => ({

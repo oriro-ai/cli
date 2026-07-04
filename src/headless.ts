@@ -16,6 +16,11 @@ export function isOutputFormatMode(s: string): s is OutputFormatMode {
 }
 
 export async function runHeadless(prompt: string, format: OutputFormatMode): Promise<void> {
+  if (!prompt.trim()) { // QA D5: don't spend a router request on an empty prompt
+    process.stderr.write("error: empty prompt — pass text after -p, e.g. oriro -p \"summarise this repo\"\n");
+    process.exitCode = 1;
+    return;
+  }
   const { session } = await assembleOriroSession({});
   let text = "";
   const unsub = session.subscribe(

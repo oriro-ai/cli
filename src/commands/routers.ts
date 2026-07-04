@@ -6,7 +6,7 @@ import type { Command } from "commander";
 import { ROUTER_CATALOG, routerById, type RouterEntry } from "../routers/catalog.js";
 import { addRouter, useRouters, resolvePool, registeredRouters, KEYLESS_SENTINEL } from "../routers/router-pool.js";
 import { ok, info, heading, die } from "./ui.js";
-import { renderList, isMachineOutput } from "./output.js";
+import { renderList, isMachineOutput, outputError } from "./output.js";
 import { accent, dim, fgHex, PALETTE } from "../ui/theme.js";
 
 export function registerRoutersCommand(program: Command): void {
@@ -18,6 +18,7 @@ export function registerRoutersCommand(program: Command): void {
     .option("-o, --output <fmt>", "output format: text (default) | json | csv")
     .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
     .action((opts: { output?: string; query?: string }) => {
+      const oerr = outputError(opts); if (oerr) die(oerr); // clean error, no stack trace (QA D1)
       const pool = new Set(resolvePool().map((p) => p.id));
       // Machine output (json/csv/query): one flat, scriptable row set — catalog + custom, with pool state.
       if (isMachineOutput(opts) || opts.query) {

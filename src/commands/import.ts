@@ -7,6 +7,7 @@ import { existsSync, readFileSync, readdirSync, statSync, cpSync, mkdirSync } fr
 import { join, basename } from "node:path";
 import type { Command } from "commander";
 import { buildServerConfig, vetServer } from "../connectors/setup.js";
+import { assertSafeUrl } from "../connectors/mcp-client.js";
 import { saveCustomServer } from "../connectors/custom.js";
 import { userSkillsDir } from "../skills/loader.js";
 import { ok, info, heading, die } from "./ui.js";
@@ -45,6 +46,16 @@ export function registerImportCommand(program: Command): void {
           ...(s.url ? { url: s.url } : {}),
           ...(s.headers ? { headers: s.headers } : {}),
         };
+        // SSRF guard on URL servers — same policy the interactive `connectors setup` applies (QA D2):
+        // an imported metadata/loopback/LAN target must be refused, not silently persisted.
+        if (s.url) {
+          try { assertSafeUrl(s.url); }
+          catch (e) {
+            process.stdout.write(`  ${fgHex(PALETTE.error, "✗")} ${name} ${dim(`blocked: ${e instanceof Error ? e.message : String(e)}`)}\n`);
+            blocked++;
+            continue;
+          }
+        }
         const outcome = vetServer(input);
         if (outcome.decision === "block") {
           process.stdout.write(`  ${fgHex(PALETTE.error, "✗")} ${name} ${dim(`blocked: ${outcome.reason}`)}\n`);
@@ -67,16 +78,17 @@ export function registerImportCommand(program: Command): void {
       const dest = userSkillsDir();
       mkdirSync(dest, { recursive: true });
       heading("Import skills");
+      // Accept BOTH: <dir> that IS a skill (has SKILL.md), OR <dir> whose CHILDREN are skills (QA F2).
+      const sources = existsSync(join(dir, "SKILL.md"))
+        ? [dir]
+        : readdirSync(dir).map((e) => join(dir, e)).filter((p) => statSync(p).isDirectory() && existsSync(join(p, "SKILL.md")));
       let n = 0;
-      for (const entry of readdirSync(dir)) {
-        const src = join(dir, entry);
-        if (!statSync(src).isDirectory()) continue;
-        if (!existsSync(join(src, "SKILL.md"))) continue; // only real skills (a folder with SKILL.md)
+      for (const src of sources) {
         cpSync(src, join(dest, basename(src)), { recursive: true });
-        process.stdout.write(`  ${fgHex(PALETTE.success, "✓")} ${accent(entry)}\n`);
+        process.stdout.write(`  ${fgHex(PALETTE.success, "✓")} ${accent(basename(src))}\n`);
         n++;
       }
-      if (n === 0) info(dim(`no SKILL.md folders found in ${dir}`));
+      if (n === 0) info(dim(`no SKILL.md skill folder found at or inside ${dir}`));
       else ok(`imported ${n} skill${n === 1 ? "" : "s"} → ${dim(dest)}`);
     });
 }
