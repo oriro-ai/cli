@@ -65,6 +65,7 @@ run(["agents", "remove", "ghost"], { expectExit: 0, contains: "nothing to remove
 run(["connectors", "list", "ZzzNotACategory"], { expectExit: 1, contains: "unknown category" }); // bad input → exit 1
 run(["connectors", "remove", "never-added-xyz"], { expectExit: 0, contains: "nothing to remove" }); // no false-positive remove
 run(["routers", "use", "neveradded-xyz"], { expectExit: 1, contains: "none of those" }); // no false success on unregistered ids
+run(["--print", "x", "--output-format", "yaml"], { expectExit: 1, contains: "output-format" }); // headless flag validation (offline)
 run(["help"], { expectExit: 0, contains: "routers" }); // `oriro help` prints top-level help
 run(["--help"], { contains: "routers" });
 

@@ -6,6 +6,7 @@
 import { createRequire } from "node:module";
 import { Command } from "commander";
 import { runRepl } from "./repl.js";
+import { runHeadless, isOutputFormatMode } from "./headless.js";
 import { registerRoutersCommand } from "./commands/routers.js";
 import { registerScribeCommand } from "./commands/scribe.js";
 import { registerConnectorsCommand } from "./commands/connectors.js";
@@ -28,8 +29,17 @@ program
   .name("oriro")
   .description("ORIRO — a free, on-device-friendly terminal AI agent.")
   .version(version, "-v, --version")
+  .option("-p, --print <prompt>", "headless one-shot: run a single prompt, print the answer, exit (CI-friendly)")
+  .option("--output-format <fmt>", "with --print: text | json | stream-json", "text")
   // no subcommand → onboarding + chat REPL; an UNKNOWN command must error (not silently open the REPL).
-  .action(async (_options: unknown, command: Command) => {
+  .action(async (options: { print?: string; outputFormat?: string }, command: Command) => {
+    // Headless one-shot (scriptable / CI). Everything else on the root stays interactive.
+    if (options.print !== undefined) {
+      const fmt = options.outputFormat ?? "text";
+      if (!isOutputFormatMode(fmt)) { process.stderr.write(`error: --output-format must be text | json | stream-json\n`); process.exitCode = 1; return; }
+      await runHeadless(options.print, fmt);
+      return;
+    }
     if (command.args.length > 0) {
       const arg = command.args[0] ?? "";
       if (arg === "help") { command.outputHelp(); return; } // `oriro help` → top-level help (exit 0)
