@@ -23,6 +23,7 @@ import { phantomFileWarning } from "./verify-actions.js";
 import { isRouterSlash, handleRouterSlash } from "./slash-routers.js";
 import { isUsageSlash, handleUsage } from "./slash-usage.js";
 import { isArtifactSlash, handleArtifactSlash } from "./slash-artifacts.js";
+import { isCompactSlash, handleCompact } from "./slash-compact.js";
 import { extractArtifacts, setArtifacts } from "./artifacts.js";
 import { bumpTurns, getTrace, toggleTrace } from "./repl-state.js";
 import { onRaceStatus } from "../routers/race-status.js";
@@ -111,7 +112,7 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       // Discoverable list of every in-chat command (kept in sync with repl.ts replHelp).
       const help = [
         "  Just type to chat — ORIRO writes and runs code for you (keyless, free).",
-        `  ${accent("/routers")} pool add·rotate   ${accent("/model")} <id…> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity`,
+        `  ${accent("/routers")} pool add·rotate   ${accent("/model")} <id…> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity   ${accent("/compact")} free context`,
         `  ${accent("/review")} artifacts from the last reply   ${accent("/save")} <n> [path]   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`,
       ].join("\n");
@@ -156,6 +157,18 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
     if (isArtifactSlash(slash)) {
       chat.addChild(new Text(handleArtifactSlash(text).join("\n"), 0, 0));
       editor.setText(""); tui.requestRender();
+      return;
+    }
+    if (isCompactSlash(slash)) {
+      editor.setText("");
+      const pending = new Text(dim("  compacting…"), 0, 0);
+      chat.addChild(pending);
+      tui.requestRender();
+      void (async () => {
+        const lines = await handleCompact(session, text);
+        pending.setText(lines.join("\n"));
+        tui.requestRender();
+      })();
       return;
     }
     if (slash === "/voice") {

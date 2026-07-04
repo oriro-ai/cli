@@ -6363,6 +6363,46 @@ function handleArtifactSlash(raw) {
   return lines;
 }
 
+// src/repl-ui/slash-compact.ts
+function isCompactSlash(cmd) {
+  return /^\/compact(\s|$)/i.test(cmd.trim());
+}
+function compactInstructions(cmd) {
+  const rest = cmd.trim().replace(/^\/compact\s*/i, "").trim();
+  return rest.length ? rest : void 0;
+}
+function formatCompactionResult(result) {
+  const before = result.tokensBefore;
+  const after = result.estimatedTokensAfter;
+  const lines = [];
+  if (typeof after === "number" && before > 0) {
+    const freed = Math.max(0, before - after);
+    const pct = Math.round(freed / before * 100);
+    lines.push(
+      `  ${fgHex(PALETTE.success, "\u2713 compacted")} ${dim(`${before.toLocaleString()} \u2192 ${after.toLocaleString()} tokens`)} ${accent(`(${pct}% freed)`)}`
+    );
+  } else {
+    lines.push(`  ${fgHex(PALETTE.success, "\u2713 compacted")} ${dim(`${before.toLocaleString()} tokens summarized`)}`);
+  }
+  lines.push(dim("  history summarized; the summary is kept, raw turns dropped. Keep going."));
+  return lines;
+}
+async function handleCompact(session, cmd) {
+  if (session.isCompacting) {
+    return [dim("  compaction already in progress \u2014 hold on\u2026")];
+  }
+  if (session.messages.length < 4) {
+    return [dim("  not much to compact yet \u2014 keep chatting, then /compact frees context.")];
+  }
+  try {
+    const result = await session.compact(compactInstructions(cmd));
+    if (!result) return [dim("  nothing to compact right now.")];
+    return formatCompactionResult(result);
+  } catch (e) {
+    return [`  ${fgHex(PALETTE.error, "compaction failed")}: ${dim(e instanceof Error ? e.message : String(e))}`];
+  }
+}
+
 // src/repl-ui/tui-repl.ts
 var editorTheme = {
   borderColor: (s) => dim(s),
@@ -6444,7 +6484,7 @@ async function runTuiRepl(session) {
     if (slash === "/help" || slash === "/?") {
       const help = [
         "  Just type to chat \u2014 ORIRO writes and runs code for you (keyless, free).",
-        `  ${accent("/routers")} pool add\xB7rotate   ${accent("/model")} <id\u2026> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity`,
+        `  ${accent("/routers")} pool add\xB7rotate   ${accent("/model")} <id\u2026> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity   ${accent("/compact")} free context`,
         `  ${accent("/review")} artifacts from the last reply   ${accent("/save")} <n> [path]   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`
       ].join("\n");
@@ -6494,6 +6534,18 @@ async function runTuiRepl(session) {
       chat.addChild(new Text(handleArtifactSlash(text).join("\n"), 0, 0));
       editor.setText("");
       tui.requestRender();
+      return;
+    }
+    if (isCompactSlash(slash)) {
+      editor.setText("");
+      const pending = new Text(dim("  compacting\u2026"), 0, 0);
+      chat.addChild(pending);
+      tui.requestRender();
+      void (async () => {
+        const lines = await handleCompact(session, text);
+        pending.setText(lines.join("\n"));
+        tui.requestRender();
+      })();
       return;
     }
     if (slash === "/voice") {
@@ -6679,7 +6731,7 @@ function replHelp() {
   ${dim("Just type to chat; ORIRO writes and runs code for you (keyless, free).")}
 
   ${dim("Models & routers")}   ${accent("/routers")} list\xB7add\xB7rotate the racing pool   ${accent("/model")} <id\u2026> switch
-  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} show tool + router activity
+  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} show tool + router activity   ${accent("/compact")} free context
   ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one
   ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn
   ${dim("General")}           ${accent("/help")} this   ${accent("/exit")} / ${accent("/quit")} leave   ${dim("(Ctrl-D / Ctrl-C also exit)")}
@@ -6754,6 +6806,10 @@ async function runReadlineRepl(session) {
       if (slash === "/trace") {
         stdout7.write(`  ${dim(`trace ${toggleTrace() ? "ON" : "off"}`)}
 `);
+        continue;
+      }
+      if (isCompactSlash(slash)) {
+        stdout7.write((await handleCompact(session, line)).join("\n") + "\n");
         continue;
       }
       if (isArtifactSlash(slash)) {

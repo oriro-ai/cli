@@ -21,6 +21,7 @@ import { phantomFileWarning } from "./repl-ui/verify-actions.js";
 import { isRouterSlash, handleRouterSlash } from "./repl-ui/slash-routers.js";
 import { isUsageSlash, handleUsage } from "./repl-ui/slash-usage.js";
 import { isArtifactSlash, handleArtifactSlash } from "./repl-ui/slash-artifacts.js";
+import { isCompactSlash, handleCompact } from "./repl-ui/slash-compact.js";
 import { extractArtifacts, setArtifacts } from "./repl-ui/artifacts.js";
 import { bumpTurns, toggleTrace } from "./repl-ui/repl-state.js";
 import { dim, accent } from "./ui/theme.js";
@@ -33,7 +34,7 @@ function replHelp(): string {
     `\n  ${accent("ORIRO terminal — help")}\n` +
     `  ${dim("Just type to chat; ORIRO writes and runs code for you (keyless, free).")}\n\n` +
     `  ${dim("Models & routers")}   ${accent("/routers")} list·add·rotate the racing pool   ${accent("/model")} <id…> switch\n` +
-    `  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} show tool + router activity\n` +
+    `  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} show tool + router activity   ${accent("/compact")} free context\n` +
     `  ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one\n` +
     `  ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn\n` +
     `  ${dim("General")}           ${accent("/help")} this   ${accent("/exit")} / ${accent("/quit")} leave   ${dim("(Ctrl-D / Ctrl-C also exit)")}\n\n` +
@@ -89,6 +90,7 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       if (isRouterSlash(slash)) { stdout.write((await handleRouterSlash(line)).join("\n") + "\n"); continue; }
       if (isUsageSlash(slash)) { stdout.write(handleUsage().join("\n") + "\n"); continue; }
       if (slash === "/trace") { stdout.write(`  ${dim(`trace ${toggleTrace() ? "ON" : "off"}`)}\n`); continue; }
+      if (isCompactSlash(slash)) { stdout.write((await handleCompact(session, line)).join("\n") + "\n"); continue; }
       if (isArtifactSlash(slash)) { stdout.write(handleArtifactSlash(line).join("\n") + "\n"); continue; }
 
       bumpTurns();
