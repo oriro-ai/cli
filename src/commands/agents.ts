@@ -15,7 +15,7 @@ import {
 import { runAgent } from "../agents/run.js";
 import { addAgentFromSource } from "../agents/catalog.js";
 import { registeredRouters } from "../routers/router-pool.js";
-import { ok, info, heading, die } from "./ui.js";
+import { ok, info, heading, die, confirmDestructive } from "./ui.js";
 import { renderList, isMachineOutput } from "./output.js";
 import { accent, dim } from "../ui/theme.js";
 
@@ -158,7 +158,10 @@ export function registerAgentsCommand(program: Command): void {
   agents
     .command("remove <name>")
     .description("delete an agent")
-    .action((name: string) => {
+    .option("-f, --force", "skip the confirmation prompt")
+    .action(async (name: string, opts: { force?: boolean }) => {
+      if (!loadAgent(name)) { info(`'${name}' is not a saved agent — nothing to remove`); return; }
+      if (!(await confirmDestructive(`remove agent '${name}'`, opts))) { info("cancelled"); return; }
       if (!removeAgent(name)) { info(`'${name}' is not a saved agent — nothing to remove`); return; }
       ok(`removed ${accent(name)}`);
     });

@@ -6,7 +6,7 @@ import { existsSync, statSync, mkdirSync, cpSync, rmSync } from "node:fs";
 import { resolve, join, basename, dirname } from "node:path";
 import type { Command } from "commander";
 import { loadOriroSkills, userSkillsDir } from "../skills/loader.js";
-import { info, heading, ok, die } from "./ui.js";
+import { info, heading, ok, die, confirmDestructive } from "./ui.js";
 import { renderList, isMachineOutput } from "./output.js";
 import { accent, dim } from "../ui/theme.js";
 
@@ -69,9 +69,11 @@ export function registerSkillsCommand(program: Command): void {
   skills
     .command("remove <name>")
     .description("remove a skill you added")
-    .action((name: string) => {
+    .option("-f, --force", "skip the confirmation prompt")
+    .action(async (name: string, opts: { force?: boolean }) => {
       const target = join(userSkillsDir(), name);
       if (!existsSync(target)) { info(`'${name}' is not a user-added skill — nothing to remove`); return; }
+      if (!(await confirmDestructive(`remove skill '${name}'`, opts))) { info("cancelled"); return; }
       rmSync(target, { recursive: true, force: true });
       ok(`removed ${accent(name)}`);
     });

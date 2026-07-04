@@ -10,7 +10,7 @@ import { listConnectors, addConnector, removeConnector, addedConnectors, connect
 import { buildServerConfig, vetServer, parsePairs } from "../connectors/setup.js";
 import { saveCustomServer, readCustomServers, removeCustomServer } from "../connectors/custom.js";
 import { assertSafeUrl } from "../connectors/mcp-client.js";
-import { ok, info, heading, die } from "./ui.js";
+import { ok, info, heading, die, confirmDestructive } from "./ui.js";
 import { renderList, isMachineOutput } from "./output.js";
 import { accent, dim } from "../ui/theme.js";
 
@@ -78,7 +78,10 @@ export function registerConnectorsCommand(program: Command): void {
   connectors
     .command("remove <slug>")
     .description("remove a connector")
-    .action((slug: string) => {
+    .option("-f, --force", "skip the confirmation prompt")
+    .action(async (slug: string, opts: { force?: boolean }) => {
+      if (!isConnectorAdded(slug)) { info(`'${slug}' is not in your added list — nothing to remove`); return; }
+      if (!(await confirmDestructive(`remove connector '${slug}'`, opts))) { info("cancelled"); return; }
       if (removeConnector(slug)) ok(`removed ${accent(slug)}`);
       else info(`'${slug}' is not in your added list — nothing to remove`);
     });

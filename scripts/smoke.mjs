@@ -59,8 +59,9 @@ run(["agents", "make", "sched", "--task", "x", "--schedule", "zzz"], { expectExi
 run(["agents", "run", "ghost"], { expectExit: 1, contains: "no agent named" }); // run unknown → error (no network)
 run(["agents", "tick"], { expectExit: 0, contains: "due" }); // no scheduled agents → "0 agents due" (no network)
 run(["agents", "add", "./does-not-exist.json"], { expectExit: 1, contains: "could not add" }); // bad source refused
-run(["agents", "remove", "demo"], { expectExit: 0, contains: "removed" }); // cleanup
-run(["agents", "remove", "ghost"], { expectExit: 0, contains: "nothing to remove" }); // no false-positive remove
+run(["agents", "remove", "demo"], { expectExit: 1, contains: "--force" }); // destructive w/o --force in non-TTY → refuse (UX-4)
+run(["agents", "remove", "demo", "--force"], { expectExit: 0, contains: "removed" }); // --force = the scriptable path
+run(["agents", "remove", "ghost"], { expectExit: 0, contains: "nothing to remove" }); // non-existent → early return, no confirm
 run(["connectors", "list", "ZzzNotACategory"], { expectExit: 1, contains: "unknown category" }); // bad input → exit 1
 run(["connectors", "remove", "never-added-xyz"], { expectExit: 0, contains: "nothing to remove" }); // no false-positive remove
 run(["routers", "use", "neveradded-xyz"], { expectExit: 1, contains: "none of those" }); // no false success on unregistered ids
