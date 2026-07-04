@@ -6,6 +6,7 @@ import type { Command } from "commander";
 import { ROUTER_CATALOG, routerById, type RouterEntry } from "../routers/catalog.js";
 import { addRouter, useRouters, resolvePool, registeredRouters, KEYLESS_SENTINEL } from "../routers/router-pool.js";
 import { ok, info, heading, die } from "./ui.js";
+import { renderList, isMachineOutput } from "./output.js";
 import { accent, dim, fgHex, PALETTE } from "../ui/theme.js";
 
 export function registerRoutersCommand(program: Command): void {
@@ -14,7 +15,29 @@ export function registerRoutersCommand(program: Command): void {
   routers
     .command("list")
     .description("list the router catalog and the active pool")
-    .action(() => {
+    .option("-o, --output <fmt>", "output format: text (default) | json | csv")
+    .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
+    .action((opts: { output?: string; query?: string }) => {
+      const pool = new Set(resolvePool().map((p) => p.id));
+      // Machine output (json/csv/query): one flat, scriptable row set — catalog + custom, with pool state.
+      if (isMachineOutput(opts) || opts.query) {
+        const catalogRows = ROUTER_CATALOG.filter((r) => !r.comingSoon).map((r) => ({
+          id: r.id, name: r.displayName, tier: r.keyless ? "keyless" : r.tier,
+          keyless: Boolean(r.keyless), source: "catalog", active: pool.has(r.id),
+        }));
+        const customRows = registeredRouters()
+          .filter((r) => !ROUTER_CATALOG.some((c) => c.id === r.id))
+          .map((r) => ({
+            id: r.id, name: r.name, tier: r.apiKey && r.apiKey !== KEYLESS_SENTINEL ? "byok" : "keyless",
+            keyless: !r.apiKey || r.apiKey === KEYLESS_SENTINEL, source: "custom", active: pool.has(r.id),
+          }));
+        process.stdout.write(renderList([...catalogRows, ...customRows], {
+          output: opts.output, query: opts.query,
+          columns: ["id", "name", "tier", "keyless", "active", "source"],
+        }) + "\n");
+        return;
+      }
+      // Default: the human, coloured view (unchanged).
       heading("Routers");
       for (const r of ROUTER_CATALOG) {
         if (r.comingSoon) {
@@ -24,7 +47,6 @@ export function registerRoutersCommand(program: Command): void {
         const tier = r.keyless ? fgHex(PALETTE.success, "keyless") : dim(r.tier);
         process.stdout.write(`  ${accent(r.id.padEnd(22))} ${r.displayName.padEnd(24)} ${tier}\n`);
       }
-      // Custom routers the user added via `add --url` (not in the catalog) — show their endpoint + type.
       const custom = registeredRouters().filter((r) => !ROUTER_CATALOG.some((c) => c.id === r.id));
       if (custom.length) {
         process.stdout.write(`\n  ${accent("your custom routers")}\n`);
@@ -33,8 +55,7 @@ export function registerRoutersCommand(program: Command): void {
           process.stdout.write(`  ${accent(r.id.padEnd(22))} ${dim(r.baseUrl.padEnd(40))} ${type}\n`);
         }
       }
-      const pool = resolvePool();
-      info(pool.length ? `active pool: ${pool.map((p) => p.id).join(", ")}` : "active pool: empty → using the keyless floor");
+      info(pool.size ? `active pool: ${[...pool].join(", ")}` : "active pool: empty → using the keyless floor");
     });
 
   routers
