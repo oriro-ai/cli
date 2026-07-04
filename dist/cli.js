@@ -1250,37 +1250,37 @@ function registerVoiceSynth(fn) {
 function registerVoiceListen(fn) {
   listener = fn;
 }
-function audioPlayers(file5) {
-  if (process.platform === "darwin") return [{ cmd: "afplay", args: [file5] }];
+function audioPlayers(file6) {
+  if (process.platform === "darwin") return [{ cmd: "afplay", args: [file6] }];
   if (process.platform === "win32")
     return [
-      { cmd: "powershell", args: ["-NoProfile", "-c", `(New-Object Media.SoundPlayer '${file5}').PlaySync()`] }
+      { cmd: "powershell", args: ["-NoProfile", "-c", `(New-Object Media.SoundPlayer '${file6}').PlaySync()`] }
     ];
   return [
-    { cmd: "aplay", args: ["-q", file5] },
-    { cmd: "ffplay", args: ["-nodisp", "-autoexit", "-loglevel", "quiet", file5] },
-    { cmd: "paplay", args: [file5] }
+    { cmd: "aplay", args: ["-q", file6] },
+    { cmd: "ffplay", args: ["-nodisp", "-autoexit", "-loglevel", "quiet", file6] },
+    { cmd: "paplay", args: [file6] }
   ];
 }
 function playWav(wav) {
-  const file5 = join7(tmpdir(), `oriro-avatar-${process.pid}-${wav.length}.wav`);
-  writeFileSync5(file5, wav);
-  const players = audioPlayers(file5);
+  const file6 = join7(tmpdir(), `oriro-avatar-${process.pid}-${wav.length}.wav`);
+  writeFileSync5(file6, wav);
+  const players = audioPlayers(file6);
   return new Promise((resolve3) => {
     const tryPlayer = (i) => {
       if (i >= players.length) {
-        rmSync(file5, { force: true });
+        rmSync(file6, { force: true });
         return resolve3(false);
       }
       const p = players[i];
       if (!p) {
-        rmSync(file5, { force: true });
+        rmSync(file6, { force: true });
         return resolve3(false);
       }
       const child = spawn(p.cmd, p.args, { stdio: "ignore" });
       child.on("error", () => tryPlayer(i + 1));
       child.on("close", (code) => {
-        rmSync(file5, { force: true });
+        rmSync(file6, { force: true });
         resolve3(code === 0);
       });
     };
@@ -1317,9 +1317,9 @@ import { existsSync, readFileSync as readFileSync6, rmSync as rmSync2 } from "fs
 function tmpWav() {
   return join8(tmpdir2(), `oriro-tts-${process.pid}-${Date.now()}-${Math.floor(performance.now())}.wav`);
 }
-function readAndClean(file5) {
-  const buf = readFileSync6(file5);
-  rmSync2(file5, { force: true });
+function readAndClean(file6) {
+  const buf = readFileSync6(file6);
+  rmSync2(file6, { force: true });
   return new Uint8Array(buf);
 }
 function winSapi(text, lang) {
@@ -1756,13 +1756,6 @@ var ROUTER_CATALOG = [
     obtainUrl: "https://berget.ai"
   }),
   C4({
-    id: "huggingface",
-    displayName: "Hugging Face",
-    baseUrl: "https://router.huggingface.co/v1",
-    freeModels: ["meta-llama/Llama-3.2-3B-Instruct"],
-    obtainUrl: "https://huggingface.co/settings/tokens"
-  }),
-  C4({
     id: "replicate",
     displayName: "Replicate",
     baseUrl: "https://api.replicate.com/v1",
@@ -1857,10 +1850,35 @@ var ROUTER_CATALOG = [
     obtainUrl: "https://platform.moonshot.ai",
     tier: "paid"
   }),
-  // ── ORIRO models — coming soon, greyed/"(free)", not selectable yet ──
-  C4({ id: "oriro-gauss", displayName: "ORIRO-Gauss", baseUrl: "", comingSoon: true }),
-  C4({ id: "oriro-avila", displayName: "ORIRO-Avila", baseUrl: "", comingSoon: true })
+  // ── ORIRO's OWN models — LIVE, keyless, first-class racers (2026-07-04) ──
+  // Served through the same-origin oriro.ai worker proxy, which injects the serve key server-side
+  // so the CLI stays keyless (no bearer ever touches the client) — the endpoints answer at
+  // baseUrl + "/chat/completions" (race-{gauss,avila}.ts alias). ORIRO-Avila is V2.4 today
+  // (AVILA_SERVE_URL set); ORIRO-Gauss races on the live serve and auto-upgrades to V2.4 the
+  // moment GAUSS_SERVE_URL is flipped — no CLI change needed. Both are true GPU endpoints, so
+  // they only race when the user opts them into the pool (`oriro routers add oriro-gauss`).
+  C4({
+    id: "oriro-gauss",
+    displayName: "ORIRO-Gauss",
+    baseUrl: "https://oriro.ai/api/race/gauss",
+    freeModels: ["gauss"],
+    obtainUrl: "https://oriro.ai",
+    keyless: true,
+    verified: true
+  }),
+  C4({
+    id: "oriro-avila",
+    displayName: "ORIRO-Avila",
+    baseUrl: "https://oriro.ai/api/race/avila",
+    freeModels: ["avila"],
+    obtainUrl: "https://oriro.ai",
+    keyless: true,
+    verified: true
+  })
 ];
+function selectableRouters() {
+  return ROUTER_CATALOG.filter((r) => !r.comingSoon);
+}
 function routerById(id) {
   return ROUTER_CATALOG.find((r) => r.id === id);
 }
@@ -3371,7 +3389,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 
 // src/routers/mux-provider.ts
-import { streamSimple as piStreamSimple, createAssistantMessageEventStream } from "@earendil-works/pi-ai";
+import { streamSimple as piStreamSimple2, createAssistantMessageEventStream } from "@earendil-works/pi-ai";
 import { register as registerOpenAICompletions } from "@earendil-works/pi-ai/openai-completions";
 
 // src/routers/mux.ts
@@ -3579,8 +3597,8 @@ function artifactsDir() {
 // src/scribe/digest.ts
 var DIGEST_CAP = 8192;
 var TIMELINE_DAY_CAP = 400;
-function read(file5) {
-  return existsSync8(file5) ? readFileSync12(file5, "utf8") : "";
+function read(file6) {
+  return existsSync8(file6) ? readFileSync12(file6, "utf8") : "";
 }
 function updateDigest(summary, context) {
   mkdirSync10(scribeDir(), { recursive: true });
@@ -4118,7 +4136,7 @@ function attachScribe(session) {
   });
 }
 
-// src/routers/mux-provider.ts
+// src/routers/mux-helpers.ts
 var MUX_PROVIDER = "oriro-mux";
 var MUX_MODEL = "oriro-free";
 function errToCallError(msg) {
@@ -4138,6 +4156,145 @@ function buildErrorMessage(message) {
     errorMessage: message
   };
 }
+
+// src/routers/race.ts
+import { streamSimple as piStreamSimple } from "@earendil-works/pi-ai";
+
+// src/routers/race-status.ts
+var listeners = /* @__PURE__ */ new Set();
+var current = { phase: "idle", racers: [], winner: null };
+function emitRaceStatus(s) {
+  current = s;
+  for (const l of listeners) {
+    try {
+      l(s);
+    } catch {
+    }
+  }
+}
+function onRaceStatus(l) {
+  listeners.add(l);
+  try {
+    l(current);
+  } catch {
+  }
+  return () => {
+    listeners.delete(l);
+  };
+}
+function getRaceStatus() {
+  return current;
+}
+
+// src/routers/race.ts
+var DEFAULT_RACE_WIDTH = 3;
+var realStreamFactory = (router, context, options, signal) => piStreamSimple(routerModel(router), context, {
+  ...options ?? {},
+  apiKey: router.apiKey,
+  signal
+});
+async function raceMux(out, mux, byId, context, options, opts = {}) {
+  const width = opts.width ?? DEFAULT_RACE_WIDTH;
+  const streamFactory = opts.streamFactory ?? realStreamFactory;
+  const push = (ev) => out.push(ev);
+  const ranked = mux.ranked().filter((id) => byId.has(id));
+  if (ranked.length === 0) {
+    const msg = buildErrorMessage("All selected routers are unavailable. Add a BYOK key, select more free routers, or retry shortly.");
+    push({ type: "error", reason: "error", error: msg });
+    out.end(msg);
+    emitRaceStatus({ phase: "failed", racers: [], winner: null });
+    return;
+  }
+  const racers = ranked.slice(0, Math.max(1, Math.min(width, ranked.length)));
+  emitRaceStatus({ phase: "racing", racers, winner: null });
+  const controllers = /* @__PURE__ */ new Map();
+  for (const id of racers) controllers.set(id, new AbortController());
+  const abortLosers = (keep) => {
+    for (const [id, c] of controllers) if (id !== keep) {
+      try {
+        c.abort();
+      } catch {
+      }
+    }
+  };
+  let winner = null;
+  let settled2 = false;
+  let lastError;
+  let remaining = racers.length;
+  return await new Promise((resolve3) => {
+    const failAll = () => {
+      if (settled2) return;
+      settled2 = true;
+      const msg = lastError ?? buildErrorMessage("All racers failed this request.");
+      push({ type: "error", reason: "error", error: msg });
+      out.end(msg);
+      emitRaceStatus({ phase: "failed", racers, winner: null });
+      resolve3();
+    };
+    for (const id of racers) {
+      const router = byId.get(id);
+      const ctrl = controllers.get(id);
+      const t0 = Date.now();
+      void (async () => {
+        let iAmWinner = false;
+        let lastPartial;
+        try {
+          for await (const ev of streamFactory(router, context, options, ctrl.signal)) {
+            if (settled2 && !iAmWinner) return;
+            if (ev.type === "error") {
+              mux.recordFailure(id, ev.error ? errToCallError(ev.error) : {});
+              if (iAmWinner && !settled2) {
+                settled2 = true;
+                push(ev);
+                out.end(ev.error);
+                resolve3();
+                return;
+              }
+              lastError = ev.error ?? lastError;
+              return;
+            }
+            if (!iAmWinner) {
+              if (winner !== null || settled2) return;
+              winner = id;
+              iAmWinner = true;
+              mux.recordSuccess(id, Date.now() - t0);
+              emitRaceStatus({ phase: "won", racers, winner: id });
+              abortLosers(id);
+            }
+            if (ev.type === "done") {
+              if (!settled2) {
+                settled2 = true;
+                const clean = sanitizeMessageToolCalls(scrubMessageIdentity(ev.message));
+                push({ type: "done", reason: ev.reason, message: clean });
+                out.end(clean);
+                resolve3();
+              }
+              return;
+            }
+            lastPartial = ev.partial ?? lastPartial;
+            push(sanitizeEventToolCalls(ev));
+          }
+          if (iAmWinner && !settled2) {
+            settled2 = true;
+            out.end(lastPartial ? sanitizeMessageToolCalls(scrubMessageIdentity(lastPartial)) : void 0);
+            resolve3();
+          } else if (!iAmWinner) {
+            mux.recordFailure(id, {});
+          }
+        } catch (e) {
+          if (e?.name === "AbortError") return;
+          mux.recordFailure(id, e);
+          if (!iAmWinner) lastError ??= buildErrorMessage(e instanceof Error ? e.message : String(e));
+        } finally {
+          remaining -= 1;
+          if (remaining === 0 && !settled2) failAll();
+        }
+      })();
+    }
+  });
+}
+
+// src/routers/mux-provider.ts
 async function driveMux(out, mux, byId, context, options) {
   let lastError;
   for (const id of mux.ranked()) {
@@ -4147,7 +4304,7 @@ async function driveMux(out, mux, byId, context, options) {
     let committed = false;
     let lastPartial;
     try {
-      const inner = piStreamSimple(routerModel(router), context, {
+      const inner = piStreamSimple2(routerModel(router), context, {
         ...options ?? {},
         apiKey: router.apiKey
       });
@@ -4196,13 +4353,16 @@ async function driveMux(out, mux, byId, context, options) {
 }
 function registerOriroMux(registry, opts = {}) {
   registerOpenAICompletions();
-  const pooled = resolvePool();
-  const routers = opts.routers ?? (pooled.length > 0 ? pooled : KEYLESS_FLOOR);
-  const byId = new Map(routers.map((r) => [r.id, r]));
-  const mux = new RouterMux(routers.map((r) => r.id));
-  try {
-    mux.load(loadMuxState(oriroDir()));
-  } catch {
+  function resolveNow() {
+    const pooled = resolvePool();
+    const routers = opts.routers ?? (pooled.length > 0 ? pooled : KEYLESS_FLOOR);
+    const byId = new Map(routers.map((r) => [r.id, r]));
+    const mux = new RouterMux(routers.map((r) => r.id));
+    try {
+      mux.load(loadMuxState(oriroDir()));
+    } catch {
+    }
+    return { routers, byId, mux };
   }
   registry.registerProvider(MUX_PROVIDER, {
     name: "ORIRO Free (keyless Mux)",
@@ -4226,12 +4386,14 @@ function registerOriroMux(registry, opts = {}) {
     ],
     streamSimple: (_model, context, options) => {
       const out = createAssistantMessageEventStream();
+      const { routers, byId, mux } = resolveNow();
       const ctx = applyIdentity(context);
       const memory = buildScribeContext();
       const withMemory = memory ? { ...ctx, systemPrompt: `${ctx.systemPrompt}
 
 ${memory}` } : ctx;
-      void driveMux(out, mux, byId, withMemory, options).finally(() => {
+      const drive = routers.length > 1 ? raceMux(out, mux, byId, withMemory, options) : driveMux(out, mux, byId, withMemory, options);
+      void drive.finally(() => {
         try {
           saveMuxState(oriroDir(), mux.snapshot());
         } catch {
@@ -5341,9 +5503,9 @@ function saveAgent(def) {
   writeFileSync16(agentFile(def.name), JSON.stringify(def, null, 2), "utf8");
 }
 function removeAgent(name) {
-  const file5 = agentFile(name);
-  if (!existsSync13(file5)) return false;
-  rmSync3(file5, { force: true });
+  const file6 = agentFile(name);
+  if (!existsSync13(file6)) return false;
+  rmSync3(file6, { force: true });
   const state = loadState();
   if (state[name]) {
     delete state[name];
@@ -5479,6 +5641,218 @@ ${result.output.slice(0, 4e3)}` }],
   });
 }
 
+// src/connectors/mcp-client.ts
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+var DISALLOWED_ENV = /* @__PURE__ */ new Set([
+  "PATH",
+  "LD_PRELOAD",
+  "LD_LIBRARY_PATH",
+  "DYLD_INSERT_LIBRARIES",
+  "DYLD_LIBRARY_PATH",
+  "NODE_OPTIONS",
+  "PYTHONPATH",
+  "PYTHONSTARTUP",
+  "PERL5LIB",
+  "RUBYOPT",
+  "GEM_PATH",
+  "APPINIT_DLLS",
+  "COR_PROFILER",
+  "BASH_ENV",
+  "ENV",
+  "IFS"
+]);
+var HANDSHAKE_TIMEOUT_MS = 8e3;
+var CALL_TIMEOUT_MS = 3e4;
+function sanitizeName(name) {
+  return (name || "").toLowerCase().replace(/[^a-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 64) || "x";
+}
+function assertSafeUrl(raw, allowLocal = false) {
+  const u = new URL(raw);
+  if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error(`unsupported scheme: ${u.protocol}`);
+  const host = u.hostname.toLowerCase();
+  const isLoopback = host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".localhost");
+  const isPrivate = /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host) || /^169\.254\./.test(host) || /^fe80:/i.test(host) || /^f[cd][0-9a-f]{2}:/i.test(host) || host === "169.254.169.254" || host === "metadata.google.internal";
+  if ((isLoopback || isPrivate) && !allowLocal) {
+    throw new Error(`blocked SSRF target ${host} (use --allow-local for loopback/LAN MCP servers)`);
+  }
+  if (u.protocol === "http:" && !isLoopback && !allowLocal) throw new Error(`refusing plaintext http to ${host} \u2014 use https`);
+  return u;
+}
+function safeEnv(env) {
+  const out = {};
+  for (const [k, v] of Object.entries(env ?? {})) {
+    if (DISALLOWED_ENV.has(k.toUpperCase())) continue;
+    out[k] = v;
+  }
+  return out;
+}
+async function connectServer(name, config, opts = {}) {
+  const client = new Client({ name: "oriro-cli", version: "0.1.0" }, { capabilities: {} });
+  let transport;
+  let stderr = "";
+  if (config.type === "stdio") {
+    const t = new StdioClientTransport({
+      command: config.command,
+      args: config.args ?? [],
+      env: safeEnv(config.env),
+      stderr: "pipe"
+    });
+    t.stderr?.on("data", (b) => {
+      stderr += b.toString();
+    });
+    transport = t;
+  } else {
+    const url = assertSafeUrl(config.url, opts.allowLocal);
+    transport = new StreamableHTTPClientTransport(url, {
+      requestInit: { headers: { "User-Agent": "oriro-cli/0.1.0", ...config.headers ?? {} } }
+    });
+  }
+  const timeoutMs = opts.timeoutMs ?? HANDSHAKE_TIMEOUT_MS;
+  let timer;
+  try {
+    await Promise.race([
+      client.connect(transport),
+      new Promise((_, rej) => {
+        timer = setTimeout(() => rej(new Error("handshake timed out")), timeoutMs);
+      })
+    ]);
+  } catch (e) {
+    const detail = stderr.trim() ? `
+server stderr:
+${stderr.trim().slice(0, 800)}` : "";
+    try {
+      await transport.close();
+    } catch {
+    }
+    throw new Error(`MCP connect failed (${name}): ${e instanceof Error ? e.message : String(e)}${detail}`);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+  return {
+    name,
+    client,
+    dispose: async () => {
+      try {
+        await client.close();
+      } catch {
+      }
+    }
+  };
+}
+async function listAllTools(client) {
+  const tools = [];
+  let cursor;
+  do {
+    const res = await client.listTools(cursor ? { cursor } : void 0, { timeout: CALL_TIMEOUT_MS });
+    for (const t of res.tools) tools.push({ name: t.name, description: t.description, inputSchema: t.inputSchema });
+    cursor = res.nextCursor;
+  } while (cursor);
+  return tools;
+}
+
+// src/connectors/register.ts
+import { Type as Type5 } from "typebox";
+function registerToolList(pi, serverName, client, tools, seen = /* @__PURE__ */ new Set()) {
+  const server = sanitizeName(serverName);
+  const registered = [];
+  for (const t of tools) {
+    const publicName = `mcp__${server}__${sanitizeName(t.name)}`;
+    if (seen.has(publicName)) continue;
+    seen.add(publicName);
+    const realName = t.name;
+    pi.registerTool({
+      name: publicName,
+      label: `MCP: ${serverName}`,
+      description: (t.description ?? `${t.name} (via ${serverName})`).slice(0, 1024),
+      parameters: Type5.Object({}, { additionalProperties: true }),
+      async execute(_id, params) {
+        const details = { server: serverName, tool: realName };
+        try {
+          const res = await client.callTool(
+            { name: realName, arguments: params ?? {} },
+            void 0,
+            { timeout: CALL_TIMEOUT_MS }
+          );
+          const text = (res.content ?? []).filter((c) => c.type === "text" && typeof c.text === "string").map((c) => c.text).join("\n");
+          if (res.isError) {
+            details.isError = true;
+            return { content: [{ type: "text", text: `MCP tool error: ${text || "(no detail)"}` }], details };
+          }
+          return { content: [{ type: "text", text: text || "(no text content)" }], details };
+        } catch (e) {
+          details.isError = true;
+          return { content: [{ type: "text", text: `MCP call failed: ${e instanceof Error ? e.message : String(e)}` }], details };
+        }
+      }
+    });
+    registered.push(publicName);
+  }
+  return registered;
+}
+
+// src/connectors/custom.ts
+import { readFileSync as readFileSync19, writeFileSync as writeFileSync17 } from "fs";
+import { join as join23 } from "path";
+function file3() {
+  return join23(oriroDir(), "mcp-custom.json");
+}
+function readCustomServers() {
+  try {
+    const v = JSON.parse(readFileSync19(file3(), "utf8"));
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+function saveCustomServer(server) {
+  const rest = readCustomServers().filter((s) => s.name.toLowerCase() !== server.name.toLowerCase());
+  writeFileSync17(join23(ensureOriroDir(), "mcp-custom.json"), JSON.stringify([...rest, server], null, 2), "utf8");
+}
+function removeCustomServer(name) {
+  const before = readCustomServers();
+  const after = before.filter((s) => s.name.toLowerCase() !== name.toLowerCase());
+  if (after.length === before.length) return false;
+  writeFileSync17(join23(ensureOriroDir(), "mcp-custom.json"), JSON.stringify(after, null, 2), "utf8");
+  return true;
+}
+function trustedServerNames() {
+  return readCustomServers().filter((s) => s.trusted).map((s) => s.name);
+}
+function isServerTrusted(name) {
+  return trustedServerNames().some((n) => n.toLowerCase() === name.toLowerCase());
+}
+
+// src/connectors/session-connect.ts
+var CONNECT_TIMEOUT_MS = 8e3;
+async function prepareConnectors() {
+  const targets = [];
+  for (const c of addedConnectors()) {
+    if (c.mcpUrl) targets.push({ name: c.slug, config: { type: "http", url: c.mcpUrl } });
+  }
+  for (const s of readCustomServers()) {
+    if (s.trusted) targets.push({ name: s.name, config: s.config, allowLocal: true });
+  }
+  const out = [];
+  for (const t of targets) {
+    try {
+      const conn = await connectServer(t.name, t.config, {
+        timeoutMs: CONNECT_TIMEOUT_MS,
+        ...t.allowLocal ? { allowLocal: true } : {}
+      });
+      const tools = await listAllTools(conn.client);
+      out.push({ name: t.name, client: conn.client, tools });
+    } catch {
+    }
+  }
+  return out;
+}
+function registerPreparedConnectors(pi, prepared) {
+  const seen = /* @__PURE__ */ new Set();
+  for (const p of prepared) registerToolList(pi, p.name, p.client, p.tools, seen);
+}
+
 // src/onboarding/assemble.ts
 async function assembleOriroSession(opts = {}) {
   const cwd = opts.cwd ?? process.cwd();
@@ -5487,13 +5861,22 @@ async function assembleOriroSession(opts = {}) {
   const settingsManager = SettingsManager.create(cwd);
   const model = registerOriroMux(modelRegistry, opts.routers ? { routers: opts.routers } : {});
   if (!model) throw new Error("ORIRO keyless model unavailable");
+  const preparedConnectors = await prepareConnectors();
   const resourceLoader = new DefaultResourceLoader({
     cwd,
     agentDir: getAgentDir(),
     settingsManager,
     additionalSkillPaths: skillRoots(),
     // bundled library + the user's own ~/.oriro/skills
-    extensionFactories: [registerGuardian, registerHead, registerScribe, registerOrchestrator, registerAgentRunner]
+    extensionFactories: [
+      registerGuardian,
+      registerHead,
+      registerScribe,
+      registerOrchestrator,
+      registerAgentRunner,
+      (pi) => registerPreparedConnectors(pi, preparedConnectors)
+      // MCP connectors → agent tools
+    ]
   });
   await resourceLoader.reload();
   const { session, extensionsResult } = await createAgentSession2({
@@ -5682,14 +6065,14 @@ var MODE_META = {
   auto: { label: "Auto", indicator: "\u23F5\u23F5" },
   plan: { label: "Plan", indicator: "\u25A2" }
 };
-var current = "manual";
+var current2 = "manual";
 function getMode() {
-  return current;
+  return current2;
 }
 function cycleMode() {
-  const i = MODES.indexOf(current);
-  current = MODES[(i + 1) % MODES.length];
-  return current;
+  const i = MODES.indexOf(current2);
+  current2 = MODES[(i + 1) % MODES.length];
+  return current2;
 }
 var thinking = false;
 function getThinking() {
@@ -5723,6 +6106,212 @@ function phantomFileWarning(reply, cwd = process.cwd()) {
   const plural = missing.size > 1;
   return `
 \u26A0 ORIRO said it ${plural ? "created files" : "created a file"} (${list}), but ${plural ? "they're" : "it's"} not on disk \u2014 the free router may have described the write without actually running it. Retry, or add your own key with \`oriro routers\` for reliable coding.`;
+}
+
+// src/repl-ui/slash-routers.ts
+function isRouterSlash(cmd) {
+  return /^\/(routers?|model)(\s|$)/i.test(cmd.trim());
+}
+function poolLine() {
+  const pool = resolvePool();
+  return pool.length ? `${dim("racing now:")} ${accent(pool.map((p) => p.id).join(", "))}` : dim("racing now: (empty) \u2192 keyless floor");
+}
+function catalogLines(head) {
+  const lines = [];
+  lines.push(
+    head === "/model" ? dim("  ORIRO models & free routers \u2014 they race, best answer wins:") : dim("  Router catalog \u2014 they race, best answer wins:")
+  );
+  for (const r of selectableRouters()) {
+    const tier = r.keyless ? fgHex(PALETTE.success, "keyless") : dim(r.tier);
+    lines.push(`    ${accent(r.id.padEnd(20))} ${r.displayName.padEnd(22)} ${tier}`);
+  }
+  lines.push(`  ${poolLine()}`);
+  lines.push(dim("  add: /routers add <id>   \xB7   rotate: /routers use <id> [<id>\u2026]"));
+  return lines;
+}
+async function handleRouterSlash(raw) {
+  const parts = raw.trim().split(/\s+/);
+  const head = (parts[0] ?? "").toLowerCase();
+  const sub = (parts[1] ?? "").toLowerCase();
+  try {
+    if (sub === "add") {
+      const id = parts[2];
+      if (!id) return [dim("  usage: /routers add <id>   (e.g. /routers add oriro-gauss)")];
+      const entry = routerById(id);
+      if (!entry) return [dim(`  unknown router '${id}' \u2014 try /routers list`)];
+      const res = await addRouter(entry, {});
+      if (res.ok) {
+        return [
+          `  ${fgHex(PALETTE.success, "\u2713")} added ${accent(id)} (${res.validation.latencyMs}ms, model ${res.validation.model}) \u2192 ${fgHex(PALETTE.success, "now racing")}`,
+          `  ${poolLine()}`
+        ];
+      }
+      return [dim(`  \u2717 could not add ${id}: ${res.validation.error ?? "validation failed"}`)];
+    }
+    const rotate = sub === "use" ? parts.slice(2) : head === "/model" && parts[1] && sub !== "list" ? parts.slice(1) : null;
+    if (rotate) {
+      if (!rotate.length) return [dim("  usage: /routers use <id> [<id>\u2026]")];
+      const { applied, unknown } = useRouters(rotate);
+      const out = [];
+      if (applied.length) out.push(`  ${fgHex(PALETTE.success, "\u2713")} now racing: ${accent(applied.join(", "))}`);
+      if (unknown.length) out.push(dim(`  not registered yet (add first): ${unknown.join(", ")}`));
+      return out.length ? out : [dim("  nothing applied \u2014 add a router first: /routers add <id>")];
+    }
+    return catalogLines(head);
+  } catch (e) {
+    return [dim(`  router command failed: ${e instanceof Error ? e.message : String(e)}`)];
+  }
+}
+
+// src/repl-ui/repl-state.ts
+var turns = 0;
+var trace = false;
+function bumpTurns() {
+  turns += 1;
+}
+function getTurns() {
+  return turns;
+}
+function getTrace() {
+  return trace;
+}
+function toggleTrace() {
+  trace = !trace;
+  return trace;
+}
+
+// src/repl-ui/slash-usage.ts
+function isUsageSlash(cmd) {
+  return /^\/usage(\s|$)/i.test(cmd.trim());
+}
+function handleUsage() {
+  const pool = resolvePool();
+  const health = new Map(loadMuxState(oriroDir()).map((s) => [s.id, s]));
+  const race = getRaceStatus();
+  const lines = [];
+  lines.push(dim(`  turns this session: ${accent(String(getTurns()))} \xB7 thinking-trace: ${getTrace() ? fgHex(PALETTE.success, "on") : dim("off")}`));
+  lines.push(dim("  racing pool (learned latency \xB7 health):"));
+  if (!pool.length) {
+    lines.push(dim("    (empty) \u2192 the keyless floor"));
+  } else {
+    const now = Date.now();
+    for (const r of pool) {
+      const s = health.get(r.id);
+      const lat = s && Number.isFinite(s.latencyMs) ? `${Math.round(s.latencyMs)}ms` : "untried";
+      const state = !s ? dim("new") : !s.healthy ? fgHex(PALETTE.error, "unhealthy") : s.cooldownUntil > now ? fgHex(PALETTE.error, "cooling") : fgHex(PALETTE.success, "healthy");
+      lines.push(`    ${accent(r.id.padEnd(20))} ${dim(lat.padEnd(9))} ${state}`);
+    }
+  }
+  if (race.winner && race.racers.length > 1) {
+    lines.push(dim(`  last race: ${race.racers.join(" \xB7 ")} \u2192 won: `) + accent(race.winner));
+  }
+  return lines;
+}
+
+// src/repl-ui/slash-artifacts.ts
+import { existsSync as existsSync15, writeFileSync as writeFileSync18 } from "fs";
+
+// src/repl-ui/artifacts.ts
+var LANG_EXT = {
+  python: "py",
+  py: "py",
+  javascript: "js",
+  js: "js",
+  typescript: "ts",
+  ts: "ts",
+  tsx: "tsx",
+  jsx: "jsx",
+  html: "html",
+  css: "css",
+  json: "json",
+  yaml: "yaml",
+  yml: "yml",
+  bash: "sh",
+  sh: "sh",
+  shell: "sh",
+  sql: "sql",
+  go: "go",
+  rust: "rs",
+  rs: "rs",
+  java: "java",
+  c: "c",
+  cpp: "cpp",
+  "c++": "cpp",
+  ruby: "rb",
+  rb: "rb",
+  php: "php",
+  markdown: "md",
+  md: "md",
+  svg: "svg"
+};
+function extFor(lang) {
+  return LANG_EXT[lang.toLowerCase()] ?? "txt";
+}
+function extractArtifacts(text) {
+  const out = [];
+  if (!text) return out;
+  const fence = /```([\w+#.-]*)\n([\s\S]*?)```/g;
+  let m;
+  while ((m = fence.exec(text)) !== null) {
+    const lang = (m[1] ?? "").trim();
+    const content = (m[2] ?? "").replace(/\n$/, "");
+    if (!content.trim()) continue;
+    const isSvg = lang.toLowerCase() === "svg" || /^\s*<svg[\s>]/.test(content);
+    out.push({
+      kind: isSvg ? "svg" : "code",
+      lang: lang || (isSvg ? "svg" : ""),
+      content,
+      suggestedName: `artifact-${out.length + 1}.${isSvg ? "svg" : extFor(lang)}`
+    });
+  }
+  const svg = /<svg[\s>][\s\S]*?<\/svg>/gi;
+  while ((m = svg.exec(text)) !== null) {
+    const content = m[0];
+    if (out.some((a) => a.content.includes(content))) continue;
+    out.push({ kind: "svg", lang: "svg", content, suggestedName: `artifact-${out.length + 1}.svg` });
+  }
+  return out;
+}
+var current3 = [];
+function setArtifacts(a) {
+  current3 = a;
+}
+function getArtifacts() {
+  return current3;
+}
+
+// src/repl-ui/slash-artifacts.ts
+function isArtifactSlash(cmd) {
+  return /^\/(review|artifacts?|save)(\s|$)/i.test(cmd.trim());
+}
+function handleArtifactSlash(raw) {
+  const parts = raw.trim().split(/\s+/);
+  const head = (parts[0] ?? "").toLowerCase();
+  const arts = getArtifacts();
+  if (head === "/save") {
+    const idx = parseInt(parts[1] ?? "", 10);
+    if (!Number.isInteger(idx) || idx < 1 || idx > arts.length) {
+      return [dim("  usage: /save <n> [path] \u2014 run /review to see the artifacts")];
+    }
+    const art = arts[idx - 1];
+    if (!art) return [dim("  no such artifact")];
+    const dest = parts[2] || art.suggestedName;
+    if (existsSync15(dest)) return [dim(`  \u2717 ${dest} already exists \u2014 give a different path: /save ${idx} <path>`)];
+    try {
+      writeFileSync18(dest, art.content, "utf8");
+    } catch (e) {
+      return [dim(`  \u2717 could not write ${dest}: ${e instanceof Error ? e.message : String(e)}`)];
+    }
+    return [`  ${fgHex(PALETTE.success, "\u2713")} saved artifact ${accent(String(idx))} \u2192 ${accent(dest)} ${dim(`(${art.content.length} bytes)`)}`];
+  }
+  if (!arts.length) return [dim("  no artifacts in the last reply \u2014 ask for code or an SVG, then /review")];
+  const lines = [dim("  Artifacts from the last reply \u2014 save one with /save <n> [path]:")];
+  arts.forEach((a, i) => {
+    const nlines = a.content.split("\n").length;
+    const preview = (a.content.split("\n")[0] ?? "").slice(0, 48).replace(/\s+/g, " ");
+    lines.push(`    ${accent(String(i + 1))}. ${a.kind}${a.lang ? `/${a.lang}` : ""} \xB7 ${nlines} lines \xB7 \u2192 ${dim(a.suggestedName)}  ${dim(preview)}`);
+  });
+  return lines;
 }
 
 // src/repl-ui/tui-repl.ts
@@ -5804,7 +6393,13 @@ async function runTuiRepl(session) {
     const slash = text.toLowerCase();
     if (slash === "/exit" || slash === "/quit") return cleanup();
     if (slash === "/help" || slash === "/?") {
-      chat.addChild(new Text(dim("  Just type to chat. Shift+Tab posture \xB7 Alt+Shift+T thinking \xB7 /voice to speak \xB7 /exit."), 0, 0));
+      const help = [
+        "  Just type to chat \u2014 ORIRO writes and runs code for you (keyless, free).",
+        `  ${accent("/routers")} pool add\xB7rotate   ${accent("/model")} <id\u2026> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity`,
+        `  ${accent("/review")} artifacts from the last reply   ${accent("/save")} <n> [path]   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
+        `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`
+      ].join("\n");
+      chat.addChild(new Text(help, 0, 0));
       editor.setText("");
       tui.requestRender();
       return;
@@ -5817,6 +6412,37 @@ async function runTuiRepl(session) {
     }
     if (slash === "/connector" || slash === "/connectors") {
       chat.addChild(new Text(dim("  59 MCP connectors. Add your own: `oriro connectors setup` \xB7 or `oriro connectors add <slug>`."), 0, 0));
+      editor.setText("");
+      tui.requestRender();
+      return;
+    }
+    if (isRouterSlash(slash)) {
+      editor.setText("");
+      const pending = new Text(dim("  \u2026"), 0, 0);
+      chat.addChild(pending);
+      tui.requestRender();
+      void (async () => {
+        const lines = await handleRouterSlash(text);
+        pending.setText(lines.join("\n"));
+        tui.requestRender();
+      })();
+      return;
+    }
+    if (isUsageSlash(slash)) {
+      chat.addChild(new Text(handleUsage().join("\n"), 0, 0));
+      editor.setText("");
+      tui.requestRender();
+      return;
+    }
+    if (slash === "/trace") {
+      const on = toggleTrace();
+      chat.addChild(new Text(dim(`  trace ${on ? "ON \u2014 showing tool + router activity" : "off"}`), 0, 0));
+      editor.setText("");
+      tui.requestRender();
+      return;
+    }
+    if (isArtifactSlash(slash)) {
+      chat.addChild(new Text(handleArtifactSlash(text).join("\n"), 0, 0));
       editor.setText("");
       tui.requestRender();
       return;
@@ -5841,10 +6467,23 @@ async function runTuiRepl(session) {
     editor.addToHistory(text);
     editor.setText("");
     chat.addChild(new Text(`${accent("\u203A")} ${text}`, 0, 1));
+    const raceLine = new Text("", 0, 0);
+    chat.addChild(raceLine);
     const streaming = new Text(dim("\u2026"), 0, 0);
     chat.addChild(streaming);
+    const unsubRace = onRaceStatus((s) => {
+      if (s.phase === "racing" && s.racers.length > 1) {
+        raceLine.setText(dim(`  \u23F1 racing: ${s.racers.join(" \xB7 ")}`));
+      } else if (s.phase === "won" && s.winner && s.racers.length > 1) {
+        raceLine.setText(dim(`  \u23F1 ${s.racers.join(" \xB7 ")} \u2192 won: `) + accent(s.winner));
+      } else {
+        raceLine.setText("");
+      }
+      tui.requestRender();
+    });
     tui.requestRender();
     busy = true;
+    bumpTurns();
     void (async () => {
       let english = await translateIncoming(text);
       if (getThinking()) english = `${THINKING_PRIMER}
@@ -5860,6 +6499,9 @@ ${english}`;
               streaming.setText(out);
               tui.requestRender();
             }
+          } else if (getTrace() && (e.type === "tool_start" || e.type === "tool_end" || e.type === "toolcall_start")) {
+            chat.addChild(new Text(dim(`  \u2699 ${e.type.replace("_", " ")}${e.toolName ? `: ${e.toolName}` : ""}`), 0, 0));
+            tui.requestRender();
           }
         }
       );
@@ -5870,13 +6512,19 @@ ${english}`;
         tui.requestRender();
         busy = false;
         unsub();
+        unsubRace();
         return;
       }
       unsub();
+      unsubRace();
       const cleaned = scrubOutput(out);
       const finalText = isEnglish3 ? cleaned.trim() : await translateOutgoing(cleaned.trim());
       const warn = phantomFileWarning(finalText);
-      streaming.setText((finalText || dim("(no response)")) + (warn ? dim(warn) : ""));
+      const arts = extractArtifacts(finalText);
+      setArtifacts(arts);
+      const hint = arts.length ? dim(`
+  \u2398 ${arts.length} artifact${arts.length === 1 ? "" : "s"} \u2014 /review to save`) : "";
+      streaming.setText((finalText || dim("(no response)")) + (warn ? dim(warn) : "") + hint);
       tui.requestRender();
       busy = false;
     })();
@@ -5890,8 +6538,8 @@ ${english}`;
 // src/voice/mic.ts
 import { spawn as spawn3 } from "child_process";
 import { tmpdir as tmpdir3 } from "os";
-import { join as join23 } from "path";
-import { existsSync as existsSync15, statSync as statSync2 } from "fs";
+import { join as join24 } from "path";
+import { existsSync as existsSync16, statSync as statSync2 } from "fs";
 function recorders(outFile, seconds) {
   const dur = String(seconds);
   if (process.platform === "darwin") {
@@ -5912,12 +6560,12 @@ function recorders(outFile, seconds) {
   ];
 }
 async function recordMic(seconds = 6) {
-  const outFile = join23(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
+  const outFile = join24(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
   for (const r of recorders(outFile, seconds)) {
     const okFile = await new Promise((resolve3) => {
       const child = spawn3(r.cmd, r.args, { stdio: "ignore" });
       child.on("error", () => resolve3(false));
-      child.on("close", (code) => resolve3(code === 0 && existsSync15(outFile) && statSync2(outFile).size > 44));
+      child.on("close", (code) => resolve3(code === 0 && existsSync16(outFile) && statSync2(outFile).size > 44));
     });
     if (okFile) return outFile;
   }
@@ -5981,9 +6629,13 @@ function replHelp() {
   ${accent("ORIRO terminal \u2014 help")}
   ${dim("Just type to chat; ORIRO writes and runs code for you (keyless, free).")}
 
-  ${accent("/help")}  this help     ${accent("/exit")} or ${accent("/quit")}  leave     ${dim("Ctrl-D / Ctrl-C also exit")}
-  ${dim("Run these OUTSIDE the chat (in your shell):")}
-  ${dim("oriro skills \xB7 routers \xB7 connectors \xB7 channels \xB7 scribe \xB7 language \xB7 avatar")}
+  ${dim("Models & routers")}   ${accent("/routers")} list\xB7add\xB7rotate the racing pool   ${accent("/model")} <id\u2026> switch
+  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} show tool + router activity
+  ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one
+  ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn
+  ${dim("General")}           ${accent("/help")} this   ${accent("/exit")} / ${accent("/quit")} leave   ${dim("(Ctrl-D / Ctrl-C also exit)")}
+
+  ${dim("Full command list outside the chat:")} ${accent("oriro --help")}
 
 `;
 }
@@ -6042,6 +6694,24 @@ async function runReadlineRepl(session) {
 `);
         continue;
       }
+      if (isRouterSlash(slash)) {
+        stdout7.write((await handleRouterSlash(line)).join("\n") + "\n");
+        continue;
+      }
+      if (isUsageSlash(slash)) {
+        stdout7.write(handleUsage().join("\n") + "\n");
+        continue;
+      }
+      if (slash === "/trace") {
+        stdout7.write(`  ${dim(`trace ${toggleTrace() ? "ON" : "off"}`)}
+`);
+        continue;
+      }
+      if (isArtifactSlash(slash)) {
+        stdout7.write(handleArtifactSlash(line).join("\n") + "\n");
+        continue;
+      }
+      bumpTurns();
       const english = await translateIncoming(line);
       noteUserInput(line);
       let out = "";
@@ -6059,8 +6729,12 @@ async function runReadlineRepl(session) {
       }
       const cleaned = scrubOutput(out);
       const shown = isEnglish3 ? cleaned.trim() : await translateOutgoing(cleaned.trim());
+      const arts = extractArtifacts(shown);
+      setArtifacts(arts);
+      const hint = arts.length ? `  ${dim(`\u2398 ${arts.length} artifact${arts.length === 1 ? "" : "s"} \u2014 /review to save`)}
+` : "";
       stdout7.write(`${shown}${phantomFileWarning(shown)}
-
+${hint}
 `);
     }
   } finally {
@@ -6073,7 +6747,54 @@ async function runReadlineRepl(session) {
   }
 }
 
+// src/headless.ts
+function isOutputFormatMode(s) {
+  return s === "text" || s === "json" || s === "stream-json";
+}
+async function runHeadless(prompt, format) {
+  if (!prompt.trim()) {
+    process.stderr.write('error: empty prompt \u2014 pass text after -p, e.g. oriro -p "summarise this repo"\n');
+    process.exitCode = 1;
+    return;
+  }
+  const { session } = await assembleOriroSession({});
+  let text = "";
+  const unsub = session.subscribe(
+    (e) => {
+      if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") {
+        const d = e.assistantMessageEvent.delta ?? "";
+        text += d;
+        if (format === "stream-json" && d) process.stdout.write(JSON.stringify({ type: "text_delta", delta: d }) + "\n");
+      }
+    }
+  );
+  let error = "";
+  try {
+    await session.prompt(prompt);
+  } catch (e) {
+    error = e instanceof Error ? e.message : String(e);
+  }
+  unsub();
+  const response = scrubOutput(text).trim();
+  const ok2 = !error && response.length > 0;
+  if (format === "json") {
+    process.stdout.write(JSON.stringify({ ok: ok2, response, ...error ? { error } : {} }) + "\n");
+  } else if (format === "stream-json") {
+    process.stdout.write(JSON.stringify({ type: "done", ok: ok2, response, ...error ? { error } : {} }) + "\n");
+  } else {
+    process.stdout.write((response || (error ? `error: ${error}` : "(no response)")) + "\n");
+  }
+  process.exitCode = ok2 ? 0 : 1;
+  try {
+    session.dispose();
+  } catch {
+  }
+  setTimeout(() => process.exit(ok2 ? 0 : 1), 400).unref();
+}
+
 // src/commands/ui.ts
+import { createInterface as createInterface7 } from "readline/promises";
+import { stdin as stdin7, stdout as stdout8 } from "process";
 var ok = (s) => {
   process.stdout.write(`${fgHex(PALETTE.success, "\u2713")} ${s}
 `);
@@ -6098,11 +6819,159 @@ function die(msg) {
   process.exitCode = 1;
   throw new DieError(msg);
 }
+async function confirmDestructive(what, opts = {}) {
+  if (opts.force) return true;
+  if (!stdin7.isTTY || !stdout8.isTTY) {
+    die(`refusing to ${what} without confirmation \u2014 re-run with --force in a non-interactive shell`);
+  }
+  const rl = createInterface7({ input: stdin7, output: stdout8 });
+  try {
+    const ans = (await rl.question(`${fgHex(PALETTE.error, "?")} ${what} \u2014 this cannot be undone. Proceed? [y/N] `)).trim().toLowerCase();
+    return ans === "y" || ans === "yes";
+  } finally {
+    rl.close();
+  }
+}
+
+// src/config/store.ts
+import { readFileSync as readFileSync20, writeFileSync as writeFileSync19, mkdirSync as mkdirSync16 } from "fs";
+import { join as join25 } from "path";
+var KEYS = {
+  output: {
+    desc: "default output format for list commands: text | json | csv",
+    validate: (v) => ["text", "json", "csv"].includes(v) ? null : "must be text | json | csv"
+  },
+  lang: { desc: "preferred UI language code (e.g. en, hi, es) \u2014 overrides terminal detection" },
+  thinking: {
+    desc: "default REPL thinking mode: on | off",
+    validate: (v) => ["on", "off"].includes(v) ? null : "must be on | off"
+  }
+};
+function configKeys() {
+  return Object.keys(KEYS).map((key) => ({ key, desc: KEYS[key].desc }));
+}
+function isConfigKey(k) {
+  return k in KEYS;
+}
+function validateConfig(key, value) {
+  return KEYS[key].validate?.(value) ?? null;
+}
+function file4() {
+  return join25(oriroDir(), "config.json");
+}
+var cache = null;
+function readAll() {
+  if (cache) return cache;
+  try {
+    const v = JSON.parse(readFileSync20(file4(), "utf8"));
+    cache = v && typeof v === "object" ? v : {};
+  } catch {
+    cache = {};
+  }
+  return cache;
+}
+function configGet(key) {
+  return readAll()[key];
+}
+function configAll() {
+  return { ...readAll() };
+}
+function configSet(key, value) {
+  const all = { ...readAll(), [key]: value };
+  mkdirSync16(oriroDir(), { recursive: true });
+  writeFileSync19(file4(), JSON.stringify(all, null, 2), "utf8");
+  cache = all;
+}
+function configUnset(key) {
+  const all = readAll();
+  if (!(key in all)) return false;
+  const rest = { ...all };
+  delete rest[key];
+  writeFileSync19(file4(), JSON.stringify(rest, null, 2), "utf8");
+  cache = rest;
+  return true;
+}
+
+// src/commands/output.ts
+function parseFormat(o) {
+  const f = (o ?? configGet("output") ?? "text").toLowerCase();
+  if (f === "json" || f === "csv" || f === "text") return f;
+  throw new Error(`invalid --output '${o}'. Use: text | json | csv`);
+}
+function applyQuery(rows, query) {
+  if (!query) return rows;
+  const [filterPart, selectField] = query.split(":", 2);
+  let out = rows;
+  const fp = filterPart ?? "";
+  if (fp.includes("=")) {
+    const [field2, value] = fp.split("=", 2);
+    out = rows.filter((r) => String(r[field2] ?? "") === value);
+  } else if (fp && !selectField) {
+    return rows.map((r) => r[fp]);
+  }
+  if (selectField) return out.map((r) => r[selectField]);
+  return out;
+}
+function csvCell(v) {
+  const s = v === null || v === void 0 ? "" : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+function renderList2(rows, opts = {}) {
+  const fmt = parseFormat(opts.output);
+  const queried = applyQuery(rows, opts.query);
+  if (fmt === "json") return JSON.stringify(queried, null, 2);
+  if (!Array.isArray(queried) || queried.length === 0) return "";
+  const first = queried[0];
+  const scalar = typeof first !== "object" || first === null;
+  if (scalar) return queried.map((v) => fmt === "csv" ? csvCell(v) : String(v)).join("\n");
+  const objs = queried;
+  const cols = opts.columns ?? [...new Set(objs.flatMap((r) => Object.keys(r)))];
+  if (fmt === "csv") {
+    return [cols.map(csvCell).join(","), ...objs.map((r) => cols.map((c) => csvCell(r[c])).join(","))].join("\n");
+  }
+  const widths = cols.map((c) => Math.max(c.length, ...objs.map((r) => String(r[c] ?? "").length)));
+  const line = (cells) => cells.map((s, i) => s.padEnd(widths[i] ?? 0)).join("  ").trimEnd();
+  return [line(cols), ...objs.map((r) => line(cols.map((c) => String(r[c] ?? ""))))].join("\n");
+}
+function isMachineOutput(opts) {
+  return parseFormat(opts.output) !== "text";
+}
+function outputError(opts) {
+  const f = (opts.output ?? configGet("output") ?? "text").toLowerCase();
+  return f === "json" || f === "csv" || f === "text" ? null : `invalid --output '${opts.output}' \u2014 use text | json | csv`;
+}
 
 // src/commands/routers.ts
 function registerRoutersCommand(program2) {
   const routers = program2.command("routers").description("manage the free-router pool the model runs on");
-  routers.command("list").description("list the router catalog and the active pool").action(() => {
+  routers.command("list").description("list the router catalog and the active pool").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action((opts) => {
+    const oerr = outputError(opts);
+    if (oerr) die(oerr);
+    const pool = new Set(resolvePool().map((p) => p.id));
+    if (isMachineOutput(opts) || opts.query) {
+      const catalogRows = ROUTER_CATALOG.filter((r) => !r.comingSoon).map((r) => ({
+        id: r.id,
+        name: r.displayName,
+        tier: r.keyless ? "keyless" : r.tier,
+        keyless: Boolean(r.keyless),
+        source: "catalog",
+        active: pool.has(r.id)
+      }));
+      const customRows = registeredRouters().filter((r) => !ROUTER_CATALOG.some((c) => c.id === r.id)).map((r) => ({
+        id: r.id,
+        name: r.name,
+        tier: r.apiKey && r.apiKey !== KEYLESS_SENTINEL ? "byok" : "keyless",
+        keyless: !r.apiKey || r.apiKey === KEYLESS_SENTINEL,
+        source: "custom",
+        active: pool.has(r.id)
+      }));
+      process.stdout.write(renderList2([...catalogRows, ...customRows], {
+        output: opts.output,
+        query: opts.query,
+        columns: ["id", "name", "tier", "keyless", "active", "source"]
+      }) + "\n");
+      return;
+    }
     heading("Routers");
     for (const r of ROUTER_CATALOG) {
       if (r.comingSoon) {
@@ -6125,8 +6994,7 @@ function registerRoutersCommand(program2) {
 `);
       }
     }
-    const pool = resolvePool();
-    info(pool.length ? `active pool: ${pool.map((p) => p.id).join(", ")}` : "active pool: empty \u2192 using the keyless floor");
+    info(pool.size ? `active pool: ${[...pool].join(", ")}` : "active pool: empty \u2192 using the keyless floor");
   });
   routers.command("add <name>").description("live-validate a router and add it to the pool \u2014 a catalog name, OR any custom endpoint via --url").option("-k, --key <key>", "API key (BYOK) \u2014 omit for a keyless free router").option("-m, --model <id>", "model id to run (REQUIRED for a custom --url router)").option("--url <baseUrl>", "add ANY custom free/BYOK router by its OpenAI-compatible base URL (the part BEFORE /chat/completions)").option("--api <api>", "custom router API: 'openai' (default) or 'google'", "openai").action(async (name, opts) => {
     let entry;
@@ -6162,10 +7030,10 @@ function registerRoutersCommand(program2) {
 }
 
 // src/commands/scribe.ts
-import { readFileSync as readFileSync20 } from "fs";
+import { readFileSync as readFileSync22 } from "fs";
 
 // src/scribe/transcript.ts
-import { existsSync as existsSync16, readFileSync as readFileSync19 } from "fs";
+import { existsSync as existsSync18, readFileSync as readFileSync21 } from "fs";
 function parseHookStdin(raw) {
   try {
     const j = JSON.parse(raw);
@@ -6198,8 +7066,8 @@ function isHumanUser(e) {
 }
 var FILE_KEYS = ["file_path", "path", "notebook_path", "filePath"];
 function lastTurnFromTranscript(path) {
-  if (!existsSync16(path)) return null;
-  const raw = readFileSync19(path, "utf8");
+  if (!existsSync18(path)) return null;
+  const raw = readFileSync21(path, "utf8");
   const entries = [];
   for (const line of raw.split("\n")) {
     if (!line.trim()) continue;
@@ -6260,7 +7128,7 @@ function lastTurnFromTranscript(path) {
 // src/commands/scribe.ts
 function readStdin() {
   try {
-    return readFileSync20(0, "utf8");
+    return readFileSync22(0, "utf8");
   } catch {
     return "";
   }
@@ -6373,40 +7241,8 @@ function registerScribeCommand(program2) {
 }
 
 // src/commands/connectors.ts
-import { createInterface as createInterface7 } from "readline/promises";
-import { stdin as stdin7, stdout as stdout8 } from "process";
-
-// src/connectors/custom.ts
-import { readFileSync as readFileSync21, writeFileSync as writeFileSync17 } from "fs";
-import { join as join24 } from "path";
-function file3() {
-  return join24(oriroDir(), "mcp-custom.json");
-}
-function readCustomServers() {
-  try {
-    const v = JSON.parse(readFileSync21(file3(), "utf8"));
-    return Array.isArray(v) ? v : [];
-  } catch {
-    return [];
-  }
-}
-function saveCustomServer(server) {
-  const rest = readCustomServers().filter((s) => s.name.toLowerCase() !== server.name.toLowerCase());
-  writeFileSync17(join24(ensureOriroDir(), "mcp-custom.json"), JSON.stringify([...rest, server], null, 2), "utf8");
-}
-function removeCustomServer(name) {
-  const before = readCustomServers();
-  const after = before.filter((s) => s.name.toLowerCase() !== name.toLowerCase());
-  if (after.length === before.length) return false;
-  writeFileSync17(join24(ensureOriroDir(), "mcp-custom.json"), JSON.stringify(after, null, 2), "utf8");
-  return true;
-}
-function trustedServerNames() {
-  return readCustomServers().filter((s) => s.trusted).map((s) => s.name);
-}
-function isServerTrusted(name) {
-  return trustedServerNames().some((n) => n.toLowerCase() === name.toLowerCase());
-}
+import { createInterface as createInterface8 } from "readline/promises";
+import { stdin as stdin8, stdout as stdout9 } from "process";
 
 // src/connectors/setup.ts
 function buildServerConfig(i) {
@@ -6437,39 +7273,41 @@ function parsePairs(s) {
   return out;
 }
 
-// src/connectors/mcp-client.ts
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-function assertSafeUrl(raw, allowLocal = false) {
-  const u = new URL(raw);
-  if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error(`unsupported scheme: ${u.protocol}`);
-  const host = u.hostname.toLowerCase();
-  const isLoopback = host === "localhost" || host === "127.0.0.1" || host === "::1" || host.endsWith(".localhost");
-  const isPrivate = /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2\d|3[01])\./.test(host) || /^169\.254\./.test(host) || /^fe80:/i.test(host) || /^f[cd][0-9a-f]{2}:/i.test(host) || host === "169.254.169.254" || host === "metadata.google.internal";
-  if ((isLoopback || isPrivate) && !allowLocal) {
-    throw new Error(`blocked SSRF target ${host} (use --allow-local for loopback/LAN MCP servers)`);
-  }
-  if (u.protocol === "http:" && !isLoopback && !allowLocal) throw new Error(`refusing plaintext http to ${host} \u2014 use https`);
-  return u;
-}
-
 // src/commands/connectors.ts
 function registerConnectorsCommand(program2) {
   const connectors = program2.command("connectors").description("MCP connectors \u2014 add external tools/services (inert until used)");
-  connectors.command("list [category]").description("list the connector catalog (optionally filtered by category)").action((category) => {
+  connectors.command("list [category]").description("list the connector catalog (optionally filtered by category)").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action((category, opts) => {
+    const oerr = outputError(opts);
+    if (oerr) die(oerr);
     if (category && !connectorCategories().includes(category)) {
       die(`unknown category '${category}' \u2014 categories: ${connectorCategories().join(", ")}`);
     }
     const entries = listConnectors(category);
     const added = new Set(addedConnectors().map((c) => c.slug));
+    if (isMachineOutput(opts) || opts.query) {
+      const rows = entries.map((c) => ({
+        slug: c.slug,
+        name: c.name,
+        category: c.category,
+        addable: Boolean(c.mcpUrl),
+        added: added.has(c.slug)
+      }));
+      process.stdout.write(renderList2(rows, {
+        output: opts.output,
+        query: opts.query,
+        columns: ["slug", "name", "category", "addable", "added"]
+      }) + "\n");
+      return;
+    }
     heading(category ? `Connectors \xB7 ${category}` : "Connectors");
     let addable = 0;
+    const NAME_W = 34;
     for (const c of entries) {
       const canAdd = !!c.mcpUrl;
       if (canAdd) addable++;
       const mark = !canAdd ? dim("\xB7") : added.has(c.slug) ? accent("\u25CF") : dim("\u25CB");
-      const name = canAdd ? c.name.padEnd(22) : dim(`${c.name} (coming soon)`.padEnd(22));
+      const label = (canAdd ? c.name : `${c.name} (coming soon)`).padEnd(NAME_W);
+      const name = canAdd ? label : dim(label);
       process.stdout.write(`  ${mark} ${(canAdd ? accent : dim)(c.slug.padEnd(20))} ${name} ${dim(c.category)}
 `);
     }
@@ -6484,12 +7322,20 @@ function registerConnectorsCommand(program2) {
     if (!res.ok) die(res.error ?? `could not add '${slug}'`);
     ok(`added ${accent(slug)} \u2014 recorded locally`);
   });
-  connectors.command("remove <slug>").description("remove a connector").action((slug) => {
+  connectors.command("remove <slug>").description("remove a connector").option("-f, --force", "skip the confirmation prompt").action(async (slug, opts) => {
+    if (!isConnectorAdded(slug)) {
+      info(`'${slug}' is not in your added list \u2014 nothing to remove`);
+      return;
+    }
+    if (!await confirmDestructive(`remove connector '${slug}'`, opts)) {
+      info("cancelled");
+      return;
+    }
     if (removeConnector(slug)) ok(`removed ${accent(slug)}`);
     else info(`'${slug}' is not in your added list \u2014 nothing to remove`);
   });
   connectors.command("setup").description("guided setup of a CUSTOM MCP server \u2014 Guardian-vetted, no JSON").option("--name <name>", "a short name for the server").option("--command <cmd>", "stdio launch command, e.g. 'npx -y @scope/mcp'").option("--args <args>", "space-separated args for --command").option("--env <pairs>", "comma-separated KEY=VAL env vars").option("--url <url>", "http(s) MCP endpoint (instead of --command)").option("--header <pairs>", "comma-separated KEY=VAL headers (with --url)").option("--allow-local", "permit loopback/LAN URL targets").option("-y, --yes", "trust and save when Guardian says 'ask'").action(async (opts) => {
-    const interactive = !!stdin7.isTTY && !!stdout8.isTTY;
+    const interactive = !!stdin8.isTTY && !!stdout9.isTTY;
     let { name, command, url } = opts;
     let argsStr = opts.args;
     let envStr = opts.env;
@@ -6508,7 +7354,7 @@ function registerConnectorsCommand(program2) {
         );
         return;
       }
-      const rl = createInterface7({ input: stdin7, output: stdout8 });
+      const rl = createInterface8({ input: stdin8, output: stdout9 });
       try {
         name = name || (await rl.question("Server name: ")).trim();
         if (!command && !url) {
@@ -6550,7 +7396,7 @@ function registerConnectorsCommand(program2) {
       if (opts.yes) {
         trusted = true;
       } else if (interactive) {
-        const rl = createInterface7({ input: stdin7, output: stdout8 });
+        const rl = createInterface8({ input: stdin8, output: stdout9 });
         try {
           const ans = (await rl.question(`Trust and save "${name}"? [y/N] `)).trim().toLowerCase();
           trusted = ans === "y" || ans === "yes";
@@ -6592,14 +7438,14 @@ function registerConnectorsCommand(program2) {
 }
 
 // src/channels/config.ts
-import { readFileSync as readFileSync22, writeFileSync as writeFileSync18 } from "fs";
-import { join as join25 } from "path";
-function file4() {
-  return join25(oriroDir(), "channels.json");
+import { readFileSync as readFileSync23, writeFileSync as writeFileSync20 } from "fs";
+import { join as join26 } from "path";
+function file5() {
+  return join26(oriroDir(), "channels.json");
 }
 function readChannels() {
   try {
-    const v = JSON.parse(readFileSync22(file4(), "utf8"));
+    const v = JSON.parse(readFileSync23(file5(), "utf8"));
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
@@ -6608,10 +7454,10 @@ function readChannels() {
 function saveChannel(cfg) {
   const all = readChannels().filter((c) => c.kind !== cfg.kind);
   all.push(cfg);
-  writeFileSync18(join25(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync20(join26(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
 }
 function removeChannel(kind) {
-  writeFileSync18(join25(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
+  writeFileSync20(join26(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
 }
 
 // src/channels/telegram.ts
@@ -6728,9 +7574,9 @@ async function startDiscord(token) {
 }
 
 // src/channels/whatsapp.ts
-import { join as join26 } from "path";
+import { join as join27 } from "path";
 function whatsappAuthDir() {
-  return join26(oriroDir(), "whatsapp-auth");
+  return join27(oriroDir(), "whatsapp-auth");
 }
 async function startWhatsApp() {
   let baileys;
@@ -6848,12 +7694,26 @@ function registerChannelsCommand(program2) {
 }
 
 // src/commands/skills.ts
-import { existsSync as existsSync17, statSync as statSync3, mkdirSync as mkdirSync16, cpSync, rmSync as rmSync4 } from "fs";
-import { resolve as resolve2, join as join27, basename, dirname as dirname3 } from "path";
+import { existsSync as existsSync19, statSync as statSync3, mkdirSync as mkdirSync17, cpSync, rmSync as rmSync4 } from "fs";
+import { resolve as resolve2, join as join28, basename, dirname as dirname3 } from "path";
 function registerSkillsCommand(program2) {
   const skills = program2.command("skills").description("the ORIRO skill library \u2014 bundled + your own");
-  skills.command("list").description("show CORE / TAIL skill counts (use --all to list names)").option("-a, --all", "list every skill name").action(async (opts) => {
+  skills.command("list").description("show CORE / TAIL skill counts (use --all to list names)").option("-a, --all", "list every skill name").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action(async (opts) => {
+    const oerr = outputError(opts);
+    if (oerr) die(oerr);
     const s = await loadOriroSkills();
+    if (isMachineOutput(opts) || opts.query) {
+      const rows = s.all.map((sk) => ({
+        name: sk.name,
+        tier: sk.disableModelInvocation ? "TAIL" : "CORE"
+      }));
+      process.stdout.write(renderList2(rows, {
+        output: opts.output,
+        query: opts.query,
+        columns: ["name", "tier"]
+      }) + "\n");
+      return;
+    }
     heading("Skills");
     info(`${accent(String(s.all.length))} loaded \xB7 ${accent(String(s.core.length))} CORE (model-visible) \xB7 ${accent(String(s.tail.length))} TAIL (/name-only)`);
     if (opts.all) {
@@ -6867,29 +7727,33 @@ function registerSkillsCommand(program2) {
   });
   skills.command("add <path>").description("add your own skill \u2014 a folder containing SKILL.md, or a SKILL.md file").action((p) => {
     const src = resolve2(p);
-    if (!existsSync17(src)) die(`not found: ${src}`);
+    if (!existsSync19(src)) die(`not found: ${src}`);
     const dest = userSkillsDir();
-    mkdirSync16(dest, { recursive: true });
+    mkdirSync17(dest, { recursive: true });
     const st = statSync3(src);
     if (st.isDirectory()) {
-      if (!existsSync17(join27(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
+      if (!existsSync19(join28(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
       const name = basename(src);
-      cpSync(src, join27(dest, name), { recursive: true });
-      ok(`added skill ${accent(name)} \u2192 ${join27(dest, name)}`);
+      cpSync(src, join28(dest, name), { recursive: true });
+      ok(`added skill ${accent(name)} \u2192 ${join28(dest, name)}`);
     } else if (basename(src).toLowerCase() === "skill.md") {
       const name = basename(dirname3(src)) || "custom-skill";
-      mkdirSync16(join27(dest, name), { recursive: true });
-      cpSync(src, join27(dest, name, "SKILL.md"));
-      ok(`added skill ${accent(name)} \u2192 ${join27(dest, name)}`);
+      mkdirSync17(join28(dest, name), { recursive: true });
+      cpSync(src, join28(dest, name, "SKILL.md"));
+      ok(`added skill ${accent(name)} \u2192 ${join28(dest, name)}`);
     } else {
       die("expected a folder containing SKILL.md, or a SKILL.md file");
     }
     info("It loads on next launch \u2014 and is available in chat via /skill.");
   });
-  skills.command("remove <name>").description("remove a skill you added").action((name) => {
-    const target = join27(userSkillsDir(), name);
-    if (!existsSync17(target)) {
+  skills.command("remove <name>").description("remove a skill you added").option("-f, --force", "skip the confirmation prompt").action(async (name, opts) => {
+    const target = join28(userSkillsDir(), name);
+    if (!existsSync19(target)) {
       info(`'${name}' is not a user-added skill \u2014 nothing to remove`);
+      return;
+    }
+    if (!await confirmDestructive(`remove skill '${name}'`, opts)) {
+      info("cancelled");
       return;
     }
     rmSync4(target, { recursive: true, force: true });
@@ -6898,7 +7762,7 @@ function registerSkillsCommand(program2) {
 }
 
 // src/commands/language.ts
-import { stdin as stdin8 } from "process";
+import { stdin as stdin9 } from "process";
 function resolveLanguage(input) {
   return languageByCode(input) ?? LANGUAGES.find((l) => l.name.toLowerCase() === input.trim().toLowerCase());
 }
@@ -6920,7 +7784,7 @@ function registerLanguageCommand(program2) {
       ok(`${accent(lang.name)} is now your terminal language.`);
       return;
     }
-    if (stdin8.isTTY) {
+    if (stdin9.isTTY) {
       const lang = await selectLanguageInteractive();
       setTerminalLanguage(lang);
       ok(`${accent(lang.name)} is now your terminal language.`);
@@ -6933,7 +7797,7 @@ function registerLanguageCommand(program2) {
 }
 
 // src/commands/avatar.ts
-import { stdin as stdin9 } from "process";
+import { stdin as stdin10 } from "process";
 function registerAvatarCommand(program2) {
   program2.command("avatar").description("show or change your terminal avatar").argument("[slug]", "set directly to this avatar slug").option("-l, --list", "list every avatar by category").action(async (slug, opts) => {
     if (opts.list) {
@@ -6951,7 +7815,7 @@ function registerAvatarCommand(program2) {
       ok(`${accent(avatar.slug)} is now your terminal face.`);
       return;
     }
-    if (stdin9.isTTY) {
+    if (stdin10.isTTY) {
       const chosen = await selectAvatarInteractive();
       if (!chosen) {
         info("no change.");
@@ -7029,12 +7893,12 @@ function registerHeadCommand(program2) {
 }
 
 // src/commands/voice.ts
-import { stdin as stdin10, stdout as stdout9 } from "process";
+import { stdin as stdin11, stdout as stdout10 } from "process";
 function registerVoiceCommand(program2) {
-  program2.command("voice").description("speech-to-text \u2014 transcribe an audio file or the mic (on-device Whisper, experimental)").argument("[file]", "audio file to transcribe (omit to record from the mic on a real terminal)").option("--translate", "translate speech to English (Whisper translate task)").option("--seconds <n>", "mic recording length in seconds", "6").action(async (file5, opts) => {
-    const interactive = !!stdin10.isTTY && !!stdout9.isTTY;
+  program2.command("voice").description("speech-to-text \u2014 transcribe an audio file or the mic (on-device Whisper, experimental)").argument("[file]", "audio file to transcribe (omit to record from the mic on a real terminal)").option("--translate", "translate speech to English (Whisper translate task)").option("--seconds <n>", "mic recording length in seconds", "6").action(async (file6, opts) => {
+    const interactive = !!stdin11.isTTY && !!stdout10.isTTY;
     heading("ORIRO voice \u{1F399}");
-    let audio = file5;
+    let audio = file6;
     if (!audio) {
       if (!interactive) {
         info("On-device speech-to-text (experimental \u2014 needs ffmpeg + the transformers voice peer).");
@@ -7067,7 +7931,7 @@ function registerVoiceCommand(program2) {
 }
 
 // src/agents/catalog.ts
-import { readFileSync as readFileSync23 } from "fs";
+import { readFileSync as readFileSync24 } from "fs";
 function parseAgentDef(raw, now) {
   if (!raw || typeof raw !== "object") return { ok: false, error: "not a JSON object" };
   const o = raw;
@@ -7094,7 +7958,7 @@ async function fetchAgentSource(pathOrUrl) {
     if (!res.ok) throw new Error(`fetch failed: HTTP ${res.status}`);
     return await res.json();
   }
-  return JSON.parse(readFileSync23(pathOrUrl, "utf8"));
+  return JSON.parse(readFileSync24(pathOrUrl, "utf8"));
 }
 async function addAgentFromSource(pathOrUrl, now) {
   let raw;
@@ -7108,6 +7972,67 @@ async function addAgentFromSource(pathOrUrl, now) {
   const overwrote = Boolean(loadAgent(parsed.def.name));
   saveAgent(parsed.def);
   return { ok: true, name: parsed.def.name, overwrote };
+}
+
+// src/commands/schedule.ts
+import { spawnSync } from "child_process";
+import { platform } from "process";
+var TASK_NAME = "ORIRO_Agents_Tick";
+function intervalMinutes(spec) {
+  const m = /^(\d+)(m|h)$/.exec(spec.trim());
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  if (n <= 0) return null;
+  return m[2] === "h" ? n * 60 : n;
+}
+function tickInvocation() {
+  return { node: process.execPath, bin: process.argv[1] ?? "oriro" };
+}
+function buildCron(mins, remove) {
+  const { node, bin } = tickInvocation();
+  if (platform === "win32") {
+    if (remove) return { cmd: `schtasks /Delete /TN ${TASK_NAME} /F`, note: "Windows Task Scheduler" };
+    const sc = mins % 60 === 0 ? `/SC HOURLY /MO ${mins / 60}` : `/SC MINUTE /MO ${mins}`;
+    return {
+      cmd: `schtasks /Create /TN ${TASK_NAME} /TR "\\"${node}\\" \\"${bin}\\" agents tick" ${sc} /F`,
+      note: "Windows Task Scheduler"
+    };
+  }
+  const line = `*/${mins} * * * * "${node}" "${bin}" agents tick # ${TASK_NAME}`;
+  if (remove) {
+    return { cmd: `crontab -l 2>/dev/null | grep -v '# ${TASK_NAME}' | crontab -`, note: "crontab" };
+  }
+  return {
+    cmd: `( crontab -l 2>/dev/null | grep -v '# ${TASK_NAME}'; echo '${line}' ) | crontab -`,
+    note: "crontab"
+  };
+}
+function runShell(cmd) {
+  const r = platform === "win32" ? spawnSync("cmd", ["/c", cmd], { encoding: "utf8" }) : spawnSync("sh", ["-c", cmd], { encoding: "utf8" });
+  if (r.status !== 0) {
+    info(dim((r.stderr || r.stdout || "").trim().slice(0, 300)));
+    return false;
+  }
+  return true;
+}
+function registerAgentsCron(agents) {
+  agents.command("cron").description("install an OS scheduler that runs `agents tick` on an interval (fires scheduled agents)").option("--every <spec>", "interval: Nm | Nh", "5m").option("--remove", "remove the scheduler entry instead of installing it").option("--apply", "actually apply the change (default: just print the command to run)").action((opts) => {
+    const mins = intervalMinutes(opts.every);
+    if (!opts.remove && mins === null) die(`invalid --every '${opts.every}' \u2014 use Nm or Nh (e.g. 5m, 2h)`);
+    const { cmd, note } = buildCron(mins ?? 5, Boolean(opts.remove));
+    heading(opts.remove ? "Remove scheduled agents" : "Schedule agents");
+    info(`${note}: runs ${accent("oriro agents tick")} ${opts.remove ? "" : `every ${accent(opts.every)}`}`);
+    if (!opts.apply) {
+      process.stdout.write(`
+  ${cmd}
+
+`);
+      info(dim("printed only \u2014 re-run with --apply to make this change, or run the command yourself"));
+      return;
+    }
+    if (runShell(cmd)) ok(opts.remove ? "scheduler entry removed" : `scheduled \u2014 agents tick will run every ${opts.every}`);
+    else die("could not apply the schedule (see the message above) \u2014 you can run the printed command manually");
+  });
 }
 
 // src/commands/agents.ts
@@ -7143,14 +8068,32 @@ function registerAgentsCommand(program2) {
     info(`make one: ${accent('oriro agents make <name> --task "\u2026" [--router <id>] [--schedule 1h]')}`);
     info(`then: ${accent("oriro agents run <name>")} ${dim("\xB7 or")} ${accent("oriro agents tick")} ${dim("for scheduled ones")}`);
   });
-  agents.command("list").description("list your saved agents").action(() => {
+  agents.command("list").description("list your saved agents").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action((opts) => {
+    const oerr = outputError(opts);
+    if (oerr) die(oerr);
     const all = listAgents();
+    const state = loadState();
+    if (isMachineOutput(opts) || opts.query) {
+      const rows = all.map((a) => ({
+        name: a.name,
+        brain: a.router ?? "pool",
+        schedule: a.schedule ?? "manual",
+        description: a.description ?? "",
+        lastRun: state[a.name]?.lastRunAt ? new Date(state[a.name].lastRunAt).toISOString() : "",
+        lastOk: state[a.name]?.lastOk ?? null
+      }));
+      process.stdout.write(renderList2(rows, {
+        output: opts.output,
+        query: opts.query,
+        columns: ["name", "brain", "schedule", "lastRun", "lastOk"]
+      }) + "\n");
+      return;
+    }
     heading("Agents");
     if (!all.length) {
       info(`no agents yet \u2014 make one: ${accent('oriro agents make my-agent --task "\u2026"')}`);
       return;
     }
-    const state = loadState();
     for (const a of all) {
       printAgent(a);
       const last = state[a.name]?.lastRunAt;
@@ -7200,13 +8143,22 @@ function registerAgentsCommand(program2) {
     ok(`${res.overwrote ? "updated" : "added"} agent ${accent(res.name ?? "")} ${dim("\u2192 ~/.oriro/agents")}`);
     info(`run it: ${accent(`oriro agents run ${res.name}`)}`);
   });
-  agents.command("remove <name>").description("delete an agent").action((name) => {
+  agents.command("remove <name>").description("delete an agent").option("-f, --force", "skip the confirmation prompt").action(async (name, opts) => {
+    if (!loadAgent(name)) {
+      info(`'${name}' is not a saved agent \u2014 nothing to remove`);
+      return;
+    }
+    if (!await confirmDestructive(`remove agent '${name}'`, opts)) {
+      info("cancelled");
+      return;
+    }
     if (!removeAgent(name)) {
       info(`'${name}' is not a saved agent \u2014 nothing to remove`);
       return;
     }
     ok(`removed ${accent(name)}`);
   });
+  registerAgentsCron(agents);
   agents.command("tick").description("run every DUE scheduled agent once, then exit (wire to OS cron / Task Scheduler)").action(async () => {
     const state = loadState();
     const now = Date.now();
@@ -7241,19 +8193,327 @@ function registerAgentsCommand(program2) {
   });
 }
 
+// src/commands/completion.ts
+function extractTree(program2) {
+  const nodes = [];
+  for (const c of program2.commands) {
+    const name = c.name();
+    if (name === "completion") continue;
+    nodes.push({
+      name,
+      subs: c.commands.map((s) => s.name()),
+      opts: c.options.map((o) => o.long).filter((l) => Boolean(l))
+    });
+  }
+  return nodes;
+}
+var SHELLS = ["bash", "zsh", "fish", "pwsh"];
+function topNames(tree) {
+  return [...tree.map((n) => n.name), "completion", "help"].join(" ");
+}
+function genBash(tree) {
+  const cases = tree.map((n) => `    ${n.name}) COMPREPLY=( $(compgen -W "${n.subs.join(" ")} ${n.opts.join(" ")}" -- "$cur") );;`).join("\n");
+  return `# ORIRO bash completion.  Install:  oriro completion bash > /etc/bash_completion.d/oriro
+#            or (per-user):  oriro completion bash >> ~/.bashrc
+_oriro_complete() {
+  local cur prev cword
+  cur="\${COMP_WORDS[COMP_CWORD]}"
+  cword=$COMP_CWORD
+  if [ "$cword" -eq 1 ]; then
+    COMPREPLY=( $(compgen -W "${topNames(tree)}" -- "$cur") )
+    return
+  fi
+  case "\${COMP_WORDS[1]}" in
+${cases}
+    *) COMPREPLY=();;
+  esac
+}
+complete -F _oriro_complete oriro
+`;
+}
+function genZsh(tree) {
+  const cases = tree.map((n) => `    ${n.name}) compadd ${n.subs.join(" ")} ${n.opts.join(" ")} ;;`).join("\n");
+  return `#compdef oriro
+# ORIRO zsh completion.  Install:  oriro completion zsh > "\${fpath[1]}/_oriro"  (then restart the shell)
+_oriro() {
+  local -a words; words=("\${(@)words}")
+  if (( CURRENT == 2 )); then
+    compadd ${topNames(tree)}
+    return
+  fi
+  case "\${words[2]}" in
+${cases}
+  esac
+}
+_oriro "$@"
+`;
+}
+function genFish(tree) {
+  const lines = [
+    "# ORIRO fish completion.  Install:  oriro completion fish > ~/.config/fish/completions/oriro.fish",
+    `complete -c oriro -f -n __fish_use_subcommand -a "${topNames(tree)}"`
+  ];
+  for (const n of tree) {
+    if (n.subs.length) {
+      lines.push(`complete -c oriro -f -n "__fish_seen_subcommand_from ${n.name}" -a "${n.subs.join(" ")}"`);
+    }
+  }
+  return lines.join("\n") + "\n";
+}
+function genPwsh(tree) {
+  const cases = tree.map((n) => `        '${n.name}' { @(${[...n.subs, ...n.opts].map((s) => `'${s}'`).join(", ")}) }`).join("\n");
+  const top = [...tree.map((n) => n.name), "completion", "help"].map((s) => `'${s}'`).join(", ");
+  return `# ORIRO PowerShell completion.  Install:  oriro completion pwsh >> $PROFILE   (then restart pwsh)
+Register-ArgumentCompleter -Native -CommandName oriro -ScriptBlock {
+    param($wordToComplete, $commandAst, $cursorPosition)
+    $tokens = $commandAst.CommandElements | ForEach-Object { $_.ToString() }
+    $candidates = if ($tokens.Count -le 2) {
+        @(${top})
+    } else {
+        switch ($tokens[1]) {
+${cases}
+            default { @() }
+        }
+    }
+    $candidates | Where-Object { $_ -like "$wordToComplete*" } |
+        ForEach-Object { [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_) }
+}
+`;
+}
+var GENERATORS = {
+  bash: genBash,
+  zsh: genZsh,
+  fish: genFish,
+  pwsh: genPwsh
+};
+function registerCompletionCommand(program2) {
+  program2.command("completion <shell>").description("print a shell tab-completion script (bash | zsh | fish | pwsh)").action((shell) => {
+    const s = shell.toLowerCase();
+    if (!SHELLS.includes(s)) {
+      die(`unsupported shell '${shell}'. Use one of: ${SHELLS.join(", ")}`);
+      return;
+    }
+    process.stdout.write(GENERATORS[s](extractTree(program2)));
+  });
+}
+
+// src/commands/config.ts
+function registerConfigCommand(program2) {
+  const config = program2.command("config").description("your durable CLI settings (defaults in ~/.oriro/config.json)");
+  config.command("list").description("show every setting, its value, and what it does").action(() => {
+    const all = configAll();
+    heading("Config");
+    for (const { key, desc } of configKeys()) {
+      const val = all[key];
+      process.stdout.write(`  ${accent(key.padEnd(10))} ${val !== void 0 ? accent(val) : dim("(default)")}  ${dim(desc)}
+`);
+    }
+    info(`set: ${accent("oriro config set <key> <value>")} \xB7 clear: ${accent("oriro config unset <key>")}`);
+  });
+  config.command("get <key>").description("print one setting's value").action((key) => {
+    if (!isConfigKey(key)) die(`unknown key '${key}' \u2014 run \`oriro config list\``);
+    const val = configGet(key);
+    if (val === void 0) {
+      info(`${key} is unset (using the built-in default)`);
+      return;
+    }
+    process.stdout.write(`${val}
+`);
+  });
+  config.command("set <key> <value>").description("set a setting (validated)").action((key, value) => {
+    if (!isConfigKey(key)) die(`unknown key '${key}' \u2014 run \`oriro config list\``);
+    const err = validateConfig(key, value);
+    if (err) die(`invalid value for '${key}': ${err}`);
+    configSet(key, value);
+    ok(`${accent(key)} = ${accent(value)}`);
+  });
+  config.command("unset <key>").description("clear a setting back to its built-in default").action((key) => {
+    if (!isConfigKey(key)) die(`unknown key '${key}' \u2014 run \`oriro config list\``);
+    if (configUnset(key)) ok(`cleared ${accent(key)}`);
+    else info(`${key} was already at its default`);
+  });
+}
+
+// src/commands/setup.ts
+import { rmSync as rmSync5 } from "fs";
+import { join as join29 } from "path";
+import { stdin as stdin12, stdout as stdout11 } from "process";
+var MARKERS = [
+  "language.json",
+  "avatar.json",
+  "skills-onboarded.json",
+  "connectors-onboarded.json",
+  "models-onboarded.json",
+  join29("routers", "onboarded.json")
+];
+function registerSetupCommand(program2) {
+  program2.command("setup").description("run the guided setup wizard (language \xB7 routers \xB7 connectors \xB7 skills \xB7 avatar)").option("--reset", "clear your settled choices and re-ask every step").action(async (opts) => {
+    if (opts.reset) {
+      for (const m of MARKERS) {
+        try {
+          rmSync5(join29(oriroDir(), m), { force: true });
+        } catch {
+        }
+      }
+      ok("reset \u2014 every step will be asked again");
+    }
+    if (!stdin12.isTTY || !stdout11.isTTY) {
+      heading("ORIRO setup");
+      info(`ORIRO is ${accent("keyless")} \u2014 no login, no API keys. Run ${accent("oriro setup")} in a real terminal for the guided wizard.`);
+      info(dim("or configure directly: oriro language <code> \xB7 oriro routers add <id> \xB7 oriro connectors add <slug> \xB7 oriro config set <k> <v>"));
+      return;
+    }
+    await runOnboarding();
+  });
+}
+
+// src/commands/import.ts
+import { existsSync as existsSync20, readFileSync as readFileSync25, readdirSync as readdirSync3, statSync as statSync4, cpSync as cpSync2, mkdirSync as mkdirSync18 } from "fs";
+import { join as join30, basename as basename2 } from "path";
+function registerImportCommand(program2) {
+  const imp = program2.command("import").description("migrate from another CLI (MCP servers, skills)");
+  imp.command("mcp <file>").description("import MCP servers from a Claude-compatible mcp.json (Guardian-vetted)").action((file6) => {
+    if (!existsSync20(file6)) die(`no such file: ${file6}`);
+    let servers;
+    try {
+      const j = JSON.parse(readFileSync25(file6, "utf8"));
+      servers = j.mcpServers ?? j.servers ?? {};
+    } catch (e) {
+      die(`could not parse ${file6}: ${e instanceof Error ? e.message : String(e)}`);
+      return;
+    }
+    const names = Object.keys(servers);
+    if (!names.length) die(`no "mcpServers" found in ${file6}`);
+    heading(`Import MCP \xB7 ${names.length} server${names.length === 1 ? "" : "s"}`);
+    let imported = 0, blocked2 = 0;
+    for (const name of names) {
+      const s = servers[name];
+      const input = {
+        name,
+        ...s.command ? { command: s.command } : {},
+        ...s.args ? { args: s.args } : {},
+        ...s.env ? { env: s.env } : {},
+        ...s.url ? { url: s.url } : {},
+        ...s.headers ? { headers: s.headers } : {}
+      };
+      if (s.url) {
+        try {
+          assertSafeUrl(s.url);
+        } catch (e) {
+          process.stdout.write(`  ${fgHex(PALETTE.error, "\u2717")} ${name} ${dim(`blocked: ${e instanceof Error ? e.message : String(e)}`)}
+`);
+          blocked2++;
+          continue;
+        }
+      }
+      const outcome = vetServer(input);
+      if (outcome.decision === "block") {
+        process.stdout.write(`  ${fgHex(PALETTE.error, "\u2717")} ${name} ${dim(`blocked: ${outcome.reason}`)}
+`);
+        blocked2++;
+        continue;
+      }
+      saveCustomServer({ name, config: buildServerConfig(input), trusted: outcome.decision === "allow" });
+      const mark = outcome.decision === "allow" ? fgHex(PALETTE.success, "\u2713 trusted") : dim("\u25CB needs trust");
+      process.stdout.write(`  ${mark} ${accent(name)}
+`);
+      imported++;
+    }
+    info(`${imported} imported \xB7 ${blocked2} blocked${imported ? ` \u2014 they connect in-session; see \`oriro connectors custom\`` : ""}`);
+  });
+  imp.command("skills <dir>").description("import SKILL.md skill folders from another CLI's skills directory").action((dir) => {
+    if (!existsSync20(dir) || !statSync4(dir).isDirectory()) die(`no such directory: ${dir}`);
+    const dest = userSkillsDir();
+    mkdirSync18(dest, { recursive: true });
+    heading("Import skills");
+    const sources = existsSync20(join30(dir, "SKILL.md")) ? [dir] : readdirSync3(dir).map((e) => join30(dir, e)).filter((p) => statSync4(p).isDirectory() && existsSync20(join30(p, "SKILL.md")));
+    let n = 0;
+    for (const src of sources) {
+      cpSync2(src, join30(dest, basename2(src)), { recursive: true });
+      process.stdout.write(`  ${fgHex(PALETTE.success, "\u2713")} ${accent(basename2(src))}
+`);
+      n++;
+    }
+    if (n === 0) info(dim(`no SKILL.md skill folder found at or inside ${dir}`));
+    else ok(`imported ${n} skill${n === 1 ? "" : "s"} \u2192 ${dim(dest)}`);
+  });
+}
+
+// src/commands/help-on-error.ts
+function lev(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  let curr = new Array(n + 1);
+  for (let i = 1; i <= m; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      curr[j] = Math.min((curr[j - 1] ?? 0) + 1, (prev[j] ?? 0) + 1, (prev[j - 1] ?? 0) + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[n] ?? n;
+}
+function didYouMean(input, candidates) {
+  let best;
+  let bestD = Infinity;
+  for (const c of candidates) {
+    const d = lev(input.toLowerCase(), c.toLowerCase());
+    if (d < bestD) {
+      bestD = d;
+      best = c;
+    }
+  }
+  return best !== void 0 && bestD <= Math.max(2, Math.floor(input.length * 0.4)) ? best : void 0;
+}
+function fullPath(cmd) {
+  const parts = [];
+  let c = cmd;
+  while (c && c.name() !== "oriro") {
+    parts.unshift(c.name());
+    c = c.parent;
+  }
+  return parts.length ? `oriro ${parts.join(" ")}` : "oriro <command>";
+}
+function enableHelpOnError(program2) {
+  const apply = (cmd) => {
+    cmd.showHelpAfterError(`
+(run: ${fullPath(cmd)} --help for usage)`);
+    cmd.showSuggestionAfterError(true);
+    for (const sub of cmd.commands) apply(sub);
+  };
+  apply(program2);
+}
+
 // src/cli.ts
 var version = createRequire(import.meta.url)("../package.json").version;
 var program = new Command();
-program.name("oriro").description("ORIRO \u2014 a free, on-device-friendly terminal AI agent.").version(version, "-v, --version").action(async (_options, command) => {
+program.name("oriro").description("ORIRO \u2014 a free, on-device-friendly terminal AI agent.").version(version, "-v, --version").option("-p, --print <prompt>", "headless one-shot: run a single prompt, print the answer, exit (CI-friendly)").option("--output-format <fmt>", "with --print: text | json | stream-json", "text").action(async (options, command) => {
+  if (options.print !== void 0) {
+    const fmt = options.outputFormat ?? "text";
+    if (!isOutputFormatMode(fmt)) {
+      process.stderr.write(`error: --output-format must be text | json | stream-json
+`);
+      process.exitCode = 1;
+      return;
+    }
+    await runHeadless(options.print, fmt);
+    return;
+  }
   if (command.args.length > 0) {
-    const arg = command.args[0];
+    const arg = command.args[0] ?? "";
     if (arg === "help") {
       command.outputHelp();
       return;
     }
-    process.stderr.write(`error: unknown command '${arg}'
-Run 'oriro --help' to see available commands.
+    const names = command.commands.map((c) => c.name());
+    const guess = didYouMean(arg, names);
+    process.stderr.write(`error: unknown command '${arg}'${guess ? ` \u2014 did you mean '${guess}'?` : ""}
+
 `);
+    command.outputHelp();
     process.exitCode = 1;
     return;
   }
@@ -7269,6 +8529,11 @@ registerAvatarCommand(program);
 registerHeadCommand(program);
 registerVoiceCommand(program);
 registerAgentsCommand(program);
+registerConfigCommand(program);
+registerSetupCommand(program);
+registerImportCommand(program);
+registerCompletionCommand(program);
+enableHelpOnError(program);
 program.parseAsync().catch((e) => {
   if (e instanceof DieError) return;
   process.stderr.write(`
