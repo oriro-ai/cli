@@ -17,6 +17,7 @@ import { registerHeadCommand } from "./commands/head.js";
 import { registerVoiceCommand } from "./commands/voice.js";
 import { registerAgentsCommand } from "./commands/agents.js";
 import { registerCompletionCommand } from "./commands/completion.js";
+import { enableHelpOnError, didYouMean } from "./commands/help-on-error.js";
 import { DieError } from "./commands/ui.js";
 
 const version = (createRequire(import.meta.url)("../package.json") as { version: string }).version;
@@ -29,9 +30,13 @@ program
   // no subcommand → onboarding + chat REPL; an UNKNOWN command must error (not silently open the REPL).
   .action(async (_options: unknown, command: Command) => {
     if (command.args.length > 0) {
-      const arg = command.args[0];
+      const arg = command.args[0] ?? "";
       if (arg === "help") { command.outputHelp(); return; } // `oriro help` → top-level help (exit 0)
-      process.stderr.write(`error: unknown command '${arg}'\nRun 'oriro --help' to see available commands.\n`);
+      // Self-teaching error: name a likely fix, then print the full command list.
+      const names = command.commands.map((c) => c.name());
+      const guess = didYouMean(arg, names);
+      process.stderr.write(`error: unknown command '${arg}'${guess ? ` — did you mean '${guess}'?` : ""}\n\n`);
+      command.outputHelp();
       process.exitCode = 1;
       return;
     }
@@ -49,6 +54,7 @@ registerHeadCommand(program);
 registerVoiceCommand(program);
 registerAgentsCommand(program);
 registerCompletionCommand(program); // last: introspects the fully-built command tree
+enableHelpOnError(program); // self-teaching errors across the whole command tree
 
 program.parseAsync().catch((e: unknown) => {
   // DieError already printed its message and set exitCode — just let the process drain & exit.
