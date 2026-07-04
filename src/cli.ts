@@ -20,6 +20,7 @@ import { registerAgentsCommand } from "./commands/agents.js";
 import { registerCompletionCommand } from "./commands/completion.js";
 import { registerConfigCommand } from "./commands/config.js";
 import { registerSetupCommand } from "./commands/setup.js";
+import { registerImportCommand } from "./commands/import.js";
 import { enableHelpOnError, didYouMean } from "./commands/help-on-error.js";
 import { DieError } from "./commands/ui.js";
 
@@ -67,6 +68,7 @@ registerVoiceCommand(program);
 registerAgentsCommand(program);
 registerConfigCommand(program);
 registerSetupCommand(program);
+registerImportCommand(program);
 registerCompletionCommand(program); // last: introspects the fully-built command tree
 enableHelpOnError(program); // self-teaching errors across the whole command tree
 
