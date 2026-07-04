@@ -22,6 +22,8 @@ import { scrubOutput } from "../identity/filter.js";
 import { phantomFileWarning } from "./verify-actions.js";
 import { isRouterSlash, handleRouterSlash } from "./slash-routers.js";
 import { isUsageSlash, handleUsage } from "./slash-usage.js";
+import { isArtifactSlash, handleArtifactSlash } from "./slash-artifacts.js";
+import { extractArtifacts, setArtifacts } from "./artifacts.js";
 import { bumpTurns, getTrace, toggleTrace } from "./repl-state.js";
 import { onRaceStatus } from "../routers/race-status.js";
 
@@ -144,6 +146,11 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       editor.setText(""); tui.requestRender();
       return;
     }
+    if (isArtifactSlash(slash)) {
+      chat.addChild(new Text(handleArtifactSlash(text).join("\n"), 0, 0));
+      editor.setText(""); tui.requestRender();
+      return;
+    }
     if (slash === "/voice") {
       // Speak a turn: record the mic + transcribe on-device, then drop the text into the editor to review + send.
       editor.setText("");
@@ -220,7 +227,10 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       const cleaned = scrubOutput(out); // strip any third-party router ad/promo before the final render
       const finalText = isEnglish ? cleaned.trim() : await translateOutgoing(cleaned.trim());
       const warn = phantomFileWarning(finalText); // flag claimed-but-absent file writes (weak-router hallucination)
-      streaming.setText((finalText || dim("(no response)")) + (warn ? dim(warn) : ""));
+      const arts = extractArtifacts(finalText); // capture code/SVG artifacts for /review + /save
+      setArtifacts(arts);
+      const hint = arts.length ? dim(`\n  ⎘ ${arts.length} artifact${arts.length === 1 ? "" : "s"} — /review to save`) : "";
+      streaming.setText((finalText || dim("(no response)")) + (warn ? dim(warn) : "") + hint);
       tui.requestRender();
       busy = false;
     })();

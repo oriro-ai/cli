@@ -20,6 +20,8 @@ import { scrubOutput } from "./identity/filter.js";
 import { phantomFileWarning } from "./repl-ui/verify-actions.js";
 import { isRouterSlash, handleRouterSlash } from "./repl-ui/slash-routers.js";
 import { isUsageSlash, handleUsage } from "./repl-ui/slash-usage.js";
+import { isArtifactSlash, handleArtifactSlash } from "./repl-ui/slash-artifacts.js";
+import { extractArtifacts, setArtifacts } from "./repl-ui/artifacts.js";
 import { bumpTurns, toggleTrace } from "./repl-ui/repl-state.js";
 import { dim, accent } from "./ui/theme.js";
 
@@ -82,6 +84,7 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       if (isRouterSlash(slash)) { stdout.write((await handleRouterSlash(line)).join("\n") + "\n"); continue; }
       if (isUsageSlash(slash)) { stdout.write(handleUsage().join("\n") + "\n"); continue; }
       if (slash === "/trace") { stdout.write(`  ${dim(`trace ${toggleTrace() ? "ON" : "off"}`)}\n`); continue; }
+      if (isArtifactSlash(slash)) { stdout.write(handleArtifactSlash(line).join("\n") + "\n"); continue; }
 
       bumpTurns();
       const english = await translateIncoming(line);
@@ -102,7 +105,9 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       // Emit the full reply once, scrubbed of any third-party router ad/promo (non-TTY: no live stream).
       const cleaned = scrubOutput(out);
       const shown = isEnglish ? cleaned.trim() : await translateOutgoing(cleaned.trim());
-      stdout.write(`${shown}${phantomFileWarning(shown)}\n\n`);
+      const arts = extractArtifacts(shown); setArtifacts(arts); // capture code/SVG for /review + /save
+      const hint = arts.length ? `  ${dim(`⎘ ${arts.length} artifact${arts.length === 1 ? "" : "s"} — /review to save`)}\n` : "";
+      stdout.write(`${shown}${phantomFileWarning(shown)}\n${hint}\n`);
     }
   } finally {
     process.removeListener("SIGINT", onSigint);
