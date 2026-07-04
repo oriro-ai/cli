@@ -17,6 +17,8 @@ interface McpCallResult {
   isError?: boolean;
 }
 
+export interface McpToolInfo { name: string; description?: string; inputSchema?: unknown; }
+
 /** Register a connected MCP server's tools into Pi. Returns the public tool names registered. */
 export async function registerMcpTools(
   pi: ExtensionAPI,
@@ -24,8 +26,23 @@ export async function registerMcpTools(
   client: Client,
   seen: Set<string> = new Set(),
 ): Promise<string[]> {
-  const server = sanitizeName(serverName);
   const tools = await listAllTools(client);
+  return registerToolList(pi, serverName, client, tools, seen);
+}
+
+/**
+ * SYNC register of ALREADY-LISTED MCP tools (no await) — so it can run inside a Pi extension factory
+ * after the tools were fetched up front (see session-connect.prepareConnectors). Same public-name
+ * scheme + result mapping as registerMcpTools.
+ */
+export function registerToolList(
+  pi: ExtensionAPI,
+  serverName: string,
+  client: Client,
+  tools: McpToolInfo[],
+  seen: Set<string> = new Set(),
+): string[] {
+  const server = sanitizeName(serverName);
   const registered: string[] = [];
 
   for (const t of tools) {

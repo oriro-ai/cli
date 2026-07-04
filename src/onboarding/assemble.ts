@@ -18,6 +18,7 @@ import { registerHead } from "../head/pi-tool.js";
 import { registerScribe, attachScribe } from "../scribe/scribe-pi.js";
 import { registerOrchestrator } from "../orchestrate.js";
 import { registerAgentRunner } from "../agents/pi-tool.js";
+import { prepareConnectors, registerPreparedConnectors } from "../connectors/session-connect.js";
 import { skillRoots } from "../skills/loader.js";
 import type { KeylessRouter } from "../routers/floor.js";
 
@@ -42,12 +43,19 @@ export async function assembleOriroSession(opts: { cwd?: string; routers?: Keyle
   const model = registerOriroMux(modelRegistry, opts.routers ? { routers: opts.routers } : {}); // free pool/floor — never a paid key
   if (!model) throw new Error("ORIRO keyless model unavailable");
 
+  // Connect the user's added MCP connectors UP FRONT (fail-soft) so their tools register synchronously
+  // in the factory below and reach the model from turn one. No added connectors → empty, zero cost.
+  const preparedConnectors = await prepareConnectors();
+
   const resourceLoader = new DefaultResourceLoader({
     cwd,
     agentDir: getAgentDir(),
     settingsManager,
     additionalSkillPaths: skillRoots(), // bundled library + the user's own ~/.oriro/skills
-    extensionFactories: [registerGuardian, registerHead, registerScribe, registerOrchestrator, registerAgentRunner],
+    extensionFactories: [
+      registerGuardian, registerHead, registerScribe, registerOrchestrator, registerAgentRunner,
+      (pi) => registerPreparedConnectors(pi, preparedConnectors), // MCP connectors → agent tools
+    ],
   });
   await resourceLoader.reload();
 
