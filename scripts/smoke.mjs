@@ -30,7 +30,7 @@ run(["skills", "list"], { contains: "loaded" }); // bundle path must resolve the
 run(["scribe", "status"], { contains: "Scriber" });
 run(["connectors", "list"], { contains: "addable" }); // summary: N addable · M added · K coming soon
 run(["routers", "list"], { contains: "active pool" });
-run(["routers", "add", "oriro-gauss"], { expectExit: 1, contains: "coming soon" });
+run(["routers", "add", "not-a-real-router-xyz"], { expectExit: 1, contains: "unknown" }); // a bogus id fails cleanly; oriro-gauss/avila are now LIVE keyless racers, no longer coming-soon
 run(["channels", "add", "discord", "not-a-token"], { expectExit: 1, contains: "rejected" }); // bad token refused
 run(["channels", "start", "discord"], { expectExit: 1, contains: "no discord bot configured" });
 run(["channels", "start", "whatsapp"], { expectExit: 0, contains: "ToS" }); // refused without --accept-risk

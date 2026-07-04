@@ -23,7 +23,7 @@
     "dev": "tsx src/cli.ts",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "test:unit": "tsx scripts/test-tool-sanitize.ts && tsx scripts/test-guardian.ts && tsx scripts/test-scribe.ts",
+    "test:unit": "tsx scripts/test-tool-sanitize.ts && tsx scripts/test-guardian.ts && tsx scripts/test-scribe.ts && tsx scripts/test-race.ts",
     "smoke": "npm run build && node scripts/smoke.mjs",
     "prepublishOnly": "npm run build && npm run test:unit && node scripts/smoke.mjs && node scripts/prepublish-check.mjs",
     "start": "node dist/cli.js"

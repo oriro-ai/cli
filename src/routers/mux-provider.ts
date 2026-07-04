@@ -21,28 +21,10 @@ import { oriroDir } from "../config/paths.js";
 import { applyIdentity, scrubMessageIdentity } from "../identity/filter.js";
 import { sanitizeMessageToolCalls, sanitizeEventToolCalls } from "./tool-sanitize.js";
 import { buildScribeContext } from "../scribe/scribe-pi.js";
+import { MUX_PROVIDER, MUX_MODEL, errToCallError, buildErrorMessage } from "./mux-helpers.js";
+import { raceMux } from "./race.js";
 
-export const MUX_PROVIDER = "oriro-mux";
-export const MUX_MODEL = "oriro-free";
-
-function errToCallError(msg: AssistantMessage & { errorMessage?: string }): CallError {
-  const text = msg.errorMessage ?? "";
-  return /\b429\b|rate.?limit|too many requests/i.test(text) ? { status: 429 } : {};
-}
-
-function buildErrorMessage(message: string): AssistantMessage {
-  return {
-    role: "assistant",
-    content: [],
-    api: "openai-completions",
-    provider: MUX_PROVIDER,
-    model: MUX_MODEL,
-    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
-    stopReason: "error",
-    timestamp: Date.now(),
-    errorMessage: message,
-  } as AssistantMessage;
-}
+export { MUX_PROVIDER, MUX_MODEL };
 
 async function driveMux(
   out: AssistantMessageEventStream,
@@ -164,14 +146,19 @@ export function registerOriroMux(
     ],
     streamSimple: (_model, context, options) => {
       const out = createAssistantMessageEventStream();
-      const { byId, mux } = resolveNow(); // fresh pool every request (see resolveNow)
+      const { routers, byId, mux } = resolveNow(); // fresh pool every request (see resolveNow)
       // Harness-layer context: ORIRO identity + (if Scriber is on) the cross-session work history,
       // injected into the system prompt so recall works inline — not dependent on the model
       // choosing to call scribe_recall (weak free models often don't). Empty when Scriber is off.
       const ctx = applyIdentity(context);
       const memory = buildScribeContext();
       const withMemory = memory ? { ...ctx, systemPrompt: `${ctx.systemPrompt}\n\n${memory}` } : ctx;
-      void driveMux(out, mux, byId, withMemory, options).finally(() => {
+      // >1 router → PARALLEL RACE (first to answer wins, losers aborted, names shown live).
+      // 1 router → the proven sequential failover. Both share identity-scrub + tool-sanitize + health.
+      const drive = routers.length > 1
+        ? raceMux(out, mux, byId, withMemory, options)
+        : driveMux(out, mux, byId, withMemory, options);
+      void drive.finally(() => {
         try { saveMuxState(oriroDir(), mux.snapshot()); } catch { /* best-effort persistence */ }
       });
       return out;

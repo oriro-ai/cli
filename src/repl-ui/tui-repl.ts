@@ -21,6 +21,7 @@ import { listen } from "../avatar/voice.js";
 import { scrubOutput } from "../identity/filter.js";
 import { phantomFileWarning } from "./verify-actions.js";
 import { isRouterSlash, handleRouterSlash } from "./slash-routers.js";
+import { onRaceStatus } from "../routers/race-status.js";
 
 const editorTheme: EditorTheme = {
   borderColor: (s) => dim(s),
@@ -152,8 +153,21 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
     editor.addToHistory(text);
     editor.setText("");
     chat.addChild(new Text(`${accent("›")} ${text}`, 0, 1));
+    // Live race line: shows the router NAMES competing this turn and which one won.
+    const raceLine = new Text("", 0, 0);
+    chat.addChild(raceLine);
     const streaming = new Text(dim("…"), 0, 0);
     chat.addChild(streaming);
+    const unsubRace = onRaceStatus((s) => {
+      if (s.phase === "racing" && s.racers.length > 1) {
+        raceLine.setText(dim(`  ⏱ racing: ${s.racers.join(" · ")}`));
+      } else if (s.phase === "won" && s.winner && s.racers.length > 1) {
+        raceLine.setText(dim(`  ⏱ ${s.racers.join(" · ")} → won: `) + accent(s.winner));
+      } else {
+        raceLine.setText("");
+      }
+      tui.requestRender();
+    });
     tui.requestRender();
 
     busy = true;
@@ -180,9 +194,11 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
         tui.requestRender();
         busy = false;
         unsub();
+        unsubRace();
         return;
       }
       unsub();
+      unsubRace();
       const cleaned = scrubOutput(out); // strip any third-party router ad/promo before the final render
       const finalText = isEnglish ? cleaned.trim() : await translateOutgoing(cleaned.trim());
       const warn = phantomFileWarning(finalText); // flag claimed-but-absent file writes (weak-router hallucination)
