@@ -6403,6 +6403,147 @@ async function handleCompact(session, cmd) {
   }
 }
 
+// src/context/init-agents.ts
+import { existsSync as existsSync17, readFileSync as readFileSync21, readdirSync as readdirSync3, statSync as statSync3, writeFileSync as writeFileSync19 } from "fs";
+import { join as join25, basename } from "path";
+var CODE_EXT = {
+  ts: "TypeScript",
+  tsx: "TypeScript",
+  js: "JavaScript",
+  jsx: "JavaScript",
+  mjs: "JavaScript",
+  py: "Python",
+  go: "Go",
+  rs: "Rust",
+  java: "Java",
+  kt: "Kotlin",
+  rb: "Ruby",
+  php: "PHP",
+  c: "C",
+  h: "C",
+  cpp: "C++",
+  cc: "C++",
+  cs: "C#",
+  swift: "Swift",
+  sh: "Shell",
+  sql: "SQL"
+};
+var SKIP_DIRS = /* @__PURE__ */ new Set(["node_modules", ".git", "dist", "build", ".next", "out", "target", "__pycache__", ".venv", "venv", ".oriro"]);
+function readJson(p) {
+  try {
+    return JSON.parse(readFileSync21(p, "utf8"));
+  } catch {
+    return {};
+  }
+}
+function detectProject(cwd) {
+  const facts = { name: basename(cwd) || "project", languages: [], commands: [], topDirs: [] };
+  const pkgPath = join25(cwd, "package.json");
+  if (existsSync17(pkgPath)) {
+    const pkg = readJson(pkgPath);
+    if (typeof pkg.name === "string" && pkg.name) facts.name = pkg.name;
+    if (typeof pkg.description === "string" && pkg.description) facts.description = pkg.description;
+    const scripts = pkg.scripts && typeof pkg.scripts === "object" ? pkg.scripts : {};
+    for (const key of ["dev", "build", "test", "lint", "start"]) {
+      if (scripts[key]) facts.commands.push({ label: key, cmd: `npm run ${key}` });
+    }
+  } else if (existsSync17(join25(cwd, "pyproject.toml")) || existsSync17(join25(cwd, "requirements.txt"))) {
+    if (!facts.description) facts.description = "Python project";
+  } else if (existsSync17(join25(cwd, "Cargo.toml"))) {
+    facts.commands.push({ label: "build", cmd: "cargo build" }, { label: "test", cmd: "cargo test" });
+  } else if (existsSync17(join25(cwd, "go.mod"))) {
+    facts.commands.push({ label: "build", cmd: "go build ./..." }, { label: "test", cmd: "go test ./..." });
+  }
+  const langCount = /* @__PURE__ */ new Map();
+  const tallyExt = (file6) => {
+    const ext = file6.split(".").pop()?.toLowerCase();
+    const lang = ext && CODE_EXT[ext];
+    if (lang) langCount.set(lang, (langCount.get(lang) ?? 0) + 1);
+  };
+  let entries = [];
+  try {
+    entries = readdirSync3(cwd);
+  } catch {
+  }
+  for (const e of entries) {
+    const full = join25(cwd, e);
+    let isDir = false;
+    try {
+      isDir = statSync3(full).isDirectory();
+    } catch {
+      continue;
+    }
+    if (isDir) {
+      if (SKIP_DIRS.has(e) || e.startsWith(".")) continue;
+      facts.topDirs.push(e);
+      try {
+        for (const f of readdirSync3(full)) {
+          try {
+            if (statSync3(join25(full, f)).isFile()) tallyExt(f);
+          } catch {
+          }
+        }
+      } catch {
+      }
+    } else {
+      tallyExt(e);
+    }
+  }
+  facts.languages = [...langCount.entries()].sort((a, b) => b[1] - a[1]).map(([l]) => l);
+  facts.topDirs.sort();
+  return facts;
+}
+function generateAgentsMd(cwd) {
+  const f = detectProject(cwd);
+  const lines = [];
+  lines.push(`# ${f.name}`, "");
+  lines.push(f.description ?? "_One-line description of what this project does._", "");
+  lines.push("## Stack");
+  lines.push(f.languages.length ? `- Languages: ${f.languages.join(", ")}` : "- Languages: _add the main languages_");
+  if (f.topDirs.length) lines.push(`- Layout: ${f.topDirs.map((d) => `\`${d}/\``).join(", ")}`);
+  lines.push("");
+  lines.push("## Commands");
+  if (f.commands.length) for (const c of f.commands) lines.push(`- ${c.label}: \`${c.cmd}\``);
+  else lines.push("- _add build/test/run commands here_");
+  lines.push("");
+  lines.push("## Conventions");
+  lines.push("- _House rules for this repo: style, patterns to follow, things never to touch._");
+  lines.push("- _ORIRO reads this file automatically each session \u2014 keep it short and current._");
+  lines.push("");
+  return lines.join("\n");
+}
+function writeAgentsMd(cwd = process.cwd(), force = false) {
+  const path = join25(cwd, "AGENTS.md");
+  const facts = detectProject(cwd);
+  if (existsSync17(path) && !force) return { path, created: false, facts };
+  writeFileSync19(path, generateAgentsMd(cwd), "utf8");
+  return { path, created: true, facts };
+}
+
+// src/repl-ui/slash-init.ts
+function isInitSlash(cmd) {
+  return /^\/init(\s|$)/i.test(cmd.trim());
+}
+function handleInit(cmd, cwd = process.cwd()) {
+  const force = /(^|\s)--force(\s|$)/i.test(cmd);
+  let res;
+  try {
+    res = writeAgentsMd(cwd, force);
+  } catch (e) {
+    return [`  ${fgHex(PALETTE.error, "init failed")}: ${dim(e instanceof Error ? e.message : String(e))}`];
+  }
+  const lines = [];
+  if (!res.created) {
+    lines.push(`  ${dim("AGENTS.md already exists")} ${accent(res.path)} ${dim("\u2014 use /init --force to overwrite.")}`);
+    return lines;
+  }
+  const f = res.facts;
+  lines.push(`  ${fgHex(PALETTE.success, "\u2713 wrote")} ${accent(res.path)}`);
+  lines.push(dim(`    detected: ${f.languages.length ? f.languages.join(", ") : "no languages"}${f.commands.length ? ` \xB7 ${f.commands.length} command${f.commands.length === 1 ? "" : "s"}` : ""}${f.topDirs.length ? ` \xB7 ${f.topDirs.length} dir${f.topDirs.length === 1 ? "" : "s"}` : ""}`));
+  lines.push(dim("    edit it to add house rules \u2014 ORIRO reads it automatically each session."));
+  return lines;
+}
+
 // src/repl-ui/tui-repl.ts
 var editorTheme = {
   borderColor: (s) => dim(s),
@@ -6485,7 +6626,7 @@ async function runTuiRepl(session) {
       const help = [
         "  Just type to chat \u2014 ORIRO writes and runs code for you (keyless, free).",
         `  ${accent("/routers")} pool add\xB7rotate   ${accent("/model")} <id\u2026> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity   ${accent("/compact")} free context`,
-        `  ${accent("/review")} artifacts from the last reply   ${accent("/save")} <n> [path]   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
+        `  ${accent("/review")} artifacts from the last reply   ${accent("/save")} <n> [path]   ${accent("/init")} write AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`
       ].join("\n");
       chat.addChild(new Text(help, 0, 0));
@@ -6546,6 +6687,12 @@ async function runTuiRepl(session) {
         pending.setText(lines.join("\n"));
         tui.requestRender();
       })();
+      return;
+    }
+    if (isInitSlash(slash)) {
+      chat.addChild(new Text(handleInit(text).join("\n"), 0, 0));
+      editor.setText("");
+      tui.requestRender();
       return;
     }
     if (slash === "/voice") {
@@ -6639,8 +6786,8 @@ ${english}`;
 // src/voice/mic.ts
 import { spawn as spawn3 } from "child_process";
 import { tmpdir as tmpdir3 } from "os";
-import { join as join25 } from "path";
-import { existsSync as existsSync17, statSync as statSync3 } from "fs";
+import { join as join26 } from "path";
+import { existsSync as existsSync18, statSync as statSync4 } from "fs";
 function recorders(outFile, seconds) {
   const dur = String(seconds);
   if (process.platform === "darwin") {
@@ -6661,12 +6808,12 @@ function recorders(outFile, seconds) {
   ];
 }
 async function recordMic(seconds = 6) {
-  const outFile = join25(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
+  const outFile = join26(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
   for (const r of recorders(outFile, seconds)) {
     const okFile = await new Promise((resolve3) => {
       const child = spawn3(r.cmd, r.args, { stdio: "ignore" });
       child.on("error", () => resolve3(false));
-      child.on("close", (code) => resolve3(code === 0 && existsSync17(outFile) && statSync3(outFile).size > 44));
+      child.on("close", (code) => resolve3(code === 0 && existsSync18(outFile) && statSync4(outFile).size > 44));
     });
     if (okFile) return outFile;
   }
@@ -6733,6 +6880,7 @@ function replHelp() {
   ${dim("Models & routers")}   ${accent("/routers")} list\xB7add\xB7rotate the racing pool   ${accent("/model")} <id\u2026> switch
   ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} show tool + router activity   ${accent("/compact")} free context
   ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one
+  ${dim("Project")}            ${accent("/init")} write a starter AGENTS.md ORIRO reads each session
   ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn
   ${dim("General")}           ${accent("/help")} this   ${accent("/exit")} / ${accent("/quit")} leave   ${dim("(Ctrl-D / Ctrl-C also exit)")}
 
@@ -6810,6 +6958,10 @@ async function runReadlineRepl(session) {
       }
       if (isCompactSlash(slash)) {
         stdout7.write((await handleCompact(session, line)).join("\n") + "\n");
+        continue;
+      }
+      if (isInitSlash(slash)) {
+        stdout7.write(handleInit(line).join("\n") + "\n");
         continue;
       }
       if (isArtifactSlash(slash)) {
@@ -6939,8 +7091,8 @@ async function confirmDestructive(what, opts = {}) {
 }
 
 // src/config/store.ts
-import { readFileSync as readFileSync21, writeFileSync as writeFileSync19, mkdirSync as mkdirSync16 } from "fs";
-import { join as join26 } from "path";
+import { readFileSync as readFileSync22, writeFileSync as writeFileSync20, mkdirSync as mkdirSync16 } from "fs";
+import { join as join27 } from "path";
 var KEYS = {
   output: {
     desc: "default output format for list commands: text | json | csv",
@@ -6962,13 +7114,13 @@ function validateConfig(key, value) {
   return KEYS[key].validate?.(value) ?? null;
 }
 function file4() {
-  return join26(oriroDir(), "config.json");
+  return join27(oriroDir(), "config.json");
 }
 var cache = null;
 function readAll() {
   if (cache) return cache;
   try {
-    const v = JSON.parse(readFileSync21(file4(), "utf8"));
+    const v = JSON.parse(readFileSync22(file4(), "utf8"));
     cache = v && typeof v === "object" ? v : {};
   } catch {
     cache = {};
@@ -6984,7 +7136,7 @@ function configAll() {
 function configSet(key, value) {
   const all = { ...readAll(), [key]: value };
   mkdirSync16(oriroDir(), { recursive: true });
-  writeFileSync19(file4(), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync20(file4(), JSON.stringify(all, null, 2), "utf8");
   cache = all;
 }
 function configUnset(key) {
@@ -6992,7 +7144,7 @@ function configUnset(key) {
   if (!(key in all)) return false;
   const rest = { ...all };
   delete rest[key];
-  writeFileSync19(file4(), JSON.stringify(rest, null, 2), "utf8");
+  writeFileSync20(file4(), JSON.stringify(rest, null, 2), "utf8");
   cache = rest;
   return true;
 }
@@ -7135,10 +7287,10 @@ function registerRoutersCommand(program2) {
 }
 
 // src/commands/scribe.ts
-import { readFileSync as readFileSync23 } from "fs";
+import { readFileSync as readFileSync24 } from "fs";
 
 // src/scribe/transcript.ts
-import { existsSync as existsSync19, readFileSync as readFileSync22 } from "fs";
+import { existsSync as existsSync20, readFileSync as readFileSync23 } from "fs";
 function parseHookStdin(raw) {
   try {
     const j = JSON.parse(raw);
@@ -7171,8 +7323,8 @@ function isHumanUser(e) {
 }
 var FILE_KEYS = ["file_path", "path", "notebook_path", "filePath"];
 function lastTurnFromTranscript(path) {
-  if (!existsSync19(path)) return null;
-  const raw = readFileSync22(path, "utf8");
+  if (!existsSync20(path)) return null;
+  const raw = readFileSync23(path, "utf8");
   const entries = [];
   for (const line of raw.split("\n")) {
     if (!line.trim()) continue;
@@ -7233,7 +7385,7 @@ function lastTurnFromTranscript(path) {
 // src/commands/scribe.ts
 function readStdin() {
   try {
-    return readFileSync23(0, "utf8");
+    return readFileSync24(0, "utf8");
   } catch {
     return "";
   }
@@ -7543,14 +7695,14 @@ function registerConnectorsCommand(program2) {
 }
 
 // src/channels/config.ts
-import { readFileSync as readFileSync24, writeFileSync as writeFileSync20 } from "fs";
-import { join as join27 } from "path";
+import { readFileSync as readFileSync25, writeFileSync as writeFileSync21 } from "fs";
+import { join as join28 } from "path";
 function file5() {
-  return join27(oriroDir(), "channels.json");
+  return join28(oriroDir(), "channels.json");
 }
 function readChannels() {
   try {
-    const v = JSON.parse(readFileSync24(file5(), "utf8"));
+    const v = JSON.parse(readFileSync25(file5(), "utf8"));
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
@@ -7559,10 +7711,10 @@ function readChannels() {
 function saveChannel(cfg) {
   const all = readChannels().filter((c) => c.kind !== cfg.kind);
   all.push(cfg);
-  writeFileSync20(join27(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync21(join28(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
 }
 function removeChannel(kind) {
-  writeFileSync20(join27(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
+  writeFileSync21(join28(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
 }
 
 // src/channels/telegram.ts
@@ -7679,9 +7831,9 @@ async function startDiscord(token) {
 }
 
 // src/channels/whatsapp.ts
-import { join as join28 } from "path";
+import { join as join29 } from "path";
 function whatsappAuthDir() {
-  return join28(oriroDir(), "whatsapp-auth");
+  return join29(oriroDir(), "whatsapp-auth");
 }
 async function startWhatsApp() {
   let baileys;
@@ -7799,8 +7951,8 @@ function registerChannelsCommand(program2) {
 }
 
 // src/commands/skills.ts
-import { existsSync as existsSync20, statSync as statSync4, mkdirSync as mkdirSync17, cpSync, rmSync as rmSync4 } from "fs";
-import { resolve as resolve2, join as join29, basename, dirname as dirname4 } from "path";
+import { existsSync as existsSync21, statSync as statSync5, mkdirSync as mkdirSync17, cpSync, rmSync as rmSync4 } from "fs";
+import { resolve as resolve2, join as join30, basename as basename2, dirname as dirname4 } from "path";
 function registerSkillsCommand(program2) {
   const skills = program2.command("skills").description("the ORIRO skill library \u2014 bundled + your own");
   skills.command("list").description("show CORE / TAIL skill counts (use --all to list names)").option("-a, --all", "list every skill name").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action(async (opts) => {
@@ -7832,28 +7984,28 @@ function registerSkillsCommand(program2) {
   });
   skills.command("add <path>").description("add your own skill \u2014 a folder containing SKILL.md, or a SKILL.md file").action((p) => {
     const src = resolve2(p);
-    if (!existsSync20(src)) die(`not found: ${src}`);
+    if (!existsSync21(src)) die(`not found: ${src}`);
     const dest = userSkillsDir();
     mkdirSync17(dest, { recursive: true });
-    const st = statSync4(src);
+    const st = statSync5(src);
     if (st.isDirectory()) {
-      if (!existsSync20(join29(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
-      const name = basename(src);
-      cpSync(src, join29(dest, name), { recursive: true });
-      ok(`added skill ${accent(name)} \u2192 ${join29(dest, name)}`);
-    } else if (basename(src).toLowerCase() === "skill.md") {
-      const name = basename(dirname4(src)) || "custom-skill";
-      mkdirSync17(join29(dest, name), { recursive: true });
-      cpSync(src, join29(dest, name, "SKILL.md"));
-      ok(`added skill ${accent(name)} \u2192 ${join29(dest, name)}`);
+      if (!existsSync21(join30(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
+      const name = basename2(src);
+      cpSync(src, join30(dest, name), { recursive: true });
+      ok(`added skill ${accent(name)} \u2192 ${join30(dest, name)}`);
+    } else if (basename2(src).toLowerCase() === "skill.md") {
+      const name = basename2(dirname4(src)) || "custom-skill";
+      mkdirSync17(join30(dest, name), { recursive: true });
+      cpSync(src, join30(dest, name, "SKILL.md"));
+      ok(`added skill ${accent(name)} \u2192 ${join30(dest, name)}`);
     } else {
       die("expected a folder containing SKILL.md, or a SKILL.md file");
     }
     info("It loads on next launch \u2014 and is available in chat via /skill.");
   });
   skills.command("remove <name>").description("remove a skill you added").option("-f, --force", "skip the confirmation prompt").action(async (name, opts) => {
-    const target = join29(userSkillsDir(), name);
-    if (!existsSync20(target)) {
+    const target = join30(userSkillsDir(), name);
+    if (!existsSync21(target)) {
       info(`'${name}' is not a user-added skill \u2014 nothing to remove`);
       return;
     }
@@ -8036,7 +8188,7 @@ function registerVoiceCommand(program2) {
 }
 
 // src/agents/catalog.ts
-import { readFileSync as readFileSync25 } from "fs";
+import { readFileSync as readFileSync26 } from "fs";
 function parseAgentDef(raw, now) {
   if (!raw || typeof raw !== "object") return { ok: false, error: "not a JSON object" };
   const o = raw;
@@ -8063,7 +8215,7 @@ async function fetchAgentSource(pathOrUrl) {
     if (!res.ok) throw new Error(`fetch failed: HTTP ${res.status}`);
     return await res.json();
   }
-  return JSON.parse(readFileSync25(pathOrUrl, "utf8"));
+  return JSON.parse(readFileSync26(pathOrUrl, "utf8"));
 }
 async function addAgentFromSource(pathOrUrl, now) {
   let raw;
@@ -8441,7 +8593,7 @@ function registerConfigCommand(program2) {
 
 // src/commands/setup.ts
 import { rmSync as rmSync5 } from "fs";
-import { join as join30 } from "path";
+import { join as join31 } from "path";
 import { stdin as stdin12, stdout as stdout11 } from "process";
 var MARKERS = [
   "language.json",
@@ -8449,14 +8601,14 @@ var MARKERS = [
   "skills-onboarded.json",
   "connectors-onboarded.json",
   "models-onboarded.json",
-  join30("routers", "onboarded.json")
+  join31("routers", "onboarded.json")
 ];
 function registerSetupCommand(program2) {
   program2.command("setup").description("run the guided setup wizard (language \xB7 routers \xB7 connectors \xB7 skills \xB7 avatar)").option("--reset", "clear your settled choices and re-ask every step").action(async (opts) => {
     if (opts.reset) {
       for (const m of MARKERS) {
         try {
-          rmSync5(join30(oriroDir(), m), { force: true });
+          rmSync5(join31(oriroDir(), m), { force: true });
         } catch {
         }
       }
@@ -8473,15 +8625,15 @@ function registerSetupCommand(program2) {
 }
 
 // src/commands/import.ts
-import { existsSync as existsSync21, readFileSync as readFileSync26, readdirSync as readdirSync3, statSync as statSync5, cpSync as cpSync2, mkdirSync as mkdirSync18 } from "fs";
-import { join as join31, basename as basename2 } from "path";
+import { existsSync as existsSync22, readFileSync as readFileSync27, readdirSync as readdirSync4, statSync as statSync6, cpSync as cpSync2, mkdirSync as mkdirSync18 } from "fs";
+import { join as join32, basename as basename3 } from "path";
 function registerImportCommand(program2) {
   const imp = program2.command("import").description("migrate from another CLI (MCP servers, skills)");
   imp.command("mcp <file>").description("import MCP servers from a Claude-compatible mcp.json (Guardian-vetted)").action((file6) => {
-    if (!existsSync21(file6)) die(`no such file: ${file6}`);
+    if (!existsSync22(file6)) die(`no such file: ${file6}`);
     let servers;
     try {
-      const j = JSON.parse(readFileSync26(file6, "utf8"));
+      const j = JSON.parse(readFileSync27(file6, "utf8"));
       servers = j.mcpServers ?? j.servers ?? {};
     } catch (e) {
       die(`could not parse ${file6}: ${e instanceof Error ? e.message : String(e)}`);
@@ -8527,15 +8679,15 @@ function registerImportCommand(program2) {
     info(`${imported} imported \xB7 ${blocked2} blocked${imported ? ` \u2014 they connect in-session; see \`oriro connectors custom\`` : ""}`);
   });
   imp.command("skills <dir>").description("import SKILL.md skill folders from another CLI's skills directory").action((dir) => {
-    if (!existsSync21(dir) || !statSync5(dir).isDirectory()) die(`no such directory: ${dir}`);
+    if (!existsSync22(dir) || !statSync6(dir).isDirectory()) die(`no such directory: ${dir}`);
     const dest = userSkillsDir();
     mkdirSync18(dest, { recursive: true });
     heading("Import skills");
-    const sources = existsSync21(join31(dir, "SKILL.md")) ? [dir] : readdirSync3(dir).map((e) => join31(dir, e)).filter((p) => statSync5(p).isDirectory() && existsSync21(join31(p, "SKILL.md")));
+    const sources = existsSync22(join32(dir, "SKILL.md")) ? [dir] : readdirSync4(dir).map((e) => join32(dir, e)).filter((p) => statSync6(p).isDirectory() && existsSync22(join32(p, "SKILL.md")));
     let n = 0;
     for (const src of sources) {
-      cpSync2(src, join31(dest, basename2(src)), { recursive: true });
-      process.stdout.write(`  ${fgHex(PALETTE.success, "\u2713")} ${accent(basename2(src))}
+      cpSync2(src, join32(dest, basename3(src)), { recursive: true });
+      process.stdout.write(`  ${fgHex(PALETTE.success, "\u2713")} ${accent(basename3(src))}
 `);
       n++;
     }

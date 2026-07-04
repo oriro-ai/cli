@@ -1,6 +1,6 @@
 {
   "name": "@oriro/orirocli",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "ORIRO — a free, on-device-friendly terminal AI agent. Built on the Pi agent harness (used as a library).",
   "type": "module",
   "bin": {
@@ -23,7 +23,7 @@
     "dev": "tsx src/cli.ts",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "test:unit": "tsx scripts/test-tool-sanitize.ts && tsx scripts/test-guardian.ts && tsx scripts/test-scribe.ts && tsx scripts/test-race.ts && tsx scripts/test-weights.ts && tsx scripts/test-output.ts && tsx scripts/test-connectors.ts && tsx scripts/test-artifacts.ts && tsx scripts/test-project-md.ts && tsx scripts/test-compact.ts",
+    "test:unit": "tsx scripts/test-tool-sanitize.ts && tsx scripts/test-guardian.ts && tsx scripts/test-scribe.ts && tsx scripts/test-race.ts && tsx scripts/test-weights.ts && tsx scripts/test-output.ts && tsx scripts/test-connectors.ts && tsx scripts/test-artifacts.ts && tsx scripts/test-project-md.ts && tsx scripts/test-compact.ts && tsx scripts/test-init.ts",
     "smoke": "npm run build && node scripts/smoke.mjs",
     "prepublishOnly": "npm run build && npm run test:unit && node scripts/smoke.mjs && node scripts/prepublish-check.mjs",
     "start": "node dist/cli.js"
