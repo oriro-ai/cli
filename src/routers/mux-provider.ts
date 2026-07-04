@@ -21,6 +21,7 @@ import { oriroDir } from "../config/paths.js";
 import { applyIdentity, scrubMessageIdentity } from "../identity/filter.js";
 import { sanitizeMessageToolCalls, sanitizeEventToolCalls } from "./tool-sanitize.js";
 import { buildScribeContext } from "../scribe/scribe-pi.js";
+import { buildProjectContext } from "../context/project-md.js";
 import { MUX_PROVIDER, MUX_MODEL, errToCallError, buildErrorMessage } from "./mux-helpers.js";
 import { raceMux } from "./race.js";
 
@@ -151,8 +152,13 @@ export function registerOriroMux(
       // injected into the system prompt so recall works inline — not dependent on the model
       // choosing to call scribe_recall (weak free models often don't). Empty when Scriber is off.
       const ctx = applyIdentity(context);
+      // Harness context, in priority order: ORIRO identity (already in ctx) → project instructions
+      // (AGENTS.md/CLAUDE.md from cwd, V0.3.1) → cross-session work history (Scriber, if on). Each
+      // is empty-safe and appended only when present.
+      const project = buildProjectContext();
       const memory = buildScribeContext();
-      const withMemory = memory ? { ...ctx, systemPrompt: `${ctx.systemPrompt}\n\n${memory}` } : ctx;
+      const extra = [project, memory].filter(Boolean).join("\n\n");
+      const withMemory = extra ? { ...ctx, systemPrompt: `${ctx.systemPrompt}\n\n${extra}` } : ctx;
       // >1 router → PARALLEL RACE (first to answer wins, losers aborted, names shown live).
       // 1 router → the proven sequential failover. Both share identity-scrub + tool-sanitize + health.
       const drive = routers.length > 1
