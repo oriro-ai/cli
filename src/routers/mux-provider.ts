@@ -127,13 +127,20 @@ export function registerOriroMux(
   opts: OriroMuxOptions = {},
 ): Model<"openai-completions"> | undefined {
   registerOpenAICompletions();
-  // Source routers from the user's selected pool (Step 6); fall back to the keyless floor
-  // when the pool is empty — the Mux never has zero routers.
-  const pooled = resolvePool();
-  const routers = opts.routers ?? (pooled.length > 0 ? pooled : KEYLESS_FLOOR);
-  const byId = new Map(routers.map((r) => [r.id, r]));
-  const mux = new RouterMux(routers.map((r) => r.id));
-  try { mux.load(loadMuxState(oriroDir())); } catch { /* fresh state if unreadable */ } // health survives between invocations
+
+  // LIVE POOL (2026-07-04): resolve the routers FRESH on every request so an in-REPL
+  // `/routers add|use` (or `oriro routers …`) takes effect on the very next prompt — no restart.
+  // Health (EWMA latency / cooldowns) persists across requests via the on-disk mux state, so
+  // re-resolving per request costs nothing but picks up pool edits. Falls back to the keyless
+  // floor when the pool is empty — the Mux never has zero routers.
+  function resolveNow(): { routers: KeylessRouter[]; byId: Map<string, KeylessRouter>; mux: RouterMux } {
+    const pooled = resolvePool();
+    const routers = opts.routers ?? (pooled.length > 0 ? pooled : KEYLESS_FLOOR);
+    const byId = new Map(routers.map((r) => [r.id, r]));
+    const mux = new RouterMux(routers.map((r) => r.id));
+    try { mux.load(loadMuxState(oriroDir())); } catch { /* fresh state if unreadable */ }
+    return { routers, byId, mux };
+  }
 
   registry.registerProvider(MUX_PROVIDER, {
     name: "ORIRO Free (keyless Mux)",
@@ -157,6 +164,7 @@ export function registerOriroMux(
     ],
     streamSimple: (_model, context, options) => {
       const out = createAssistantMessageEventStream();
+      const { byId, mux } = resolveNow(); // fresh pool every request (see resolveNow)
       // Harness-layer context: ORIRO identity + (if Scriber is on) the cross-session work history,
       // injected into the system prompt so recall works inline — not dependent on the model
       // choosing to call scribe_recall (weak free models often don't). Empty when Scriber is off.

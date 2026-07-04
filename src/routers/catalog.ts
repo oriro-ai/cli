@@ -392,9 +392,31 @@ export const ROUTER_CATALOG: readonly RouterEntry[] = [
     tier: "paid",
   }),
 
-  // ── ORIRO models — coming soon, greyed/"(free)", not selectable yet ──
-  C({ id: "oriro-gauss", displayName: "ORIRO-Gauss", baseUrl: "", comingSoon: true }),
-  C({ id: "oriro-avila", displayName: "ORIRO-Avila", baseUrl: "", comingSoon: true }),
+  // ── ORIRO's OWN models — LIVE, keyless, first-class racers (2026-07-04) ──
+  // Served through the same-origin oriro.ai worker proxy, which injects the serve key server-side
+  // so the CLI stays keyless (no bearer ever touches the client) — the endpoints answer at
+  // baseUrl + "/chat/completions" (race-{gauss,avila}.ts alias). ORIRO-Avila is V2.4 today
+  // (AVILA_SERVE_URL set); ORIRO-Gauss races on the live serve and auto-upgrades to V2.4 the
+  // moment GAUSS_SERVE_URL is flipped — no CLI change needed. Both are true GPU endpoints, so
+  // they only race when the user opts them into the pool (`oriro routers add oriro-gauss`).
+  C({
+    id: "oriro-gauss",
+    displayName: "ORIRO-Gauss",
+    baseUrl: "https://oriro.ai/api/race/gauss",
+    freeModels: ["gauss"],
+    obtainUrl: "https://oriro.ai",
+    keyless: true,
+    verified: true,
+  }),
+  C({
+    id: "oriro-avila",
+    displayName: "ORIRO-Avila",
+    baseUrl: "https://oriro.ai/api/race/avila",
+    freeModels: ["avila"],
+    obtainUrl: "https://oriro.ai",
+    keyless: true,
+    verified: true,
+  }),
 ];
 
 /** Selectable now (excludes coming-soon ORIRO models). */

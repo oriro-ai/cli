@@ -18,6 +18,7 @@ import { runTuiRepl } from "./repl-ui/tui-repl.js";
 import { setupVoiceInput } from "./voice/setup.js";
 import { scrubOutput } from "./identity/filter.js";
 import { phantomFileWarning } from "./repl-ui/verify-actions.js";
+import { isRouterSlash, handleRouterSlash } from "./repl-ui/slash-routers.js";
 import { dim, accent } from "./ui/theme.js";
 
 /** In-REPL help — real, not LLM-fabricated. */
@@ -76,6 +77,7 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       if (slash === "/help" || slash === "/?") { stdout.write(replHelp()); continue; }
       if (slash === "/skill" || slash === "/skills") { stdout.write(`  ${dim("326 skills bundled & active. Browse: oriro skills list --all")}\n`); continue; }
       if (slash === "/connector" || slash === "/connectors") { stdout.write(`  ${dim("59 MCP connectors. Add: oriro connectors setup · or oriro connectors add <slug>")}\n`); continue; }
+      if (isRouterSlash(slash)) { stdout.write((await handleRouterSlash(line)).join("\n") + "\n"); continue; }
 
       const english = await translateIncoming(line);
       noteUserInput(line);

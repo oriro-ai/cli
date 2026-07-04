@@ -20,6 +20,7 @@ import { noteUserInput } from "../scribe/scribe-pi.js";
 import { listen } from "../avatar/voice.js";
 import { scrubOutput } from "../identity/filter.js";
 import { phantomFileWarning } from "./verify-actions.js";
+import { isRouterSlash, handleRouterSlash } from "./slash-routers.js";
 
 const editorTheme: EditorTheme = {
   borderColor: (s) => dim(s),
@@ -115,6 +116,18 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
     if (slash === "/connector" || slash === "/connectors") {
       chat.addChild(new Text(dim("  59 MCP connectors. Add your own: `oriro connectors setup` · or `oriro connectors add <slug>`."), 0, 0));
       editor.setText(""); tui.requestRender();
+      return;
+    }
+    if (isRouterSlash(slash)) {
+      editor.setText("");
+      const pending = new Text(dim("  …"), 0, 0);
+      chat.addChild(pending);
+      tui.requestRender();
+      void (async () => {
+        const lines = await handleRouterSlash(text);
+        pending.setText(lines.join("\n"));
+        tui.requestRender();
+      })();
       return;
     }
     if (slash === "/voice") {
