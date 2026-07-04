@@ -17,6 +17,7 @@ import { registerHeadCommand } from "./commands/head.js";
 import { registerVoiceCommand } from "./commands/voice.js";
 import { registerAgentsCommand } from "./commands/agents.js";
 import { registerCompletionCommand } from "./commands/completion.js";
+import { registerConfigCommand } from "./commands/config.js";
 import { enableHelpOnError, didYouMean } from "./commands/help-on-error.js";
 import { DieError } from "./commands/ui.js";
 
@@ -53,6 +54,7 @@ registerAvatarCommand(program);
 registerHeadCommand(program);
 registerVoiceCommand(program);
 registerAgentsCommand(program);
+registerConfigCommand(program);
 registerCompletionCommand(program); // last: introspects the fully-built command tree
 enableHelpOnError(program); // self-teaching errors across the whole command tree
 

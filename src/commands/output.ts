@@ -2,6 +2,8 @@
 // `--query`, modelled on cli-microsoft365's --output + --query. Dependency-free (no jmespath): the query
 // supports the two cases that cover ~all real use — select a field (`--query id`) and filter by equality
 // (`--query keyless=true`), combinable (`--query keyless=true:id`). Commands build rows; this renders.
+import { configGet } from "../config/store.js";
+
 export type OutputFormat = "text" | "json" | "csv";
 
 export interface RenderOpts {
@@ -11,7 +13,8 @@ export interface RenderOpts {
 }
 
 function parseFormat(o?: string): OutputFormat {
-  const f = (o ?? "text").toLowerCase();
+  // Explicit --output wins; otherwise fall back to the user's `config set output …` default; else text.
+  const f = (o ?? configGet("output") ?? "text").toLowerCase();
   if (f === "json" || f === "csv" || f === "text") return f;
   throw new Error(`invalid --output '${o}'. Use: text | json | csv`);
 }
