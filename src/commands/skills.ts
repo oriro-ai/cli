@@ -7,6 +7,7 @@ import { resolve, join, basename, dirname } from "node:path";
 import type { Command } from "commander";
 import { loadOriroSkills, userSkillsDir } from "../skills/loader.js";
 import { info, heading, ok, die } from "./ui.js";
+import { renderList, isMachineOutput } from "./output.js";
 import { accent, dim } from "../ui/theme.js";
 
 export function registerSkillsCommand(program: Command): void {
@@ -16,8 +17,19 @@ export function registerSkillsCommand(program: Command): void {
     .command("list")
     .description("show CORE / TAIL skill counts (use --all to list names)")
     .option("-a, --all", "list every skill name")
-    .action(async (opts: { all?: boolean }) => {
+    .option("-o, --output <fmt>", "output format: text (default) | json | csv")
+    .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
+    .action(async (opts: { all?: boolean; output?: string; query?: string }) => {
       const s = await loadOriroSkills();
+      if (isMachineOutput(opts) || opts.query) {
+        const rows = s.all.map((sk) => ({
+          name: sk.name, tier: sk.disableModelInvocation ? "TAIL" : "CORE",
+        }));
+        process.stdout.write(renderList(rows, {
+          output: opts.output, query: opts.query, columns: ["name", "tier"],
+        }) + "\n");
+        return;
+      }
       heading("Skills");
       info(`${accent(String(s.all.length))} loaded · ${accent(String(s.core.length))} CORE (model-visible) · ${accent(String(s.tail.length))} TAIL (/name-only)`);
       if (opts.all) {

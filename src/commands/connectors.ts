@@ -11,6 +11,7 @@ import { buildServerConfig, vetServer, parsePairs } from "../connectors/setup.js
 import { saveCustomServer, readCustomServers, removeCustomServer } from "../connectors/custom.js";
 import { assertSafeUrl } from "../connectors/mcp-client.js";
 import { ok, info, heading, die } from "./ui.js";
+import { renderList, isMachineOutput } from "./output.js";
 import { accent, dim } from "../ui/theme.js";
 
 interface SetupOpts {
@@ -30,12 +31,25 @@ export function registerConnectorsCommand(program: Command): void {
   connectors
     .command("list [category]")
     .description("list the connector catalog (optionally filtered by category)")
-    .action((category?: string) => {
+    .option("-o, --output <fmt>", "output format: text (default) | json | csv")
+    .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
+    .action((category: string | undefined, opts: { output?: string; query?: string }) => {
       if (category && !connectorCategories().includes(category)) {
         die(`unknown category '${category}' — categories: ${connectorCategories().join(", ")}`);
       }
       const entries = listConnectors(category);
       const added = new Set(addedConnectors().map((c) => c.slug));
+      if (isMachineOutput(opts) || opts.query) {
+        const rows = entries.map((c) => ({
+          slug: c.slug, name: c.name, category: c.category,
+          addable: Boolean(c.mcpUrl), added: added.has(c.slug),
+        }));
+        process.stdout.write(renderList(rows, {
+          output: opts.output, query: opts.query,
+          columns: ["slug", "name", "category", "addable", "added"],
+        }) + "\n");
+        return;
+      }
       heading(category ? `Connectors · ${category}` : "Connectors");
       let addable = 0;
       for (const c of entries) {

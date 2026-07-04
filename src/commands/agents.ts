@@ -16,6 +16,7 @@ import { runAgent } from "../agents/run.js";
 import { addAgentFromSource } from "../agents/catalog.js";
 import { registeredRouters } from "../routers/router-pool.js";
 import { ok, info, heading, die } from "./ui.js";
+import { renderList, isMachineOutput } from "./output.js";
 import { accent, dim } from "../ui/theme.js";
 
 function nowIso(): string {
@@ -58,14 +59,31 @@ export function registerAgentsCommand(program: Command): void {
   agents
     .command("list")
     .description("list your saved agents")
-    .action(() => {
+    .option("-o, --output <fmt>", "output format: text (default) | json | csv")
+    .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
+    .action((opts: { output?: string; query?: string }) => {
       const all = listAgents();
+      const state = loadState();
+      if (isMachineOutput(opts) || opts.query) {
+        const rows = all.map((a) => ({
+          name: a.name,
+          brain: a.router ?? "pool",
+          schedule: a.schedule ?? "manual",
+          description: a.description ?? "",
+          lastRun: state[a.name]?.lastRunAt ? new Date(state[a.name]!.lastRunAt as number).toISOString() : "",
+          lastOk: state[a.name]?.lastOk ?? null,
+        }));
+        process.stdout.write(renderList(rows, {
+          output: opts.output, query: opts.query,
+          columns: ["name", "brain", "schedule", "lastRun", "lastOk"],
+        }) + "\n");
+        return;
+      }
       heading("Agents");
       if (!all.length) {
         info(`no agents yet — make one: ${accent('oriro agents make my-agent --task "…"')}`);
         return;
       }
-      const state = loadState();
       for (const a of all) {
         printAgent(a);
         const last = state[a.name]?.lastRunAt;
