@@ -6314,6 +6314,7 @@ var TOUR = [
   { title: "Free the context", cmd: "/compact   \xB7   /init", blurb: "summarize a long chat \xB7 seed project memory" },
   { title: "Use it in your editor", cmd: "oriro serve acp | mcp", blurb: "drive ORIRO from Zed/JetBrains, or as an MCP tool" },
   { title: "Your own on-device models", cmd: "oriro login <code>  \u2192  oriro models pull", blurb: "download Gauss + Avila V2.4, run them locally ($0, private)" },
+  { title: "Always-on control plane", cmd: "oriro gateway", blurb: "host your chat channels + scheduled agents in one resident process" },
   { title: "Speak & 100 languages", cmd: "/voice   \xB7   oriro language", blurb: "talk to it; work in your own language" }
 ];
 var FIRST_WIN = "make me a landing page for a coffee shop, then /prove it";
@@ -9150,6 +9151,247 @@ function registerServeCommand(program2, version2) {
   });
 }
 
+// src/channels/config.ts
+init_paths();
+import { readFileSync as readFileSync23, writeFileSync as writeFileSync23 } from "fs";
+import { join as join32 } from "path";
+function file5() {
+  return join32(oriroDir(), "channels.json");
+}
+function readChannels() {
+  try {
+    const v = JSON.parse(readFileSync23(file5(), "utf8"));
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+function saveChannel(cfg) {
+  const all = readChannels().filter((c) => c.kind !== cfg.kind);
+  all.push(cfg);
+  writeFileSync23(join32(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
+}
+function removeChannel(kind) {
+  writeFileSync23(join32(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
+}
+
+// src/channels/telegram.ts
+import { Bot } from "grammy";
+
+// src/channels/host.ts
+init_assemble();
+init_filter();
+init_scribe_pi();
+var OriroChannelHost = class {
+  session = null;
+  starting = null;
+  async ensure() {
+    if (this.session) return this.session;
+    if (!this.starting) {
+      this.starting = assembleOriroSession().then((a) => {
+        this.session = a.session;
+        return a.session;
+      });
+    }
+    return this.starting;
+  }
+  /** Dispatch one inbound message → ORIRO reply. Never throws — a channel must not crash on a turn. */
+  async dispatch(text) {
+    try {
+      const session = await this.ensure();
+      let out = "";
+      const unsub = session.subscribe((e) => {
+        if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") out += e.assistantMessageEvent.delta ?? "";
+      });
+      try {
+        noteUserInput(text);
+        await session.prompt(text);
+      } finally {
+        unsub();
+      }
+      return scrubOutput(out).trim() || "(ORIRO had no reply)";
+    } catch (e) {
+      return `ORIRO error: ${e instanceof Error ? e.message : String(e)}`;
+    }
+  }
+  dispose() {
+    this.session?.dispose();
+    this.session = null;
+    this.starting = null;
+  }
+};
+
+// src/channels/telegram.ts
+var TELEGRAM_TOKEN = /^\d{6,}:[A-Za-z0-9_-]{20,}$/;
+async function validateTelegramToken(token) {
+  if (!TELEGRAM_TOKEN.test(token)) throw new Error("malformed token (get one from @BotFather)");
+  const me = await new Bot(token).api.getMe();
+  return me.username;
+}
+async function startTelegram(token) {
+  if (!TELEGRAM_TOKEN.test(token)) throw new Error("invalid Telegram bot token (get one from @BotFather)");
+  const bot = new Bot(token);
+  const host = new OriroChannelHost();
+  bot.on("message:text", async (ctx) => {
+    const reply = await host.dispatch(ctx.message.text);
+    await ctx.reply(reply);
+  });
+  bot.catch((err) => {
+    process.stderr.write(`telegram error: ${err instanceof Error ? err.message : String(err)}
+`);
+  });
+  void bot.start({ drop_pending_updates: true });
+  return {
+    stop: async () => {
+      await bot.stop();
+      host.dispose();
+    }
+  };
+}
+
+// src/channels/discord.ts
+var DISCORD_TOKEN = /^[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{20,}$/;
+var MAX_DISCORD = 2e3;
+async function validateDiscordToken(token) {
+  if (!DISCORD_TOKEN.test(token)) throw new Error("malformed token (Discord Developer Portal \u2192 Bot \u2192 Reset Token)");
+  const res = await fetch("https://discord.com/api/v10/users/@me", { headers: { Authorization: `Bot ${token}` } });
+  if (!res.ok) throw new Error(`Discord rejected the token (HTTP ${res.status})`);
+  const me = await res.json();
+  return me.username ?? me.id ?? "unknown";
+}
+async function startDiscord(token) {
+  let djs;
+  try {
+    djs = await import("discord.js");
+  } catch {
+    throw new Error("Discord needs the discord.js peer \u2014 install it:\n  npm i discord.js");
+  }
+  const { Client: Client2, GatewayIntentBits, Events } = djs;
+  const host = new OriroChannelHost();
+  const client = new Client2({
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.MessageContent,
+      GatewayIntentBits.DirectMessages
+    ]
+  });
+  client.on(Events.MessageCreate, async (msg) => {
+    if (msg.author.bot || !msg.content) return;
+    const reply = await host.dispatch(msg.content);
+    try {
+      await msg.reply(reply.slice(0, MAX_DISCORD));
+    } catch (e) {
+      process.stderr.write(`discord reply failed: ${e instanceof Error ? e.message : String(e)}
+`);
+    }
+  });
+  client.on(Events.Error, (err) => process.stderr.write(`discord error: ${err.message}
+`));
+  await client.login(token);
+  return {
+    stop: async () => {
+      await client.destroy();
+      host.dispose();
+    }
+  };
+}
+
+// src/gateway/gateway.ts
+init_store2();
+init_run2();
+function planGateway() {
+  const channels = readChannels().filter((c) => c.enabled && (c.kind === "telegram" || c.kind === "discord") && !!c.token).map((c) => ({ kind: c.kind, token: c.token }));
+  const scheduledAgents = listAgents().filter((a) => a.schedule).map((a) => a.name);
+  return { channels, scheduledAgents };
+}
+async function startChannel(kind, token) {
+  return kind === "discord" ? startDiscord(token) : startTelegram(token);
+}
+var sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function runGateway(opts) {
+  const plan = planGateway();
+  const running = [];
+  for (const c of plan.channels) {
+    try {
+      running.push(await startChannel(c.kind, c.token));
+      opts.log(`\u25CF channel up: ${c.kind}`);
+    } catch (e) {
+      opts.log(`\u2717 channel ${c.kind} failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  opts.log(`\u2699 ${plan.scheduledAgents.length} scheduled agent${plan.scheduledAgents.length === 1 ? "" : "s"} armed`);
+  const everyMs = opts.intervalMs ?? 6e4;
+  let stop = false;
+  const stopAll = async () => {
+    stop = true;
+    for (const r of running) {
+      try {
+        await r.stop();
+      } catch {
+      }
+    }
+  };
+  const onSignal = () => {
+    opts.log("stopping\u2026");
+    void stopAll().finally(() => process.exit(0));
+  };
+  if (!opts.once) {
+    process.on("SIGINT", onSignal);
+    process.on("SIGTERM", onSignal);
+  }
+  const tick = async () => {
+    const state = loadState();
+    const now = Date.now();
+    for (const def of listAgents().filter((a) => isDue(a, state, now))) {
+      if (stop) break;
+      opts.log(`\u25B6 agent due: ${def.name}`);
+      const r = await runAgent2(def);
+      markRun(def.name, r.ok, Date.now());
+      opts.log(`  ${r.ok ? "\u2713" : "\u2717"} ${def.name}`);
+    }
+  };
+  if (opts.once) {
+    await tick();
+    await stopAll();
+    return;
+  }
+  while (!stop) {
+    await tick();
+    for (let waited = 0; waited < everyMs && !stop; waited += 500) await sleep(500);
+  }
+}
+
+// src/commands/gateway.ts
+init_theme();
+function registerGatewayCommand(program2) {
+  const gateway = program2.command("gateway").description("run ORIRO's control plane \u2014 all channels + scheduled agents in one resident process");
+  gateway.command("status").description("show what the gateway will run (channels + scheduled agents) \u2014 starts nothing").action(() => {
+    const plan = planGateway();
+    heading("ORIRO Gateway \u2014 plan");
+    if (!plan.channels.length) info(dim("channels: none configured \u2014 add with `oriro channels add telegram <token>`"));
+    else for (const c of plan.channels) ok(`channel: ${accent(c.kind)} (will host)`);
+    if (!plan.scheduledAgents.length) info(dim("agents: none scheduled \u2014 create with `oriro agents make <name> --task \u2026 --schedule \u2026`"));
+    else info(`agents scheduled: ${accent(plan.scheduledAgents.join(", "))}`);
+    info(dim("run it: `oriro gateway` (Ctrl-C to stop)"));
+  });
+  gateway.command("tick").description("fire every DUE scheduled agent once, then exit (wire to OS cron / Task Scheduler)").action(async () => {
+    heading("ORIRO Gateway \u2014 tick");
+    await runGateway({ once: true, log: (l) => process.stdout.write(`  ${dim(l)}
+`) });
+  });
+  gateway.action(async () => {
+    const plan = planGateway();
+    if (!plan.channels.length && !plan.scheduledAgents.length) {
+      die("nothing to run \u2014 configure a channel (`oriro channels add \u2026`) or schedule an agent (`oriro agents make \u2026 --schedule \u2026`) first.");
+    }
+    heading("ORIRO Gateway");
+    info(dim("one control plane: channels + scheduled agents. Ctrl-C to stop."));
+    await runGateway({ log: (l) => process.stdout.write(`  ${dim(l)}
+`) });
+  });
+}
+
 // src/commands/routers.ts
 init_router_pool();
 init_theme();
@@ -9241,7 +9483,7 @@ function registerRoutersCommand(program2) {
 }
 
 // src/commands/scribe.ts
-import { readFileSync as readFileSync24 } from "fs";
+import { readFileSync as readFileSync25 } from "fs";
 
 // src/scribe/index.ts
 init_capture();
@@ -9256,7 +9498,7 @@ init_wal();
 init_retrieval();
 
 // src/scribe/transcript.ts
-import { existsSync as existsSync22, readFileSync as readFileSync23 } from "fs";
+import { existsSync as existsSync22, readFileSync as readFileSync24 } from "fs";
 function parseHookStdin(raw) {
   try {
     const j = JSON.parse(raw);
@@ -9290,7 +9532,7 @@ function isHumanUser(e) {
 var FILE_KEYS = ["file_path", "path", "notebook_path", "filePath"];
 function lastTurnFromTranscript(path) {
   if (!existsSync22(path)) return null;
-  const raw = readFileSync23(path, "utf8");
+  const raw = readFileSync24(path, "utf8");
   const entries = [];
   for (const line of raw.split("\n")) {
     if (!line.trim()) continue;
@@ -9352,7 +9594,7 @@ function lastTurnFromTranscript(path) {
 init_theme();
 function readStdin() {
   try {
-    return readFileSync24(0, "utf8");
+    return readFileSync25(0, "utf8");
   } catch {
     return "";
   }
@@ -9664,152 +9906,6 @@ function registerConnectorsCommand(program2) {
     if (removeCustomServer(name)) ok(`forgot ${accent(name)}`);
     else info(`'${name}' is not a custom server \u2014 nothing to forget`);
   });
-}
-
-// src/channels/config.ts
-init_paths();
-import { readFileSync as readFileSync25, writeFileSync as writeFileSync23 } from "fs";
-import { join as join32 } from "path";
-function file5() {
-  return join32(oriroDir(), "channels.json");
-}
-function readChannels() {
-  try {
-    const v = JSON.parse(readFileSync25(file5(), "utf8"));
-    return Array.isArray(v) ? v : [];
-  } catch {
-    return [];
-  }
-}
-function saveChannel(cfg) {
-  const all = readChannels().filter((c) => c.kind !== cfg.kind);
-  all.push(cfg);
-  writeFileSync23(join32(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
-}
-function removeChannel(kind) {
-  writeFileSync23(join32(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
-}
-
-// src/channels/telegram.ts
-import { Bot } from "grammy";
-
-// src/channels/host.ts
-init_assemble();
-init_filter();
-init_scribe_pi();
-var OriroChannelHost = class {
-  session = null;
-  starting = null;
-  async ensure() {
-    if (this.session) return this.session;
-    if (!this.starting) {
-      this.starting = assembleOriroSession().then((a) => {
-        this.session = a.session;
-        return a.session;
-      });
-    }
-    return this.starting;
-  }
-  /** Dispatch one inbound message → ORIRO reply. Never throws — a channel must not crash on a turn. */
-  async dispatch(text) {
-    try {
-      const session = await this.ensure();
-      let out = "";
-      const unsub = session.subscribe((e) => {
-        if (e.type === "message_update" && e.assistantMessageEvent?.type === "text_delta") out += e.assistantMessageEvent.delta ?? "";
-      });
-      try {
-        noteUserInput(text);
-        await session.prompt(text);
-      } finally {
-        unsub();
-      }
-      return scrubOutput(out).trim() || "(ORIRO had no reply)";
-    } catch (e) {
-      return `ORIRO error: ${e instanceof Error ? e.message : String(e)}`;
-    }
-  }
-  dispose() {
-    this.session?.dispose();
-    this.session = null;
-    this.starting = null;
-  }
-};
-
-// src/channels/telegram.ts
-var TELEGRAM_TOKEN = /^\d{6,}:[A-Za-z0-9_-]{20,}$/;
-async function validateTelegramToken(token) {
-  if (!TELEGRAM_TOKEN.test(token)) throw new Error("malformed token (get one from @BotFather)");
-  const me = await new Bot(token).api.getMe();
-  return me.username;
-}
-async function startTelegram(token) {
-  if (!TELEGRAM_TOKEN.test(token)) throw new Error("invalid Telegram bot token (get one from @BotFather)");
-  const bot = new Bot(token);
-  const host = new OriroChannelHost();
-  bot.on("message:text", async (ctx) => {
-    const reply = await host.dispatch(ctx.message.text);
-    await ctx.reply(reply);
-  });
-  bot.catch((err) => {
-    process.stderr.write(`telegram error: ${err instanceof Error ? err.message : String(err)}
-`);
-  });
-  void bot.start({ drop_pending_updates: true });
-  return {
-    stop: async () => {
-      await bot.stop();
-      host.dispose();
-    }
-  };
-}
-
-// src/channels/discord.ts
-var DISCORD_TOKEN = /^[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{20,}$/;
-var MAX_DISCORD = 2e3;
-async function validateDiscordToken(token) {
-  if (!DISCORD_TOKEN.test(token)) throw new Error("malformed token (Discord Developer Portal \u2192 Bot \u2192 Reset Token)");
-  const res = await fetch("https://discord.com/api/v10/users/@me", { headers: { Authorization: `Bot ${token}` } });
-  if (!res.ok) throw new Error(`Discord rejected the token (HTTP ${res.status})`);
-  const me = await res.json();
-  return me.username ?? me.id ?? "unknown";
-}
-async function startDiscord(token) {
-  let djs;
-  try {
-    djs = await import("discord.js");
-  } catch {
-    throw new Error("Discord needs the discord.js peer \u2014 install it:\n  npm i discord.js");
-  }
-  const { Client: Client2, GatewayIntentBits, Events } = djs;
-  const host = new OriroChannelHost();
-  const client = new Client2({
-    intents: [
-      GatewayIntentBits.Guilds,
-      GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.MessageContent,
-      GatewayIntentBits.DirectMessages
-    ]
-  });
-  client.on(Events.MessageCreate, async (msg) => {
-    if (msg.author.bot || !msg.content) return;
-    const reply = await host.dispatch(msg.content);
-    try {
-      await msg.reply(reply.slice(0, MAX_DISCORD));
-    } catch (e) {
-      process.stderr.write(`discord reply failed: ${e instanceof Error ? e.message : String(e)}
-`);
-    }
-  });
-  client.on(Events.Error, (err) => process.stderr.write(`discord error: ${err.message}
-`));
-  await client.login(token);
-  return {
-    stop: async () => {
-      await client.destroy();
-      host.dispose();
-    }
-  };
 }
 
 // src/channels/whatsapp.ts
@@ -10317,7 +10413,7 @@ ${res.output}
   else info(`${def.name} produced no output${res.output ? "" : " (router unavailable?)"}`);
   return res.ok;
 }
-var sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+var sleep2 = (ms) => new Promise((r) => setTimeout(r, ms));
 function registerAgentsCommand(program2) {
   const agents = program2.command("agents").description("your workflow-automation agents \u2014 run on a router, full tools behind Guardian").action(() => {
     heading("Agents");
@@ -10446,7 +10542,7 @@ function registerAgentsCommand(program2) {
         if (stop) break;
         await runAndReport(def);
       }
-      for (let waited = 0; waited < everyMs && !stop; waited += 500) await sleep(500);
+      for (let waited = 0; waited < everyMs && !stop; waited += 500) await sleep2(500);
     }
   });
 }
@@ -11726,6 +11822,7 @@ program.name("oriro").description("ORIRO \u2014 a free, on-device-friendly termi
 registerSessionsCommand(program);
 registerProjectCommands(program);
 registerServeCommand(program, version);
+registerGatewayCommand(program);
 registerRoutersCommand(program);
 registerScribeCommand(program);
 registerConnectorsCommand(program);

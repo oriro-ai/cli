@@ -23,6 +23,7 @@ const TOUR: TourItem[] = [
   { title: "Free the context", cmd: "/compact   ·   /init", blurb: "summarize a long chat · seed project memory" },
   { title: "Use it in your editor", cmd: "oriro serve acp | mcp", blurb: "drive ORIRO from Zed/JetBrains, or as an MCP tool" },
   { title: "Your own on-device models", cmd: "oriro login <code>  →  oriro models pull", blurb: "download Gauss + Avila V2.4, run them locally ($0, private)" },
+  { title: "Always-on control plane", cmd: "oriro gateway", blurb: "host your chat channels + scheduled agents in one resident process" },
   { title: "Speak & 100 languages", cmd: "/voice   ·   oriro language", blurb: "talk to it; work in your own language" },
 ];
 
@@ -49,5 +50,5 @@ export function capabilityTourLines(): string[] {
 export const TOUR_MUST_INCLUDE = [
   "/plan", "/approve", "/agents", "/imagine", "/prove", "oriro head",
   "oriro -c", "/sessions", "/undo", "/compact", "/init", "oriro serve",
-  "oriro models pull", "/voice", "/help",
+  "oriro models pull", "oriro gateway", "/voice", "/help",
 ];

@@ -10,6 +10,7 @@ import { runHeadless, isOutputFormatMode } from "./headless.js";
 import { registerSessionsCommand } from "./commands/sessions.js";
 import { registerProjectCommands } from "./commands/project.js";
 import { registerServeCommand } from "./commands/serve.js";
+import { registerGatewayCommand } from "./commands/gateway.js";
 import type { ResumeOpts } from "./sessions/store.js";
 import { registerRoutersCommand } from "./commands/routers.js";
 import { registerScribeCommand } from "./commands/scribe.js";
@@ -77,6 +78,7 @@ program
 registerSessionsCommand(program);
 registerProjectCommands(program); // V0.3.7 — oriro init / oriro compact (shell twins of /init · /compact)
 registerServeCommand(program, version); // V0.3.8 — oriro serve acp|mcp (expose ORIRO to editors + other agents)
+registerGatewayCommand(program); // V0.6 Phase 2a — oriro gateway: channels + scheduled agents in one control plane
 registerRoutersCommand(program);
 registerScribeCommand(program);
 registerConnectorsCommand(program);
