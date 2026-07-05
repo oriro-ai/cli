@@ -14,6 +14,7 @@ import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { resolveSessionManager, type ResumeOpts } from "../sessions/store.js";
 import { registerOriroMux } from "../routers/mux-provider.js";
 import { registerGuardian } from "../guardian/pi-gate.js";
+import { registerPostureGate } from "../repl-ui/posture-gate.js";
 import { registerHead } from "../head/pi-tool.js";
 import { registerScribe, attachScribe } from "../scribe/scribe-pi.js";
 import { registerOrchestrator } from "../orchestrate.js";
@@ -55,7 +56,7 @@ export async function assembleOriroSession(opts: { cwd?: string; routers?: Keyle
     settingsManager,
     additionalSkillPaths: skillRoots(), // bundled library + the user's own ~/.oriro/skills
     extensionFactories: [
-      registerGuardian, registerHead, registerScribe, registerOrchestrator, registerAgentRunner,
+      registerGuardian, registerPostureGate, registerHead, registerScribe, registerOrchestrator, registerAgentRunner,
       (pi) => registerPreparedConnectors(pi, preparedConnectors), // MCP connectors → agent tools
     ],
   });

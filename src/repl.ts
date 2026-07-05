@@ -26,6 +26,8 @@ import { isInitSlash, handleInit } from "./repl-ui/slash-init.js";
 import { isSessionsSlash, handleSessions, isUndoSlash, handleUndo } from "./repl-ui/slash-sessions.js";
 import type { ResumeOpts } from "./sessions/store.js";
 import { extractArtifacts, setArtifacts } from "./repl-ui/artifacts.js";
+import { parsePlanSlash, enterPlan, approvePlan, rejectPlan, notePlanOutput, PLAN_PRIMER } from "./repl-ui/plan-mode.js";
+import { getMode, setMode } from "./repl-ui/permission.js";
 import { bumpTurns, toggleTrace } from "./repl-ui/repl-state.js";
 import { dim, accent } from "./ui/theme.js";
 
@@ -39,6 +41,7 @@ function replHelp(): string {
     `  ${dim("Models & routers")}   ${accent("/routers")} list·add·rotate the racing pool   ${accent("/model")} <id…> switch\n` +
     `  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} activity   ${accent("/compact")} free context   ${accent("/undo")} rewind a turn\n` +
     `  ${dim("Continuity")}         ${accent("/sessions")} list saved sessions   ${dim("resume:")} ${accent("oriro -c")} ${dim("or")} ${accent("oriro --resume <id>")}\n` +
+    `  ${dim("Plan loop")}          ${accent("/plan")} <task> read-only plan   ${accent("/approve")} execute it   ${accent("/reject")} discard\n` +
     `  ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one\n` +
     `  ${dim("Project")}            ${accent("/init")} write a starter AGENTS.md ORIRO reads each session\n` +
     `  ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn\n` +
@@ -102,8 +105,35 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       if (isUndoSlash(slash)) { stdout.write((await handleUndo(session)).join("\n") + "\n"); continue; }
       if (isArtifactSlash(slash)) { stdout.write(handleArtifactSlash(line).join("\n") + "\n"); continue; }
 
+      // V0.3.5 Plan mode — the same plan → approve → execute loop as the TUI; the posture gate
+      // keeps plan-mode turns read-only here too (deterministic block, no UI needed).
+      const plan = parsePlanSlash(line);
+      let internalPrompt: string | undefined; // fixed English prompt (skips translation)
+      let turnText = line;
+      if (plan) {
+        if (plan.cmd === "reject") {
+          stdout.write(`  ${dim(rejectPlan() ? "▢ plan discarded — refine the request (still in Plan) or /approve a new plan later" : "▢ nothing to reject — no plan is waiting")}\n`);
+          continue;
+        }
+        if (plan.cmd === "approve") {
+          const r = approvePlan();
+          if (!r.ok) { stdout.write(`  ${dim(`▢ ${r.reason}`)}\n`); continue; }
+          setMode(r.restoreMode); // leave read-only BEFORE executing
+          internalPrompt = r.prompt;
+        } else {
+          enterPlan(getMode());
+          setMode("plan");
+          if (!plan.task) {
+            stdout.write(`  ${dim("▢ Plan mode — describe the task and I'll plan it (read-only). Then")} ${accent("/approve")} ${dim("to execute ·")} ${accent("/reject")} ${dim("to discard.")}\n`);
+            continue;
+          }
+          turnText = plan.task;
+        }
+      }
+
       bumpTurns();
-      const english = await translateIncoming(line);
+      let english = internalPrompt ?? (await translateIncoming(turnText));
+      if (getMode() === "plan") english = `${PLAN_PRIMER}\n\n${english}`; // every plan-mode turn plans, read-only
       noteUserInput(line);
       let out = "";
       const unsub = session.subscribe(
@@ -124,6 +154,9 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       const arts = extractArtifacts(shown); setArtifacts(arts); // capture code/SVG for /review + /save
       const hint = arts.length ? `  ${dim(`⎘ ${arts.length} artifact${arts.length === 1 ? "" : "s"} — /review to save`)}\n` : "";
       stdout.write(`${shown}${phantomFileWarning(shown)}\n${hint}\n`);
+      if (getMode() === "plan" && notePlanOutput(shown)) {
+        stdout.write(`  ${dim("▢ plan ready —")} ${accent("/approve")} ${dim("to execute ·")} ${accent("/reject")} ${dim("to discard")}\n`);
+      }
     }
   } finally {
     process.removeListener("SIGINT", onSigint);

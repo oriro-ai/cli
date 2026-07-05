@@ -13,7 +13,9 @@
 import { ProcessTerminal, TUI, Editor, Text, Container, type EditorTheme } from "@earendil-works/pi-tui";
 import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { accent, dim } from "../ui/theme.js";
-import { cycleMode, getMode, MODE_META, MODES, getThinking, toggleThinking, THINKING_PRIMER } from "./permission.js";
+import { cycleMode, getMode, setMode, MODE_META, MODES, getThinking, toggleThinking, THINKING_PRIMER } from "./permission.js";
+import { parsePlanSlash, enterPlan, approvePlan, rejectPlan, notePlanOutput, PLAN_PRIMER } from "./plan-mode.js";
+import { armPostureGate } from "./posture-gate.js";
 import { getTerminalLanguage } from "../language/index.js";
 import { translateIncoming, translateOutgoing } from "../language/gateway.js";
 import { noteUserInput } from "../scribe/scribe-pi.js";
@@ -54,6 +56,7 @@ function footerText(): string {
 }
 
 export async function runTuiRepl(session: AgentSession): Promise<void> {
+  armPostureGate(); // interactive TUI → posture "ask" decisions are enforced (readline/CI never arm)
   const isEnglish = getTerminalLanguage().code.toLowerCase().startsWith("en");
   const term = new ProcessTerminal();
   const tui = new TUI(term, true);
@@ -80,7 +83,8 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
   // the lowercase Alt+t (\x1bt) as an alias so it fires on terminals that don't uppercase.
   const removeListener = tui.addInputListener((data) => {
     if (data === "\x1b[Z") {
-      cycleMode();
+      const before = getMode();
+      if (cycleMode() === "plan") enterPlan(before); // remember the posture to restore on /approve
       refreshFooter();
       return { consume: true };
     }
@@ -117,6 +121,7 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
         `  ${accent("/routers")} pool add·rotate   ${accent("/model")} <id…> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity   ${accent("/compact")} free context`,
         `  ${accent("/review")} artifacts   ${accent("/save")} <n> [path]   ${accent("/init")} AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
         `  ${accent("/sessions")} list saved   ${accent("/undo")} rewind a turn   ${dim("resume:")} ${accent("oriro -c")} / ${accent("oriro --resume <id>")}`,
+        `  ${accent("/plan")} <task> plan read-only   ${accent("/approve")} execute it   ${accent("/reject")} discard`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`,
       ].join("\n");
       chat.addChild(new Text(help, 0, 0));
@@ -191,6 +196,41 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       })();
       return;
     }
+    // V0.3.5 Plan mode — /plan [task] · /approve · /reject (plan → approve → execute).
+    const plan = parsePlanSlash(text);
+    let internalPrompt: string | undefined; // fixed English prompt (skips translation)
+    let turnText = text;
+    if (plan) {
+      if (plan.cmd === "reject") {
+        const had = rejectPlan();
+        chat.addChild(new Text(dim(had ? "  ▢ plan discarded — refine the request (still in Plan) or Shift+Tab out" : "  ▢ nothing to reject — no plan is waiting"), 0, 0));
+        editor.setText(""); tui.requestRender();
+        return;
+      }
+      if (plan.cmd === "approve") {
+        const r = approvePlan();
+        if (!r.ok) {
+          chat.addChild(new Text(dim(`  ▢ ${r.reason}`), 0, 0));
+          editor.setText(""); tui.requestRender();
+          return;
+        }
+        setMode(r.restoreMode); // leave read-only BEFORE executing
+        refreshFooter();
+        internalPrompt = r.prompt;
+      } else {
+        // /plan — enter the posture; with a task, plan it this turn; without, explain the loop.
+        enterPlan(getMode());
+        setMode("plan");
+        refreshFooter();
+        if (!plan.task) {
+          chat.addChild(new Text(dim("  ▢ Plan mode — describe the task and I'll plan it (read-only). Then ") + accent("/approve") + dim(" to execute · ") + accent("/reject") + dim(" to discard."), 0, 0));
+          editor.setText(""); tui.requestRender();
+          return;
+        }
+        turnText = plan.task;
+      }
+    }
+
     if (slash === "/voice") {
       // Speak a turn: record the mic + transcribe on-device, then drop the text into the editor to review + send.
       editor.setText("");
@@ -233,7 +273,8 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
     busy = true;
     bumpTurns(); // /usage turn counter
     void (async () => {
-      let english = await translateIncoming(text);
+      let english = internalPrompt ?? (await translateIncoming(turnText));
+      if (getMode() === "plan") english = `${PLAN_PRIMER}\n\n${english}`; // every plan-mode turn plans, read-only
       if (getThinking()) english = `${THINKING_PRIMER}\n\n${english}`; // plan-first when thinking is on
       noteUserInput(text);
       let out = "";
@@ -271,6 +312,9 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       setArtifacts(arts);
       const hint = arts.length ? dim(`\n  ⎘ ${arts.length} artifact${arts.length === 1 ? "" : "s"} — /review to save`) : "";
       streaming.setText((finalText || dim("(no response)")) + (warn ? dim(warn) : "") + hint);
+      if (getMode() === "plan" && notePlanOutput(finalText)) {
+        chat.addChild(new Text(dim("  ▢ plan ready — ") + accent("/approve") + dim(" to execute · ") + accent("/reject") + dim(" to discard"), 0, 0));
+      }
       tui.requestRender();
       busy = false;
     })();
