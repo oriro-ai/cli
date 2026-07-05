@@ -36,11 +36,15 @@ export type StreamFactory = (
 ) => AsyncIterable<StreamEvent>;
 
 export const realStreamFactory: StreamFactory = (router, context, options, signal) =>
-  piStreamSimple(routerModel(router), context, {
-    ...(options ?? {}),
-    apiKey: router.apiKey,
-    signal,
-  } as SimpleStreamOptions) as unknown as AsyncIterable<StreamEvent>;
+  // A router with a custom transport (e.g. Ornith's keyless proxy) streams itself; others go through
+  // pi's openai-completions HTTP. The custom streamer receives the abort signal so it drops on a loss.
+  (router.stream
+    ? router.stream(context, options, signal)
+    : piStreamSimple(routerModel(router), context, {
+        ...(options ?? {}),
+        apiKey: router.apiKey,
+        signal,
+      } as SimpleStreamOptions)) as unknown as AsyncIterable<StreamEvent>;
 
 export interface RaceOpts {
   width?: number;

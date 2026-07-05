@@ -1966,6 +1966,145 @@ var init_router_pool = __esm({
   }
 });
 
+// src/routers/ornith-stream.ts
+function ornithUrl() {
+  const base = process.env.ORIRO_API_BASE ?? "https://oriro.ai";
+  return `${base.replace(/\/+$/, "")}/api/race/ornith`;
+}
+function flattenContent(content) {
+  if (typeof content === "string") return content;
+  return content.map((b) => b.type === "text" ? b.text : "").join("").trim();
+}
+function toOrnithMessages(context) {
+  const out = [];
+  if (context.systemPrompt) out.push({ role: "system", content: context.systemPrompt });
+  for (const m of context.messages) {
+    const role = m.role === "assistant" ? "assistant" : "user";
+    out.push({ role, content: flattenContent(m.content) });
+  }
+  return out.filter((m) => m.content.length > 0);
+}
+function stripThinkingPreamble(text) {
+  const t = text.replace(/^\s+/, "");
+  if (!/^thinking process:/i.test(t)) return text.trim();
+  const dbl = t.indexOf("\n\n");
+  if (dbl >= 0) {
+    const after = t.slice(dbl + 2).trim();
+    if (after) return after;
+  }
+  const nl = t.indexOf("\n");
+  if (nl >= 0) {
+    const after = t.slice(nl + 1).trim();
+    if (after) return after;
+  }
+  return t.replace(/^thinking process:\s*/i, "").trim();
+}
+function parseSseData(line) {
+  const s = line.trim();
+  if (!s.startsWith("data:")) return null;
+  const payload = s.slice(5).trim();
+  if (payload === "[DONE]") return "done";
+  try {
+    const obj = JSON.parse(payload);
+    if (obj?.object === "error" || obj?.error) {
+      const code = typeof obj.error === "object" ? obj.error?.code : obj.error;
+      return { error: String(code ?? "error") };
+    }
+    const content = obj?.choices?.[0]?.delta?.content;
+    return typeof content === "string" ? { content } : null;
+  } catch {
+    return null;
+  }
+}
+function ornithMessage(text, stopReason, errorMessage) {
+  return {
+    role: "assistant",
+    content: [{ type: "text", text }],
+    api: "openai-completions",
+    provider: "ornith",
+    model: "ornith",
+    usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } },
+    stopReason,
+    ...errorMessage ? { errorMessage } : {},
+    timestamp: Date.now()
+  };
+}
+async function* ornithStream(context, options, signal) {
+  const fail2 = (m) => ({ type: "error", reason: "error", error: ornithMessage("", "error", m) });
+  const abortSignal = signal ?? options?.signal;
+  let res;
+  try {
+    res = await fetch(ornithUrl(), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ messages: toOrnithMessages(context) }),
+      ...abortSignal ? { signal: abortSignal } : {}
+    });
+  } catch (e) {
+    yield fail2(`ornith unreachable: ${e instanceof Error ? e.message : String(e)}`);
+    return;
+  }
+  const ct = res.headers.get("content-type") ?? "";
+  if (!res.ok || !ct.includes("text/event-stream") || !res.body) {
+    yield fail2(`ornith HTTP ${res.status}`);
+    return;
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let full = "";
+  let inStreamError = null;
+  try {
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      let stop = false;
+      for (const line of lines) {
+        const p = parseSseData(line);
+        if (p === "done") {
+          stop = true;
+          break;
+        }
+        if (p && "error" in p) {
+          inStreamError = p.error;
+          stop = true;
+          break;
+        }
+        if (p && "content" in p) full += p.content;
+      }
+      if (stop) break;
+    }
+  } catch (e) {
+    if (abortSignal?.aborted) {
+      yield fail2("aborted");
+      return;
+    }
+    yield fail2(`ornith stream error: ${e instanceof Error ? e.message : String(e)}`);
+    return;
+  } finally {
+    try {
+      reader.releaseLock();
+    } catch {
+    }
+  }
+  const answer = stripThinkingPreamble(full);
+  if (!answer) {
+    yield fail2(inStreamError ?? "ornith returned no answer");
+    return;
+  }
+  const msg = ornithMessage(answer, "stop");
+  yield { type: "text_delta", contentIndex: 0, delta: answer, partial: msg };
+  yield { type: "done", reason: "stop", message: msg };
+}
+var init_ornith_stream = __esm({
+  "src/routers/ornith-stream.ts"() {
+    "use strict";
+  }
+});
+
 // src/routers/floor.ts
 function routerModel(r) {
   return {
@@ -1985,6 +2124,7 @@ var KEYLESS_FLOOR;
 var init_floor = __esm({
   "src/routers/floor.ts"() {
     "use strict";
+    init_ornith_stream();
     KEYLESS_FLOOR = [
       {
         id: "pollinations",
@@ -1999,6 +2139,16 @@ var init_floor = __esm({
         baseUrl: "http://localhost:11434/v1",
         model: "llama3.2",
         apiKey: "ollama"
+      },
+      {
+        // Ornith 1.0 (deepreinforce-ai, MIT) — always-on free racer, keyless via ORIRO's own proxy
+        // (POST /api/race/ornith; HF token server-side). Custom streamer; fails soft if the proxy 503s.
+        id: "ornith",
+        name: "Ornith 1.0",
+        baseUrl: "https://oriro.ai/api/race/ornith",
+        model: "ornith",
+        apiKey: "oriro-keyless",
+        stream: ornithStream
       }
     ];
   }
@@ -3123,11 +3273,15 @@ var init_race = __esm({
     init_mux_helpers();
     init_race_status();
     DEFAULT_RACE_WIDTH = 3;
-    realStreamFactory = (router, context, options, signal) => piStreamSimple(routerModel(router), context, {
-      ...options ?? {},
-      apiKey: router.apiKey,
-      signal
-    });
+    realStreamFactory = (router, context, options, signal) => (
+      // A router with a custom transport (e.g. Ornith's keyless proxy) streams itself; others go through
+      // pi's openai-completions HTTP. The custom streamer receives the abort signal so it drops on a loss.
+      router.stream ? router.stream(context, options, signal) : piStreamSimple(routerModel(router), context, {
+        ...options ?? {},
+        apiKey: router.apiKey,
+        signal
+      })
+    );
   }
 });
 
@@ -3143,7 +3297,7 @@ async function driveMux(out, mux, byId, context, options) {
     let committed = false;
     let lastPartial;
     try {
-      const inner = piStreamSimple2(routerModel(router), context, {
+      const inner = router.stream ? router.stream(context, options) : piStreamSimple2(routerModel(router), context, {
         ...options ?? {},
         apiKey: router.apiKey
       });

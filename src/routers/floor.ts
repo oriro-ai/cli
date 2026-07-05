@@ -1,7 +1,16 @@
 // ORIRO Step 0 — the KEYLESS FLOOR. Providers that never need a paid key, so the CLI
 // always has a brain. The Mux fails over across these; Ollama is the on-device last
 // resort ($0, fully offline). Built fresh on Pi (no OpenClaw); openai-completions shape.
-import type { Model } from "@earendil-works/pi-ai";
+import type { Model, AssistantMessageEvent, Context, SimpleStreamOptions } from "@earendil-works/pi-ai";
+import { ornithStream } from "./ornith-stream.js";
+
+/** A router whose transport isn't the standard {baseUrl}/chat/completions shape provides its OWN
+ *  streamer (e.g. Ornith's keyless proxy). The race/failover loops use this in place of pi's HTTP. */
+export type RouterStream = (
+  context: Context,
+  options: SimpleStreamOptions | undefined,
+  signal?: AbortSignal,
+) => AsyncIterable<AssistantMessageEvent>;
 
 export interface KeylessRouter {
   id: string;
@@ -9,6 +18,7 @@ export interface KeylessRouter {
   baseUrl: string;
   model: string;
   apiKey: string; // sentinel — keyless endpoints ignore it; never a paid key
+  stream?: RouterStream; // present → custom transport (bypasses openai-completions); e.g. Ornith proxy
 }
 
 // The default keyless floor. Order = preferred-first before any latency is learned.
@@ -26,6 +36,16 @@ export const KEYLESS_FLOOR: KeylessRouter[] = [
     baseUrl: "http://localhost:11434/v1",
     model: "llama3.2",
     apiKey: "ollama",
+  },
+  {
+    // Ornith 1.0 (deepreinforce-ai, MIT) — always-on free racer, keyless via ORIRO's own proxy
+    // (POST /api/race/ornith; HF token server-side). Custom streamer; fails soft if the proxy 503s.
+    id: "ornith",
+    name: "Ornith 1.0",
+    baseUrl: "https://oriro.ai/api/race/ornith",
+    model: "ornith",
+    apiKey: "oriro-keyless",
+    stream: ornithStream,
   },
 ];
 

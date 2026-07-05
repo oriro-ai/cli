@@ -42,10 +42,13 @@ async function driveMux(
     let committed = false;
     let lastPartial: AssistantMessage | undefined;
     try {
-      const inner = piStreamSimple(routerModel(router), context, {
-        ...(options ?? {}),
-        apiKey: router.apiKey,
-      } as SimpleStreamOptions);
+      // Custom-transport routers (e.g. Ornith's keyless proxy) stream themselves; others via pi's HTTP.
+      const inner = router.stream
+        ? router.stream(context, options)
+        : piStreamSimple(routerModel(router), context, {
+            ...(options ?? {}),
+            apiKey: router.apiKey,
+          } as SimpleStreamOptions);
       let failedBeforeContent = false;
       for await (const ev of inner) {
         if (ev.type === "error") {
