@@ -192,10 +192,10 @@ function rmVerdict(stmt) {
   if (noPreserve) return block("fs-destruction", "Recursive force-delete with --no-preserve-root");
   const targets = w.slice(1).filter((x) => !x.startsWith("-")).map(classifyRmTarget);
   if (targets.includes("danger")) return block("fs-destruction", "Recursive force-delete of root/home/cwd/system path");
-  if (targets.includes("system-sub")) return ask2("fs-destruction", "Recursive force-delete inside a system directory");
+  if (targets.includes("system-sub")) return ask("fs-destruction", "Recursive force-delete inside a system directory");
   return null;
 }
-var block, ask2, cmdOf, norm, anyMatch, stripQuotes, SYS_DIR, DISK, FS_DESTRUCTION, HOST_DISRUPT, FETCH, SHELL, REMOTE_EXEC, REVERSE_SHELL, SECRET_PATHS, NET_SINK, ENV_EXFIL, ENV_VAR_IN_BODY, PERSISTENCE, GUARDIAN_TAMPER, TAMPER, MALWARE, DEFAULT_RULES;
+var block, ask, cmdOf, norm, anyMatch, stripQuotes, SYS_DIR, DISK, FS_DESTRUCTION, HOST_DISRUPT, FETCH, SHELL, REMOTE_EXEC, REVERSE_SHELL, SECRET_PATHS, NET_SINK, ENV_EXFIL, ENV_VAR_IN_BODY, PERSISTENCE, GUARDIAN_TAMPER, TAMPER, MALWARE, DEFAULT_RULES;
 var init_rules = __esm({
   "src/guardian/rules.ts"() {
     "use strict";
@@ -206,7 +206,7 @@ var init_rules = __esm({
       rule,
       reason
     });
-    ask2 = (rule, reason, severity = "warning") => ({
+    ask = (rule, reason, severity = "warning") => ({
       decision: "ask",
       severity,
       rule,
@@ -370,7 +370,7 @@ var init_rules = __esm({
         match: (c) => {
           const cmd = norm(cmdOf(c));
           if (/>>?[^\n]*\.ssh[\\/]authorized_keys/i.test(cmd)) return block("persistence", "Implanting an SSH key (backdoor)");
-          return anyMatch(PERSISTENCE, cmd) ? ask2("persistence", "Installing a persistent foothold (cron/startup/service)") : null;
+          return anyMatch(PERSISTENCE, cmd) ? ask("persistence", "Installing a persistent foothold (cron/startup/service)") : null;
         }
       },
       {
@@ -385,7 +385,7 @@ var init_rules = __esm({
       {
         id: "security-tamper",
         description: "Flag disabling firewall/Defender or wiping history.",
-        match: (c) => anyMatch(TAMPER, norm(cmdOf(c))) ? ask2("security-tamper", "Disabling security controls or covering tracks") : null
+        match: (c) => anyMatch(TAMPER, norm(cmdOf(c))) ? ask("security-tamper", "Disabling security controls or covering tracks") : null
       },
       {
         id: "malware-signature",
@@ -409,7 +409,7 @@ ${c.command ?? ""}`);
           const hit = c.paths.find(
             (p) => SECRET_PATHS.test(p) || /[\\/]\.ssh[\\/]/i.test(p) || /[\\/](etc|boot|sys|windows[\\/]system32)[\\/]/i.test(p)
           );
-          return hit ? ask2("sensitive-path-write", `Writing to a sensitive location: ${hit}`) : null;
+          return hit ? ask("sensitive-path-write", `Writing to a sensitive location: ${hit}`) : null;
         }
       }
     ];
@@ -486,23 +486,23 @@ var init_policy = __esm({
 });
 
 // src/guardian/config.ts
-import { join as join3 } from "path";
-import { readFileSync as readFileSync2, writeFileSync as writeFileSync2 } from "fs";
+import { join as join4 } from "path";
+import { readFileSync as readFileSync3, writeFileSync as writeFileSync3 } from "fs";
 function readGuardianConfig() {
   try {
-    const parsed = JSON.parse(readFileSync2(FILE(), "utf8"));
+    const parsed = JSON.parse(readFileSync3(FILE2(), "utf8"));
     return { ...DEFAULT_GUARDIAN_CONFIG, ...parsed };
   } catch {
     return { ...DEFAULT_GUARDIAN_CONFIG };
   }
 }
 function writeGuardianConfig(cfg) {
-  const f = join3(ensureOriroDir(), "guardian.json");
-  writeFileSync2(f, JSON.stringify(cfg, null, 2) + "\n", "utf8");
+  const f = join4(ensureOriroDir(), "guardian.json");
+  writeFileSync3(f, JSON.stringify(cfg, null, 2) + "\n", "utf8");
 }
 function isGuardianActivated() {
   try {
-    readFileSync2(FILE(), "utf8");
+    readFileSync3(FILE2(), "utf8");
     return true;
   } catch {
     return false;
@@ -516,12 +516,12 @@ function resolvePolicy(cfg = readGuardianConfig()) {
     trustedServers: cfg.trustedServers
   };
 }
-var FILE, DEFAULT_GUARDIAN_CONFIG;
+var FILE2, DEFAULT_GUARDIAN_CONFIG;
 var init_config = __esm({
   "src/guardian/config.ts"() {
     "use strict";
     init_paths();
-    FILE = () => join3(oriroDir(), "guardian.json");
+    FILE2 = () => join4(oriroDir(), "guardian.json");
     DEFAULT_GUARDIAN_CONFIG = {
       enabled: true,
       mode: "active",
@@ -535,29 +535,29 @@ var init_config = __esm({
 
 // src/guardian/audit.ts
 import { homedir as homedir2 } from "os";
-import { join as join4 } from "path";
-import { appendFileSync, mkdirSync as mkdirSync2, readFileSync as readFileSync3 } from "fs";
+import { join as join5 } from "path";
+import { appendFileSync, mkdirSync as mkdirSync2, readFileSync as readFileSync4 } from "fs";
 function recordAudit(entry) {
   try {
     mkdirSync2(DIR, { recursive: true });
-    appendFileSync(FILE2, JSON.stringify(entry) + "\n", "utf8");
+    appendFileSync(FILE3, JSON.stringify(entry) + "\n", "utf8");
   } catch {
   }
 }
-var DIR, FILE2;
+var DIR, FILE3;
 var init_audit = __esm({
   "src/guardian/audit.ts"() {
     "use strict";
-    DIR = join4(homedir2(), ".oriro", "guardian");
-    FILE2 = join4(DIR, "audit.jsonl");
+    DIR = join5(homedir2(), ".oriro", "guardian");
+    FILE3 = join5(DIR, "audit.jsonl");
   }
 });
 
 // src/guardian/analyzer.ts
 async function analyze(call, ruleVerdict) {
-  if (!active2 || !active2.ready() || ruleVerdict.decision === "allow") return ruleVerdict;
+  if (!active || !active.ready() || ruleVerdict.decision === "allow") return ruleVerdict;
   try {
-    const refined = await active2.analyze(call, ruleVerdict);
+    const refined = await active.analyze(call, ruleVerdict);
     if (ruleVerdict.decision === "block" && refined.decision !== "block") {
       return refined.decision === "allow" ? { ...ruleVerdict, reason: `${ruleVerdict.reason} \xB7 ${refined.reason}` } : refined;
     }
@@ -566,11 +566,11 @@ async function analyze(call, ruleVerdict) {
     return ruleVerdict;
   }
 }
-var active2;
+var active;
 var init_analyzer = __esm({
   "src/guardian/analyzer.ts"() {
     "use strict";
-    active2 = null;
+    active = null;
   }
 });
 
@@ -676,249 +676,16 @@ var init_pi_gate = __esm({
   }
 });
 
-// src/utils.ts
-var CONFIG_DIR;
-var init_utils = __esm({
-  "src/utils.ts"() {
-    "use strict";
-    init_paths();
-    CONFIG_DIR = oriroDir();
-  }
-});
-
-// src/scribe/consent.ts
-import { existsSync as existsSync2, mkdirSync as mkdirSync4, readFileSync as readFileSync7, writeFileSync as writeFileSync6 } from "fs";
-import { dirname, join as join9 } from "path";
-function consentFile() {
-  const override = process.env.ORIRO_SCRIBE_DIR?.trim();
-  return override && override.length > 0 ? join9(override, "consent.json") : join9(CONFIG_DIR, "scribe.json");
-}
-function isScribeEnabled() {
-  try {
-    const f = consentFile();
-    if (!existsSync2(f)) return false;
-    const data = JSON.parse(readFileSync7(f, "utf8"));
-    return data.enabled === true;
-  } catch {
-    return false;
-  }
-}
-function setScribeConsent(enabled) {
-  const f = consentFile();
-  mkdirSync4(dirname(f), { recursive: true });
-  const state = { enabled, consentedAt: (/* @__PURE__ */ new Date()).toISOString() };
-  writeFileSync6(f, `${JSON.stringify(state, null, 2)}
-`, "utf8");
-  return state;
-}
-function hasScribeChoice() {
-  try {
-    return existsSync2(consentFile());
-  } catch {
-    return false;
-  }
-}
-var init_consent = __esm({
-  "src/scribe/consent.ts"() {
-    "use strict";
-    init_utils();
-  }
-});
-
-// src/routers/pool.ts
-import { existsSync as existsSync3, mkdirSync as mkdirSync5, readFileSync as readFileSync8, writeFileSync as writeFileSync7 } from "fs";
-import { join as join10 } from "path";
-function poolFile(dir) {
-  return join10(dir, "routers", "selected.json");
-}
-function loadPool(dir) {
-  const p = poolFile(dir);
-  if (!existsSync3(p)) return [];
-  try {
-    const v = JSON.parse(readFileSync8(p, "utf8"));
-    return Array.isArray(v) ? v : [];
-  } catch {
-    return [];
-  }
-}
-function savePool(dir, ids) {
-  mkdirSync5(join10(dir, "routers"), { recursive: true });
-  writeFileSync7(poolFile(dir), JSON.stringify([...new Set(ids)], null, 2), "utf8");
-}
-var init_pool = __esm({
-  "src/routers/pool.ts"() {
-    "use strict";
-  }
-});
-
-// src/routers/validate.ts
-async function validateRouter(entry, key, modelId) {
-  const model = modelId ?? entry.freeModels[0] ?? "";
-  const t0 = Date.now();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
-  try {
-    let res;
-    if (entry.api === "google-generative-ai") {
-      const url = `${entry.baseUrl.replace(/\/$/, "")}/models/${model}:generateContent${key ? `?key=${encodeURIComponent(key)}` : ""}`;
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: "ping" }] }] }),
-        signal: controller.signal
-      });
-    } else {
-      const headers = { "content-type": "application/json" };
-      if (key) headers.authorization = `Bearer ${key}`;
-      res = await fetch(`${entry.baseUrl.replace(/\/$/, "")}/chat/completions`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          model,
-          messages: [{ role: "user", content: "ping" }],
-          max_tokens: 1
-        }),
-        signal: controller.signal
-      });
-    }
-    return {
-      ok: res.ok,
-      latencyMs: Date.now() - t0,
-      model,
-      error: res.ok ? void 0 : `HTTP ${res.status}`
-    };
-  } catch (e) {
-    return {
-      ok: false,
-      latencyMs: Date.now() - t0,
-      model,
-      error: e instanceof Error ? e.message : String(e)
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-var PROBE_TIMEOUT_MS;
-var init_validate = __esm({
-  "src/routers/validate.ts"() {
-    "use strict";
-    PROBE_TIMEOUT_MS = 12e3;
-  }
-});
-
-// src/routers/router-pool.ts
-import { mkdirSync as mkdirSync6, readFileSync as readFileSync9, writeFileSync as writeFileSync8 } from "fs";
-import { join as join11 } from "path";
-function regFile() {
-  return join11(oriroDir(), "routers", "registered.json");
-}
-function readReg() {
-  try {
-    return JSON.parse(readFileSync9(regFile(), "utf8"));
-  } catch {
-    return {};
-  }
-}
-function writeReg(m) {
-  mkdirSync6(join11(oriroDir(), "routers"), { recursive: true });
-  writeFileSync8(regFile(), JSON.stringify(m, null, 2), "utf8");
-}
-async function addRouter(entry, opts) {
-  if (entry.comingSoon) {
-    return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: "coming soon" } };
-  }
-  if (entry.kind && entry.kind !== "chat") {
-    return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: `'${entry.id}' is a ${entry.kind} router, not a chat router` } };
-  }
-  const key = opts?.key ?? (entry.keyless ? KEYLESS_SENTINEL : void 0);
-  const v = await validateRouter(entry, key, opts?.modelId);
-  if (!v.ok) return { ok: false, validation: v };
-  const router = {
-    id: entry.id,
-    name: entry.displayName,
-    baseUrl: entry.baseUrl,
-    model: opts?.modelId ?? v.model ?? entry.freeModels[0] ?? "",
-    apiKey: key ?? KEYLESS_SENTINEL
-  };
-  const reg = readReg();
-  reg[entry.id] = router;
-  writeReg(reg);
-  savePool(oriroDir(), [...loadPool(oriroDir()), entry.id]);
-  return { ok: true, validation: v };
-}
-function useRouters(ids) {
-  const reg = readReg();
-  const applied = ids.filter((id) => reg[id]);
-  const unknown = ids.filter((id) => !reg[id]);
-  if (applied.length > 0) savePool(oriroDir(), applied);
-  return { applied, unknown };
-}
-function registeredRouters() {
-  return Object.values(readReg());
-}
-function resolvePool() {
-  const reg = readReg();
-  return loadPool(oriroDir()).map((id) => reg[id]).filter((r) => Boolean(r));
-}
-var KEYLESS_SENTINEL;
-var init_router_pool = __esm({
-  "src/routers/router-pool.ts"() {
-    "use strict";
-    init_paths();
-    init_pool();
-    init_validate();
-    KEYLESS_SENTINEL = "oriro-keyless-no-key-required";
-  }
-});
-
-// src/routers/floor.ts
-function routerModel(r) {
-  return {
-    id: r.model,
-    name: r.name,
-    api: "openai-completions",
-    provider: r.id,
-    baseUrl: r.baseUrl,
-    reasoning: false,
-    input: ["text"],
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-    contextWindow: 128e3,
-    maxTokens: 4096
-  };
-}
-var KEYLESS_FLOOR;
-var init_floor = __esm({
-  "src/routers/floor.ts"() {
-    "use strict";
-    KEYLESS_FLOOR = [
-      {
-        id: "pollinations",
-        name: "Pollinations (free)",
-        baseUrl: "https://text.pollinations.ai/openai",
-        model: "openai",
-        apiKey: "oriro-keyless"
-      },
-      {
-        id: "ollama-local",
-        name: "Ollama (on-device)",
-        baseUrl: "http://localhost:11434/v1",
-        model: "llama3.2",
-        apiKey: "ollama"
-      }
-    ];
-  }
-});
-
 // src/skills/loader.ts
 import { loadSkills, formatSkillsForPrompt } from "@earendil-works/pi-coding-agent";
 import { fileURLToPath } from "url";
-import { existsSync as existsSync5 } from "fs";
-import { dirname as dirname2, join as join13 } from "path";
+import { existsSync } from "fs";
+import { dirname, join as join6 } from "path";
 function packageRoot(start) {
   let dir = start;
   for (let i = 0; i < 10; i++) {
-    if (existsSync5(join13(dir, "package.json"))) return dir;
-    const parent = dirname2(dir);
+    if (existsSync(join6(dir, "package.json"))) return dir;
+    const parent = dirname(dir);
     if (parent === dir) break;
     dir = parent;
   }
@@ -926,15 +693,15 @@ function packageRoot(start) {
 }
 function skillsDir() {
   if (process.env.ORIRO_SKILLS_DIR) return process.env.ORIRO_SKILLS_DIR;
-  return join13(packageRoot(dirname2(fileURLToPath(import.meta.url))), "skills");
+  return join6(packageRoot(dirname(fileURLToPath(import.meta.url))), "skills");
 }
 function userSkillsDir() {
-  return process.env.ORIRO_USER_SKILLS_DIR ?? join13(oriroDir(), "skills");
+  return process.env.ORIRO_USER_SKILLS_DIR ?? join6(oriroDir(), "skills");
 }
 function skillRoots() {
   const roots = [skillsDir()];
   const user = userSkillsDir();
-  if (existsSync5(user) && user !== roots[0]) roots.push(user);
+  if (existsSync(user) && user !== roots[0]) roots.push(user);
   return roots;
 }
 async function loadOriroSkills(dir = skillsDir()) {
@@ -1953,21 +1720,21 @@ var init_catalog = __esm({
 });
 
 // src/connectors/connectors.ts
-import { readFileSync as readFileSync10, writeFileSync as writeFileSync10 } from "fs";
-import { join as join14 } from "path";
+import { readFileSync as readFileSync5, writeFileSync as writeFileSync4 } from "fs";
+import { join as join7 } from "path";
 function file2() {
-  return join14(oriroDir(), "connectors.json");
+  return join7(oriroDir(), "connectors.json");
 }
 function readAdded() {
   try {
-    const v = JSON.parse(readFileSync10(file2(), "utf8"));
+    const v = JSON.parse(readFileSync5(file2(), "utf8"));
     return Array.isArray(v) ? v : [];
   } catch {
     return [];
   }
 }
 function writeAdded(slugs) {
-  writeFileSync10(join14(ensureOriroDir(), "connectors.json"), JSON.stringify([...new Set(slugs)], null, 2), "utf8");
+  writeFileSync4(join7(ensureOriroDir(), "connectors.json"), JSON.stringify([...new Set(slugs)], null, 2), "utf8");
 }
 function listConnectors(category) {
   return category ? CONNECTOR_CATALOG.filter((c) => c.category === category) : CONNECTOR_CATALOG;
@@ -2001,6 +1768,239 @@ var init_connectors = __esm({
     "use strict";
     init_paths();
     init_catalog();
+  }
+});
+
+// src/utils.ts
+var CONFIG_DIR;
+var init_utils = __esm({
+  "src/utils.ts"() {
+    "use strict";
+    init_paths();
+    CONFIG_DIR = oriroDir();
+  }
+});
+
+// src/scribe/consent.ts
+import { existsSync as existsSync2, mkdirSync as mkdirSync3, readFileSync as readFileSync6, writeFileSync as writeFileSync5 } from "fs";
+import { dirname as dirname2, join as join8 } from "path";
+function consentFile() {
+  const override = process.env.ORIRO_SCRIBE_DIR?.trim();
+  return override && override.length > 0 ? join8(override, "consent.json") : join8(CONFIG_DIR, "scribe.json");
+}
+function isScribeEnabled() {
+  try {
+    const f = consentFile();
+    if (!existsSync2(f)) return false;
+    const data = JSON.parse(readFileSync6(f, "utf8"));
+    return data.enabled === true;
+  } catch {
+    return false;
+  }
+}
+function setScribeConsent(enabled) {
+  const f = consentFile();
+  mkdirSync3(dirname2(f), { recursive: true });
+  const state = { enabled, consentedAt: (/* @__PURE__ */ new Date()).toISOString() };
+  writeFileSync5(f, `${JSON.stringify(state, null, 2)}
+`, "utf8");
+  return state;
+}
+function hasScribeChoice() {
+  try {
+    return existsSync2(consentFile());
+  } catch {
+    return false;
+  }
+}
+var init_consent = __esm({
+  "src/scribe/consent.ts"() {
+    "use strict";
+    init_utils();
+  }
+});
+
+// src/routers/pool.ts
+import { existsSync as existsSync5, mkdirSync as mkdirSync6, readFileSync as readFileSync9, writeFileSync as writeFileSync9 } from "fs";
+import { join as join13 } from "path";
+function poolFile(dir) {
+  return join13(dir, "routers", "selected.json");
+}
+function loadPool(dir) {
+  const p = poolFile(dir);
+  if (!existsSync5(p)) return [];
+  try {
+    const v = JSON.parse(readFileSync9(p, "utf8"));
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+function savePool(dir, ids) {
+  mkdirSync6(join13(dir, "routers"), { recursive: true });
+  writeFileSync9(poolFile(dir), JSON.stringify([...new Set(ids)], null, 2), "utf8");
+}
+var init_pool = __esm({
+  "src/routers/pool.ts"() {
+    "use strict";
+  }
+});
+
+// src/routers/validate.ts
+async function validateRouter(entry, key, modelId) {
+  const model = modelId ?? entry.freeModels[0] ?? "";
+  const t0 = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+  try {
+    let res;
+    if (entry.api === "google-generative-ai") {
+      const url = `${entry.baseUrl.replace(/\/$/, "")}/models/${model}:generateContent${key ? `?key=${encodeURIComponent(key)}` : ""}`;
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: "ping" }] }] }),
+        signal: controller.signal
+      });
+    } else {
+      const headers = { "content-type": "application/json" };
+      if (key) headers.authorization = `Bearer ${key}`;
+      res = await fetch(`${entry.baseUrl.replace(/\/$/, "")}/chat/completions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model,
+          messages: [{ role: "user", content: "ping" }],
+          max_tokens: 1
+        }),
+        signal: controller.signal
+      });
+    }
+    return {
+      ok: res.ok,
+      latencyMs: Date.now() - t0,
+      model,
+      error: res.ok ? void 0 : `HTTP ${res.status}`
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      latencyMs: Date.now() - t0,
+      model,
+      error: e instanceof Error ? e.message : String(e)
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+var PROBE_TIMEOUT_MS;
+var init_validate = __esm({
+  "src/routers/validate.ts"() {
+    "use strict";
+    PROBE_TIMEOUT_MS = 12e3;
+  }
+});
+
+// src/routers/router-pool.ts
+import { mkdirSync as mkdirSync7, readFileSync as readFileSync10, writeFileSync as writeFileSync10 } from "fs";
+import { join as join14 } from "path";
+function regFile() {
+  return join14(oriroDir(), "routers", "registered.json");
+}
+function readReg() {
+  try {
+    return JSON.parse(readFileSync10(regFile(), "utf8"));
+  } catch {
+    return {};
+  }
+}
+function writeReg(m) {
+  mkdirSync7(join14(oriroDir(), "routers"), { recursive: true });
+  writeFileSync10(regFile(), JSON.stringify(m, null, 2), "utf8");
+}
+async function addRouter(entry, opts) {
+  if (entry.comingSoon) {
+    return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: "coming soon" } };
+  }
+  if (entry.kind && entry.kind !== "chat") {
+    return { ok: false, validation: { ok: false, latencyMs: 0, model: "", error: `'${entry.id}' is a ${entry.kind} router, not a chat router` } };
+  }
+  const key = opts?.key ?? (entry.keyless ? KEYLESS_SENTINEL : void 0);
+  const v = await validateRouter(entry, key, opts?.modelId);
+  if (!v.ok) return { ok: false, validation: v };
+  const router = {
+    id: entry.id,
+    name: entry.displayName,
+    baseUrl: entry.baseUrl,
+    model: opts?.modelId ?? v.model ?? entry.freeModels[0] ?? "",
+    apiKey: key ?? KEYLESS_SENTINEL
+  };
+  const reg = readReg();
+  reg[entry.id] = router;
+  writeReg(reg);
+  savePool(oriroDir(), [...loadPool(oriroDir()), entry.id]);
+  return { ok: true, validation: v };
+}
+function useRouters(ids) {
+  const reg = readReg();
+  const applied = ids.filter((id) => reg[id]);
+  const unknown = ids.filter((id) => !reg[id]);
+  if (applied.length > 0) savePool(oriroDir(), applied);
+  return { applied, unknown };
+}
+function registeredRouters() {
+  return Object.values(readReg());
+}
+function resolvePool() {
+  const reg = readReg();
+  return loadPool(oriroDir()).map((id) => reg[id]).filter((r) => Boolean(r));
+}
+var KEYLESS_SENTINEL;
+var init_router_pool = __esm({
+  "src/routers/router-pool.ts"() {
+    "use strict";
+    init_paths();
+    init_pool();
+    init_validate();
+    KEYLESS_SENTINEL = "oriro-keyless-no-key-required";
+  }
+});
+
+// src/routers/floor.ts
+function routerModel(r) {
+  return {
+    id: r.model,
+    name: r.name,
+    api: "openai-completions",
+    provider: r.id,
+    baseUrl: r.baseUrl,
+    reasoning: false,
+    input: ["text"],
+    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+    contextWindow: 128e3,
+    maxTokens: 4096
+  };
+}
+var KEYLESS_FLOOR;
+var init_floor = __esm({
+  "src/routers/floor.ts"() {
+    "use strict";
+    KEYLESS_FLOOR = [
+      {
+        id: "pollinations",
+        name: "Pollinations (free)",
+        baseUrl: "https://text.pollinations.ai/openai",
+        model: "openai",
+        apiKey: "oriro-keyless"
+      },
+      {
+        id: "ollama-local",
+        name: "Ollama (on-device)",
+        baseUrl: "http://localhost:11434/v1",
+        model: "llama3.2",
+        apiKey: "ollama"
+      }
+    ];
   }
 });
 
@@ -5156,8 +5156,8 @@ function fanDir(repoRoot, stamp, i) {
 }
 async function git(cwd, ...args) {
   try {
-    const { stdout: stdout12 } = await run("git", ["-C", cwd, ...args], { windowsHide: true });
-    return { ok: true, out: stdout12.trim() };
+    const { stdout: stdout13 } = await run("git", ["-C", cwd, ...args], { windowsHide: true });
+    return { ok: true, out: stdout13.trim() };
   } catch (e) {
     return { ok: false, out: e instanceof Error ? e.message : String(e) };
   }
@@ -5448,7 +5448,7 @@ import { Command } from "commander";
 
 // src/repl.ts
 import { createInterface as createInterface6 } from "readline/promises";
-import { stdin as stdin6, stdout as stdout7 } from "process";
+import { stdin as stdin6, stdout as stdout8 } from "process";
 
 // src/ui/banner.ts
 init_theme();
@@ -5468,7 +5468,255 @@ ${tagline}
 
 // src/onboarding/wrapper.ts
 import { createInterface as createInterface5 } from "readline/promises";
-import { stdin as stdin5, stdout as stdout6 } from "process";
+import { stdin as stdin5, stdout as stdout7 } from "process";
+
+// src/onboarding/tui-wizard.ts
+import { TUI as TUI2, Container as Container2, ProcessTerminal } from "@earendil-works/pi-tui";
+import { stdout as stdout3 } from "process";
+
+// src/onboarding/tui/screen.ts
+init_theme();
+import { Text } from "@earendil-works/pi-tui";
+
+// src/onboarding/tui/select-state.ts
+var SelectState = class {
+  all;
+  opts;
+  filter = "";
+  cursor = 0;
+  // index into the FILTERED list
+  offset = 0;
+  // scroll window start into the FILTERED list
+  constructor(all, opts) {
+    this.all = all;
+    this.opts = { ...opts, height: Math.max(1, opts.height) };
+  }
+  filtered() {
+    if (this.opts.filter && this.filter) return this.opts.filter(this.all, this.filter);
+    return this.all;
+  }
+  /** Move the cursor by delta (clamped), then scroll the window so the cursor stays visible. */
+  move(delta) {
+    const n = this.filtered().length;
+    if (n === 0) {
+      this.cursor = 0;
+      this.offset = 0;
+      return;
+    }
+    this.cursor = Math.min(Math.max(this.cursor + delta, 0), n - 1);
+    const h = this.opts.height;
+    if (this.cursor < this.offset) this.offset = this.cursor;
+    else if (this.cursor >= this.offset + h) this.offset = this.cursor - h + 1;
+    this.offset = Math.min(this.offset, Math.max(0, n - h));
+  }
+  /** Replace the filter text; reset the cursor to the top of the new result set. */
+  setFilter(query) {
+    this.filter = query;
+    this.cursor = 0;
+    this.offset = 0;
+  }
+  /** The currently highlighted item, or undefined when the filtered list is empty. */
+  selected() {
+    return this.filtered()[this.cursor];
+  }
+  /** The visible slice + where the cursor sits within it + hidden counts (for scroll hints). */
+  window() {
+    const f = this.filtered();
+    const h = this.opts.height;
+    const rows = f.slice(this.offset, this.offset + h);
+    return {
+      rows,
+      cursorInWindow: f.length === 0 ? -1 : this.cursor - this.offset,
+      above: this.offset,
+      below: Math.max(0, f.length - (this.offset + rows.length)),
+      total: f.length
+    };
+  }
+};
+
+// src/onboarding/tui/screen.ts
+var UP = "\x1B[A";
+var DOWN = "\x1B[B";
+var ENTER1 = "\r";
+var ENTER2 = "\n";
+var BS1 = "\x7F";
+var BS2 = "\b";
+var ESC = "\x1B";
+var CTRLC = "";
+var isPrintable = (d) => d.length === 1 && d >= " " && d !== "\x7F";
+function headerLine(step, total, title) {
+  const rail = Array.from({ length: total }, (_, i) => i < step ? accent("\u25CF") : dim("\u25CB")).join("");
+  return `  ${accent("\u25EF")} ${bold("ORIRO setup")}  ${rail}  ${dim(`Step ${step}/${total} \u2014`)} ${bold(title)}`;
+}
+function pickList(tui, root, s) {
+  const state = new SelectState(s.items, { height: s.height ?? 12, filter: s.filter });
+  return new Promise((resolve3) => {
+    let done = false;
+    const render = () => {
+      root.clear();
+      root.addChild(new Text(headerLine(s.step, s.total, s.title), 0, 1));
+      if (s.subtitle) root.addChild(new Text(`  ${dim(s.subtitle)}`, 0, 1));
+      const w = state.window();
+      if (s.filter) {
+        const q = state.filter ? accent(state.filter) : dim(s.filterHint ?? "type to filter");
+        root.addChild(new Text(`  ${dim("search:")} ${q}${dim(w.total ? `   ${w.total} match${w.total === 1 ? "" : "es"}` : "   no matches")}`, 0, 1));
+      }
+      if (w.above > 0) root.addChild(new Text(`  ${dim(`\u2191 ${w.above} more`)}`, 0, 0));
+      w.rows.forEach((row, i) => {
+        const on = i === w.cursorInWindow;
+        const text = s.label(row);
+        root.addChild(new Text(on ? `  ${accent("\u203A")} ${accent(text)}` : `    ${dim(text)}`, 0, 0));
+      });
+      if (w.below > 0) root.addChild(new Text(`  ${dim(`\u2193 ${w.below} more`)}`, 0, 0));
+      root.addChild(new Text(`
+  ${dim("\u2191/\u2193 move \xB7 Enter select" + (s.filter ? " \xB7 type to filter" : "") + " \xB7 Esc skip")}`, 0, 1));
+      tui.requestRender();
+    };
+    const finish = (val) => {
+      if (done) return;
+      done = true;
+      remove();
+      resolve3(val);
+    };
+    const remove = tui.addInputListener((data) => {
+      if (done) return void 0;
+      if (data === UP) {
+        state.move(-1);
+        render();
+        return { consume: true };
+      }
+      if (data === DOWN) {
+        state.move(1);
+        render();
+        return { consume: true };
+      }
+      if (data === ENTER1 || data === ENTER2) {
+        finish(state.selected() ?? null);
+        return { consume: true };
+      }
+      if (data === ESC || data === CTRLC) {
+        finish(null);
+        return { consume: true };
+      }
+      if (s.filter && (data === BS1 || data === BS2)) {
+        state.setFilter(state.filter.slice(0, -1));
+        render();
+        return { consume: true };
+      }
+      if (s.filter && isPrintable(data)) {
+        state.setFilter(state.filter + data);
+        render();
+        return { consume: true };
+      }
+      return void 0;
+    });
+    render();
+  });
+}
+function notice(tui, root, s) {
+  return new Promise((resolve3) => {
+    let done = false;
+    root.clear();
+    root.addChild(new Text(headerLine(s.step, s.total, s.title), 0, 1));
+    for (const l of s.lines) root.addChild(new Text(l, 0, 0));
+    root.addChild(new Text(`
+  ${dim(s.prompt ?? "Press Enter to continue\u2026")}`, 0, 1));
+    tui.requestRender();
+    const remove = tui.addInputListener((data) => {
+      if (done) return void 0;
+      if (data === ENTER1 || data === ENTER2 || data === ESC || data === CTRLC || isPrintable(data)) {
+        done = true;
+        remove();
+        resolve3();
+        return { consume: true };
+      }
+      return void 0;
+    });
+  });
+}
+function confirmYesNo(tui, root, s) {
+  return new Promise((resolve3) => {
+    let done = false;
+    root.clear();
+    root.addChild(new Text(headerLine(s.step, s.total, s.title), 0, 1));
+    for (const l of s.lines) root.addChild(new Text(l, 0, 0));
+    root.addChild(new Text(`
+  ${dim(`[${s.def ? "Y/n" : "y/N"}]  y = yes \xB7 n = no \xB7 Enter = ${s.def ? "yes" : "no"}`)}`, 0, 1));
+    tui.requestRender();
+    const finish = (v) => {
+      if (done) return;
+      done = true;
+      remove();
+      resolve3(v);
+    };
+    const remove = tui.addInputListener((data) => {
+      if (done) return void 0;
+      const c = data.toLowerCase();
+      if (c === "y") {
+        finish(true);
+        return { consume: true };
+      }
+      if (c === "n") {
+        finish(false);
+        return { consume: true };
+      }
+      if (data === ENTER1 || data === ENTER2) {
+        finish(s.def);
+        return { consume: true };
+      }
+      if (data === ESC || data === CTRLC) {
+        finish(s.def);
+        return { consume: true };
+      }
+      return void 0;
+    });
+  });
+}
+function promptLine(tui, root, s) {
+  return new Promise((resolve3) => {
+    let done = false;
+    let buf = "";
+    const render = () => {
+      root.clear();
+      root.addChild(new Text(headerLine(s.step, s.total, s.title), 0, 1));
+      for (const l of s.lines) root.addChild(new Text(l, 0, 0));
+      root.addChild(new Text(`
+  ${accent("\u203A")} ${s.label}: ${bold(buf)}${fgHex(PALETTE.gold, "\u258F")}`, 0, 1));
+      root.addChild(new Text(`  ${dim("Enter to continue \xB7 empty to skip")}`, 0, 0));
+      tui.requestRender();
+    };
+    const finish = () => {
+      if (done) return;
+      done = true;
+      remove();
+      resolve3(buf.trim());
+    };
+    const remove = tui.addInputListener((data) => {
+      if (done) return void 0;
+      if (data === ENTER1 || data === ENTER2) {
+        finish();
+        return { consume: true };
+      }
+      if (data === ESC || data === CTRLC) {
+        buf = "";
+        finish();
+        return { consume: true };
+      }
+      if (data === BS1 || data === BS2) {
+        buf = buf.slice(0, -1);
+        render();
+        return { consume: true };
+      }
+      if (isPrintable(data)) {
+        buf += data;
+        render();
+        return { consume: true };
+      }
+      return void 0;
+    });
+    render();
+  });
+}
 
 // src/language/languages.ts
 var LANGUAGES = [
@@ -5621,129 +5869,63 @@ function setTerminalLanguage(lang, opts) {
   return cfg;
 }
 
-// src/language/translate.ts
-var active = null;
-function registerTranslator(t) {
-  active = t;
-}
-var isEnglish = (code) => !code || code.toLowerCase().startsWith("en");
-async function translateForCoder(text, fromLang) {
-  if (isEnglish(fromLang) || !text.trim()) return text;
-  if (active && active.ready()) {
-    try {
-      return await active.toEnglish(text, fromLang);
-    } catch {
-    }
-  }
-  return text;
-}
-async function translateForUser(english, toLang) {
-  if (isEnglish(toLang) || !english.trim()) return english;
-  if (active && active.ready()) {
-    try {
-      return await active.fromEnglish(english, toLang);
-    } catch {
-    }
-  }
-  return english;
-}
+// src/avatar/avatars.json
+var avatars_default = { avatars: [{ id: "813db996ee7b20af", slug: "gen-z-01", category: "Gen Z", image_url: "/api/avatars/img/gen-z-01" }, { id: "ad694588da43b13b", slug: "gen-z-02", category: "Gen Z", image_url: "/api/avatars/img/gen-z-02" }, { id: "e8b93ac755c364b3", slug: "gen-z-04", category: "Gen Z", image_url: "/api/avatars/img/gen-z-04" }, { id: "cb54bb7ba0accb9b", slug: "gen-z-06", category: "Gen Z", image_url: "/api/avatars/img/gen-z-06" }, { id: "3b49b273fd782408", slug: "gen-z-08", category: "Gen Z", image_url: "/api/avatars/img/gen-z-08" }, { id: "5dd4edb573e45563", slug: "gen-z-09", category: "Gen Z", image_url: "/api/avatars/img/gen-z-09" }, { id: "be1611ef3b188dbc", slug: "gen-z-10", category: "Gen Z", image_url: "/api/avatars/img/gen-z-10" }, { id: "960992c8484f38ae", slug: "fun-01", category: "Creative", image_url: "/api/avatars/img/fun-01" }, { id: "37c715a202014e62", slug: "fun-02", category: "Creative", image_url: "/api/avatars/img/fun-02" }, { id: "883abad238502939", slug: "fun-04", category: "Creative", image_url: "/api/avatars/img/fun-04" }, { id: "2fe883c65c464637", slug: "fun-05", category: "Creative", image_url: "/api/avatars/img/fun-05" }, { id: "d24b1d1df0afc221", slug: "fun-07", category: "Creative", image_url: "/api/avatars/img/fun-07" }, { id: "2168d77a76c5ebdc", slug: "fun-09", category: "Creative", image_url: "/api/avatars/img/fun-09" }, { id: "bf4ca588ca132f9a", slug: "fun-10", category: "Creative", image_url: "/api/avatars/img/fun-10" }, { id: "5d3a5f1effa56f71", slug: "fantasy-02", category: "Fantasy", image_url: "/api/avatars/img/fantasy-02" }, { id: "7532e949bff0abe6", slug: "fantasy-03", category: "Fantasy", image_url: "/api/avatars/img/fantasy-03" }, { id: "68702daf31710218", slug: "fantasy-05", category: "Fantasy", image_url: "/api/avatars/img/fantasy-05" }, { id: "b160d76a3fdbedbf", slug: "fantasy-06", category: "Fantasy", image_url: "/api/avatars/img/fantasy-06" }, { id: "719ad88a97de6cfc", slug: "fantasy-08", category: "Fantasy", image_url: "/api/avatars/img/fantasy-08" }, { id: "101558de2f8917bb", slug: "fantasy-10", category: "Fantasy", image_url: "/api/avatars/img/fantasy-10" }, { id: "4bb0e52a5a6d0edc", slug: "global-01", category: "Global", image_url: "/api/avatars/img/global-01" }, { id: "8824b9c348046047", slug: "global-03", category: "Global", image_url: "/api/avatars/img/global-03" }, { id: "81424ffd10547dac", slug: "global-04", category: "Global", image_url: "/api/avatars/img/global-04" }, { id: "737366b7d9df4549", slug: "global-06", category: "Global", image_url: "/api/avatars/img/global-06" }, { id: "93163fa1d46f21e1", slug: "global-08", category: "Global", image_url: "/api/avatars/img/global-08" }, { id: "f6075bcefff712da", slug: "global-09", category: "Global", image_url: "/api/avatars/img/global-09" }, { id: "be86a80bb94c84c8", slug: "expert-01", category: "Expert", image_url: "/api/avatars/img/expert-01" }, { id: "f7d6487e222bcc29", slug: "expert-02", category: "Expert", image_url: "/api/avatars/img/expert-02" }, { id: "d0aa93a43ad3a23e", slug: "expert-04", category: "Expert", image_url: "/api/avatars/img/expert-04" }, { id: "74ad39869e9d82ac", slug: "expert-05", category: "Expert", image_url: "/api/avatars/img/expert-05" }, { id: "8471765aad30231d", slug: "expert-07", category: "Expert", image_url: "/api/avatars/img/expert-07" }, { id: "834eadae5399d239", slug: "expert-09", category: "Expert", image_url: "/api/avatars/img/expert-09" }, { id: "b7f2e37653eea65e", slug: "expert-10", category: "Expert", image_url: "/api/avatars/img/expert-10" }, { id: "e3867b1ff11475b0", slug: "gen-z-05", category: "Gen Z", image_url: "/api/avatars/img/gen-z-05" }, { id: "cb6047052e603e7a", slug: "gen-z-07", category: "Gen Z", image_url: "/api/avatars/img/gen-z-07" }, { id: "117a54c7d49aea48", slug: "fun-03", category: "Creative", image_url: "/api/avatars/img/fun-03" }, { id: "81a5223da360f2e6", slug: "fun-06", category: "Creative", image_url: "/api/avatars/img/fun-06" }, { id: "2c817bedcb1b1fd0", slug: "fantasy-01", category: "Fantasy", image_url: "/api/avatars/img/fantasy-01" }, { id: "12280bbaa9e04ff5", slug: "fantasy-09", category: "Fantasy", image_url: "/api/avatars/img/fantasy-09" }, { id: "f6cd1faec4b371a6", slug: "global-02", category: "Global", image_url: "/api/avatars/img/global-02" }, { id: "c67691eb77e3b623", slug: "global-05", category: "Global", image_url: "/api/avatars/img/global-05" }, { id: "05417b4e7e122913", slug: "global-07", category: "Global", image_url: "/api/avatars/img/global-07" }, { id: "49e2532316daa4a6", slug: "global-10", category: "Global", image_url: "/api/avatars/img/global-10" }, { id: "c4cca88fa74e819c", slug: "expert-03", category: "Expert", image_url: "/api/avatars/img/expert-03" }, { id: "a894d2ef7ae29f2a", slug: "expert-06", category: "Expert", image_url: "/api/avatars/img/expert-06" }, { id: "d93e5fe1986cd8a3", slug: "gen-z-03", category: "Gen Z", image_url: "/api/avatars/img/gen-z-03" }, { id: "418f971b45ccf4c0", slug: "fun-08", category: "Creative", image_url: "/api/avatars/img/fun-08" }, { id: "870f8b85db72aad1", slug: "fantasy-04", category: "Fantasy", image_url: "/api/avatars/img/fantasy-04" }, { id: "02af33587005ec54", slug: "expert-08", category: "Expert", image_url: "/api/avatars/img/expert-08" }, { id: "f59fa0d2d4a52da9", slug: "fantasy-07", category: "Fantasy", image_url: "/api/avatars/img/fantasy-07" }, { id: "1adc5831f2a6cd83", slug: "alex", category: "Business", image_url: "/api/avatars/img/alex" }, { id: "7654cf80f7f49a91", slug: "sarah", category: "Business", image_url: "/api/avatars/img/sarah" }, { id: "9546cef00e19c2da", slug: "marcus", category: "Business", image_url: "/api/avatars/img/marcus" }, { id: "5d22a0dcde2ec384", slug: "diana", category: "Business", image_url: "/api/avatars/img/diana" }, { id: "99366ec1f89e00c9", slug: "leo", category: "Creativity", image_url: "/api/avatars/img/leo" }, { id: "3f85d0c0864ed624", slug: "zara", category: "Creativity", image_url: "/api/avatars/img/zara" }, { id: "816687d3bbfa94c6", slug: "kai", category: "Education", image_url: "/api/avatars/img/kai" }, { id: "777fa97d66765c7b", slug: "prof-james", category: "Education", image_url: "/api/avatars/img/prof-james" }, { id: "a15e356b6d211790", slug: "maya", category: "Education", image_url: "/api/avatars/img/maya" }, { id: "98ae5c5ae60410a5", slug: "ethan", category: "Education", image_url: "/api/avatars/img/ethan" }, { id: "6336f9e456fe8bf3", slug: "dr-nora", category: "Health", image_url: "/api/avatars/img/dr-nora" }, { id: "01edf97260e9c79a", slug: "jake", category: "Health", image_url: "/api/avatars/img/jake" }, { id: "67258a6b886f8bcb", slug: "luna", category: "Technology", image_url: "/api/avatars/img/luna" }, { id: "ab3dc37da75071e1", slug: "dr-ben", category: "Technology", image_url: "/api/avatars/img/dr-ben" }, { id: "b5af67d61b4253af", slug: "nova", category: "Technology", image_url: "/api/avatars/img/nova" }, { id: "4961c7e62c358235", slug: "dev", category: "Technology", image_url: "/api/avatars/img/dev" }, { id: "0f68f79143fe7f12", slug: "aria", category: "Finance", image_url: "/api/avatars/img/aria" }, { id: "8ee6daf89856b905", slug: "victor", category: "Finance", image_url: "/api/avatars/img/victor" }, { id: "9c651cb88d46adee", slug: "claire", category: "Finance", image_url: "/api/avatars/img/claire" }, { id: "9dcd063928b84355", slug: "rico", category: "Finance", image_url: "/api/avatars/img/rico" }], categories: ["Business", "Creative", "Creativity", "Education", "Expert", "Fantasy", "Finance", "Gen Z", "Global", "Health", "Technology"] };
 
-// src/language/onboarding.ts
-import { createInterface } from "readline/promises";
-import { stdin, stdout as stdout2 } from "process";
+// src/avatar/manifest.ts
+var MANIFEST = avatars_default;
+var AVATARS = MANIFEST.avatars ?? [];
+var AVATAR_ORIGIN = "https://oriro.ai";
+function avatarCategories() {
+  const seen = /* @__PURE__ */ new Set();
+  for (const a of AVATARS) seen.add(a.category);
+  return [...seen];
+}
+function avatarsInCategory(category) {
+  const c = category.toLowerCase();
+  return AVATARS.filter((a) => a.category.toLowerCase() === c);
+}
+function avatarBySlug(slug) {
+  const s = (slug || "").toLowerCase();
+  return AVATARS.find((a) => a.slug.toLowerCase() === s);
+}
+function avatarImageUrl(a) {
+  return a.image_url.startsWith("http") ? a.image_url : `${AVATAR_ORIGIN}${a.image_url}`;
+}
+var AVATAR_COUNT = AVATARS.length;
 
-// src/onboarding/prompt.ts
-init_theme();
-import { stdout } from "process";
-async function ask(rl, question) {
+// src/avatar/config.ts
+import { join as join3 } from "path";
+import { readFileSync as readFileSync2, writeFileSync as writeFileSync2 } from "fs";
+init_paths();
+var FILE = () => join3(oriroDir(), "avatar.json");
+function readAvatarConfig() {
   try {
-    return await rl.question(question);
+    return JSON.parse(readFileSync2(FILE(), "utf8"));
   } catch {
-    try {
-      rl.close();
-    } catch {
-    }
-    stdout.write(dim("\nBye.\n"));
-    process.exit(0);
+    return null;
   }
 }
-
-// src/language/onboarding.ts
-var C = {
-  teal: "\x1B[38;2;45;212;191m",
-  purple: "\x1B[38;2;128;96;222m",
-  dim: "\x1B[2m",
-  bold: "\x1B[1m",
-  reset: "\x1B[0m"
-};
-function header() {
-  stdout2.write(`
-  ${C.teal}\u25EF${C.reset} ${C.bold}ORIRO${C.reset} ${C.dim}\u2014 your terminal, your language${C.reset}
-`);
-  stdout2.write(`  ${C.dim}You type and read in your language; the AI works in English for you.${C.reset}
-`);
-  stdout2.write(`  ${C.dim}${LANGUAGES.length} languages \xB7 ${NEURAL_VOICE_COUNT} with a built-in voice (${C.purple}\u2605${C.dim}).${C.reset}
-
-`);
+function writeAvatarConfig(cfg) {
+  const f = join3(ensureOriroDir(), "avatar.json");
+  writeFileSync2(f, JSON.stringify(cfg, null, 2) + "\n", "utf8");
 }
-function renderList(list) {
-  const shown = list.slice(0, 15);
-  shown.forEach((l, i) => {
-    const star = l.neuralVoice ? `${C.purple}\u2605${C.reset}` : " ";
-    stdout2.write(`  ${C.teal}${String(i + 1).padStart(2)}${C.reset}  ${star} ${l.name} ${C.dim}(${l.code})${C.reset}
-`);
-  });
-  if (list.length > shown.length) {
-    stdout2.write(`  ${C.dim}\u2026 ${list.length - shown.length} more \u2014 keep typing to narrow.${C.reset}
-`);
-  }
+function isAvatarConfigured() {
+  return readAvatarConfig() !== null;
 }
-async function selectLanguageInteractive() {
-  header();
-  const rl = createInterface({ input: stdin, output: stdout2 });
-  try {
-    let list = searchLanguages("");
-    renderList(list);
-    for (; ; ) {
-      const ans = (await ask(rl, `
-  ${C.teal}\u203A${C.reset} Type a language, or a number to pick: `)).trim();
-      const n = Number(ans);
-      const shown = Math.min(15, list.length);
-      const byNumber = ans && Number.isInteger(n) && n >= 1 && n <= shown ? list[n - 1] : void 0;
-      if (byNumber) return byNumber;
-      const direct = languageByCode(ans);
-      if (direct) return direct;
-      list = searchLanguages(ans);
-      if (list.length === 0) {
-        stdout2.write(`  ${C.dim}No match \u2014 try the English name or ISO code.${C.reset}
-`);
-        list = searchLanguages("");
-      } else {
-        const only = list.length === 1 ? list[0] : void 0;
-        if (only) return only;
-      }
-      stdout2.write("\n");
-      renderList(list);
-    }
-  } finally {
-    rl.close();
-  }
+function getSelectedAvatar() {
+  const cfg = readAvatarConfig();
+  return cfg && avatarBySlug(cfg.slug) || null;
 }
-async function runLanguageOnboarding() {
-  const existing = readLanguageConfig();
-  if (existing) {
-    const l = languageByCode(existing.code);
-    if (l) return l;
-  }
-  const lang = await selectLanguageInteractive();
-  setTerminalLanguage(lang);
-  stdout2.write(
-    `
-  ${C.teal}\u25EF${C.reset} ${C.bold}${lang.name}${C.reset} is now your terminal language. ${C.dim}Change it anytime with ${C.reset}${C.teal}oriro language${C.reset}
-
-`
-  );
-  return lang;
+function setSelectedAvatar(avatar, opts) {
+  const cfg = {
+    slug: avatar.slug,
+    voiceId: avatar.voice_id,
+    show: true,
+    speak: opts?.speak ?? false
+  };
+  writeAvatarConfig(cfg);
+  return cfg;
 }
 
 // src/guardian/index.ts
@@ -5812,72 +5994,438 @@ async function activateGuardian() {
 // src/guardian/index.ts
 init_v3lite();
 
-// src/avatar/avatars.json
-var avatars_default = { avatars: [{ id: "813db996ee7b20af", slug: "gen-z-01", category: "Gen Z", image_url: "/api/avatars/img/gen-z-01" }, { id: "ad694588da43b13b", slug: "gen-z-02", category: "Gen Z", image_url: "/api/avatars/img/gen-z-02" }, { id: "e8b93ac755c364b3", slug: "gen-z-04", category: "Gen Z", image_url: "/api/avatars/img/gen-z-04" }, { id: "cb54bb7ba0accb9b", slug: "gen-z-06", category: "Gen Z", image_url: "/api/avatars/img/gen-z-06" }, { id: "3b49b273fd782408", slug: "gen-z-08", category: "Gen Z", image_url: "/api/avatars/img/gen-z-08" }, { id: "5dd4edb573e45563", slug: "gen-z-09", category: "Gen Z", image_url: "/api/avatars/img/gen-z-09" }, { id: "be1611ef3b188dbc", slug: "gen-z-10", category: "Gen Z", image_url: "/api/avatars/img/gen-z-10" }, { id: "960992c8484f38ae", slug: "fun-01", category: "Creative", image_url: "/api/avatars/img/fun-01" }, { id: "37c715a202014e62", slug: "fun-02", category: "Creative", image_url: "/api/avatars/img/fun-02" }, { id: "883abad238502939", slug: "fun-04", category: "Creative", image_url: "/api/avatars/img/fun-04" }, { id: "2fe883c65c464637", slug: "fun-05", category: "Creative", image_url: "/api/avatars/img/fun-05" }, { id: "d24b1d1df0afc221", slug: "fun-07", category: "Creative", image_url: "/api/avatars/img/fun-07" }, { id: "2168d77a76c5ebdc", slug: "fun-09", category: "Creative", image_url: "/api/avatars/img/fun-09" }, { id: "bf4ca588ca132f9a", slug: "fun-10", category: "Creative", image_url: "/api/avatars/img/fun-10" }, { id: "5d3a5f1effa56f71", slug: "fantasy-02", category: "Fantasy", image_url: "/api/avatars/img/fantasy-02" }, { id: "7532e949bff0abe6", slug: "fantasy-03", category: "Fantasy", image_url: "/api/avatars/img/fantasy-03" }, { id: "68702daf31710218", slug: "fantasy-05", category: "Fantasy", image_url: "/api/avatars/img/fantasy-05" }, { id: "b160d76a3fdbedbf", slug: "fantasy-06", category: "Fantasy", image_url: "/api/avatars/img/fantasy-06" }, { id: "719ad88a97de6cfc", slug: "fantasy-08", category: "Fantasy", image_url: "/api/avatars/img/fantasy-08" }, { id: "101558de2f8917bb", slug: "fantasy-10", category: "Fantasy", image_url: "/api/avatars/img/fantasy-10" }, { id: "4bb0e52a5a6d0edc", slug: "global-01", category: "Global", image_url: "/api/avatars/img/global-01" }, { id: "8824b9c348046047", slug: "global-03", category: "Global", image_url: "/api/avatars/img/global-03" }, { id: "81424ffd10547dac", slug: "global-04", category: "Global", image_url: "/api/avatars/img/global-04" }, { id: "737366b7d9df4549", slug: "global-06", category: "Global", image_url: "/api/avatars/img/global-06" }, { id: "93163fa1d46f21e1", slug: "global-08", category: "Global", image_url: "/api/avatars/img/global-08" }, { id: "f6075bcefff712da", slug: "global-09", category: "Global", image_url: "/api/avatars/img/global-09" }, { id: "be86a80bb94c84c8", slug: "expert-01", category: "Expert", image_url: "/api/avatars/img/expert-01" }, { id: "f7d6487e222bcc29", slug: "expert-02", category: "Expert", image_url: "/api/avatars/img/expert-02" }, { id: "d0aa93a43ad3a23e", slug: "expert-04", category: "Expert", image_url: "/api/avatars/img/expert-04" }, { id: "74ad39869e9d82ac", slug: "expert-05", category: "Expert", image_url: "/api/avatars/img/expert-05" }, { id: "8471765aad30231d", slug: "expert-07", category: "Expert", image_url: "/api/avatars/img/expert-07" }, { id: "834eadae5399d239", slug: "expert-09", category: "Expert", image_url: "/api/avatars/img/expert-09" }, { id: "b7f2e37653eea65e", slug: "expert-10", category: "Expert", image_url: "/api/avatars/img/expert-10" }, { id: "e3867b1ff11475b0", slug: "gen-z-05", category: "Gen Z", image_url: "/api/avatars/img/gen-z-05" }, { id: "cb6047052e603e7a", slug: "gen-z-07", category: "Gen Z", image_url: "/api/avatars/img/gen-z-07" }, { id: "117a54c7d49aea48", slug: "fun-03", category: "Creative", image_url: "/api/avatars/img/fun-03" }, { id: "81a5223da360f2e6", slug: "fun-06", category: "Creative", image_url: "/api/avatars/img/fun-06" }, { id: "2c817bedcb1b1fd0", slug: "fantasy-01", category: "Fantasy", image_url: "/api/avatars/img/fantasy-01" }, { id: "12280bbaa9e04ff5", slug: "fantasy-09", category: "Fantasy", image_url: "/api/avatars/img/fantasy-09" }, { id: "f6cd1faec4b371a6", slug: "global-02", category: "Global", image_url: "/api/avatars/img/global-02" }, { id: "c67691eb77e3b623", slug: "global-05", category: "Global", image_url: "/api/avatars/img/global-05" }, { id: "05417b4e7e122913", slug: "global-07", category: "Global", image_url: "/api/avatars/img/global-07" }, { id: "49e2532316daa4a6", slug: "global-10", category: "Global", image_url: "/api/avatars/img/global-10" }, { id: "c4cca88fa74e819c", slug: "expert-03", category: "Expert", image_url: "/api/avatars/img/expert-03" }, { id: "a894d2ef7ae29f2a", slug: "expert-06", category: "Expert", image_url: "/api/avatars/img/expert-06" }, { id: "d93e5fe1986cd8a3", slug: "gen-z-03", category: "Gen Z", image_url: "/api/avatars/img/gen-z-03" }, { id: "418f971b45ccf4c0", slug: "fun-08", category: "Creative", image_url: "/api/avatars/img/fun-08" }, { id: "870f8b85db72aad1", slug: "fantasy-04", category: "Fantasy", image_url: "/api/avatars/img/fantasy-04" }, { id: "02af33587005ec54", slug: "expert-08", category: "Expert", image_url: "/api/avatars/img/expert-08" }, { id: "f59fa0d2d4a52da9", slug: "fantasy-07", category: "Fantasy", image_url: "/api/avatars/img/fantasy-07" }, { id: "1adc5831f2a6cd83", slug: "alex", category: "Business", image_url: "/api/avatars/img/alex" }, { id: "7654cf80f7f49a91", slug: "sarah", category: "Business", image_url: "/api/avatars/img/sarah" }, { id: "9546cef00e19c2da", slug: "marcus", category: "Business", image_url: "/api/avatars/img/marcus" }, { id: "5d22a0dcde2ec384", slug: "diana", category: "Business", image_url: "/api/avatars/img/diana" }, { id: "99366ec1f89e00c9", slug: "leo", category: "Creativity", image_url: "/api/avatars/img/leo" }, { id: "3f85d0c0864ed624", slug: "zara", category: "Creativity", image_url: "/api/avatars/img/zara" }, { id: "816687d3bbfa94c6", slug: "kai", category: "Education", image_url: "/api/avatars/img/kai" }, { id: "777fa97d66765c7b", slug: "prof-james", category: "Education", image_url: "/api/avatars/img/prof-james" }, { id: "a15e356b6d211790", slug: "maya", category: "Education", image_url: "/api/avatars/img/maya" }, { id: "98ae5c5ae60410a5", slug: "ethan", category: "Education", image_url: "/api/avatars/img/ethan" }, { id: "6336f9e456fe8bf3", slug: "dr-nora", category: "Health", image_url: "/api/avatars/img/dr-nora" }, { id: "01edf97260e9c79a", slug: "jake", category: "Health", image_url: "/api/avatars/img/jake" }, { id: "67258a6b886f8bcb", slug: "luna", category: "Technology", image_url: "/api/avatars/img/luna" }, { id: "ab3dc37da75071e1", slug: "dr-ben", category: "Technology", image_url: "/api/avatars/img/dr-ben" }, { id: "b5af67d61b4253af", slug: "nova", category: "Technology", image_url: "/api/avatars/img/nova" }, { id: "4961c7e62c358235", slug: "dev", category: "Technology", image_url: "/api/avatars/img/dev" }, { id: "0f68f79143fe7f12", slug: "aria", category: "Finance", image_url: "/api/avatars/img/aria" }, { id: "8ee6daf89856b905", slug: "victor", category: "Finance", image_url: "/api/avatars/img/victor" }, { id: "9c651cb88d46adee", slug: "claire", category: "Finance", image_url: "/api/avatars/img/claire" }, { id: "9dcd063928b84355", slug: "rico", category: "Finance", image_url: "/api/avatars/img/rico" }], categories: ["Business", "Creative", "Creativity", "Education", "Expert", "Fantasy", "Finance", "Gen Z", "Global", "Health", "Technology"] };
+// src/onboarding/tui-wizard.ts
+init_loader();
+init_connectors();
+init_consent();
 
-// src/avatar/manifest.ts
-var MANIFEST = avatars_default;
-var AVATARS = MANIFEST.avatars ?? [];
-var AVATAR_ORIGIN = "https://oriro.ai";
-function avatarCategories() {
-  const seen = /* @__PURE__ */ new Set();
-  for (const a of AVATARS) seen.add(a.category);
-  return [...seen];
-}
-function avatarsInCategory(category) {
-  const c = category.toLowerCase();
-  return AVATARS.filter((a) => a.category.toLowerCase() === c);
-}
-function avatarBySlug(slug) {
-  const s = (slug || "").toLowerCase();
-  return AVATARS.find((a) => a.slug.toLowerCase() === s);
-}
-function avatarImageUrl(a) {
-  return a.image_url.startsWith("http") ? a.image_url : `${AVATAR_ORIGIN}${a.image_url}`;
-}
-var AVATAR_COUNT = AVATARS.length;
-
-// src/avatar/config.ts
-import { join as join5 } from "path";
-import { readFileSync as readFileSync4, writeFileSync as writeFileSync3 } from "fs";
+// src/onboarding/steps.ts
 init_paths();
-var FILE3 = () => join5(oriroDir(), "avatar.json");
-function readAvatarConfig() {
+init_loader();
+init_connectors();
+init_theme();
+import { stdin, stdout as stdout2 } from "process";
+import { createInterface } from "readline/promises";
+import { existsSync as existsSync3, mkdirSync as mkdirSync4, writeFileSync as writeFileSync6 } from "fs";
+import { join as join9 } from "path";
+
+// src/onboarding/prompt.ts
+init_theme();
+import { stdout } from "process";
+async function ask2(rl, question) {
   try {
-    return JSON.parse(readFileSync4(FILE3(), "utf8"));
+    return await rl.question(question);
   } catch {
-    return null;
+    try {
+      rl.close();
+    } catch {
+    }
+    stdout.write(dim("\nBye.\n"));
+    process.exit(0);
   }
 }
-function writeAvatarConfig(cfg) {
-  const f = join5(ensureOriroDir(), "avatar.json");
-  writeFileSync3(f, JSON.stringify(cfg, null, 2) + "\n", "utf8");
+
+// src/onboarding/steps.ts
+function markerFile(name) {
+  return join9(oriroDir(), name);
 }
-function isAvatarConfigured() {
-  return readAvatarConfig() !== null;
+function settled(name) {
+  try {
+    return existsSync3(markerFile(name));
+  } catch {
+    return false;
+  }
 }
-function getSelectedAvatar() {
-  const cfg = readAvatarConfig();
-  return cfg && avatarBySlug(cfg.slug) || null;
+function settle(name, data = {}) {
+  try {
+    mkdirSync4(oriroDir(), { recursive: true });
+    writeFileSync6(markerFile(name), `${JSON.stringify({ at: (/* @__PURE__ */ new Date()).toISOString(), ...data }, null, 2)}
+`, "utf8");
+  } catch {
+  }
 }
-function setSelectedAvatar(avatar, opts) {
-  const cfg = {
-    slug: avatar.slug,
-    voiceId: avatar.voice_id,
-    show: true,
-    speak: opts?.speak ?? false
-  };
-  writeAvatarConfig(cfg);
-  return cfg;
+function markOnboarded(name, data = {}) {
+  settle(name, data);
+}
+var WELCOME = {
+  en: "Welcome to ORIRO-CLI",
+  es: "Bienvenido a ORIRO-CLI",
+  fr: "Bienvenue sur ORIRO-CLI",
+  de: "Willkommen bei ORIRO-CLI",
+  pt: "Bem-vindo ao ORIRO-CLI",
+  it: "Benvenuto in ORIRO-CLI",
+  nl: "Welkom bij ORIRO-CLI",
+  hi: "ORIRO-CLI \u092E\u0947\u0902 \u0906\u092A\u0915\u093E \u0938\u094D\u0935\u093E\u0917\u0924 \u0939\u0948",
+  zh: "\u6B22\u8FCE\u4F7F\u7528 ORIRO-CLI",
+  ja: "ORIRO-CLI \u3078\u3088\u3046\u3053\u305D",
+  ko: "ORIRO-CLI\uC5D0 \uC624\uC2E0 \uAC83\uC744 \uD658\uC601\uD569\uB2C8\uB2E4",
+  ru: "\u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 ORIRO-CLI",
+  ar: "\u0645\u0631\u062D\u0628\u064B\u0627 \u0628\u0643 \u0641\u064A ORIRO-CLI",
+  tr: "ORIRO-CLI'ye ho\u015F geldiniz",
+  pl: "Witamy w ORIRO-CLI",
+  uk: "\u041B\u0430\u0441\u043A\u0430\u0432\u043E \u043F\u0440\u043E\u0441\u0438\u043C\u043E \u0434\u043E ORIRO-CLI",
+  vi: "Ch\xE0o m\u1EEBng \u0111\u1EBFn v\u1EDBi ORIRO-CLI",
+  id: "Selamat datang di ORIRO-CLI",
+  th: "\u0E22\u0E34\u0E19\u0E14\u0E35\u0E15\u0E49\u0E2D\u0E19\u0E23\u0E31\u0E1A\u0E2A\u0E39\u0E48 ORIRO-CLI",
+  sv: "V\xE4lkommen till ORIRO-CLI",
+  bn: "ORIRO-CLI \u09A4\u09C7 \u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE",
+  ta: "ORIRO-CLI \u0B95\u0BCD\u0B95\u0BC1 \u0BB5\u0BB0\u0BB5\u0BC7\u0BB1\u0BCD\u0B95\u0BBF\u0BB1\u0BCB\u0BAE\u0BCD",
+  te: "ORIRO-CLI \u0C15\u0C3F \u0C38\u0C4D\u0C35\u0C3E\u0C17\u0C24\u0C02",
+  mr: "ORIRO-CLI \u092E\u0927\u094D\u092F\u0947 \u0906\u092A\u0932\u0947 \u0938\u094D\u0935\u093E\u0917\u0924 \u0906\u0939\u0947"
+};
+function welcomeIn(code) {
+  return WELCOME[(code || "en").toLowerCase().slice(0, 2)] ?? WELCOME.en ?? "Welcome to ORIRO-CLI";
+}
+function hasSkillsChoice() {
+  return settled("skills-onboarded.json");
+}
+async function runSkillsStep() {
+  const s = await loadOriroSkills();
+  stdout2.write(
+    `
+  ${accent("Skills")} \u2014 ${accent(String(s.all.length))} are bundled and ${accent("already active")} ${dim(`(${s.core.length} model-visible \xB7 ${s.tail.length} on-demand via /name)`)}.
+  ${dim("Nothing to install. Browse them anytime with ")}${accent("oriro skills list")}${dim(" or ")}${accent("/skill")}${dim(" in chat.")}
+`
+  );
+  const rl = createInterface({ input: stdin, output: stdout2 });
+  try {
+    await ask2(rl, `  ${dim("Press Enter to keep all active\u2026")} `);
+  } finally {
+    rl.close();
+  }
+  settle("skills-onboarded.json", { count: s.all.length });
+}
+function hasConnectorsChoice() {
+  return settled("connectors-onboarded.json");
+}
+async function runConnectorsStep() {
+  const addable = listConnectors().filter((c) => c.mcpUrl).length;
+  stdout2.write(
+    `
+  ${accent("Connectors")} \u2014 ${accent(String(addable))} MCP integrations available ${dim("(e.g. ")}${accent("slack")}${dim(", ")}${accent("github")}${dim(", ")}${accent("notion")}${dim(", ")}${accent("linear")}${dim(").")}
+  ${dim("Type a name to add one now, or press Enter to skip \u2014 add anytime with ")}${accent("oriro connectors add <name>")}${dim(".")}
+`
+  );
+  const rl = createInterface({ input: stdin, output: stdout2 });
+  try {
+    const slug = (await ask2(rl, `  ${accent("\u203A")} Connector name ${dim("(or Enter to skip)")}: `)).trim().replace(/^\/+/, "").replace(/^add\s+/i, "").trim();
+    if (slug && !/^connectors?$/i.test(slug)) {
+      const res = addConnector(slug);
+      stdout2.write(res.ok ? `  ${accent("\u2713")} added ${accent(slug)} \u2014 recorded locally.
+` : `  ${dim(`${res.error ?? "not a known connector"} \u2014 see the full list with `)}${accent("oriro connectors list")}${dim(". Skipping for now.")}
+`);
+    } else {
+      stdout2.write(`  ${dim("Skipped \u2014 none added. You can add your own MCP server with `oriro connectors setup`.")}
+`);
+    }
+  } finally {
+    rl.close();
+  }
+  settle("connectors-onboarded.json", {});
+}
+function hasModelsChoice() {
+  return settled("models-onboarded.json");
+}
+async function runModelsStep() {
+  stdout2.write(
+    `
+  ${bold(accent("ORIRO Gauss + Avila"))} ${dim("(V2.4)")} \u2014 your own ${accent("on-device")} models, ${accent("ready now")}.
+    ${dim("\u2022")} run ${accent("fully on this machine")} ${dim("\u2014 $0, no key, private (no Ollama needed)")}
+    ${dim("\u2022")} join your ${accent("router race")} alongside the free routers ${dim("(and your BYOK)")}
+    ${dim("\u2022")} device-locked on download ${dim("\u2014 the weights never leave this machine")}
+  ${dim("Download them (\u22488 GB each, resumable):")}
+    ${accent("1.")} ${dim("get a one-time code on")} ${accent("oriro.app \u2192 Download \u2192 \u201CConnect this computer\u201D")}
+    ${accent("2.")} ${accent("oriro login <code>")}  ${dim("then")}  ${accent("oriro models pull")}
+  ${dim("Already downloaded the GGUFs from oriro.app? ")}${accent("oriro models import <files>")}${dim(" \u2014 no login needed.")}
+`
+  );
+  const rl = createInterface({ input: stdin, output: stdout2 });
+  try {
+    await ask2(rl, `  ${dim("Press Enter to continue\u2026")} `);
+  } finally {
+    rl.close();
+  }
+  settle("models-onboarded.json", { status: "ready", version: "2.4" });
+}
+
+// src/onboarding/capability-tour.ts
+init_theme();
+var TOUR = [
+  { title: "Plan \u2192 do", cmd: "/plan <task>  \u2192  /approve", blurb: "read-only plan first, then execute it" },
+  { title: "Parallel agents", cmd: "/agents <A> | <B>", blurb: "sub-agents in isolated git worktrees" },
+  { title: "Make an image", cmd: "/imagine <scene>", blurb: "keyless SVG art, saved to your folder" },
+  { title: "Prove it works", cmd: "/prove [n|url] --video", blurb: "render in a real browser, save the evidence" },
+  { title: "See any website", cmd: "oriro head <url> --code", blurb: "ORIRO visits it and returns code/spec/shots" },
+  { title: "Never lose work", cmd: "oriro -c   \xB7   /sessions   \xB7   /undo", blurb: "resume, list, rewind \u2014 all local" },
+  { title: "Free the context", cmd: "/compact   \xB7   /init", blurb: "summarize a long chat \xB7 seed project memory" },
+  { title: "Use it in your editor", cmd: "oriro serve acp | mcp", blurb: "drive ORIRO from Zed/JetBrains, or as an MCP tool" },
+  { title: "Your own on-device models", cmd: "oriro login <code>  \u2192  oriro models pull", blurb: "download Gauss + Avila V2.4, run them locally ($0, private)" },
+  { title: "Speak & 100 languages", cmd: "/voice   \xB7   oriro language", blurb: "talk to it; work in your own language" }
+];
+var FIRST_WIN = "make me a landing page for a coffee shop, then /prove it";
+function capabilityTourLines() {
+  const lines = [];
+  lines.push("");
+  lines.push(`  ${bold(accent("Here's what you can do"))} ${dim("\u2014 type these anytime in the chat:")}`);
+  for (const t of TOUR) {
+    lines.push(`    ${accent(t.cmd)}`);
+    lines.push(`      ${dim(`${t.title} \u2014 ${t.blurb}`)}`);
+  }
+  lines.push("");
+  lines.push(`  ${bold("Try this first:")}  ${accent(FIRST_WIN)}`);
+  lines.push(`  ${dim("Full list anytime:")} ${accent("/help")} ${dim("in chat, or")} ${accent("oriro --help")} ${dim("in your shell.")}`);
+  return lines;
+}
+
+// src/onboarding/tui-wizard.ts
+init_theme();
+var TOTAL = 8;
+async function runTuiWizard() {
+  const term = new ProcessTerminal();
+  const tui = new TUI2(term, true);
+  const root = new Container2();
+  tui.addChild(root);
+  tui.start();
+  try {
+    if (!isLanguageConfigured()) {
+      const lang = await pickList(tui, root, {
+        step: 1,
+        total: TOTAL,
+        title: "Language",
+        subtitle: `${LANGUAGES.length} languages \xB7 ${NEURAL_VOICE_COUNT} with a built-in voice (\u2605). You type in yours; the AI works in English for you.`,
+        items: LANGUAGES,
+        height: 12,
+        label: (l) => `${l.neuralVoice ? "\u2605" : " "} ${l.name}  (${l.code})`,
+        filter: (all, q) => searchLanguages(q),
+        filterHint: "type a language or ISO code"
+      });
+      if (lang) setTerminalLanguage(lang);
+    }
+    await activateGuardian();
+    await notice(tui, root, {
+      step: 2,
+      total: TOTAL,
+      title: "Safety & sight",
+      lines: [
+        `  ${accent("\u{1F6E1} Guardian V3")} ${dim("is on by default \u2014 it blocks wipes, exfiltration and curl|sh in every mode.")}`,
+        `  ${accent("\u{1F9ED} Head")} ${dim("is ready \u2014 ORIRO can visit a live site and SEE it (structure, code, screenshots).")}`
+      ]
+    });
+    if (!isAvatarConfigured()) {
+      const cats = avatarCategories();
+      const cat = await pickList(tui, root, {
+        step: 3,
+        total: TOTAL,
+        title: "Avatar",
+        subtitle: `${AVATAR_COUNT} faces \u2014 your avatar floats in the terminal and speaks. (Esc to skip.)`,
+        items: cats,
+        height: 12,
+        label: (c) => `${c}  (${avatarsInCategory(c).length})`
+      });
+      if (cat) {
+        const faces = avatarsInCategory(cat);
+        const face = await pickList(tui, root, {
+          step: 3,
+          total: TOTAL,
+          title: `Avatar \xB7 ${cat}`,
+          items: faces,
+          height: 12,
+          label: (a) => a.slug
+        });
+        if (face) setSelectedAvatar(face, { speak: false });
+      }
+    }
+    const s = await loadOriroSkills();
+    await notice(tui, root, {
+      step: 4,
+      total: TOTAL,
+      title: "Skills",
+      lines: [
+        `  ${accent(String(s.all.length))} ${dim(`skills bundled and already active (${s.core.length} model-visible \xB7 ${s.tail.length} on-demand).`)}`,
+        `  ${dim("Nothing to install. Browse with ")}${accent("oriro skills list")}${dim(" or ")}${accent("/skill")}${dim(" in chat.")}`
+      ]
+    });
+    markOnboarded("skills-onboarded.json", { count: s.all.length });
+    const addable = listConnectors().filter((c) => c.mcpUrl).length;
+    const slug = (await promptLine(tui, root, {
+      step: 5,
+      total: TOTAL,
+      title: "Connectors",
+      lines: [
+        `  ${accent(String(addable))} ${dim("MCP integrations available (e.g. ")}${accent("slack")}${dim(", ")}${accent("github")}${dim(", ")}${accent("notion")}${dim(").")}`,
+        `  ${dim("Type a name to add one now, or leave empty to skip (add anytime with ")}${accent("oriro connectors add")}${dim(").")}`
+      ],
+      label: "Connector name"
+    })).replace(/^\/+/, "").replace(/^add\s+/i, "").trim();
+    let connectorNote = `  ${dim("Skipped \u2014 add one anytime with ")}${accent("oriro connectors add <name>")}${dim(".")}`;
+    if (slug && !/^connectors?$/i.test(slug)) {
+      const res = addConnector(slug);
+      connectorNote = res.ok ? `  ${accent("\u2713")} ${dim("added ")}${accent(slug)}${dim(" \u2014 recorded locally.")}` : `  ${dim(`${res.error ?? "not a known connector"} \u2014 see `)}${accent("oriro connectors list")}${dim(".")}`;
+    }
+    markOnboarded("connectors-onboarded.json", {});
+    await notice(tui, root, {
+      step: 6,
+      total: TOTAL,
+      title: "Routers",
+      lines: [
+        connectorNote,
+        "",
+        `  ${dim("Free keyless routers race for every answer \u2014 no key, $0. They're active now.")}`,
+        `  ${dim("Add your own key for a faster private lane anytime: ")}${accent("oriro routers add")}${dim(".")}`
+      ]
+    });
+    await notice(tui, root, {
+      step: 7,
+      total: TOTAL,
+      title: "Your own models",
+      lines: [
+        `  ${bold(accent("Gauss + Avila"))} ${dim("(V2.4)")} \u2014 ${accent("ready now")} ${dim("to run on THIS machine ($0, no key, private).")}`,
+        `  ${dim("Download (\u22488 GB each, resumable, device-locked):")}`,
+        `    ${accent("1.")} ${dim("get a code on")} ${accent("oriro.app \u2192 Download \u2192 \u201CConnect this computer\u201D")}`,
+        `    ${accent("2.")} ${accent("oriro login <code>")}  ${dim("then")}  ${accent("oriro models pull")}`
+      ]
+    });
+    markOnboarded("models-onboarded.json", { status: "ready", version: "2.4" });
+    if (!hasScribeChoice()) {
+      const yes = await confirmYesNo(tui, root, {
+        step: 8,
+        total: TOTAL,
+        title: "Memory",
+        def: false,
+        lines: [
+          `  ${dim("The Scriber keeps your work in context on THIS machine only \u2014 it never leaves it.")}`,
+          `  ${dim("Redacted before disk, reversible anytime with ")}${accent("oriro scribe off")}${dim(".")}`
+        ]
+      });
+      setScribeConsent(yes);
+    }
+  } finally {
+    tui.stop();
+  }
+  stdout3.write(`
+  ${bold(accent(welcomeIn(getTerminalLanguage().code)))}
+`);
+  stdout3.write(capabilityTourLines().join("\n") + "\n");
+  stdout3.write(`
+  ${accent("ORIRO is ready.")} ${dim("Just type to start \u2014 or try the line above.")}
+
+`);
+}
+
+// src/language/translate.ts
+var active2 = null;
+function registerTranslator(t) {
+  active2 = t;
+}
+var isEnglish = (code) => !code || code.toLowerCase().startsWith("en");
+async function translateForCoder(text, fromLang) {
+  if (isEnglish(fromLang) || !text.trim()) return text;
+  if (active2 && active2.ready()) {
+    try {
+      return await active2.toEnglish(text, fromLang);
+    } catch {
+    }
+  }
+  return text;
+}
+async function translateForUser(english, toLang) {
+  if (isEnglish(toLang) || !english.trim()) return english;
+  if (active2 && active2.ready()) {
+    try {
+      return await active2.fromEnglish(english, toLang);
+    } catch {
+    }
+  }
+  return english;
+}
+
+// src/language/onboarding.ts
+import { createInterface as createInterface2 } from "readline/promises";
+import { stdin as stdin2, stdout as stdout4 } from "process";
+var C = {
+  teal: "\x1B[38;2;45;212;191m",
+  purple: "\x1B[38;2;128;96;222m",
+  dim: "\x1B[2m",
+  bold: "\x1B[1m",
+  reset: "\x1B[0m"
+};
+function header() {
+  stdout4.write(`
+  ${C.teal}\u25EF${C.reset} ${C.bold}ORIRO${C.reset} ${C.dim}\u2014 your terminal, your language${C.reset}
+`);
+  stdout4.write(`  ${C.dim}You type and read in your language; the AI works in English for you.${C.reset}
+`);
+  stdout4.write(`  ${C.dim}${LANGUAGES.length} languages \xB7 ${NEURAL_VOICE_COUNT} with a built-in voice (${C.purple}\u2605${C.dim}).${C.reset}
+
+`);
+}
+function renderList(list) {
+  const shown = list.slice(0, 15);
+  shown.forEach((l, i) => {
+    const star = l.neuralVoice ? `${C.purple}\u2605${C.reset}` : " ";
+    stdout4.write(`  ${C.teal}${String(i + 1).padStart(2)}${C.reset}  ${star} ${l.name} ${C.dim}(${l.code})${C.reset}
+`);
+  });
+  if (list.length > shown.length) {
+    stdout4.write(`  ${C.dim}\u2026 ${list.length - shown.length} more \u2014 keep typing to narrow.${C.reset}
+`);
+  }
+}
+async function selectLanguageInteractive() {
+  header();
+  const rl = createInterface2({ input: stdin2, output: stdout4 });
+  try {
+    let list = searchLanguages("");
+    renderList(list);
+    for (; ; ) {
+      const ans = (await ask2(rl, `
+  ${C.teal}\u203A${C.reset} Type a language, or a number to pick: `)).trim();
+      const n = Number(ans);
+      const shown = Math.min(15, list.length);
+      const byNumber = ans && Number.isInteger(n) && n >= 1 && n <= shown ? list[n - 1] : void 0;
+      if (byNumber) return byNumber;
+      const direct = languageByCode(ans);
+      if (direct) return direct;
+      list = searchLanguages(ans);
+      if (list.length === 0) {
+        stdout4.write(`  ${C.dim}No match \u2014 try the English name or ISO code.${C.reset}
+`);
+        list = searchLanguages("");
+      } else {
+        const only = list.length === 1 ? list[0] : void 0;
+        if (only) return only;
+      }
+      stdout4.write("\n");
+      renderList(list);
+    }
+  } finally {
+    rl.close();
+  }
+}
+async function runLanguageOnboarding() {
+  const existing = readLanguageConfig();
+  if (existing) {
+    const l = languageByCode(existing.code);
+    if (l) return l;
+  }
+  const lang = await selectLanguageInteractive();
+  setTerminalLanguage(lang);
+  stdout4.write(
+    `
+  ${C.teal}\u25EF${C.reset} ${C.bold}${lang.name}${C.reset} is now your terminal language. ${C.dim}Change it anytime with ${C.reset}${C.teal}oriro language${C.reset}
+
+`
+  );
+  return lang;
 }
 
 // src/avatar/cache.ts
 import { homedir as homedir3 } from "os";
-import { join as join6 } from "path";
-import { mkdirSync as mkdirSync3, readFileSync as readFileSync5, writeFileSync as writeFileSync4, statSync } from "fs";
-var CACHE_DIR = join6(homedir3(), ".oriro", "avatars");
+import { join as join10 } from "path";
+import { mkdirSync as mkdirSync5, readFileSync as readFileSync7, writeFileSync as writeFileSync7, statSync } from "fs";
+var CACHE_DIR = join10(homedir3(), ".oriro", "avatars");
 function avatarCachePath(slug) {
-  return join6(CACHE_DIR, `${slug}.png`);
+  return join10(CACHE_DIR, `${slug}.png`);
 }
 function isAvatarCached(slug) {
   try {
@@ -5892,12 +6440,12 @@ async function ensureAvatarImage(avatar) {
   const res = await fetch(avatarImageUrl(avatar));
   if (!res.ok) throw new Error(`avatar image fetch failed (${res.status}) for ${avatar.slug}`);
   const bytes = new Uint8Array(await res.arrayBuffer());
-  mkdirSync3(CACHE_DIR, { recursive: true });
-  writeFileSync4(path, bytes);
+  mkdirSync5(CACHE_DIR, { recursive: true });
+  writeFileSync7(path, bytes);
   return path;
 }
 function readCachedAvatar(slug) {
-  return new Uint8Array(readFileSync5(avatarCachePath(slug)));
+  return new Uint8Array(readFileSync7(avatarCachePath(slug)));
 }
 
 // src/avatar/render.ts
@@ -5955,8 +6503,8 @@ function renderAvatar(avatar, pngBytes, opts) {
 // src/avatar/voice.ts
 import { spawn } from "child_process";
 import { tmpdir } from "os";
-import { join as join7 } from "path";
-import { writeFileSync as writeFileSync5, rmSync } from "fs";
+import { join as join11 } from "path";
+import { writeFileSync as writeFileSync8, rmSync } from "fs";
 var synth = null;
 var listener = null;
 function registerVoiceSynth(fn) {
@@ -5978,8 +6526,8 @@ function audioPlayers(file6) {
   ];
 }
 function playWav(wav) {
-  const file6 = join7(tmpdir(), `oriro-avatar-${process.pid}-${wav.length}.wav`);
-  writeFileSync5(file6, wav);
+  const file6 = join11(tmpdir(), `oriro-avatar-${process.pid}-${wav.length}.wav`);
+  writeFileSync8(file6, wav);
   const players = audioPlayers(file6);
   return new Promise((resolve3) => {
     const tryPlayer = (i) => {
@@ -6021,19 +6569,19 @@ async function listen() {
 }
 
 // src/avatar/onboarding.ts
-import { stdin as stdin2, stdout as stdout3 } from "process";
-import { createInterface as createInterface2 } from "readline/promises";
+import { stdin as stdin3, stdout as stdout5 } from "process";
+import { createInterface as createInterface3 } from "readline/promises";
 
 // src/avatar/system-voice.ts
 import { spawn as spawn2 } from "child_process";
 import { tmpdir as tmpdir2 } from "os";
-import { join as join8 } from "path";
-import { existsSync, readFileSync as readFileSync6, rmSync as rmSync2 } from "fs";
+import { join as join12 } from "path";
+import { existsSync as existsSync4, readFileSync as readFileSync8, rmSync as rmSync2 } from "fs";
 function tmpWav() {
-  return join8(tmpdir2(), `oriro-tts-${process.pid}-${Date.now()}-${Math.floor(performance.now())}.wav`);
+  return join12(tmpdir2(), `oriro-tts-${process.pid}-${Date.now()}-${Math.floor(performance.now())}.wav`);
 }
 function readAndClean(file6) {
-  const buf = readFileSync6(file6);
+  const buf = readFileSync8(file6);
   rmSync2(file6, { force: true });
   return new Uint8Array(buf);
 }
@@ -6045,7 +6593,7 @@ function winSapi(text, lang) {
     const p = spawn2("powershell", ["-NoProfile", "-Command", ps], { stdio: ["pipe", "ignore", "ignore"] });
     p.on("error", reject);
     p.on("close", (code) => {
-      if (code === 0 && existsSync(out)) resolve3(readAndClean(out));
+      if (code === 0 && existsSync4(out)) resolve3(readAndClean(out));
       else reject(new Error("SAPI synth failed"));
     });
     p.stdin.write(text);
@@ -6059,7 +6607,7 @@ function macSay(text) {
     p.on("error", reject);
     p.on(
       "close",
-      (code) => code === 0 && existsSync(out) ? resolve3(readAndClean(out)) : reject(new Error("say failed"))
+      (code) => code === 0 && existsSync4(out) ? resolve3(readAndClean(out)) : reject(new Error("say failed"))
     );
   });
 }
@@ -6070,7 +6618,7 @@ function linuxEspeak(text) {
     p.on("error", reject);
     p.on(
       "close",
-      (code) => code === 0 && existsSync(out) ? resolve3(readAndClean(out)) : reject(new Error("espeak failed"))
+      (code) => code === 0 && existsSync4(out) ? resolve3(readAndClean(out)) : reject(new Error("espeak failed"))
     );
   });
 }
@@ -6095,7 +6643,7 @@ var C3 = {
   reset: "\x1B[0m"
 };
 async function previewAvatar(avatar) {
-  stdout3.write(
+  stdout5.write(
     `
   ${C3.teal}\u25EF${C3.reset} ${C3.bold}${avatar.slug}${C3.reset} is now your terminal face. ${C3.dim}Change anytime with ${C3.reset}${C3.teal}oriro avatar${C3.reset}
 `
@@ -6106,19 +6654,19 @@ async function previewAvatar(avatar) {
     png = readCachedAvatar(avatar.slug);
   } catch {
   }
-  stdout3.write("\n" + renderAvatar(avatar, png) + "\n");
+  stdout5.write("\n" + renderAvatar(avatar, png) + "\n");
   setupSystemVoice();
   const spoke = await speak(`Hi, I'm ${avatar.slug}, your ORIRO terminal face. I'll speak your replies.`, {
     voiceId: avatar.slug,
     lang: "en-US"
   });
-  if (spoke) stdout3.write(`  ${C3.dim}(spoken aloud in your terminal's voice)${C3.reset}
+  if (spoke) stdout5.write(`  ${C3.dim}(spoken aloud in your terminal's voice)${C3.reset}
 `);
 }
 async function selectAvatarInteractive() {
-  const rl = createInterface2({ input: stdin2, output: stdout3 });
+  const rl = createInterface3({ input: stdin3, output: stdout5 });
   try {
-    stdout3.write(
+    stdout5.write(
       `
   ${C3.teal}\u25EF${C3.reset} ${C3.bold}Choose your ORIRO avatar${C3.reset} ${C3.dim}\u2014 ${AVATAR_COUNT} faces, it floats in your terminal and speaks.${C3.reset}
 
@@ -6126,44 +6674,44 @@ async function selectAvatarInteractive() {
     );
     const cats = avatarCategories();
     cats.forEach(
-      (cat2, i) => stdout3.write(
+      (cat2, i) => stdout5.write(
         `  ${C3.teal}${String(i + 1).padStart(2)}${C3.reset}  ${cat2} ${C3.dim}(${avatarsInCategory(cat2).length})${C3.reset}
 `
       )
     );
     let cat;
     for (; ; ) {
-      const ans = (await ask(rl, `
+      const ans = (await ask2(rl, `
   ${C3.teal}\u203A${C3.reset} Pick a category number ${C3.dim}(or Enter to skip)${C3.reset}: `)).trim();
       if (!ans) {
-        stdout3.write(`  ${C3.dim}Skipped \u2014 no avatar.${C3.reset}
+        stdout5.write(`  ${C3.dim}Skipped \u2014 no avatar.${C3.reset}
 `);
         return null;
       }
       const n = Number(ans);
       cat = Number.isInteger(n) ? cats[n - 1] : void 0;
       if (cat) break;
-      stdout3.write(`  ${C3.dim}Please enter a number from the list.${C3.reset}
+      stdout5.write(`  ${C3.dim}Please enter a number from the list.${C3.reset}
 `);
     }
     const list = avatarsInCategory(cat);
-    stdout3.write("\n");
+    stdout5.write("\n");
     list.forEach(
-      (a, i) => stdout3.write(`  ${C3.teal}${String(i + 1).padStart(2)}${C3.reset}  ${a.slug}
+      (a, i) => stdout5.write(`  ${C3.teal}${String(i + 1).padStart(2)}${C3.reset}  ${a.slug}
 `)
     );
     for (; ; ) {
-      const ans = (await ask(rl, `
+      const ans = (await ask2(rl, `
   ${C3.teal}\u203A${C3.reset} Pick an avatar number ${C3.dim}(or Enter to skip)${C3.reset}: `)).trim();
       if (!ans) {
-        stdout3.write(`  ${C3.dim}Skipped \u2014 no avatar.${C3.reset}
+        stdout5.write(`  ${C3.dim}Skipped \u2014 no avatar.${C3.reset}
 `);
         return null;
       }
       const n = Number(ans);
       const chosen = Number.isInteger(n) ? list[n - 1] : void 0;
       if (chosen) return chosen;
-      stdout3.write(`  ${C3.dim}Please enter a number from the list.${C3.reset}
+      stdout5.write(`  ${C3.dim}Please enter a number from the list.${C3.reset}
 `);
     }
   } finally {
@@ -6187,10 +6735,10 @@ init_consent();
 
 // src/routers/onboarding.ts
 init_paths();
-import { createInterface as createInterface3 } from "readline/promises";
-import { stdin as stdin3, stdout as stdout4 } from "process";
-import { existsSync as existsSync4, mkdirSync as mkdirSync7, writeFileSync as writeFileSync9 } from "fs";
-import { join as join12 } from "path";
+import { createInterface as createInterface4 } from "readline/promises";
+import { stdin as stdin4, stdout as stdout6 } from "process";
+import { existsSync as existsSync6, mkdirSync as mkdirSync8, writeFileSync as writeFileSync11 } from "fs";
+import { join as join15 } from "path";
 
 // src/routers/catalog.ts
 var C4 = (e) => ({
@@ -6568,81 +7116,81 @@ function routerById(id) {
 init_router_pool();
 init_floor();
 init_theme();
-function markerFile() {
-  return join12(oriroDir(), "routers", "onboarded.json");
+function markerFile2() {
+  return join15(oriroDir(), "routers", "onboarded.json");
 }
 function hasRouterChoice() {
   try {
-    return existsSync4(markerFile());
+    return existsSync6(markerFile2());
   } catch {
     return false;
   }
 }
 function markRouterOnboarded() {
   try {
-    mkdirSync7(join12(oriroDir(), "routers"), { recursive: true });
-    writeFileSync9(markerFile(), `${JSON.stringify({ onboardedAt: (/* @__PURE__ */ new Date()).toISOString() }, null, 2)}
+    mkdirSync8(join15(oriroDir(), "routers"), { recursive: true });
+    writeFileSync11(markerFile2(), `${JSON.stringify({ onboardedAt: (/* @__PURE__ */ new Date()).toISOString() }, null, 2)}
 `, "utf8");
   } catch {
   }
 }
 async function runRouterOnboarding() {
-  stdout4.write(
+  stdout6.write(
     `
   ${accent("Routers")} \u2014 these ${accent("free keyless")} routers race for you by default ${dim("(no key, $0)")}:
 `
   );
   for (const r of KEYLESS_FLOOR) {
     const local = /localhost|127\.0\.0\.1/.test(r.baseUrl);
-    stdout4.write(`    ${accent("\u25CF")} ${r.name.padEnd(22)} ${dim(local ? "on-device (if installed)" : "hosted \xB7 active")}
+    stdout6.write(`    ${accent("\u25CF")} ${r.name.padEnd(22)} ${dim(local ? "on-device (if installed)" : "hosted \xB7 active")}
 `);
   }
-  stdout4.write(
+  stdout6.write(
     `  ${dim("They're active now \u2014 you can chat immediately. Add your own key for a faster, private lane, or skip.")}
 `
   );
-  const rl = createInterface3({ input: stdin3, output: stdout4 });
+  const rl = createInterface4({ input: stdin4, output: stdout6 });
   try {
-    const add = (await ask(rl, `  Add your own key now? ${dim("[y/N]")} `)).trim().toLowerCase();
+    const add = (await ask2(rl, `  Add your own key now? ${dim("[y/N]")} `)).trim().toLowerCase();
     if (add === "y" || add === "yes") {
       const picks = ROUTER_CATALOG.filter(
         (r) => !r.comingSoon && !r.keyless && (!r.kind || r.kind === "chat")
       ).slice(0, 8);
-      stdout4.write(`
+      stdout6.write(`
   ${dim("Free providers (grab a free key from each provider's site):")}
 `);
       for (const r of picks) {
-        stdout4.write(`    ${accent(r.id.padEnd(14))} ${dim(r.displayName)}
+        stdout6.write(`    ${accent(r.id.padEnd(14))} ${dim(r.displayName)}
 `);
       }
-      stdout4.write(`    ${dim("\u2026or any id from `oriro routers list`")}
+      stdout6.write(`    ${dim("\u2026or any id from `oriro routers list`")}
 
 `);
-      const slug = (await ask(rl, `  Which provider? ${dim("(id, or blank to skip)")} `)).trim();
+      const slug = (await ask2(rl, `  Which provider? ${dim("(id, or blank to skip)")} `)).trim();
       if (slug) {
         const entry = routerById(slug);
         if (!entry) {
-          stdout4.write(`  ${dim(`Unknown '${slug}' \u2014 skipped. You can add it later: oriro routers add ${slug}`)}
+          stdout6.write(`  ${dim(`Unknown '${slug}' \u2014 skipped. You can add it later: oriro routers add ${slug}`)}
 `);
         } else {
-          const key = (await ask(rl, `  Paste your ${accent(entry.displayName)} API key: `)).trim();
+          const key = (await ask2(rl, `  Paste your ${accent(entry.displayName)} API key: `)).trim();
           if (key) {
-            stdout4.write(`  ${dim("Validating\u2026")}
+            stdout6.write(`  ${dim("Validating\u2026")}
 `);
             const res = await addRouter(entry, { key });
             if (res.ok) {
-              stdout4.write(
+              stdout6.write(
                 `  ${accent("\u2713")} added ${accent(slug)} (${res.validation.latencyMs}ms) \u2014 it now races in your pool.
 `
               );
             } else {
-              stdout4.write(
+              stdout6.write(
                 `  ${dim(`Couldn't add ${slug}: ${res.validation.error ?? "validation failed"}. Staying keyless \u2014 retry: oriro routers add ${slug} --key <key>`)}
 `
               );
             }
           } else {
-            stdout4.write(`  ${dim("No key entered \u2014 staying keyless.")}
+            stdout6.write(`  ${dim("No key entered \u2014 staying keyless.")}
 `);
           }
         }
@@ -6652,165 +7200,8 @@ async function runRouterOnboarding() {
     rl.close();
   }
   markRouterOnboarded();
-  stdout4.write(`  ${dim("Manage routers anytime: ")}${accent("oriro routers list \xB7 add \xB7 use")}
+  stdout6.write(`  ${dim("Manage routers anytime: ")}${accent("oriro routers list \xB7 add \xB7 use")}
 `);
-}
-
-// src/onboarding/steps.ts
-init_paths();
-init_loader();
-init_connectors();
-init_theme();
-import { stdin as stdin4, stdout as stdout5 } from "process";
-import { createInterface as createInterface4 } from "readline/promises";
-import { existsSync as existsSync6, mkdirSync as mkdirSync8, writeFileSync as writeFileSync11 } from "fs";
-import { join as join15 } from "path";
-function markerFile2(name) {
-  return join15(oriroDir(), name);
-}
-function settled(name) {
-  try {
-    return existsSync6(markerFile2(name));
-  } catch {
-    return false;
-  }
-}
-function settle(name, data = {}) {
-  try {
-    mkdirSync8(oriroDir(), { recursive: true });
-    writeFileSync11(markerFile2(name), `${JSON.stringify({ at: (/* @__PURE__ */ new Date()).toISOString(), ...data }, null, 2)}
-`, "utf8");
-  } catch {
-  }
-}
-var WELCOME = {
-  en: "Welcome to ORIRO-CLI",
-  es: "Bienvenido a ORIRO-CLI",
-  fr: "Bienvenue sur ORIRO-CLI",
-  de: "Willkommen bei ORIRO-CLI",
-  pt: "Bem-vindo ao ORIRO-CLI",
-  it: "Benvenuto in ORIRO-CLI",
-  nl: "Welkom bij ORIRO-CLI",
-  hi: "ORIRO-CLI \u092E\u0947\u0902 \u0906\u092A\u0915\u093E \u0938\u094D\u0935\u093E\u0917\u0924 \u0939\u0948",
-  zh: "\u6B22\u8FCE\u4F7F\u7528 ORIRO-CLI",
-  ja: "ORIRO-CLI \u3078\u3088\u3046\u3053\u305D",
-  ko: "ORIRO-CLI\uC5D0 \uC624\uC2E0 \uAC83\uC744 \uD658\uC601\uD569\uB2C8\uB2E4",
-  ru: "\u0414\u043E\u0431\u0440\u043E \u043F\u043E\u0436\u0430\u043B\u043E\u0432\u0430\u0442\u044C \u0432 ORIRO-CLI",
-  ar: "\u0645\u0631\u062D\u0628\u064B\u0627 \u0628\u0643 \u0641\u064A ORIRO-CLI",
-  tr: "ORIRO-CLI'ye ho\u015F geldiniz",
-  pl: "Witamy w ORIRO-CLI",
-  uk: "\u041B\u0430\u0441\u043A\u0430\u0432\u043E \u043F\u0440\u043E\u0441\u0438\u043C\u043E \u0434\u043E ORIRO-CLI",
-  vi: "Ch\xE0o m\u1EEBng \u0111\u1EBFn v\u1EDBi ORIRO-CLI",
-  id: "Selamat datang di ORIRO-CLI",
-  th: "\u0E22\u0E34\u0E19\u0E14\u0E35\u0E15\u0E49\u0E2D\u0E19\u0E23\u0E31\u0E1A\u0E2A\u0E39\u0E48 ORIRO-CLI",
-  sv: "V\xE4lkommen till ORIRO-CLI",
-  bn: "ORIRO-CLI \u09A4\u09C7 \u09B8\u09CD\u09AC\u09BE\u0997\u09A4\u09AE",
-  ta: "ORIRO-CLI \u0B95\u0BCD\u0B95\u0BC1 \u0BB5\u0BB0\u0BB5\u0BC7\u0BB1\u0BCD\u0B95\u0BBF\u0BB1\u0BCB\u0BAE\u0BCD",
-  te: "ORIRO-CLI \u0C15\u0C3F \u0C38\u0C4D\u0C35\u0C3E\u0C17\u0C24\u0C02",
-  mr: "ORIRO-CLI \u092E\u0927\u094D\u092F\u0947 \u0906\u092A\u0932\u0947 \u0938\u094D\u0935\u093E\u0917\u0924 \u0906\u0939\u0947"
-};
-function welcomeIn(code) {
-  return WELCOME[(code || "en").toLowerCase().slice(0, 2)] ?? WELCOME.en ?? "Welcome to ORIRO-CLI";
-}
-function hasSkillsChoice() {
-  return settled("skills-onboarded.json");
-}
-async function runSkillsStep() {
-  const s = await loadOriroSkills();
-  stdout5.write(
-    `
-  ${accent("Skills")} \u2014 ${accent(String(s.all.length))} are bundled and ${accent("already active")} ${dim(`(${s.core.length} model-visible \xB7 ${s.tail.length} on-demand via /name)`)}.
-  ${dim("Nothing to install. Browse them anytime with ")}${accent("oriro skills list")}${dim(" or ")}${accent("/skill")}${dim(" in chat.")}
-`
-  );
-  const rl = createInterface4({ input: stdin4, output: stdout5 });
-  try {
-    await ask(rl, `  ${dim("Press Enter to keep all active\u2026")} `);
-  } finally {
-    rl.close();
-  }
-  settle("skills-onboarded.json", { count: s.all.length });
-}
-function hasConnectorsChoice() {
-  return settled("connectors-onboarded.json");
-}
-async function runConnectorsStep() {
-  const addable = listConnectors().filter((c) => c.mcpUrl).length;
-  stdout5.write(
-    `
-  ${accent("Connectors")} \u2014 ${accent(String(addable))} MCP integrations available ${dim("(e.g. ")}${accent("slack")}${dim(", ")}${accent("github")}${dim(", ")}${accent("notion")}${dim(", ")}${accent("linear")}${dim(").")}
-  ${dim("Type a name to add one now, or press Enter to skip \u2014 add anytime with ")}${accent("oriro connectors add <name>")}${dim(".")}
-`
-  );
-  const rl = createInterface4({ input: stdin4, output: stdout5 });
-  try {
-    const slug = (await ask(rl, `  ${accent("\u203A")} Connector name ${dim("(or Enter to skip)")}: `)).trim().replace(/^\/+/, "").replace(/^add\s+/i, "").trim();
-    if (slug && !/^connectors?$/i.test(slug)) {
-      const res = addConnector(slug);
-      stdout5.write(res.ok ? `  ${accent("\u2713")} added ${accent(slug)} \u2014 recorded locally.
-` : `  ${dim(`${res.error ?? "not a known connector"} \u2014 see the full list with `)}${accent("oriro connectors list")}${dim(". Skipping for now.")}
-`);
-    } else {
-      stdout5.write(`  ${dim("Skipped \u2014 none added. You can add your own MCP server with `oriro connectors setup`.")}
-`);
-    }
-  } finally {
-    rl.close();
-  }
-  settle("connectors-onboarded.json", {});
-}
-function hasModelsChoice() {
-  return settled("models-onboarded.json");
-}
-async function runModelsStep() {
-  stdout5.write(
-    `
-  ${bold(accent("ORIRO Gauss + Avila"))} ${dim("(V2.4)")} \u2014 your own ${accent("on-device")} models, ${accent("ready now")}.
-    ${dim("\u2022")} run ${accent("fully on this machine")} ${dim("\u2014 $0, no key, private (no Ollama needed)")}
-    ${dim("\u2022")} join your ${accent("router race")} alongside the free routers ${dim("(and your BYOK)")}
-    ${dim("\u2022")} device-locked on download ${dim("\u2014 the weights never leave this machine")}
-  ${dim("Download them (\u22488 GB each, resumable):")}
-    ${accent("1.")} ${dim("get a one-time code on")} ${accent("oriro.app \u2192 Download \u2192 \u201CConnect this computer\u201D")}
-    ${accent("2.")} ${accent("oriro login <code>")}  ${dim("then")}  ${accent("oriro models pull")}
-  ${dim("Already downloaded the GGUFs from oriro.app? ")}${accent("oriro models import <files>")}${dim(" \u2014 no login needed.")}
-`
-  );
-  const rl = createInterface4({ input: stdin4, output: stdout5 });
-  try {
-    await ask(rl, `  ${dim("Press Enter to continue\u2026")} `);
-  } finally {
-    rl.close();
-  }
-  settle("models-onboarded.json", { status: "ready", version: "2.4" });
-}
-
-// src/onboarding/capability-tour.ts
-init_theme();
-var TOUR = [
-  { title: "Plan \u2192 do", cmd: "/plan <task>  \u2192  /approve", blurb: "read-only plan first, then execute it" },
-  { title: "Parallel agents", cmd: "/agents <A> | <B>", blurb: "sub-agents in isolated git worktrees" },
-  { title: "Make an image", cmd: "/imagine <scene>", blurb: "keyless SVG art, saved to your folder" },
-  { title: "Prove it works", cmd: "/prove [n|url] --video", blurb: "render in a real browser, save the evidence" },
-  { title: "See any website", cmd: "oriro head <url> --code", blurb: "ORIRO visits it and returns code/spec/shots" },
-  { title: "Never lose work", cmd: "oriro -c   \xB7   /sessions   \xB7   /undo", blurb: "resume, list, rewind \u2014 all local" },
-  { title: "Free the context", cmd: "/compact   \xB7   /init", blurb: "summarize a long chat \xB7 seed project memory" },
-  { title: "Use it in your editor", cmd: "oriro serve acp | mcp", blurb: "drive ORIRO from Zed/JetBrains, or as an MCP tool" },
-  { title: "Your own on-device models", cmd: "oriro login <code>  \u2192  oriro models pull", blurb: "download Gauss + Avila V2.4, run them locally ($0, private)" },
-  { title: "Speak & 100 languages", cmd: "/voice   \xB7   oriro language", blurb: "talk to it; work in your own language" }
-];
-var FIRST_WIN = "make me a landing page for a coffee shop, then /prove it";
-function capabilityTourLines() {
-  const lines = [];
-  lines.push("");
-  lines.push(`  ${bold(accent("Here's what you can do"))} ${dim("\u2014 type these anytime in the chat:")}`);
-  for (const t of TOUR) {
-    lines.push(`    ${accent(t.cmd)}`);
-    lines.push(`      ${dim(`${t.title} \u2014 ${t.blurb}`)}`);
-  }
-  lines.push("");
-  lines.push(`  ${bold("Try this first:")}  ${accent(FIRST_WIN)}`);
-  lines.push(`  ${dim("Full list anytime:")} ${accent("/help")} ${dim("in chat, or")} ${accent("oriro --help")} ${dim("in your shell.")}`);
-  return lines;
 }
 
 // src/onboarding/wrapper.ts
@@ -6819,23 +7210,36 @@ function isFirstRun() {
   return !isLanguageConfigured() || !hasScribeChoice();
 }
 async function askYesNo(question) {
-  const rl = createInterface5({ input: stdin5, output: stdout6 });
+  const rl = createInterface5({ input: stdin5, output: stdout7 });
   try {
-    const a = (await ask(rl, `${question} ${dim("[Y/n]")} `)).trim().toLowerCase();
+    const a = (await ask2(rl, `${question} ${dim("[Y/n]")} `)).trim().toLowerCase();
     return a === "" || a === "y" || a === "yes";
   } finally {
     rl.close();
   }
 }
 async function runOnboarding() {
-  stdout6.write(banner());
+  if (stdin5.isTTY && stdout7.isTTY && process.env.ORIRO_WIZARD === "1") {
+    stdout7.write(banner());
+    try {
+      await runTuiWizard();
+      return;
+    } catch {
+      stdout7.write(`  ${dim("(continuing in simple mode\u2026)")}
+`);
+    }
+  }
+  return runLinearOnboarding();
+}
+async function runLinearOnboarding() {
+  if (!(stdin5.isTTY && stdout7.isTTY)) stdout7.write(banner());
   await runLanguageOnboarding();
   await activateGuardian();
-  stdout6.write(`  ${accent("\u{1F6E1} Guardian V3")} is on by default. ${accent("\u{1F9ED} Head")} is ready.
+  stdout7.write(`  ${accent("\u{1F6E1} Guardian V3")} is on by default. ${accent("\u{1F9ED} Head")} is ready.
 
 `);
   if (!isAvatarConfigured()) await runAvatarOnboarding();
-  stdout6.write(`
+  stdout7.write(`
   ${bold(accent(welcomeIn(getTerminalLanguage().code)))}
 `);
   if (!hasSkillsChoice()) await runSkillsStep();
@@ -6847,12 +7251,12 @@ async function runOnboarding() {
       "Remember with me? The Scriber keeps your work in context on THIS machine only \u2014 it never leaves it."
     );
     setScribeConsent(yes);
-    stdout6.write(yes ? `  ${accent("\u{1F4D3} Scriber")} on.
+    stdout7.write(yes ? `  ${accent("\u{1F4D3} Scriber")} on.
 ` : `  ${dim("Scriber off \u2014 `oriro scribe on` anytime.")}
 `);
   }
-  stdout6.write("\n" + capabilityTourLines().join("\n") + "\n");
-  stdout6.write(`
+  stdout7.write("\n" + capabilityTourLines().join("\n") + "\n");
+  stdout7.write(`
   ${accent("ORIRO is ready.")} ${dim("Just type to start \u2014 or try the line above.")}
 
 `);
@@ -7028,7 +7432,7 @@ async function translateOutgoing(text) {
 // src/repl-ui/tui-repl.ts
 init_theme();
 init_permission();
-import { ProcessTerminal, TUI, Editor, Text, Container } from "@earendil-works/pi-tui";
+import { ProcessTerminal as ProcessTerminal2, TUI as TUI3, Editor, Text as Text2, Container as Container3 } from "@earendil-works/pi-tui";
 
 // src/repl-ui/plan-mode.ts
 var PLAN_PRIMER = "PLAN MODE \u2014 read-only. Produce a concrete implementation plan for the request below: numbered steps, the exact files to change and how, the commands to run, and the risks. Do NOT make any changes \u2014 no edits, no writes, no commands (write/exec tools are blocked in this mode). Finish with a short 'Verify' list of what will prove the work is correct after execution.";
@@ -7689,12 +8093,12 @@ function footerText() {
 async function runTuiRepl(session) {
   armPostureGate();
   const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
-  const term = new ProcessTerminal();
-  const tui = new TUI(term, true);
-  const chat = new Container();
+  const term = new ProcessTerminal2();
+  const tui = new TUI3(term, true);
+  const chat = new Container3();
   const editor = new Editor(tui, editorTheme, { paddingX: 1 });
-  const sep = new Text(dim("\u2500".repeat(Math.max(8, term.columns))), 0, 0);
-  const footer = new Text(footerText(), 0, 0);
+  const sep = new Text2(dim("\u2500".repeat(Math.max(8, term.columns))), 0, 0);
+  const footer = new Text2(footerText(), 0, 0);
   tui.addChild(chat);
   tui.addChild(editor);
   tui.addChild(sep);
@@ -7755,26 +8159,26 @@ async function runTuiRepl(session) {
         `  ${accent("/imagine")} <scene> draw an SVG artwork (keyless, auto-saved)   ${accent("/prove")} [n|url] browser-proof with screenshot/--video`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`
       ].join("\n");
-      chat.addChild(new Text(help, 0, 0));
+      chat.addChild(new Text2(help, 0, 0));
       editor.setText("");
       tui.requestRender();
       return;
     }
     if (slash === "/skill" || slash === "/skills") {
-      chat.addChild(new Text(dim("  326 skills bundled & active. Browse them: `oriro skills list --all` in your shell."), 0, 0));
+      chat.addChild(new Text2(dim("  326 skills bundled & active. Browse them: `oriro skills list --all` in your shell."), 0, 0));
       editor.setText("");
       tui.requestRender();
       return;
     }
     if (slash === "/connector" || slash === "/connectors") {
-      chat.addChild(new Text(dim("  59 MCP connectors. Add your own: `oriro connectors setup` \xB7 or `oriro connectors add <slug>`."), 0, 0));
+      chat.addChild(new Text2(dim("  59 MCP connectors. Add your own: `oriro connectors setup` \xB7 or `oriro connectors add <slug>`."), 0, 0));
       editor.setText("");
       tui.requestRender();
       return;
     }
     if (isRouterSlash(slash)) {
       editor.setText("");
-      const pending = new Text(dim("  \u2026"), 0, 0);
+      const pending = new Text2(dim("  \u2026"), 0, 0);
       chat.addChild(pending);
       tui.requestRender();
       void (async () => {
@@ -7785,27 +8189,27 @@ async function runTuiRepl(session) {
       return;
     }
     if (isUsageSlash(slash)) {
-      chat.addChild(new Text(handleUsage().join("\n"), 0, 0));
+      chat.addChild(new Text2(handleUsage().join("\n"), 0, 0));
       editor.setText("");
       tui.requestRender();
       return;
     }
     if (slash === "/trace") {
       const on = toggleTrace();
-      chat.addChild(new Text(dim(`  trace ${on ? "ON \u2014 showing tool + router activity" : "off"}`), 0, 0));
+      chat.addChild(new Text2(dim(`  trace ${on ? "ON \u2014 showing tool + router activity" : "off"}`), 0, 0));
       editor.setText("");
       tui.requestRender();
       return;
     }
     if (isArtifactSlash(slash)) {
-      chat.addChild(new Text(handleArtifactSlash(text).join("\n"), 0, 0));
+      chat.addChild(new Text2(handleArtifactSlash(text).join("\n"), 0, 0));
       editor.setText("");
       tui.requestRender();
       return;
     }
     if (isCompactSlash(slash)) {
       editor.setText("");
-      const pending = new Text(dim("  compacting\u2026"), 0, 0);
+      const pending = new Text2(dim("  compacting\u2026"), 0, 0);
       chat.addChild(pending);
       tui.requestRender();
       void (async () => {
@@ -7816,14 +8220,14 @@ async function runTuiRepl(session) {
       return;
     }
     if (isInitSlash(slash)) {
-      chat.addChild(new Text(handleInit(text).join("\n"), 0, 0));
+      chat.addChild(new Text2(handleInit(text).join("\n"), 0, 0));
       editor.setText("");
       tui.requestRender();
       return;
     }
     if (isSessionsSlash(slash) || isUndoSlash(slash)) {
       editor.setText("");
-      const pending = new Text(dim("  \u2026"), 0, 0);
+      const pending = new Text2(dim("  \u2026"), 0, 0);
       chat.addChild(pending);
       tui.requestRender();
       void (async () => {
@@ -7835,7 +8239,7 @@ async function runTuiRepl(session) {
     }
     if (isProveSlash(slash)) {
       editor.setText("");
-      const pending = new Text(dim("  \u{1F50E} proving in Chromium\u2026"), 0, 0);
+      const pending = new Text2(dim("  \u{1F50E} proving in Chromium\u2026"), 0, 0);
       chat.addChild(pending);
       tui.requestRender();
       void (async () => {
@@ -7847,7 +8251,7 @@ async function runTuiRepl(session) {
     }
     if (isAgentsSlash(slash)) {
       editor.setText("");
-      const pending = new Text(dim("  \u2692 deploying agents\u2026"), 0, 0);
+      const pending = new Text2(dim("  \u2692 deploying agents\u2026"), 0, 0);
       chat.addChild(pending);
       tui.requestRender();
       void (async () => {
@@ -7863,7 +8267,7 @@ async function runTuiRepl(session) {
     if (plan) {
       if (plan.cmd === "reject") {
         const had = rejectPlan();
-        chat.addChild(new Text(dim(had ? "  \u25A2 plan discarded \u2014 refine the request (still in Plan) or Shift+Tab out" : "  \u25A2 nothing to reject \u2014 no plan is waiting"), 0, 0));
+        chat.addChild(new Text2(dim(had ? "  \u25A2 plan discarded \u2014 refine the request (still in Plan) or Shift+Tab out" : "  \u25A2 nothing to reject \u2014 no plan is waiting"), 0, 0));
         editor.setText("");
         tui.requestRender();
         return;
@@ -7871,7 +8275,7 @@ async function runTuiRepl(session) {
       if (plan.cmd === "approve") {
         const r = approvePlan();
         if (!r.ok) {
-          chat.addChild(new Text(dim(`  \u25A2 ${r.reason}`), 0, 0));
+          chat.addChild(new Text2(dim(`  \u25A2 ${r.reason}`), 0, 0));
           editor.setText("");
           tui.requestRender();
           return;
@@ -7884,7 +8288,7 @@ async function runTuiRepl(session) {
         setMode("plan");
         refreshFooter();
         if (!plan.task) {
-          chat.addChild(new Text(dim("  \u25A2 Plan mode \u2014 describe the task and I'll plan it (read-only). Then ") + accent("/approve") + dim(" to execute \xB7 ") + accent("/reject") + dim(" to discard."), 0, 0));
+          chat.addChild(new Text2(dim("  \u25A2 Plan mode \u2014 describe the task and I'll plan it (read-only). Then ") + accent("/approve") + dim(" to execute \xB7 ") + accent("/reject") + dim(" to discard."), 0, 0));
           editor.setText("");
           tui.requestRender();
           return;
@@ -7896,7 +8300,7 @@ async function runTuiRepl(session) {
     if (isImagineSlash(slash)) {
       const task = imagineTask(text);
       if (!task) {
-        chat.addChild(new Text(dim("  usage: /imagine <what to draw> \u2014 ORIRO draws a self-contained SVG and saves it here"), 0, 0));
+        chat.addChild(new Text2(dim("  usage: /imagine <what to draw> \u2014 ORIRO draws a self-contained SVG and saves it here"), 0, 0));
         editor.setText("");
         tui.requestRender();
         return;
@@ -7906,7 +8310,7 @@ async function runTuiRepl(session) {
     }
     if (slash === "/voice") {
       editor.setText("");
-      const status = new Text(dim("  \u{1F399} listening\u2026 (needs ffmpeg + the transformers voice peer)"), 0, 0);
+      const status = new Text2(dim("  \u{1F399} listening\u2026 (needs ffmpeg + the transformers voice peer)"), 0, 0);
       chat.addChild(status);
       tui.requestRender();
       void (async () => {
@@ -7923,10 +8327,10 @@ async function runTuiRepl(session) {
     }
     editor.addToHistory(text);
     editor.setText("");
-    chat.addChild(new Text(`${accent("\u203A")} ${text}`, 0, 1));
-    const raceLine = new Text("", 0, 0);
+    chat.addChild(new Text2(`${accent("\u203A")} ${text}`, 0, 1));
+    const raceLine = new Text2("", 0, 0);
     chat.addChild(raceLine);
-    const streaming = new Text(dim("\u2026"), 0, 0);
+    const streaming = new Text2(dim("\u2026"), 0, 0);
     chat.addChild(streaming);
     const unsubRace = onRaceStatus((s) => {
       if (s.phase === "racing" && s.racers.length > 1) {
@@ -7963,7 +8367,7 @@ ${english}`;
               tui.requestRender();
             }
           } else if (getTrace() && (e.type === "tool_start" || e.type === "tool_end" || e.type === "toolcall_start")) {
-            chat.addChild(new Text(dim(`  \u2699 ${e.type.replace("_", " ")}${e.toolName ? `: ${e.toolName}` : ""}`), 0, 0));
+            chat.addChild(new Text2(dim(`  \u2699 ${e.type.replace("_", " ")}${e.toolName ? `: ${e.toolName}` : ""}`), 0, 0));
             tui.requestRender();
           }
         }
@@ -7989,9 +8393,9 @@ ${english}`;
   \u2398 ${arts.length} artifact${arts.length === 1 ? "" : "s"} \u2014 /review to save`) : "";
       streaming.setText((finalText || dim("(no response)")) + (warn ? dim(warn) : "") + hint);
       if (getMode() === "plan" && notePlanOutput(finalText)) {
-        chat.addChild(new Text(dim("  \u25A2 plan ready \u2014 ") + accent("/approve") + dim(" to execute \xB7 ") + accent("/reject") + dim(" to discard"), 0, 0));
+        chat.addChild(new Text2(dim("  \u25A2 plan ready \u2014 ") + accent("/approve") + dim(" to execute \xB7 ") + accent("/reject") + dim(" to discard"), 0, 0));
       }
-      if (imagineTurn) chat.addChild(new Text(imagineResultLines(finalText).join("\n"), 0, 0));
+      if (imagineTurn) chat.addChild(new Text2(imagineResultLines(finalText).join("\n"), 0, 0));
       tui.requestRender();
       busy = false;
     })();
@@ -8117,12 +8521,12 @@ function replHelp() {
 }
 async function runRepl(opts = {}) {
   if (isFirstRun()) await runOnboarding();
-  else stdout7.write(banner());
+  else stdout8.write(banner());
   const { session, sessionNote } = await assembleOriroSession({ resume: opts.resume });
-  if (sessionNote) stdout7.write(`  ${dim(sessionNote)}
+  if (sessionNote) stdout8.write(`  ${dim(sessionNote)}
 `);
   setupVoiceInput();
-  if (stdin6.isTTY && stdout7.isTTY) {
+  if (stdin6.isTTY && stdout8.isTTY) {
     await runTuiRepl(session);
     return;
   }
@@ -8130,12 +8534,12 @@ async function runRepl(opts = {}) {
 }
 async function runReadlineRepl(session) {
   const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
-  const rl = createInterface6({ input: stdin6, output: stdout7 });
+  const rl = createInterface6({ input: stdin6, output: stdout8 });
   let closing = false;
   const onSigint = () => {
     if (closing) return;
     closing = true;
-    stdout7.write(dim("\nBye.\n"));
+    stdout8.write(dim("\nBye.\n"));
     try {
       rl.close();
     } catch {
@@ -8159,58 +8563,58 @@ async function runReadlineRepl(session) {
       const slash = line.toLowerCase();
       if (slash === "/exit" || slash === "/quit") break;
       if (slash === "/help" || slash === "/?") {
-        stdout7.write(replHelp());
+        stdout8.write(replHelp());
         continue;
       }
       if (slash === "/skill" || slash === "/skills") {
-        stdout7.write(`  ${dim("326 skills bundled & active. Browse: oriro skills list --all")}
+        stdout8.write(`  ${dim("326 skills bundled & active. Browse: oriro skills list --all")}
 `);
         continue;
       }
       if (slash === "/connector" || slash === "/connectors") {
-        stdout7.write(`  ${dim("59 MCP connectors. Add: oriro connectors setup \xB7 or oriro connectors add <slug>")}
+        stdout8.write(`  ${dim("59 MCP connectors. Add: oriro connectors setup \xB7 or oriro connectors add <slug>")}
 `);
         continue;
       }
       if (isRouterSlash(slash)) {
-        stdout7.write((await handleRouterSlash(line)).join("\n") + "\n");
+        stdout8.write((await handleRouterSlash(line)).join("\n") + "\n");
         continue;
       }
       if (isUsageSlash(slash)) {
-        stdout7.write(handleUsage().join("\n") + "\n");
+        stdout8.write(handleUsage().join("\n") + "\n");
         continue;
       }
       if (slash === "/trace") {
-        stdout7.write(`  ${dim(`trace ${toggleTrace() ? "ON" : "off"}`)}
+        stdout8.write(`  ${dim(`trace ${toggleTrace() ? "ON" : "off"}`)}
 `);
         continue;
       }
       if (isCompactSlash(slash)) {
-        stdout7.write((await handleCompact(session, line)).join("\n") + "\n");
+        stdout8.write((await handleCompact(session, line)).join("\n") + "\n");
         continue;
       }
       if (isInitSlash(slash)) {
-        stdout7.write(handleInit(line).join("\n") + "\n");
+        stdout8.write(handleInit(line).join("\n") + "\n");
         continue;
       }
       if (isSessionsSlash(slash)) {
-        stdout7.write((await handleSessions()).join("\n") + "\n");
+        stdout8.write((await handleSessions()).join("\n") + "\n");
         continue;
       }
       if (isUndoSlash(slash)) {
-        stdout7.write((await handleUndo(session)).join("\n") + "\n");
+        stdout8.write((await handleUndo(session)).join("\n") + "\n");
         continue;
       }
       if (isArtifactSlash(slash)) {
-        stdout7.write(handleArtifactSlash(line).join("\n") + "\n");
+        stdout8.write(handleArtifactSlash(line).join("\n") + "\n");
         continue;
       }
       if (isAgentsSlash(slash)) {
-        stdout7.write((await handleAgents(line)).join("\n") + "\n");
+        stdout8.write((await handleAgents(line)).join("\n") + "\n");
         continue;
       }
       if (isProveSlash(slash)) {
-        stdout7.write((await handleProve(line)).join("\n") + "\n");
+        stdout8.write((await handleProve(line)).join("\n") + "\n");
         continue;
       }
       const plan = parsePlanSlash(line);
@@ -8218,14 +8622,14 @@ async function runReadlineRepl(session) {
       let turnText = line;
       if (plan) {
         if (plan.cmd === "reject") {
-          stdout7.write(`  ${dim(rejectPlan() ? "\u25A2 plan discarded \u2014 refine the request (still in Plan) or /approve a new plan later" : "\u25A2 nothing to reject \u2014 no plan is waiting")}
+          stdout8.write(`  ${dim(rejectPlan() ? "\u25A2 plan discarded \u2014 refine the request (still in Plan) or /approve a new plan later" : "\u25A2 nothing to reject \u2014 no plan is waiting")}
 `);
           continue;
         }
         if (plan.cmd === "approve") {
           const r = approvePlan();
           if (!r.ok) {
-            stdout7.write(`  ${dim(`\u25A2 ${r.reason}`)}
+            stdout8.write(`  ${dim(`\u25A2 ${r.reason}`)}
 `);
             continue;
           }
@@ -8235,7 +8639,7 @@ async function runReadlineRepl(session) {
           enterPlan(getMode());
           setMode("plan");
           if (!plan.task) {
-            stdout7.write(`  ${dim("\u25A2 Plan mode \u2014 describe the task and I'll plan it (read-only). Then")} ${accent("/approve")} ${dim("to execute \xB7")} ${accent("/reject")} ${dim("to discard.")}
+            stdout8.write(`  ${dim("\u25A2 Plan mode \u2014 describe the task and I'll plan it (read-only). Then")} ${accent("/approve")} ${dim("to execute \xB7")} ${accent("/reject")} ${dim("to discard.")}
 `);
             continue;
           }
@@ -8246,7 +8650,7 @@ async function runReadlineRepl(session) {
       if (isImagineSlash(slash)) {
         const task = imagineTask(line);
         if (!task) {
-          stdout7.write(`  ${dim("usage: /imagine <what to draw> \u2014 ORIRO draws a self-contained SVG and saves it here")}
+          stdout8.write(`  ${dim("usage: /imagine <what to draw> \u2014 ORIRO draws a self-contained SVG and saves it here")}
 `);
           continue;
         }
@@ -8281,21 +8685,21 @@ ${english}`;
       setArtifacts(arts);
       const hint = arts.length ? `  ${dim(`\u2398 ${arts.length} artifact${arts.length === 1 ? "" : "s"} \u2014 /review to save`)}
 ` : "";
-      stdout7.write(`${shown}${phantomFileWarning(shown)}
+      stdout8.write(`${shown}${phantomFileWarning(shown)}
 ${hint}
 `);
       if (getMode() === "plan" && notePlanOutput(shown)) {
-        stdout7.write(`  ${dim("\u25A2 plan ready \u2014")} ${accent("/approve")} ${dim("to execute \xB7")} ${accent("/reject")} ${dim("to discard")}
+        stdout8.write(`  ${dim("\u25A2 plan ready \u2014")} ${accent("/approve")} ${dim("to execute \xB7")} ${accent("/reject")} ${dim("to discard")}
 `);
       }
-      if (imagineTurn) stdout7.write(imagineResultLines(shown).join("\n") + "\n");
+      if (imagineTurn) stdout8.write(imagineResultLines(shown).join("\n") + "\n");
     }
   } finally {
     process.removeListener("SIGINT", onSigint);
     if (!closing) {
       rl.close();
       session.dispose();
-      stdout7.write(dim("\nBye.\n"));
+      stdout8.write(dim("\nBye.\n"));
     }
   }
 }
@@ -8353,7 +8757,7 @@ init_store();
 // src/commands/ui.ts
 init_theme();
 import { createInterface as createInterface7 } from "readline/promises";
-import { stdin as stdin7, stdout as stdout8 } from "process";
+import { stdin as stdin7, stdout as stdout9 } from "process";
 var ok = (s) => {
   process.stdout.write(`${fgHex(PALETTE.success, "\u2713")} ${s}
 `);
@@ -8380,10 +8784,10 @@ function die(msg) {
 }
 async function confirmDestructive(what, opts = {}) {
   if (opts.force) return true;
-  if (!stdin7.isTTY || !stdout8.isTTY) {
+  if (!stdin7.isTTY || !stdout9.isTTY) {
     die(`refusing to ${what} without confirmation \u2014 re-run with --force in a non-interactive shell`);
   }
-  const rl = createInterface7({ input: stdin7, output: stdout8 });
+  const rl = createInterface7({ input: stdin7, output: stdout9 });
   try {
     const ans = (await rl.question(`${fgHex(PALETTE.error, "?")} ${what} \u2014 this cannot be undone. Proceed? [y/N] `)).trim().toLowerCase();
     return ans === "y" || ans === "yes";
@@ -8910,7 +9314,7 @@ function registerScribeCommand(program2) {
 // src/commands/connectors.ts
 init_connectors();
 import { createInterface as createInterface8 } from "readline/promises";
-import { stdin as stdin8, stdout as stdout9 } from "process";
+import { stdin as stdin8, stdout as stdout10 } from "process";
 
 // src/connectors/setup.ts
 init_custom();
@@ -9007,7 +9411,7 @@ function registerConnectorsCommand(program2) {
     else info(`'${slug}' is not in your added list \u2014 nothing to remove`);
   });
   connectors.command("setup").description("guided setup of a CUSTOM MCP server \u2014 Guardian-vetted, no JSON").option("--name <name>", "a short name for the server").option("--command <cmd>", "stdio launch command, e.g. 'npx -y @scope/mcp'").option("--args <args>", "space-separated args for --command").option("--env <pairs>", "comma-separated KEY=VAL env vars").option("--url <url>", "http(s) MCP endpoint (instead of --command)").option("--header <pairs>", "comma-separated KEY=VAL headers (with --url)").option("--allow-local", "permit loopback/LAN URL targets").option("-y, --yes", "trust and save when Guardian says 'ask'").action(async (opts) => {
-    const interactive = !!stdin8.isTTY && !!stdout9.isTTY;
+    const interactive = !!stdin8.isTTY && !!stdout10.isTTY;
     let { name, command, url } = opts;
     let argsStr = opts.args;
     let envStr = opts.env;
@@ -9026,7 +9430,7 @@ function registerConnectorsCommand(program2) {
         );
         return;
       }
-      const rl = createInterface8({ input: stdin8, output: stdout9 });
+      const rl = createInterface8({ input: stdin8, output: stdout10 });
       try {
         name = name || (await rl.question("Server name: ")).trim();
         if (!command && !url) {
@@ -9068,7 +9472,7 @@ function registerConnectorsCommand(program2) {
       if (opts.yes) {
         trusted = true;
       } else if (interactive) {
-        const rl = createInterface8({ input: stdin8, output: stdout9 });
+        const rl = createInterface8({ input: stdin8, output: stdout10 });
         try {
           const ans = (await rl.question(`Trust and save "${name}"? [y/N] `)).trim().toLowerCase();
           trusted = ans === "y" || ans === "yes";
@@ -9583,11 +9987,11 @@ function registerHeadCommand(program2) {
 }
 
 // src/commands/voice.ts
-import { stdin as stdin11, stdout as stdout10 } from "process";
+import { stdin as stdin11, stdout as stdout11 } from "process";
 init_theme();
 function registerVoiceCommand(program2) {
   program2.command("voice").description("speech-to-text \u2014 transcribe an audio file or the mic (on-device Whisper, experimental)").argument("[file]", "audio file to transcribe (omit to record from the mic on a real terminal)").option("--translate", "translate speech to English (Whisper translate task)").option("--seconds <n>", "mic recording length in seconds", "6").action(async (file6, opts) => {
-    const interactive = !!stdin11.isTTY && !!stdout10.isTTY;
+    const interactive = !!stdin11.isTTY && !!stdout11.isTTY;
     heading("ORIRO voice \u{1F399}");
     let audio = file6;
     if (!audio) {
@@ -10039,7 +10443,7 @@ function registerConfigCommand(program2) {
 // src/commands/setup.ts
 import { rmSync as rmSync5 } from "fs";
 import { join as join35 } from "path";
-import { stdin as stdin12, stdout as stdout11 } from "process";
+import { stdin as stdin12, stdout as stdout12 } from "process";
 init_paths();
 init_theme();
 var MARKERS = [
@@ -10061,7 +10465,7 @@ function registerSetupCommand(program2) {
       }
       ok("reset \u2014 every step will be asked again");
     }
-    if (!stdin12.isTTY || !stdout11.isTTY) {
+    if (!stdin12.isTTY || !stdout12.isTTY) {
       heading("ORIRO setup");
       info(`ORIRO is ${accent("keyless")} \u2014 no login, no API keys. Run ${accent("oriro setup")} in a real terminal for the guided wizard.`);
       info(dim("or configure directly: oriro language <code> \xB7 oriro routers add <id> \xB7 oriro connectors add <slug> \xB7 oriro config set <k> <v>"));

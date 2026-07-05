@@ -4,6 +4,7 @@
 //   Scriber consent (Yes/No, off by default) → [channels offered later] → ready.
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
+import { runTuiWizard } from "./tui-wizard.js";
 import { banner } from "../ui/banner.js";
 import { isLanguageConfigured, runLanguageOnboarding } from "../language/index.js";
 import { getTerminalLanguage } from "../language/config.js";
@@ -38,9 +39,29 @@ async function askYesNo(question: string): Promise<boolean> {
   }
 }
 
-/** Run the ORIRO first-run journey. Persists every choice; safe to re-run (skips settled steps). */
+/** Run the ORIRO first-run journey. Persists every choice; safe to re-run (skips settled steps).
+ *  On a real terminal we run the PREMIUM interactive wizard (arrow-key nav, progress rail); on a
+ *  non-TTY (pipes/CI) or ANY wizard failure we fall back to the linear flow below — which writes the
+ *  same markers/config, so a partially-completed wizard resumes cleanly. First-run never regresses. */
 export async function runOnboarding(): Promise<void> {
-  stdout.write(banner());
+  // Premium TUI wizard is OPT-IN for its first release (`ORIRO_WIZARD=1`) so the proven linear flow
+  // stays the default first-run until the wizard is eyeballed on a real terminal; then it flips to
+  // default. Either way a non-TTY or any wizard failure falls back to the linear flow — no regression.
+  if (stdin.isTTY && stdout.isTTY && process.env.ORIRO_WIZARD === "1") {
+    stdout.write(banner());
+    try {
+      await runTuiWizard();
+      return;
+    } catch {
+      stdout.write(`  ${dim("(continuing in simple mode…)")}\n`);
+    }
+  }
+  return runLinearOnboarding();
+}
+
+/** The linear (readline) onboarding — the non-TTY path and the wizard's fallback. */
+async function runLinearOnboarding(): Promise<void> {
+  if (!(stdin.isTTY && stdout.isTTY)) stdout.write(banner());
 
   // Step 1 — language (the first choice)
   await runLanguageOnboarding();
@@ -62,7 +83,7 @@ export async function runOnboarding(): Promise<void> {
   // Step 7 — routers: the free keyless pool races by default; offer BYOK for a private lane.
   if (!hasRouterChoice()) await runRouterOnboarding();
 
-  // Step 8 — ORIRO Gauss + Avila (V2.4) preview — coming soon (in training).
+  // Step 8 — ORIRO Gauss + Avila (V2.4) — ready to download to this machine (login → models pull).
   if (!hasModelsChoice()) await runModelsStep();
 
   // Step 9 — Scriber consent (off by default; after the models step, per your ordering).

@@ -26,6 +26,12 @@ function settle(name: string, data: Record<string, unknown> = {}): void {
   } catch { /* marker is a convenience; never fatal */ }
 }
 
+/** Settle a step marker from OUTSIDE this module (the premium TUI wizard reuses the same markers as
+ *  the linear flow, so whichever path runs, re-runs skip settled steps identically). */
+export function markOnboarded(name: string, data: Record<string, unknown> = {}): void {
+  settle(name, data);
+}
+
 // ── localized welcome ────────────────────────────────────────────────────────
 const WELCOME: Record<string, string> = {
   en: "Welcome to ORIRO-CLI", es: "Bienvenido a ORIRO-CLI", fr: "Bienvenue sur ORIRO-CLI",
