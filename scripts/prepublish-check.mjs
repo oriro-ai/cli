@@ -22,6 +22,12 @@ if (existsSync(bundlePath)) {
   for (const needle of ["spike-step", "spike-commands", "spike-channels", "_test-mcp", "openclaw", "orirohub"]) {
     check(!new RegExp(needle, "i").test(bundle), `bundle clean of "${needle}"`, `bundle contains "${needle}" — junk/old-fork leaked in`);
   }
+  // P0-2 lane (incomplete on-device runtime) must NEVER ship. This is the automated version of the
+  // manual "grep registerModelsCommand = 0" discipline — added after v0.3.9 leaked the lane because
+  // a release was built without stashing it first. Markers cover its CLI commands + weights modules.
+  for (const needle of ["registerModelsCommand", "registerLoginCommand", "node-llama-cpp", "weights/secure-load"]) {
+    check(!bundle.includes(needle), `bundle clean of P0-2 "${needle}"`, `bundle contains P0-2 marker "${needle}" — stash the P0-2 lane (src/cli.ts + src/weights + src/commands/{login,models}.ts) and rebuild`);
+  }
 }
 
 // 2. Package identity.

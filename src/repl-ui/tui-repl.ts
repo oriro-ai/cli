@@ -15,6 +15,7 @@ import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { accent, dim } from "../ui/theme.js";
 import { cycleMode, getMode, setMode, MODE_META, MODES, getThinking, toggleThinking, THINKING_PRIMER } from "./permission.js";
 import { parsePlanSlash, enterPlan, approvePlan, rejectPlan, notePlanOutput, PLAN_PRIMER } from "./plan-mode.js";
+import { isImagineSlash, imagineTask, imagineResultLines, IMAGINE_PRIMER } from "./slash-imagine.js";
 import { armPostureGate } from "./posture-gate.js";
 import { getTerminalLanguage } from "../language/index.js";
 import { translateIncoming, translateOutgoing } from "../language/gateway.js";
@@ -123,6 +124,7 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
         `  ${accent("/review")} artifacts   ${accent("/save")} <n> [path]   ${accent("/init")} AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
         `  ${accent("/sessions")} list saved   ${accent("/undo")} rewind a turn   ${dim("resume:")} ${accent("oriro -c")} / ${accent("oriro --resume <id>")}`,
         `  ${accent("/plan")} <task> plan read-only   ${accent("/approve")} execute it   ${accent("/reject")} discard   ${accent("/agents")} parallel worktree fan-out`,
+        `  ${accent("/imagine")} <scene> draw an SVG artwork (keyless, auto-saved)`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`,
       ].join("\n");
       chat.addChild(new Text(help, 0, 0));
@@ -245,6 +247,19 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       }
     }
 
+    // V0.3.9 — /imagine <prompt>: the keyless engine draws ONE standalone SVG, auto-saved to cwd.
+    let imagineTurn = false;
+    if (isImagineSlash(slash)) {
+      const task = imagineTask(text);
+      if (!task) {
+        chat.addChild(new Text(dim("  usage: /imagine <what to draw> — ORIRO draws a self-contained SVG and saves it here"), 0, 0));
+        editor.setText(""); tui.requestRender();
+        return;
+      }
+      imagineTurn = true;
+      turnText = task;
+    }
+
     if (slash === "/voice") {
       // Speak a turn: record the mic + transcribe on-device, then drop the text into the editor to review + send.
       editor.setText("");
@@ -288,6 +303,7 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
     bumpTurns(); // /usage turn counter
     void (async () => {
       let english = internalPrompt ?? (await translateIncoming(turnText));
+      if (imagineTurn) english = `${IMAGINE_PRIMER}\n\n${english}`; // /imagine → one standalone SVG
       if (getMode() === "plan") english = `${PLAN_PRIMER}\n\n${english}`; // every plan-mode turn plans, read-only
       if (getThinking()) english = `${THINKING_PRIMER}\n\n${english}`; // plan-first when thinking is on
       noteUserInput(text);
@@ -329,6 +345,7 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       if (getMode() === "plan" && notePlanOutput(finalText)) {
         chat.addChild(new Text(dim("  ▢ plan ready — ") + accent("/approve") + dim(" to execute · ") + accent("/reject") + dim(" to discard"), 0, 0));
       }
+      if (imagineTurn) chat.addChild(new Text(imagineResultLines(finalText).join("\n"), 0, 0));
       tui.requestRender();
       busy = false;
     })();

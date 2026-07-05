@@ -5130,7 +5130,7 @@ var init_assemble = __esm({
 // src/agents/worktree.ts
 import { execFile } from "child_process";
 import { promisify } from "util";
-import { join as join27, basename as basename2 } from "path";
+import { join as join28, basename as basename2 } from "path";
 function parseAgentsSlash(line) {
   const m = /^\/agents(?:\s+(\S[\s\S]*))?$/i.exec(line.trim());
   if (!m) return void 0;
@@ -5152,7 +5152,7 @@ function fanBranch(stamp, i) {
   return `oriro/agents/${stamp}-a${i + 1}`;
 }
 function fanDir(repoRoot, stamp, i) {
-  return join27(oriroDir(), "worktrees", `${basename2(repoRoot)}-${stamp}-a${i + 1}`);
+  return join28(oriroDir(), "worktrees", `${basename2(repoRoot)}-${stamp}-a${i + 1}`);
 }
 async function git(cwd, ...args) {
   try {
@@ -7030,13 +7030,119 @@ function parsePlanSlash(line) {
   return { cmd: "reject" };
 }
 
+// src/repl-ui/slash-imagine.ts
+import { existsSync as existsSync15, writeFileSync as writeFileSync18 } from "fs";
+import { join as join26 } from "path";
+
+// src/repl-ui/artifacts.ts
+var LANG_EXT = {
+  python: "py",
+  py: "py",
+  javascript: "js",
+  js: "js",
+  typescript: "ts",
+  ts: "ts",
+  tsx: "tsx",
+  jsx: "jsx",
+  html: "html",
+  css: "css",
+  json: "json",
+  yaml: "yaml",
+  yml: "yml",
+  bash: "sh",
+  sh: "sh",
+  shell: "sh",
+  sql: "sql",
+  go: "go",
+  rust: "rs",
+  rs: "rs",
+  java: "java",
+  c: "c",
+  cpp: "cpp",
+  "c++": "cpp",
+  ruby: "rb",
+  rb: "rb",
+  php: "php",
+  markdown: "md",
+  md: "md",
+  svg: "svg"
+};
+function extFor(lang) {
+  return LANG_EXT[lang.toLowerCase()] ?? "txt";
+}
+function extractArtifacts(text) {
+  const out = [];
+  if (!text) return out;
+  const fence = /```([\w+#.-]*)\n([\s\S]*?)```/g;
+  let m;
+  while ((m = fence.exec(text)) !== null) {
+    const lang = (m[1] ?? "").trim();
+    const content = (m[2] ?? "").replace(/\n$/, "");
+    if (!content.trim()) continue;
+    const isSvg = lang.toLowerCase() === "svg" || /^\s*<svg[\s>]/.test(content);
+    out.push({
+      kind: isSvg ? "svg" : "code",
+      lang: lang || (isSvg ? "svg" : ""),
+      content,
+      suggestedName: `artifact-${out.length + 1}.${isSvg ? "svg" : extFor(lang)}`
+    });
+  }
+  const svg = /<svg[\s>][\s\S]*?<\/svg>/gi;
+  while ((m = svg.exec(text)) !== null) {
+    const content = m[0];
+    if (out.some((a) => a.content.includes(content))) continue;
+    out.push({ kind: "svg", lang: "svg", content, suggestedName: `artifact-${out.length + 1}.svg` });
+  }
+  return out;
+}
+var current3 = [];
+function setArtifacts(a) {
+  current3 = a;
+}
+function getArtifacts() {
+  return current3;
+}
+
+// src/repl-ui/slash-imagine.ts
+init_theme();
+function isImagineSlash(cmd) {
+  return /^\/imagine(\s|$)/i.test(cmd.trim());
+}
+function imagineTask(raw) {
+  const rest = raw.trim().replace(/^\/imagine\s*/i, "").trim();
+  return rest.length ? rest : void 0;
+}
+var IMAGINE_PRIMER = "IMAGE MODE: you are ORIRO's image engine. Create ONE complete, self-contained SVG artwork for the request below. Reply with ONLY a single fenced ```svg code block containing valid standalone SVG \u2014 root <svg> with xmlns and a viewBox, generous use of shapes/paths/gradients, NO external images, fonts, scripts or links. No prose before or after the block.";
+function imagineDest(now, cwd = process.cwd()) {
+  const p = (n, w = 2) => String(n).padStart(w, "0");
+  const base = `imagine-${p(now.getMonth() + 1)}${p(now.getDate())}-${p(now.getHours())}${p(now.getMinutes())}${p(now.getSeconds())}`;
+  let dest = join26(cwd, `${base}.svg`);
+  for (let i = 2; existsSync15(dest); i++) dest = join26(cwd, `${base}-${i}.svg`);
+  return dest;
+}
+function imagineResultLines(finalText, now = /* @__PURE__ */ new Date(), cwd) {
+  const svg = extractArtifacts(finalText).find((a) => a.kind === "svg");
+  if (!svg) {
+    return [dim("  \u2300 no SVG came back this turn \u2014 /imagine again (free), or rephrase the scene.")];
+  }
+  const dest = imagineDest(now, cwd);
+  try {
+    writeFileSync18(dest, svg.content, "utf8");
+  } catch (e) {
+    return [dim(`  \u2717 could not save the image: ${e instanceof Error ? e.message : String(e)} \u2014 /save it via /review instead`)];
+  }
+  return [
+    `  ${fgHex(PALETTE.success, "\u2713 imagined")} \u2192 ${accent(dest)} ${dim(`(${svg.content.length} bytes \u2014 open it in any browser)`)}`
+  ];
+}
+
 // src/repl-ui/tui-repl.ts
 init_posture_gate();
 init_scribe_pi();
 init_filter();
 
 // src/repl-ui/verify-actions.ts
-import { existsSync as existsSync15 } from "fs";
+import { existsSync as existsSync16 } from "fs";
 import { isAbsolute, resolve } from "path";
 var CLAIM = /\b(?:have|has)\s+been\s+created\b|\b(?:created|wrote|written|saved|generated)\b(?![ \t]*(?:by you|it yourself))/i;
 var SUGGESTION = /\byou\s+(?:can|could|should|may)\s+(?:create|add|save|make|put)\b/i;
@@ -7049,7 +7155,7 @@ function phantomFileWarning(reply, cwd = process.cwd()) {
     if (!p) continue;
     if (/^https?:|node_modules|<[^>]+>|your-|example\./i.test(p)) continue;
     const abs = isAbsolute(p) ? p : resolve(cwd, p.replace(/^[.][\\/]/, ""));
-    if (!existsSync15(abs)) missing.add(p);
+    if (!existsSync16(abs)) missing.add(p);
   }
   if (missing.size === 0) return "";
   if (SUGGESTION.test(reply) && !/\b(?:have|has)\s+been\s+created\b/i.test(reply)) return "";
@@ -7169,78 +7275,7 @@ function handleUsage() {
 }
 
 // src/repl-ui/slash-artifacts.ts
-import { existsSync as existsSync16, writeFileSync as writeFileSync18 } from "fs";
-
-// src/repl-ui/artifacts.ts
-var LANG_EXT = {
-  python: "py",
-  py: "py",
-  javascript: "js",
-  js: "js",
-  typescript: "ts",
-  ts: "ts",
-  tsx: "tsx",
-  jsx: "jsx",
-  html: "html",
-  css: "css",
-  json: "json",
-  yaml: "yaml",
-  yml: "yml",
-  bash: "sh",
-  sh: "sh",
-  shell: "sh",
-  sql: "sql",
-  go: "go",
-  rust: "rs",
-  rs: "rs",
-  java: "java",
-  c: "c",
-  cpp: "cpp",
-  "c++": "cpp",
-  ruby: "rb",
-  rb: "rb",
-  php: "php",
-  markdown: "md",
-  md: "md",
-  svg: "svg"
-};
-function extFor(lang) {
-  return LANG_EXT[lang.toLowerCase()] ?? "txt";
-}
-function extractArtifacts(text) {
-  const out = [];
-  if (!text) return out;
-  const fence = /```([\w+#.-]*)\n([\s\S]*?)```/g;
-  let m;
-  while ((m = fence.exec(text)) !== null) {
-    const lang = (m[1] ?? "").trim();
-    const content = (m[2] ?? "").replace(/\n$/, "");
-    if (!content.trim()) continue;
-    const isSvg = lang.toLowerCase() === "svg" || /^\s*<svg[\s>]/.test(content);
-    out.push({
-      kind: isSvg ? "svg" : "code",
-      lang: lang || (isSvg ? "svg" : ""),
-      content,
-      suggestedName: `artifact-${out.length + 1}.${isSvg ? "svg" : extFor(lang)}`
-    });
-  }
-  const svg = /<svg[\s>][\s\S]*?<\/svg>/gi;
-  while ((m = svg.exec(text)) !== null) {
-    const content = m[0];
-    if (out.some((a) => a.content.includes(content))) continue;
-    out.push({ kind: "svg", lang: "svg", content, suggestedName: `artifact-${out.length + 1}.svg` });
-  }
-  return out;
-}
-var current3 = [];
-function setArtifacts(a) {
-  current3 = a;
-}
-function getArtifacts() {
-  return current3;
-}
-
-// src/repl-ui/slash-artifacts.ts
+import { existsSync as existsSync17, writeFileSync as writeFileSync19 } from "fs";
 init_theme();
 function isArtifactSlash(cmd) {
   return /^\/(review|artifacts?|save)(\s|$)/i.test(cmd.trim());
@@ -7257,9 +7292,9 @@ function handleArtifactSlash(raw) {
     const art = arts[idx - 1];
     if (!art) return [dim("  no such artifact")];
     const dest = parts[2] || art.suggestedName;
-    if (existsSync16(dest)) return [dim(`  \u2717 ${dest} already exists \u2014 give a different path: /save ${idx} <path>`)];
+    if (existsSync17(dest)) return [dim(`  \u2717 ${dest} already exists \u2014 give a different path: /save ${idx} <path>`)];
     try {
-      writeFileSync18(dest, art.content, "utf8");
+      writeFileSync19(dest, art.content, "utf8");
     } catch (e) {
       return [dim(`  \u2717 could not write ${dest}: ${e instanceof Error ? e.message : String(e)}`)];
     }
@@ -7317,8 +7352,8 @@ async function handleCompact(session, cmd) {
 }
 
 // src/context/init-agents.ts
-import { existsSync as existsSync17, readFileSync as readFileSync21, readdirSync as readdirSync3, statSync as statSync3, writeFileSync as writeFileSync19 } from "fs";
-import { join as join26, basename } from "path";
+import { existsSync as existsSync18, readFileSync as readFileSync21, readdirSync as readdirSync3, statSync as statSync3, writeFileSync as writeFileSync20 } from "fs";
+import { join as join27, basename } from "path";
 var CODE_EXT = {
   ts: "TypeScript",
   tsx: "TypeScript",
@@ -7351,8 +7386,8 @@ function readJson(p) {
 }
 function detectProject(cwd) {
   const facts = { name: basename(cwd) || "project", languages: [], commands: [], topDirs: [] };
-  const pkgPath = join26(cwd, "package.json");
-  if (existsSync17(pkgPath)) {
+  const pkgPath = join27(cwd, "package.json");
+  if (existsSync18(pkgPath)) {
     const pkg = readJson(pkgPath);
     if (typeof pkg.name === "string" && pkg.name) facts.name = pkg.name;
     if (typeof pkg.description === "string" && pkg.description) facts.description = pkg.description;
@@ -7360,11 +7395,11 @@ function detectProject(cwd) {
     for (const key of ["dev", "build", "test", "lint", "start"]) {
       if (scripts[key]) facts.commands.push({ label: key, cmd: `npm run ${key}` });
     }
-  } else if (existsSync17(join26(cwd, "pyproject.toml")) || existsSync17(join26(cwd, "requirements.txt"))) {
+  } else if (existsSync18(join27(cwd, "pyproject.toml")) || existsSync18(join27(cwd, "requirements.txt"))) {
     if (!facts.description) facts.description = "Python project";
-  } else if (existsSync17(join26(cwd, "Cargo.toml"))) {
+  } else if (existsSync18(join27(cwd, "Cargo.toml"))) {
     facts.commands.push({ label: "build", cmd: "cargo build" }, { label: "test", cmd: "cargo test" });
-  } else if (existsSync17(join26(cwd, "go.mod"))) {
+  } else if (existsSync18(join27(cwd, "go.mod"))) {
     facts.commands.push({ label: "build", cmd: "go build ./..." }, { label: "test", cmd: "go test ./..." });
   }
   const langCount = /* @__PURE__ */ new Map();
@@ -7379,7 +7414,7 @@ function detectProject(cwd) {
   } catch {
   }
   for (const e of entries) {
-    const full = join26(cwd, e);
+    const full = join27(cwd, e);
     let isDir = false;
     try {
       isDir = statSync3(full).isDirectory();
@@ -7392,7 +7427,7 @@ function detectProject(cwd) {
       try {
         for (const f of readdirSync3(full)) {
           try {
-            if (statSync3(join26(full, f)).isFile()) tallyExt(f);
+            if (statSync3(join27(full, f)).isFile()) tallyExt(f);
           } catch {
           }
         }
@@ -7426,10 +7461,10 @@ function generateAgentsMd(cwd) {
   return lines.join("\n");
 }
 function writeAgentsMd(cwd = process.cwd(), force = false) {
-  const path = join26(cwd, "AGENTS.md");
+  const path = join27(cwd, "AGENTS.md");
   const facts = detectProject(cwd);
-  if (existsSync17(path) && !force) return { path, created: false, facts };
-  writeFileSync19(path, generateAgentsMd(cwd), "utf8");
+  if (existsSync18(path) && !force) return { path, created: false, facts };
+  writeFileSync20(path, generateAgentsMd(cwd), "utf8");
   return { path, created: true, facts };
 }
 
@@ -7599,6 +7634,7 @@ async function runTuiRepl(session) {
         `  ${accent("/review")} artifacts   ${accent("/save")} <n> [path]   ${accent("/init")} AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
         `  ${accent("/sessions")} list saved   ${accent("/undo")} rewind a turn   ${dim("resume:")} ${accent("oriro -c")} / ${accent("oriro --resume <id>")}`,
         `  ${accent("/plan")} <task> plan read-only   ${accent("/approve")} execute it   ${accent("/reject")} discard   ${accent("/agents")} parallel worktree fan-out`,
+        `  ${accent("/imagine")} <scene> draw an SVG artwork (keyless, auto-saved)`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`
       ].join("\n");
       chat.addChild(new Text(help, 0, 0));
@@ -7726,6 +7762,18 @@ async function runTuiRepl(session) {
         turnText = plan.task;
       }
     }
+    let imagineTurn = false;
+    if (isImagineSlash(slash)) {
+      const task = imagineTask(text);
+      if (!task) {
+        chat.addChild(new Text(dim("  usage: /imagine <what to draw> \u2014 ORIRO draws a self-contained SVG and saves it here"), 0, 0));
+        editor.setText("");
+        tui.requestRender();
+        return;
+      }
+      imagineTurn = true;
+      turnText = task;
+    }
     if (slash === "/voice") {
       editor.setText("");
       const status = new Text(dim("  \u{1F399} listening\u2026 (needs ffmpeg + the transformers voice peer)"), 0, 0);
@@ -7765,6 +7813,9 @@ async function runTuiRepl(session) {
     bumpTurns();
     void (async () => {
       let english = internalPrompt ?? await translateIncoming(turnText);
+      if (imagineTurn) english = `${IMAGINE_PRIMER}
+
+${english}`;
       if (getMode() === "plan") english = `${PLAN_PRIMER}
 
 ${english}`;
@@ -7810,6 +7861,7 @@ ${english}`;
       if (getMode() === "plan" && notePlanOutput(finalText)) {
         chat.addChild(new Text(dim("  \u25A2 plan ready \u2014 ") + accent("/approve") + dim(" to execute \xB7 ") + accent("/reject") + dim(" to discard"), 0, 0));
       }
+      if (imagineTurn) chat.addChild(new Text(imagineResultLines(finalText).join("\n"), 0, 0));
       tui.requestRender();
       busy = false;
     })();
@@ -7823,8 +7875,8 @@ ${english}`;
 // src/voice/mic.ts
 import { spawn as spawn3 } from "child_process";
 import { tmpdir as tmpdir3 } from "os";
-import { join as join28 } from "path";
-import { existsSync as existsSync18, statSync as statSync4 } from "fs";
+import { join as join29 } from "path";
+import { existsSync as existsSync19, statSync as statSync4 } from "fs";
 function recorders(outFile, seconds) {
   const dur = String(seconds);
   if (process.platform === "darwin") {
@@ -7845,12 +7897,12 @@ function recorders(outFile, seconds) {
   ];
 }
 async function recordMic(seconds = 6) {
-  const outFile = join28(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
+  const outFile = join29(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
   for (const r of recorders(outFile, seconds)) {
     const okFile = await new Promise((resolve3) => {
       const child = spawn3(r.cmd, r.args, { stdio: "ignore" });
       child.on("error", () => resolve3(false));
-      child.on("close", (code) => resolve3(code === 0 && existsSync18(outFile) && statSync4(outFile).size > 44));
+      child.on("close", (code) => resolve3(code === 0 && existsSync19(outFile) && statSync4(outFile).size > 44));
     });
     if (okFile) return outFile;
   }
@@ -7922,6 +7974,7 @@ function replHelp() {
   ${dim("Continuity")}         ${accent("/sessions")} list saved sessions   ${dim("resume:")} ${accent("oriro -c")} ${dim("or")} ${accent("oriro --resume <id>")}
   ${dim("Plan loop")}          ${accent("/plan")} <task> read-only plan   ${accent("/approve")} execute it   ${accent("/reject")} discard
   ${dim("Fan-out")}            ${accent("/agents")} <A> | <B> parallel sub-agents in isolated git worktrees
+  ${dim("Images")}             ${accent("/imagine")} <scene> draw an SVG artwork (keyless, auto-saved to cwd)
   ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one
   ${dim("Project")}            ${accent("/init")} write a starter AGENTS.md ORIRO reads each session
   ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn
@@ -8054,8 +8107,22 @@ async function runReadlineRepl(session) {
           turnText = plan.task;
         }
       }
+      let imagineTurn = false;
+      if (isImagineSlash(slash)) {
+        const task = imagineTask(line);
+        if (!task) {
+          stdout7.write(`  ${dim("usage: /imagine <what to draw> \u2014 ORIRO draws a self-contained SVG and saves it here")}
+`);
+          continue;
+        }
+        imagineTurn = true;
+        turnText = task;
+      }
       bumpTurns();
       let english = internalPrompt ?? await translateIncoming(turnText);
+      if (imagineTurn) english = `${IMAGINE_PRIMER}
+
+${english}`;
       if (getMode() === "plan") english = `${PLAN_PRIMER}
 
 ${english}`;
@@ -8086,6 +8153,7 @@ ${hint}
         stdout7.write(`  ${dim("\u25A2 plan ready \u2014")} ${accent("/approve")} ${dim("to execute \xB7")} ${accent("/reject")} ${dim("to discard")}
 `);
       }
+      if (imagineTurn) stdout7.write(imagineResultLines(shown).join("\n") + "\n");
     }
   } finally {
     process.removeListener("SIGINT", onSigint);
@@ -8194,8 +8262,8 @@ import jmespath from "jmespath";
 
 // src/config/store.ts
 init_paths();
-import { readFileSync as readFileSync22, writeFileSync as writeFileSync20, mkdirSync as mkdirSync16 } from "fs";
-import { join as join29 } from "path";
+import { readFileSync as readFileSync22, writeFileSync as writeFileSync21, mkdirSync as mkdirSync16 } from "fs";
+import { join as join30 } from "path";
 var KEYS = {
   output: {
     desc: "default output format for list commands: text | json | csv",
@@ -8217,7 +8285,7 @@ function validateConfig(key, value) {
   return KEYS[key].validate?.(value) ?? null;
 }
 function file4() {
-  return join29(oriroDir(), "config.json");
+  return join30(oriroDir(), "config.json");
 }
 var cache = null;
 function readAll() {
@@ -8239,7 +8307,7 @@ function configAll() {
 function configSet(key, value) {
   const all = { ...readAll(), [key]: value };
   mkdirSync16(oriroDir(), { recursive: true });
-  writeFileSync20(file4(), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync21(file4(), JSON.stringify(all, null, 2), "utf8");
   cache = all;
 }
 function configUnset(key) {
@@ -8247,7 +8315,7 @@ function configUnset(key) {
   if (!(key in all)) return false;
   const rest = { ...all };
   delete rest[key];
-  writeFileSync20(file4(), JSON.stringify(rest, null, 2), "utf8");
+  writeFileSync21(file4(), JSON.stringify(rest, null, 2), "utf8");
   cache = rest;
   return true;
 }
@@ -8496,7 +8564,7 @@ init_wal();
 init_retrieval();
 
 // src/scribe/transcript.ts
-import { existsSync as existsSync20, readFileSync as readFileSync23 } from "fs";
+import { existsSync as existsSync21, readFileSync as readFileSync23 } from "fs";
 function parseHookStdin(raw) {
   try {
     const j = JSON.parse(raw);
@@ -8529,7 +8597,7 @@ function isHumanUser(e) {
 }
 var FILE_KEYS = ["file_path", "path", "notebook_path", "filePath"];
 function lastTurnFromTranscript(path) {
-  if (!existsSync20(path)) return null;
+  if (!existsSync21(path)) return null;
   const raw = readFileSync23(path, "utf8");
   const entries = [];
   for (const line of raw.split("\n")) {
@@ -8908,10 +8976,10 @@ function registerConnectorsCommand(program2) {
 
 // src/channels/config.ts
 init_paths();
-import { readFileSync as readFileSync25, writeFileSync as writeFileSync21 } from "fs";
-import { join as join30 } from "path";
+import { readFileSync as readFileSync25, writeFileSync as writeFileSync22 } from "fs";
+import { join as join31 } from "path";
 function file5() {
-  return join30(oriroDir(), "channels.json");
+  return join31(oriroDir(), "channels.json");
 }
 function readChannels() {
   try {
@@ -8924,10 +8992,10 @@ function readChannels() {
 function saveChannel(cfg) {
   const all = readChannels().filter((c) => c.kind !== cfg.kind);
   all.push(cfg);
-  writeFileSync21(join30(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync22(join31(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
 }
 function removeChannel(kind) {
-  writeFileSync21(join30(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
+  writeFileSync22(join31(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
 }
 
 // src/channels/telegram.ts
@@ -9048,9 +9116,9 @@ async function startDiscord(token) {
 
 // src/channels/whatsapp.ts
 init_paths();
-import { join as join31 } from "path";
+import { join as join32 } from "path";
 function whatsappAuthDir() {
-  return join31(oriroDir(), "whatsapp-auth");
+  return join32(oriroDir(), "whatsapp-auth");
 }
 async function startWhatsApp() {
   let baileys;
@@ -9170,8 +9238,8 @@ function registerChannelsCommand(program2) {
 
 // src/commands/skills.ts
 init_loader();
-import { existsSync as existsSync21, statSync as statSync5, mkdirSync as mkdirSync17, cpSync, rmSync as rmSync4 } from "fs";
-import { resolve as resolve2, join as join32, basename as basename3, dirname as dirname4 } from "path";
+import { existsSync as existsSync22, statSync as statSync5, mkdirSync as mkdirSync17, cpSync, rmSync as rmSync4 } from "fs";
+import { resolve as resolve2, join as join33, basename as basename3, dirname as dirname4 } from "path";
 init_theme();
 function registerSkillsCommand(program2) {
   const skills = program2.command("skills").description("the ORIRO skill library \u2014 bundled + your own");
@@ -9204,28 +9272,28 @@ function registerSkillsCommand(program2) {
   });
   skills.command("add <path>").description("add your own skill \u2014 a folder containing SKILL.md, or a SKILL.md file").action((p) => {
     const src = resolve2(p);
-    if (!existsSync21(src)) die(`not found: ${src}`);
+    if (!existsSync22(src)) die(`not found: ${src}`);
     const dest = userSkillsDir();
     mkdirSync17(dest, { recursive: true });
     const st = statSync5(src);
     if (st.isDirectory()) {
-      if (!existsSync21(join32(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
+      if (!existsSync22(join33(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
       const name = basename3(src);
-      cpSync(src, join32(dest, name), { recursive: true });
-      ok(`added skill ${accent(name)} \u2192 ${join32(dest, name)}`);
+      cpSync(src, join33(dest, name), { recursive: true });
+      ok(`added skill ${accent(name)} \u2192 ${join33(dest, name)}`);
     } else if (basename3(src).toLowerCase() === "skill.md") {
       const name = basename3(dirname4(src)) || "custom-skill";
-      mkdirSync17(join32(dest, name), { recursive: true });
-      cpSync(src, join32(dest, name, "SKILL.md"));
-      ok(`added skill ${accent(name)} \u2192 ${join32(dest, name)}`);
+      mkdirSync17(join33(dest, name), { recursive: true });
+      cpSync(src, join33(dest, name, "SKILL.md"));
+      ok(`added skill ${accent(name)} \u2192 ${join33(dest, name)}`);
     } else {
       die("expected a folder containing SKILL.md, or a SKILL.md file");
     }
     info("It loads on next launch \u2014 and is available in chat via /skill.");
   });
   skills.command("remove <name>").description("remove a skill you added").option("-f, --force", "skip the confirmation prompt").action(async (name, opts) => {
-    const target = join32(userSkillsDir(), name);
-    if (!existsSync21(target)) {
+    const target = join33(userSkillsDir(), name);
+    if (!existsSync22(target)) {
       info(`'${name}' is not a user-added skill \u2014 nothing to remove`);
       return;
     }
@@ -9829,7 +9897,7 @@ function registerConfigCommand(program2) {
 
 // src/commands/setup.ts
 import { rmSync as rmSync5 } from "fs";
-import { join as join33 } from "path";
+import { join as join34 } from "path";
 import { stdin as stdin12, stdout as stdout11 } from "process";
 init_paths();
 init_theme();
@@ -9839,14 +9907,14 @@ var MARKERS = [
   "skills-onboarded.json",
   "connectors-onboarded.json",
   "models-onboarded.json",
-  join33("routers", "onboarded.json")
+  join34("routers", "onboarded.json")
 ];
 function registerSetupCommand(program2) {
   program2.command("setup").description("run the guided setup wizard (language \xB7 routers \xB7 connectors \xB7 skills \xB7 avatar)").option("--reset", "clear your settled choices and re-ask every step").action(async (opts) => {
     if (opts.reset) {
       for (const m of MARKERS) {
         try {
-          rmSync5(join33(oriroDir(), m), { force: true });
+          rmSync5(join34(oriroDir(), m), { force: true });
         } catch {
         }
       }
@@ -9863,8 +9931,8 @@ function registerSetupCommand(program2) {
 }
 
 // src/commands/import.ts
-import { existsSync as existsSync22, readFileSync as readFileSync27, readdirSync as readdirSync4, statSync as statSync6, cpSync as cpSync2, mkdirSync as mkdirSync18 } from "fs";
-import { join as join34, basename as basename4 } from "path";
+import { existsSync as existsSync23, readFileSync as readFileSync27, readdirSync as readdirSync4, statSync as statSync6, cpSync as cpSync2, mkdirSync as mkdirSync18 } from "fs";
+import { join as join35, basename as basename4 } from "path";
 init_mcp_client();
 init_custom();
 init_loader();
@@ -9872,7 +9940,7 @@ init_theme();
 function registerImportCommand(program2) {
   const imp = program2.command("import").description("migrate from another CLI (MCP servers, skills)");
   imp.command("mcp <file>").description("import MCP servers from a Claude-compatible mcp.json (Guardian-vetted)").action((file6) => {
-    if (!existsSync22(file6)) die(`no such file: ${file6}`);
+    if (!existsSync23(file6)) die(`no such file: ${file6}`);
     let servers;
     try {
       const j = JSON.parse(readFileSync27(file6, "utf8"));
@@ -9921,14 +9989,14 @@ function registerImportCommand(program2) {
     info(`${imported} imported \xB7 ${blocked2} blocked${imported ? ` \u2014 they connect in-session; see \`oriro connectors custom\`` : ""}`);
   });
   imp.command("skills <dir>").description("import SKILL.md skill folders from another CLI's skills directory").action((dir) => {
-    if (!existsSync22(dir) || !statSync6(dir).isDirectory()) die(`no such directory: ${dir}`);
+    if (!existsSync23(dir) || !statSync6(dir).isDirectory()) die(`no such directory: ${dir}`);
     const dest = userSkillsDir();
     mkdirSync18(dest, { recursive: true });
     heading("Import skills");
-    const sources = existsSync22(join34(dir, "SKILL.md")) ? [dir] : readdirSync4(dir).map((e) => join34(dir, e)).filter((p) => statSync6(p).isDirectory() && existsSync22(join34(p, "SKILL.md")));
+    const sources = existsSync23(join35(dir, "SKILL.md")) ? [dir] : readdirSync4(dir).map((e) => join35(dir, e)).filter((p) => statSync6(p).isDirectory() && existsSync23(join35(p, "SKILL.md")));
     let n = 0;
     for (const src of sources) {
-      cpSync2(src, join34(dest, basename4(src)), { recursive: true });
+      cpSync2(src, join35(dest, basename4(src)), { recursive: true });
       process.stdout.write(`  ${fgHex(PALETTE.success, "\u2713")} ${accent(basename4(src))}
 `);
       n++;

@@ -28,6 +28,7 @@ import { isAgentsSlash, handleAgents } from "./repl-ui/slash-agents.js";
 import type { ResumeOpts } from "./sessions/store.js";
 import { extractArtifacts, setArtifacts } from "./repl-ui/artifacts.js";
 import { parsePlanSlash, enterPlan, approvePlan, rejectPlan, notePlanOutput, PLAN_PRIMER } from "./repl-ui/plan-mode.js";
+import { isImagineSlash, imagineTask, imagineResultLines, IMAGINE_PRIMER } from "./repl-ui/slash-imagine.js";
 import { getMode, setMode } from "./repl-ui/permission.js";
 import { bumpTurns, toggleTrace } from "./repl-ui/repl-state.js";
 import { dim, accent } from "./ui/theme.js";
@@ -44,6 +45,7 @@ function replHelp(): string {
     `  ${dim("Continuity")}         ${accent("/sessions")} list saved sessions   ${dim("resume:")} ${accent("oriro -c")} ${dim("or")} ${accent("oriro --resume <id>")}\n` +
     `  ${dim("Plan loop")}          ${accent("/plan")} <task> read-only plan   ${accent("/approve")} execute it   ${accent("/reject")} discard\n` +
     `  ${dim("Fan-out")}            ${accent("/agents")} <A> | <B> parallel sub-agents in isolated git worktrees\n` +
+    `  ${dim("Images")}             ${accent("/imagine")} <scene> draw an SVG artwork (keyless, auto-saved to cwd)\n` +
     `  ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one\n` +
     `  ${dim("Project")}            ${accent("/init")} write a starter AGENTS.md ORIRO reads each session\n` +
     `  ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn\n` +
@@ -134,8 +136,21 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
         }
       }
 
+      // V0.3.9 — /imagine <prompt>: draw one standalone SVG, auto-saved to cwd.
+      let imagineTurn = false;
+      if (isImagineSlash(slash)) {
+        const task = imagineTask(line);
+        if (!task) {
+          stdout.write(`  ${dim("usage: /imagine <what to draw> — ORIRO draws a self-contained SVG and saves it here")}\n`);
+          continue;
+        }
+        imagineTurn = true;
+        turnText = task;
+      }
+
       bumpTurns();
       let english = internalPrompt ?? (await translateIncoming(turnText));
+      if (imagineTurn) english = `${IMAGINE_PRIMER}\n\n${english}`; // /imagine → one standalone SVG
       if (getMode() === "plan") english = `${PLAN_PRIMER}\n\n${english}`; // every plan-mode turn plans, read-only
       noteUserInput(line);
       let out = "";
@@ -160,6 +175,7 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       if (getMode() === "plan" && notePlanOutput(shown)) {
         stdout.write(`  ${dim("▢ plan ready —")} ${accent("/approve")} ${dim("to execute ·")} ${accent("/reject")} ${dim("to discard")}\n`);
       }
+      if (imagineTurn) stdout.write(imagineResultLines(shown).join("\n") + "\n");
     }
   } finally {
     process.removeListener("SIGINT", onSigint);
