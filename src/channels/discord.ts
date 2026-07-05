@@ -1,6 +1,8 @@
 // ORIRO channels — Discord, built FRESH on discord.js (official Bot API, Apache-2.0). Connects on
 // the USER's OWN bot token; each text message runs through the ORIRO host → reply. Mirrors the
-// Telegram adapter. discord.js is lazy-imported so it never slows a non-Discord run. Zero OpenClaw footprint.
+// Telegram adapter. discord.js is an OPTIONAL PEER (like WhatsApp/Baileys) — NOT in the default
+// install, so a plain `npm i @oriro/orirocli` stays lean and carries zero of discord.js's transitive
+// weight. It's lazy-imported only when a Discord bot is actually started; missing → a clear install hint.
 import { OriroChannelHost } from "./host.js";
 import type { RunningChannel } from "./telegram.js";
 
@@ -21,7 +23,13 @@ export async function validateDiscordToken(token: string): Promise<string> {
 /** Start a Discord bot on the user's own token. Each (non-bot) text message → ORIRO → reply.
  *  Needs the MESSAGE CONTENT intent enabled in the Discord Developer Portal. */
 export async function startDiscord(token: string): Promise<RunningChannel> {
-  const { Client, GatewayIntentBits, Events } = await import("discord.js");
+  let djs: typeof import("discord.js");
+  try {
+    djs = await import("discord.js");
+  } catch {
+    throw new Error("Discord needs the discord.js peer — install it:\n  npm i discord.js");
+  }
+  const { Client, GatewayIntentBits, Events } = djs;
   const host = new OriroChannelHost();
   const client = new Client({
     intents: [

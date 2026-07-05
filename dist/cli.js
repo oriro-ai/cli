@@ -5294,7 +5294,7 @@ __export(acp_exports, {
 });
 import { randomUUID } from "crypto";
 import { Readable, Writable } from "stream";
-import { AgentSideConnection, ndJsonStream, PROTOCOL_VERSION } from "@zed-industries/agent-client-protocol";
+import { AgentSideConnection, ndJsonStream, PROTOCOL_VERSION } from "@agentclientprotocol/sdk";
 async function serveAcp() {
   protectStdio();
   exitOnStdinClose();
@@ -9186,7 +9186,13 @@ async function validateDiscordToken(token) {
   return me.username ?? me.id ?? "unknown";
 }
 async function startDiscord(token) {
-  const { Client: Client2, GatewayIntentBits, Events } = await import("discord.js");
+  let djs;
+  try {
+    djs = await import("discord.js");
+  } catch {
+    throw new Error("Discord needs the discord.js peer \u2014 install it:\n  npm i discord.js");
+  }
+  const { Client: Client2, GatewayIntentBits, Events } = djs;
   const host = new OriroChannelHost();
   const client = new Client2({
     intents: [

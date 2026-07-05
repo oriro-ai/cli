@@ -1,12 +1,12 @@
 // ORIRO ACP server — V0.3.8. Speaks the Agent Client Protocol over stdio (the official
-// @zed-industries/agent-client-protocol package — no hand-rolled JSON-RPC), so Zed, JetBrains and
+// @agentclientprotocol/sdk package — no hand-rolled JSON-RPC), so Zed, JetBrains and
 // any ACP-capable editor can drive ORIRO as their coding agent: `oriro serve acp`.
 // Each ACP session is a FULL assembled ORIRO session (keyless Mux + Guardian + skills) bound to the
 // editor's cwd; agent text streams back as agent_message_chunk updates. Keyless by construction.
 import { randomUUID } from "node:crypto";
 import { Readable, Writable } from "node:stream";
-import { AgentSideConnection, ndJsonStream, PROTOCOL_VERSION } from "@zed-industries/agent-client-protocol";
-import type { Agent, InitializeRequest, InitializeResponse, NewSessionRequest, NewSessionResponse, AuthenticateRequest, AuthenticateResponse, PromptRequest, PromptResponse, CancelNotification } from "@zed-industries/agent-client-protocol";
+import { AgentSideConnection, ndJsonStream, PROTOCOL_VERSION } from "@agentclientprotocol/sdk";
+import type { Agent, InitializeRequest, InitializeResponse, NewSessionRequest, NewSessionResponse, AuthenticateRequest, AuthenticateResponse, PromptRequest, PromptResponse, CancelNotification } from "@agentclientprotocol/sdk";
 import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import { assembleOriroSession } from "../onboarding/assemble.js";
 import { scrubOutput } from "../identity/filter.js";
