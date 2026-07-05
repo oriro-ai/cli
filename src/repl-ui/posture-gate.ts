@@ -18,8 +18,20 @@ export function armPostureGate(): void {
   armed = true;
 }
 
+/**
+ * Sub-agent sessions (in-REPL `/agents` fan-out, `oriro agents run` recursion) share this process's
+ * posture state but must NOT inherit the main session's posture — they'd be crippled by Plan/Manual
+ * while working headless in their own worktrees. ORIRO_AGENT_DEPTH > 0 marks them; Guardian remains
+ * their floor. Pure (unit-tested).
+ */
+export function bypassPosture(depthEnv: string | undefined): boolean {
+  const d = Number(depthEnv);
+  return Number.isFinite(d) && d > 0;
+}
+
 export function registerPostureGate(pi: ExtensionAPI): void {
   pi.on("tool_call", async (event, ctx) => {
+    if (bypassPosture(process.env.ORIRO_AGENT_DEPTH)) return undefined; // sub-agent: Guardian-only
     // Guardian runs as its own extension and blocks independently — so guardianBlocked=false here.
     const d = decideTool({ toolName: event.toolName, guardianBlocked: false });
 

@@ -24,6 +24,7 @@ import { isArtifactSlash, handleArtifactSlash } from "./repl-ui/slash-artifacts.
 import { isCompactSlash, handleCompact } from "./repl-ui/slash-compact.js";
 import { isInitSlash, handleInit } from "./repl-ui/slash-init.js";
 import { isSessionsSlash, handleSessions, isUndoSlash, handleUndo } from "./repl-ui/slash-sessions.js";
+import { isAgentsSlash, handleAgents } from "./repl-ui/slash-agents.js";
 import type { ResumeOpts } from "./sessions/store.js";
 import { extractArtifacts, setArtifacts } from "./repl-ui/artifacts.js";
 import { parsePlanSlash, enterPlan, approvePlan, rejectPlan, notePlanOutput, PLAN_PRIMER } from "./repl-ui/plan-mode.js";
@@ -42,6 +43,7 @@ function replHelp(): string {
     `  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} activity   ${accent("/compact")} free context   ${accent("/undo")} rewind a turn\n` +
     `  ${dim("Continuity")}         ${accent("/sessions")} list saved sessions   ${dim("resume:")} ${accent("oriro -c")} ${dim("or")} ${accent("oriro --resume <id>")}\n` +
     `  ${dim("Plan loop")}          ${accent("/plan")} <task> read-only plan   ${accent("/approve")} execute it   ${accent("/reject")} discard\n` +
+    `  ${dim("Fan-out")}            ${accent("/agents")} <A> | <B> parallel sub-agents in isolated git worktrees\n` +
     `  ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one\n` +
     `  ${dim("Project")}            ${accent("/init")} write a starter AGENTS.md ORIRO reads each session\n` +
     `  ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn\n` +
@@ -104,6 +106,7 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       if (isSessionsSlash(slash)) { stdout.write((await handleSessions()).join("\n") + "\n"); continue; }
       if (isUndoSlash(slash)) { stdout.write((await handleUndo(session)).join("\n") + "\n"); continue; }
       if (isArtifactSlash(slash)) { stdout.write(handleArtifactSlash(line).join("\n") + "\n"); continue; }
+      if (isAgentsSlash(slash)) { stdout.write((await handleAgents(line)).join("\n") + "\n"); continue; }
 
       // V0.3.5 Plan mode — the same plan → approve → execute loop as the TUI; the posture gate
       // keeps plan-mode turns read-only here too (deterministic block, no UI needed).

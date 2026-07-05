@@ -28,6 +28,7 @@ import { isArtifactSlash, handleArtifactSlash } from "./slash-artifacts.js";
 import { isCompactSlash, handleCompact } from "./slash-compact.js";
 import { isInitSlash, handleInit } from "./slash-init.js";
 import { isSessionsSlash, handleSessions, isUndoSlash, handleUndo } from "./slash-sessions.js";
+import { isAgentsSlash, handleAgents } from "./slash-agents.js";
 import { extractArtifacts, setArtifacts } from "./artifacts.js";
 import { bumpTurns, getTrace, toggleTrace } from "./repl-state.js";
 import { onRaceStatus } from "../routers/race-status.js";
@@ -121,7 +122,7 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
         `  ${accent("/routers")} pool add·rotate   ${accent("/model")} <id…> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity   ${accent("/compact")} free context`,
         `  ${accent("/review")} artifacts   ${accent("/save")} <n> [path]   ${accent("/init")} AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
         `  ${accent("/sessions")} list saved   ${accent("/undo")} rewind a turn   ${dim("resume:")} ${accent("oriro -c")} / ${accent("oriro --resume <id>")}`,
-        `  ${accent("/plan")} <task> plan read-only   ${accent("/approve")} execute it   ${accent("/reject")} discard`,
+        `  ${accent("/plan")} <task> plan read-only   ${accent("/approve")} execute it   ${accent("/reject")} discard   ${accent("/agents")} parallel worktree fan-out`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`,
       ].join("\n");
       chat.addChild(new Text(help, 0, 0));
@@ -196,6 +197,19 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       })();
       return;
     }
+    if (isAgentsSlash(slash)) {
+      editor.setText("");
+      const pending = new Text(dim("  ⚒ deploying agents…"), 0, 0);
+      chat.addChild(pending);
+      tui.requestRender();
+      void (async () => {
+        const lines = await handleAgents(text);
+        pending.setText(lines.join("\n"));
+        tui.requestRender();
+      })();
+      return;
+    }
+
     // V0.3.5 Plan mode — /plan [task] · /approve · /reject (plan → approve → execute).
     const plan = parsePlanSlash(text);
     let internalPrompt: string | undefined; // fixed English prompt (skips translation)

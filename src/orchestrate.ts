@@ -57,8 +57,8 @@ async function runAgent(spec: AgentSpec): Promise<AgentResult> {
   return last;
 }
 
-/** Bounded-concurrency map. */
-async function runPool<T, R>(items: T[], n: number, fn: (t: T) => Promise<R>): Promise<R[]> {
+/** Bounded-concurrency map (also used by the V0.3.6 `/agents` worktree fan-out). */
+export async function runPool<T, R>(items: T[], n: number, fn: (t: T) => Promise<R>): Promise<R[]> {
   const results: R[] = new Array(items.length);
   let i = 0;
   async function worker(): Promise<void> {
