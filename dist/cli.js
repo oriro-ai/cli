@@ -7527,6 +7527,9 @@ async function confirmDestructive(what, opts = {}) {
   }
 }
 
+// src/commands/output.ts
+import jmespath from "jmespath";
+
 // src/config/store.ts
 import { readFileSync as readFileSync22, writeFileSync as writeFileSync20, mkdirSync as mkdirSync16 } from "fs";
 import { join as join29 } from "path";
@@ -7589,39 +7592,62 @@ function configUnset(key) {
 // src/commands/output.ts
 function parseFormat(o) {
   const f = (o ?? configGet("output") ?? "text").toLowerCase();
-  if (f === "json" || f === "csv" || f === "text") return f;
-  throw new Error(`invalid --output '${o}'. Use: text | json | csv`);
+  if (f === "json" || f === "csv" || f === "text" || f === "md") return f;
+  throw new Error(`invalid --output '${o}'. Use: text | json | csv | md`);
 }
+var LIGHTWEIGHT_QUERY = /^[\w.-]+(=[^:]*)?(:[\w.-]+)?$/;
 function applyQuery(rows, query) {
   if (!query) return rows;
-  const [filterPart, selectField] = query.split(":", 2);
-  let out = rows;
-  const fp = filterPart ?? "";
-  if (fp.includes("=")) {
-    const [field2, value] = fp.split("=", 2);
-    out = rows.filter((r) => String(r[field2] ?? "") === value);
-  } else if (fp && !selectField) {
-    return rows.map((r) => r[fp]);
+  if (LIGHTWEIGHT_QUERY.test(query.trim())) {
+    const [filterPart, selectField] = query.trim().split(":", 2);
+    let out = rows;
+    const fp = filterPart ?? "";
+    if (fp.includes("=")) {
+      const [field2, value] = fp.split("=", 2);
+      out = rows.filter((r) => String(r[field2] ?? "") === value);
+    } else if (fp && !selectField) {
+      return rows.map((r) => r[fp]);
+    }
+    if (selectField) return out.map((r) => r[selectField]);
+    return out;
   }
-  if (selectField) return out.map((r) => r[selectField]);
-  return out;
+  try {
+    return jmespath.search(rows, query);
+  } catch (e) {
+    throw new Error(`invalid --query '${query}' \u2014 not lightweight (field / field=value[:select]) nor valid JMESPath: ${e instanceof Error ? e.message : String(e)}`);
+  }
 }
 function csvCell(v) {
   const s = v === null || v === void 0 ? "" : String(v);
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
+function mdCell(v) {
+  const s = v === null || v === void 0 ? "" : String(v);
+  return s.replace(/\|/g, "\\|").replace(/\n/g, " ");
+}
 function renderList2(rows, opts = {}) {
   const fmt = parseFormat(opts.output);
-  const queried = applyQuery(rows, opts.query);
-  if (fmt === "json") return JSON.stringify(queried, null, 2);
-  if (!Array.isArray(queried) || queried.length === 0) return "";
+  const raw = applyQuery(rows, opts.query);
+  if (fmt === "json") return JSON.stringify(raw, null, 2);
+  const queried = Array.isArray(raw) ? raw : raw === void 0 || raw === null ? [] : [raw];
+  if (queried.length === 0) return "";
   const first = queried[0];
   const scalar = typeof first !== "object" || first === null;
-  if (scalar) return queried.map((v) => fmt === "csv" ? csvCell(v) : String(v)).join("\n");
+  if (scalar) {
+    if (fmt === "md") return queried.map((v) => `- ${mdCell(v)}`).join("\n");
+    return queried.map((v) => fmt === "csv" ? csvCell(v) : String(v)).join("\n");
+  }
   const objs = queried;
   const cols = opts.columns ?? [...new Set(objs.flatMap((r) => Object.keys(r)))];
   if (fmt === "csv") {
     return [cols.map(csvCell).join(","), ...objs.map((r) => cols.map((c) => csvCell(r[c])).join(","))].join("\n");
+  }
+  if (fmt === "md") {
+    return [
+      `| ${cols.map(mdCell).join(" | ")} |`,
+      `| ${cols.map(() => "---").join(" | ")} |`,
+      ...objs.map((r) => `| ${cols.map((c) => mdCell(r[c])).join(" | ")} |`)
+    ].join("\n");
   }
   const widths = cols.map((c) => Math.max(c.length, ...objs.map((r) => String(r[c] ?? "").length)));
   const line = (cells) => cells.map((s, i) => s.padEnd(widths[i] ?? 0)).join("  ").trimEnd();
@@ -7632,12 +7658,12 @@ function isMachineOutput(opts) {
 }
 function outputError(opts) {
   const f = (opts.output ?? configGet("output") ?? "text").toLowerCase();
-  return f === "json" || f === "csv" || f === "text" ? null : `invalid --output '${opts.output}' \u2014 use text | json | csv`;
+  return f === "json" || f === "csv" || f === "text" || f === "md" ? null : `invalid --output '${opts.output}' \u2014 use text | json | csv | md`;
 }
 
 // src/commands/sessions.ts
 function registerSessionsCommand(program2) {
-  program2.command("sessions").description("list your saved chat sessions (resume with `oriro -c` or `oriro --resume <id>`)").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action(async (opts) => {
+  program2.command("sessions").description("list your saved chat sessions (resume with `oriro -c` or `oriro --resume <id>`)").option("-o, --output <fmt>", "output format: text (default) | json | csv | md").option("-q, --query <expr>", "filter/select: 'field', 'field=value[:selectField]', or any JMESPath").action(async (opts) => {
     const oerr = outputError(opts);
     if (oerr) die(oerr);
     const infos = await listSessions();
@@ -7656,10 +7682,37 @@ function registerSessionsCommand(program2) {
   });
 }
 
+// src/commands/project.ts
+function registerProjectCommands(program2) {
+  program2.command("init").description("write a starter AGENTS.md for this project (same as the in-chat /init)").option("--force", "overwrite an existing AGENTS.md").action((opts) => {
+    process.stdout.write(handleInit(`/init${opts.force ? " --force" : ""}`).join("\n") + "\n");
+  });
+  program2.command("compact [focus...]").description("summarize + free a saved session's history (default: most recent here; same as /compact)").option("--resume <id>", "compact a specific saved session (id or unique prefix)").action(async (focus, opts) => {
+    let session;
+    let sessionNote;
+    try {
+      ({ session, sessionNote } = await assembleOriroSession({
+        resume: opts.resume ? { resumeId: opts.resume } : { continue: true }
+      }));
+    } catch (e) {
+      die(e instanceof Error ? e.message : String(e));
+      return;
+    }
+    if (sessionNote) process.stdout.write(`  ${dim(sessionNote)}
+`);
+    const lines = await handleCompact(session, `/compact${focus.length ? ` ${focus.join(" ")}` : ""}`);
+    process.stdout.write(lines.join("\n") + "\n");
+    try {
+      session.dispose();
+    } catch {
+    }
+  });
+}
+
 // src/commands/routers.ts
 function registerRoutersCommand(program2) {
   const routers = program2.command("routers").description("manage the free-router pool the model runs on");
-  routers.command("list").description("list the router catalog and the active pool").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action((opts) => {
+  routers.command("list").description("list the router catalog and the active pool").option("-o, --output <fmt>", "output format: text (default) | json | csv | md").option("-q, --query <expr>", "filter/select: 'field', 'field=value[:selectField]', or any JMESPath").action((opts) => {
     const oerr = outputError(opts);
     if (oerr) die(oerr);
     const pool = new Set(resolvePool().map((p) => p.id));
@@ -7991,7 +8044,7 @@ function parsePairs(s) {
 // src/commands/connectors.ts
 function registerConnectorsCommand(program2) {
   const connectors = program2.command("connectors").description("MCP connectors \u2014 add external tools/services (inert until used)");
-  connectors.command("list [category]").description("list the connector catalog (optionally filtered by category)").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action((category, opts) => {
+  connectors.command("list [category]").description("list the connector catalog (optionally filtered by category)").option("-o, --output <fmt>", "output format: text (default) | json | csv | md").option("-q, --query <expr>", "filter/select: 'field', 'field=value[:selectField]', or any JMESPath").action((category, opts) => {
     const oerr = outputError(opts);
     if (oerr) die(oerr);
     if (category && !connectorCategories().includes(category)) {
@@ -8413,7 +8466,7 @@ import { existsSync as existsSync21, statSync as statSync5, mkdirSync as mkdirSy
 import { resolve as resolve2, join as join32, basename as basename3, dirname as dirname4 } from "path";
 function registerSkillsCommand(program2) {
   const skills = program2.command("skills").description("the ORIRO skill library \u2014 bundled + your own");
-  skills.command("list").description("show CORE / TAIL skill counts (use --all to list names)").option("-a, --all", "list every skill name").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action(async (opts) => {
+  skills.command("list").description("show CORE / TAIL skill counts (use --all to list names)").option("-a, --all", "list every skill name").option("-o, --output <fmt>", "output format: text (default) | json | csv | md").option("-q, --query <expr>", "filter/select: 'field', 'field=value[:selectField]', or any JMESPath").action(async (opts) => {
     const oerr = outputError(opts);
     if (oerr) die(oerr);
     const s = await loadOriroSkills();
@@ -8783,7 +8836,7 @@ function registerAgentsCommand(program2) {
     info(`make one: ${accent('oriro agents make <name> --task "\u2026" [--router <id>] [--schedule 1h]')}`);
     info(`then: ${accent("oriro agents run <name>")} ${dim("\xB7 or")} ${accent("oriro agents tick")} ${dim("for scheduled ones")}`);
   });
-  agents.command("list").description("list your saved agents").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action((opts) => {
+  agents.command("list").description("list your saved agents").option("-o, --output <fmt>", "output format: text (default) | json | csv | md").option("-q, --query <expr>", "filter/select: 'field', 'field=value[:selectField]', or any JMESPath").action((opts) => {
     const oerr = outputError(opts);
     if (oerr) die(oerr);
     const all = listAgents();
@@ -9241,6 +9294,7 @@ program.name("oriro").description("ORIRO \u2014 a free, on-device-friendly termi
   await runRepl({ resume });
 });
 registerSessionsCommand(program);
+registerProjectCommands(program);
 registerRoutersCommand(program);
 registerScribeCommand(program);
 registerConnectorsCommand(program);

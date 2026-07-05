@@ -17,8 +17,8 @@ export function registerSkillsCommand(program: Command): void {
     .command("list")
     .description("show CORE / TAIL skill counts (use --all to list names)")
     .option("-a, --all", "list every skill name")
-    .option("-o, --output <fmt>", "output format: text (default) | json | csv")
-    .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
+    .option("-o, --output <fmt>", "output format: text (default) | json | csv | md")
+    .option("-q, --query <expr>", "filter/select: 'field', 'field=value[:selectField]', or any JMESPath")
     .action(async (opts: { all?: boolean; output?: string; query?: string }) => {
       const oerr = outputError(opts); if (oerr) die(oerr); // clean error, no stack trace (QA D1)
       const s = await loadOriroSkills();

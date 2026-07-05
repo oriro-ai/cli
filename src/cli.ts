@@ -8,6 +8,7 @@ import { Command } from "commander";
 import { runRepl } from "./repl.js";
 import { runHeadless, isOutputFormatMode } from "./headless.js";
 import { registerSessionsCommand } from "./commands/sessions.js";
+import { registerProjectCommands } from "./commands/project.js";
 import type { ResumeOpts } from "./sessions/store.js";
 import { registerRoutersCommand } from "./commands/routers.js";
 import { registerScribeCommand } from "./commands/scribe.js";
@@ -71,6 +72,7 @@ program
   });
 
 registerSessionsCommand(program);
+registerProjectCommands(program); // V0.3.7 — oriro init / oriro compact (shell twins of /init · /compact)
 registerRoutersCommand(program);
 registerScribeCommand(program);
 registerConnectorsCommand(program);

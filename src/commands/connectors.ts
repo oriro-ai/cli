@@ -31,8 +31,8 @@ export function registerConnectorsCommand(program: Command): void {
   connectors
     .command("list [category]")
     .description("list the connector catalog (optionally filtered by category)")
-    .option("-o, --output <fmt>", "output format: text (default) | json | csv")
-    .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
+    .option("-o, --output <fmt>", "output format: text (default) | json | csv | md")
+    .option("-q, --query <expr>", "filter/select: 'field', 'field=value[:selectField]', or any JMESPath")
     .action((category: string | undefined, opts: { output?: string; query?: string }) => {
       const oerr = outputError(opts); if (oerr) die(oerr); // clean error, no stack trace (QA D1)
       if (category && !connectorCategories().includes(category)) {

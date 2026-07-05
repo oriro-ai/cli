@@ -1,6 +1,6 @@
 {
   "name": "@oriro/orirocli",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "ORIRO — a free, on-device-friendly terminal AI agent. Built on the Pi agent harness (used as a library).",
   "type": "module",
   "bin": {
@@ -37,6 +37,7 @@
     "commander": "^12.1.0",
     "discord.js": "^14.26.4",
     "grammy": "^1.44.0",
+    "jmespath": "^0.16.0",
     "typebox": "^1.1.38"
   },
   "peerDependencies": {
@@ -52,6 +53,7 @@
     }
   },
   "devDependencies": {
+    "@types/jmespath": "^0.15.2",
     "@types/node": "^22",
     "tsup": "^8",
     "tsx": "^4",

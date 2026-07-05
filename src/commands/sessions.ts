@@ -10,8 +10,8 @@ export function registerSessionsCommand(program: Command): void {
   program
     .command("sessions")
     .description("list your saved chat sessions (resume with `oriro -c` or `oriro --resume <id>`)")
-    .option("-o, --output <fmt>", "output format: text (default) | json | csv")
-    .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
+    .option("-o, --output <fmt>", "output format: text (default) | json | csv | md")
+    .option("-q, --query <expr>", "filter/select: 'field', 'field=value[:selectField]', or any JMESPath")
     .action(async (opts: { output?: string; query?: string }) => {
       const oerr = outputError(opts); if (oerr) die(oerr);
       const infos = await listSessions();

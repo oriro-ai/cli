@@ -15,8 +15,8 @@ export function registerRoutersCommand(program: Command): void {
   routers
     .command("list")
     .description("list the router catalog and the active pool")
-    .option("-o, --output <fmt>", "output format: text (default) | json | csv")
-    .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
+    .option("-o, --output <fmt>", "output format: text (default) | json | csv | md")
+    .option("-q, --query <expr>", "filter/select: 'field', 'field=value[:selectField]', or any JMESPath")
     .action((opts: { output?: string; query?: string }) => {
       const oerr = outputError(opts); if (oerr) die(oerr); // clean error, no stack trace (QA D1)
       const pool = new Set(resolvePool().map((p) => p.id));

@@ -60,8 +60,8 @@ export function registerAgentsCommand(program: Command): void {
   agents
     .command("list")
     .description("list your saved agents")
-    .option("-o, --output <fmt>", "output format: text (default) | json | csv")
-    .option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'")
+    .option("-o, --output <fmt>", "output format: text (default) | json | csv | md")
+    .option("-q, --query <expr>", "filter/select: 'field', 'field=value[:selectField]', or any JMESPath")
     .action((opts: { output?: string; query?: string }) => {
       const oerr = outputError(opts); if (oerr) die(oerr); // clean error, no stack trace (QA D1)
       const all = listAgents();
