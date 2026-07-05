@@ -9151,6 +9151,10 @@ function registerServeCommand(program2, version2) {
   });
 }
 
+// src/commands/gateway.ts
+import { spawnSync } from "child_process";
+import { platform } from "process";
+
 // src/channels/config.ts
 init_paths();
 import { readFileSync as readFileSync23, writeFileSync as writeFileSync23 } from "fs";
@@ -9362,8 +9366,84 @@ async function runGateway(opts) {
   }
 }
 
+// src/gateway/service.ts
+var GATEWAY_TASK = "ORIRO_Gateway";
+var GATEWAY_LABEL = "ai.oriro.gateway";
+var GATEWAY_UNIT = "oriro-gateway";
+function systemdUnit(inv) {
+  return [
+    "[Unit]",
+    "Description=ORIRO Gateway (channels + scheduled agents)",
+    "After=network-online.target",
+    "",
+    "[Service]",
+    `ExecStart="${inv.node}" "${inv.bin}" gateway`,
+    "Restart=always",
+    "RestartSec=5",
+    "",
+    "[Install]",
+    "WantedBy=default.target"
+  ].join("\n");
+}
+function launchdPlist(inv) {
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">',
+    '<plist version="1.0"><dict>',
+    `  <key>Label</key><string>${GATEWAY_LABEL}</string>`,
+    "  <key>ProgramArguments</key>",
+    `  <array><string>${inv.node}</string><string>${inv.bin}</string><string>gateway</string></array>`,
+    "  <key>RunAtLoad</key><true/>",
+    "  <key>KeepAlive</key><true/>",
+    "</dict></plist>"
+  ].join("\n");
+}
+function buildServiceCommand(plat, opts) {
+  const { node, bin } = opts.inv;
+  if (plat === "win32") {
+    if (opts.remove) return { cmd: `schtasks /Delete /TN ${GATEWAY_TASK} /F`, note: "Windows Task Scheduler" };
+    return {
+      cmd: `schtasks /Create /TN ${GATEWAY_TASK} /TR "\\"${node}\\" \\"${bin}\\" gateway" /SC ONLOGON /RL LIMITED /F`,
+      note: "Windows Task Scheduler (starts at logon)"
+    };
+  }
+  if (plat === "darwin") {
+    const plistPath = `"$HOME/Library/LaunchAgents/${GATEWAY_LABEL}.plist"`;
+    if (opts.remove) return { cmd: `launchctl unload ${plistPath} 2>/dev/null; rm -f ${plistPath}`, note: "launchd LaunchAgent" };
+    return {
+      cmd: `mkdir -p "$HOME/Library/LaunchAgents" && cat > ${plistPath} <<'ORIRO_PLIST'
+${launchdPlist(opts.inv)}
+ORIRO_PLIST
+launchctl unload ${plistPath} 2>/dev/null; launchctl load ${plistPath}`,
+      note: "launchd LaunchAgent (RunAtLoad + KeepAlive)"
+    };
+  }
+  const unitPath = `"$HOME/.config/systemd/user/${GATEWAY_UNIT}.service"`;
+  if (opts.remove) {
+    return {
+      cmd: `systemctl --user disable --now ${GATEWAY_UNIT} 2>/dev/null; rm -f ${unitPath}; systemctl --user daemon-reload`,
+      note: "systemd user service"
+    };
+  }
+  return {
+    cmd: `mkdir -p "$HOME/.config/systemd/user" && cat > ${unitPath} <<'ORIRO_UNIT'
+${systemdUnit(opts.inv)}
+ORIRO_UNIT
+systemctl --user daemon-reload && systemctl --user enable --now ${GATEWAY_UNIT}`,
+    note: "systemd user service (Restart=always)"
+  };
+}
+
 // src/commands/gateway.ts
 init_theme();
+function runShell(cmd) {
+  const r = platform === "win32" ? spawnSync("cmd", ["/c", cmd], { encoding: "utf8" }) : spawnSync("sh", ["-c", cmd], { encoding: "utf8" });
+  if (r.status !== 0) {
+    info(dim((r.stderr || r.stdout || "").trim().slice(0, 400)));
+    return false;
+  }
+  return true;
+}
 function registerGatewayCommand(program2) {
   const gateway = program2.command("gateway").description("run ORIRO's control plane \u2014 all channels + scheduled agents in one resident process");
   gateway.command("status").description("show what the gateway will run (channels + scheduled agents) \u2014 starts nothing").action(() => {
@@ -9379,6 +9459,22 @@ function registerGatewayCommand(program2) {
     heading("ORIRO Gateway \u2014 tick");
     await runGateway({ once: true, log: (l) => process.stdout.write(`  ${dim(l)}
 `) });
+  });
+  gateway.command("install").description("install the gateway as an always-on OS service (starts on login, restarts on crash)").option("--remove", "remove the installed service instead").option("--apply", "actually apply it (default: print the exact command so you see what runs)").action((opts) => {
+    const inv = { node: process.execPath, bin: process.argv[1] ?? "oriro" };
+    const { cmd, note } = buildServiceCommand(platform, { remove: Boolean(opts.remove), inv });
+    heading(opts.remove ? "Remove gateway service" : "Install gateway service");
+    info(`${note}: ${opts.remove ? "removes" : "runs"} ${accent("oriro gateway")}${opts.remove ? "" : " on login (auto-restart)"}`);
+    if (!opts.apply) {
+      process.stdout.write(`
+${cmd}
+
+`);
+      info(dim("printed only \u2014 re-run with --apply to make this change, or run it yourself"));
+      return;
+    }
+    if (runShell(cmd)) ok(opts.remove ? "gateway service removed" : "gateway installed \u2014 it will start on next login (start now: `oriro gateway`)");
+    else die("could not apply (see the message above) \u2014 you can run the printed command manually");
   });
   gateway.action(async () => {
     const plan = planGateway();
@@ -10327,8 +10423,8 @@ async function addAgentFromSource(pathOrUrl, now) {
 init_router_pool();
 
 // src/commands/schedule.ts
-import { spawnSync } from "child_process";
-import { platform } from "process";
+import { spawnSync as spawnSync2 } from "child_process";
+import { platform as platform2 } from "process";
 init_theme();
 var TASK_NAME = "ORIRO_Agents_Tick";
 function intervalMinutes(spec) {
@@ -10343,7 +10439,7 @@ function tickInvocation() {
 }
 function buildCron(mins, remove) {
   const { node, bin } = tickInvocation();
-  if (platform === "win32") {
+  if (platform2 === "win32") {
     if (remove) return { cmd: `schtasks /Delete /TN ${TASK_NAME} /F`, note: "Windows Task Scheduler" };
     const sc = mins % 60 === 0 ? `/SC HOURLY /MO ${mins / 60}` : `/SC MINUTE /MO ${mins}`;
     return {
@@ -10360,8 +10456,8 @@ function buildCron(mins, remove) {
     note: "crontab"
   };
 }
-function runShell(cmd) {
-  const r = platform === "win32" ? spawnSync("cmd", ["/c", cmd], { encoding: "utf8" }) : spawnSync("sh", ["-c", cmd], { encoding: "utf8" });
+function runShell2(cmd) {
+  const r = platform2 === "win32" ? spawnSync2("cmd", ["/c", cmd], { encoding: "utf8" }) : spawnSync2("sh", ["-c", cmd], { encoding: "utf8" });
   if (r.status !== 0) {
     info(dim((r.stderr || r.stdout || "").trim().slice(0, 300)));
     return false;
@@ -10383,7 +10479,7 @@ function registerAgentsCron(agents) {
       info(dim("printed only \u2014 re-run with --apply to make this change, or run the command yourself"));
       return;
     }
-    if (runShell(cmd)) ok(opts.remove ? "scheduler entry removed" : `scheduled \u2014 agents tick will run every ${opts.every}`);
+    if (runShell2(cmd)) ok(opts.remove ? "scheduler entry removed" : `scheduled \u2014 agents tick will run every ${opts.every}`);
     else die("could not apply the schedule (see the message above) \u2014 you can run the printed command manually");
   });
 }
@@ -10945,7 +11041,7 @@ async function unpackOrxToFile(srcOrxPath, destGgufPath, kek) {
 init_paths();
 import { randomBytes as randomBytes2, scryptSync, createHash as createHash2 } from "crypto";
 import { existsSync as existsSync24, mkdirSync as mkdirSync18, readFileSync as readFileSync28, writeFileSync as writeFileSync25, chmodSync as chmodSync2 } from "fs";
-import { hostname, userInfo, platform as platform2, arch } from "os";
+import { hostname, userInfo, platform as platform3, arch } from "os";
 import { join as join37 } from "path";
 var SCRYPT_N = 1 << 15;
 var SCRYPT_R = 8;
@@ -10971,7 +11067,7 @@ function installSecret() {
 }
 function deviceFingerprint() {
   const u = userInfo();
-  return createHash2("sha256").update([hostname(), u.username, platform2(), arch(), String(u.uid)].join("|")).digest("hex");
+  return createHash2("sha256").update([hostname(), u.username, platform3(), arch(), String(u.uid)].join("|")).digest("hex");
 }
 function deriveKek(licenseKey) {
   const salt = createHash2("sha256").update("oriro-orx-v1|" + deviceFingerprint()).digest();
