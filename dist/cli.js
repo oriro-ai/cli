@@ -6334,8 +6334,7 @@ function capabilityTourLines() {
 // src/onboarding/tui-wizard.ts
 init_theme();
 var TOTAL = 8;
-async function runTuiWizard() {
-  const term = new ProcessTerminal();
+async function runTuiWizard(term = new ProcessTerminal()) {
   const tui = new TUI2(term, true);
   const root = new Container2();
   tui.addChild(root);
@@ -7373,7 +7372,7 @@ async function askYesNo(question) {
   }
 }
 async function runOnboarding() {
-  if (stdin5.isTTY && stdout7.isTTY && process.env.ORIRO_WIZARD === "1") {
+  if (stdin5.isTTY && stdout7.isTTY && process.env.ORIRO_NO_WIZARD !== "1") {
     stdout7.write(banner());
     try {
       await runTuiWizard();

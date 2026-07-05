@@ -44,10 +44,10 @@ async function askYesNo(question: string): Promise<boolean> {
  *  non-TTY (pipes/CI) or ANY wizard failure we fall back to the linear flow below — which writes the
  *  same markers/config, so a partially-completed wizard resumes cleanly. First-run never regresses. */
 export async function runOnboarding(): Promise<void> {
-  // Premium TUI wizard is OPT-IN for its first release (`ORIRO_WIZARD=1`) so the proven linear flow
-  // stays the default first-run until the wizard is eyeballed on a real terminal; then it flips to
-  // default. Either way a non-TTY or any wizard failure falls back to the linear flow — no regression.
-  if (stdin.isTTY && stdout.isTTY && process.env.ORIRO_WIZARD === "1") {
+  // Premium TUI wizard is the DEFAULT first-run on a real terminal (verified end-to-end headlessly via
+  // an injectable mock terminal — scripts/test-wizard.ts). `ORIRO_NO_WIZARD=1` opts out; a non-TTY or
+  // ANY wizard failure falls back to the linear flow, which writes the same config — first-run never regresses.
+  if (stdin.isTTY && stdout.isTTY && process.env.ORIRO_NO_WIZARD !== "1") {
     stdout.write(banner());
     try {
       await runTuiWizard();

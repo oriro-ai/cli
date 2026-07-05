@@ -4,7 +4,7 @@
 // It REUSES every data source + setter the linear flow uses, and writes the SAME settle markers, so
 // the two paths are interchangeable and idempotent. It runs ONLY on a real TTY; the caller
 // (wrapper.ts) falls back to the proven linear onboarding on non-TTY or ANY error — first-run never regresses.
-import { TUI, Container, ProcessTerminal } from "@earendil-works/pi-tui";
+import { TUI, Container, ProcessTerminal, type Terminal } from "@earendil-works/pi-tui";
 import { stdout } from "node:process";
 import { pickList, notice, confirmYesNo, promptLine } from "./tui/screen.js";
 import { LANGUAGES, searchLanguages, NEURAL_VOICE_COUNT, type OriroLanguage } from "../language/languages.js";
@@ -22,9 +22,9 @@ import { accent, dim, bold } from "../ui/theme.js";
 
 const TOTAL = 8;
 
-/** Run the premium wizard. Resolves when done; THROWS on any TUI failure so the caller can fall back. */
-export async function runTuiWizard(): Promise<void> {
-  const term = new ProcessTerminal();
+/** Run the premium wizard. Resolves when done; THROWS on any TUI failure so the caller can fall back.
+ *  `term` is injectable so the whole flow can be driven headlessly in tests (mock terminal). */
+export async function runTuiWizard(term: Terminal = new ProcessTerminal()): Promise<void> {
   const tui = new TUI(term, true);
   const root = new Container();
   tui.addChild(root);
