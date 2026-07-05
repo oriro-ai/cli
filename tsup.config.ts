@@ -28,6 +28,7 @@ export default defineConfig({
     "@modelcontextprotocol/sdk",
     "@huggingface/transformers",
     "playwright",
+    "node-llama-cpp",
     "typebox",
     "discord.js",
     "@whiskeysockets/baileys",

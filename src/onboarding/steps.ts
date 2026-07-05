@@ -62,15 +62,19 @@ export function hasConnectorsChoice(): boolean { return settled("connectors-onbo
 export async function runConnectorsStep(): Promise<void> {
   const addable = listConnectors().filter((c) => c.mcpUrl).length;
   stdout.write(
-    `\n  ${accent("Connectors")} — ${accent(String(addable))} MCP integrations available ${dim("(Slack, GitHub, Notion, Linear, …)")}.\n` +
-    `  ${dim("Add one now (type its slug), or press Enter to skip — add anytime with ")}${accent("/connector")}${dim(" or ")}${accent("oriro connectors")}${dim(".")}\n`,
+    `\n  ${accent("Connectors")} — ${accent(String(addable))} MCP integrations available ${dim("(e.g. ")}${accent("slack")}${dim(", ")}${accent("github")}${dim(", ")}${accent("notion")}${dim(", ")}${accent("linear")}${dim(").")}\n` +
+    `  ${dim("Type a name to add one now, or press Enter to skip — add anytime with ")}${accent("oriro connectors add <name>")}${dim(".")}\n`,
   );
   const rl = createInterface({ input: stdin, output: stdout });
   try {
-    const slug = (await ask(rl, `  ${accent("›")} Connector slug ${dim("(or Enter to skip)")}: `)).trim();
-    if (slug) {
+    // Accept a leading "/" (people type "/connector" out of habit) and a stray "add " prefix.
+    const slug = (await ask(rl, `  ${accent("›")} Connector name ${dim("(or Enter to skip)")}: `))
+      .trim().replace(/^\/+/, "").replace(/^add\s+/i, "").trim();
+    if (slug && !/^connectors?$/i.test(slug)) {
       const res = addConnector(slug);
-      stdout.write(res.ok ? `  ${accent("✓")} added ${accent(slug)} — recorded locally.\n` : `  ${dim(res.error ?? "skipped")}\n`);
+      stdout.write(res.ok
+        ? `  ${accent("✓")} added ${accent(slug)} — recorded locally.\n`
+        : `  ${dim(`${res.error ?? "not a known connector"} — see the full list with `)}${accent("oriro connectors list")}${dim(". Skipping for now.")}\n`);
     } else {
       stdout.write(`  ${dim("Skipped — none added. You can add your own MCP server with `oriro connectors setup`.")}\n`);
     }
@@ -78,19 +82,21 @@ export async function runConnectorsStep(): Promise<void> {
   settle("connectors-onboarded.json", {});
 }
 
-// ── Step 8: ORIRO Gauss + Avila (V2.4) preview — coming soon (in training) ────
+// ── Step 8: ORIRO Gauss + Avila (V2.4) — READY to download to this machine ────
 export function hasModelsChoice(): boolean { return settled("models-onboarded.json"); }
 
 export async function runModelsStep(): Promise<void> {
   stdout.write(
-    `\n  ${bold(accent("ORIRO Gauss + Avila"))} ${dim("(V2.4)")} — your own ${accent("on-device")} models.\n` +
-    `  ${dim("Status:")} ${accent("completing training")} ${dim("— currently baking. When they land they'll:")}\n` +
+    `\n  ${bold(accent("ORIRO Gauss + Avila"))} ${dim("(V2.4)")} — your own ${accent("on-device")} models, ${accent("ready now")}.\n` +
+    `    ${dim("•")} run ${accent("fully on this machine")} ${dim("— $0, no key, private (no Ollama needed)")}\n` +
     `    ${dim("•")} join your ${accent("router race")} alongside the free routers ${dim("(and your BYOK)")}\n` +
-    `    ${dim("•")} run ${accent("fully on this machine")} ${dim("— $0, no key, private")}\n` +
-    `    ${dim("•")} learn from your accepted edits via a ${accent("nightly on-device pass")} ${dim("(opt-in, with consent)")}\n` +
-    `  ${accent("◷ Coming soon")} ${dim("— you'll be prompted to download + enable them when they're ready.")}\n`,
+    `    ${dim("•")} device-locked on download ${dim("— the weights never leave this machine")}\n` +
+    `  ${dim("Download them (≈8 GB each, resumable):")}\n` +
+    `    ${accent("1.")} ${dim("get a one-time code on")} ${accent("oriro.app → Download → “Connect this computer”")}\n` +
+    `    ${accent("2.")} ${accent("oriro login <code>")}  ${dim("then")}  ${accent("oriro models pull")}\n` +
+    `  ${dim("Already downloaded the GGUFs from oriro.app? ")}${accent("oriro models import <files>")}${dim(" — no login needed.")}\n`,
   );
   const rl = createInterface({ input: stdin, output: stdout });
   try { await ask(rl, `  ${dim("Press Enter to continue…")} `); } finally { rl.close(); }
-  settle("models-onboarded.json", { status: "training", version: "2.4" });
+  settle("models-onboarded.json", { status: "ready", version: "2.4" });
 }

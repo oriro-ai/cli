@@ -6738,17 +6738,17 @@ async function runConnectorsStep() {
   const addable = listConnectors().filter((c) => c.mcpUrl).length;
   stdout5.write(
     `
-  ${accent("Connectors")} \u2014 ${accent(String(addable))} MCP integrations available ${dim("(Slack, GitHub, Notion, Linear, \u2026)")}.
-  ${dim("Add one now (type its slug), or press Enter to skip \u2014 add anytime with ")}${accent("/connector")}${dim(" or ")}${accent("oriro connectors")}${dim(".")}
+  ${accent("Connectors")} \u2014 ${accent(String(addable))} MCP integrations available ${dim("(e.g. ")}${accent("slack")}${dim(", ")}${accent("github")}${dim(", ")}${accent("notion")}${dim(", ")}${accent("linear")}${dim(").")}
+  ${dim("Type a name to add one now, or press Enter to skip \u2014 add anytime with ")}${accent("oriro connectors add <name>")}${dim(".")}
 `
   );
   const rl = createInterface4({ input: stdin4, output: stdout5 });
   try {
-    const slug = (await ask(rl, `  ${accent("\u203A")} Connector slug ${dim("(or Enter to skip)")}: `)).trim();
-    if (slug) {
+    const slug = (await ask(rl, `  ${accent("\u203A")} Connector name ${dim("(or Enter to skip)")}: `)).trim().replace(/^\/+/, "").replace(/^add\s+/i, "").trim();
+    if (slug && !/^connectors?$/i.test(slug)) {
       const res = addConnector(slug);
       stdout5.write(res.ok ? `  ${accent("\u2713")} added ${accent(slug)} \u2014 recorded locally.
-` : `  ${dim(res.error ?? "skipped")}
+` : `  ${dim(`${res.error ?? "not a known connector"} \u2014 see the full list with `)}${accent("oriro connectors list")}${dim(". Skipping for now.")}
 `);
     } else {
       stdout5.write(`  ${dim("Skipped \u2014 none added. You can add your own MCP server with `oriro connectors setup`.")}
@@ -6765,12 +6765,14 @@ function hasModelsChoice() {
 async function runModelsStep() {
   stdout5.write(
     `
-  ${bold(accent("ORIRO Gauss + Avila"))} ${dim("(V2.4)")} \u2014 your own ${accent("on-device")} models.
-  ${dim("Status:")} ${accent("completing training")} ${dim("\u2014 currently baking. When they land they'll:")}
+  ${bold(accent("ORIRO Gauss + Avila"))} ${dim("(V2.4)")} \u2014 your own ${accent("on-device")} models, ${accent("ready now")}.
+    ${dim("\u2022")} run ${accent("fully on this machine")} ${dim("\u2014 $0, no key, private (no Ollama needed)")}
     ${dim("\u2022")} join your ${accent("router race")} alongside the free routers ${dim("(and your BYOK)")}
-    ${dim("\u2022")} run ${accent("fully on this machine")} ${dim("\u2014 $0, no key, private")}
-    ${dim("\u2022")} learn from your accepted edits via a ${accent("nightly on-device pass")} ${dim("(opt-in, with consent)")}
-  ${accent("\u25F7 Coming soon")} ${dim("\u2014 you'll be prompted to download + enable them when they're ready.")}
+    ${dim("\u2022")} device-locked on download ${dim("\u2014 the weights never leave this machine")}
+  ${dim("Download them (\u22488 GB each, resumable):")}
+    ${accent("1.")} ${dim("get a one-time code on")} ${accent("oriro.app \u2192 Download \u2192 \u201CConnect this computer\u201D")}
+    ${accent("2.")} ${accent("oriro login <code>")}  ${dim("then")}  ${accent("oriro models pull")}
+  ${dim("Already downloaded the GGUFs from oriro.app? ")}${accent("oriro models import <files>")}${dim(" \u2014 no login needed.")}
 `
   );
   const rl = createInterface4({ input: stdin4, output: stdout5 });
@@ -6779,7 +6781,36 @@ async function runModelsStep() {
   } finally {
     rl.close();
   }
-  settle("models-onboarded.json", { status: "training", version: "2.4" });
+  settle("models-onboarded.json", { status: "ready", version: "2.4" });
+}
+
+// src/onboarding/capability-tour.ts
+init_theme();
+var TOUR = [
+  { title: "Plan \u2192 do", cmd: "/plan <task>  \u2192  /approve", blurb: "read-only plan first, then execute it" },
+  { title: "Parallel agents", cmd: "/agents <A> | <B>", blurb: "sub-agents in isolated git worktrees" },
+  { title: "Make an image", cmd: "/imagine <scene>", blurb: "keyless SVG art, saved to your folder" },
+  { title: "Prove it works", cmd: "/prove [n|url] --video", blurb: "render in a real browser, save the evidence" },
+  { title: "See any website", cmd: "oriro head <url> --code", blurb: "ORIRO visits it and returns code/spec/shots" },
+  { title: "Never lose work", cmd: "oriro -c   \xB7   /sessions   \xB7   /undo", blurb: "resume, list, rewind \u2014 all local" },
+  { title: "Free the context", cmd: "/compact   \xB7   /init", blurb: "summarize a long chat \xB7 seed project memory" },
+  { title: "Use it in your editor", cmd: "oriro serve acp | mcp", blurb: "drive ORIRO from Zed/JetBrains, or as an MCP tool" },
+  { title: "Your own on-device models", cmd: "oriro login <code>  \u2192  oriro models pull", blurb: "download Gauss + Avila V2.4, run them locally ($0, private)" },
+  { title: "Speak & 100 languages", cmd: "/voice   \xB7   oriro language", blurb: "talk to it; work in your own language" }
+];
+var FIRST_WIN = "make me a landing page for a coffee shop, then /prove it";
+function capabilityTourLines() {
+  const lines = [];
+  lines.push("");
+  lines.push(`  ${bold(accent("Here's what you can do"))} ${dim("\u2014 type these anytime in the chat:")}`);
+  for (const t of TOUR) {
+    lines.push(`    ${accent(t.cmd)}`);
+    lines.push(`      ${dim(`${t.title} \u2014 ${t.blurb}`)}`);
+  }
+  lines.push("");
+  lines.push(`  ${bold("Try this first:")}  ${accent(FIRST_WIN)}`);
+  lines.push(`  ${dim("Full list anytime:")} ${accent("/help")} ${dim("in chat, or")} ${accent("oriro --help")} ${dim("in your shell.")}`);
+  return lines;
 }
 
 // src/onboarding/wrapper.ts
@@ -6820,8 +6851,9 @@ async function runOnboarding() {
 ` : `  ${dim("Scriber off \u2014 `oriro scribe on` anytime.")}
 `);
   }
+  stdout6.write("\n" + capabilityTourLines().join("\n") + "\n");
   stdout6.write(`
-  ${accent("ORIRO is ready.")} ${dim("Type to chat \xB7 /exit to leave")}
+  ${accent("ORIRO is ready.")} ${dim("Just type to start \u2014 or try the line above.")}
 
 `);
 }
@@ -10039,9 +10071,942 @@ function registerSetupCommand(program2) {
   });
 }
 
+// src/config/session.ts
+init_paths();
+import { readFileSync as readFileSync27, writeFileSync as writeFileSync24, rmSync as rmSync6, chmodSync } from "fs";
+import { join as join36 } from "path";
+function sessionPath() {
+  return join36(ensureOriroDir(), "session.json");
+}
+function saveSession(setupToken) {
+  const p = sessionPath();
+  writeFileSync24(p, JSON.stringify({ setup_token: setupToken, saved_at: Date.now() }), "utf8");
+  try {
+    chmodSync(p, 384);
+  } catch {
+  }
+}
+function readSetupToken() {
+  if (process.env.ORIRO_SETUP_TOKEN) return process.env.ORIRO_SETUP_TOKEN;
+  try {
+    const s = JSON.parse(readFileSync27(sessionPath(), "utf8"));
+    return s.setup_token || void 0;
+  } catch {
+    return void 0;
+  }
+}
+function readLicense() {
+  return process.env.ORIRO_LICENSE_KEY ?? "oriro-local-v1";
+}
+function isLoggedIn() {
+  return !!readSetupToken();
+}
+function clearSession() {
+  try {
+    rmSync6(sessionPath(), { force: true });
+  } catch {
+  }
+}
+
+// src/commands/login.ts
+init_theme();
+function registerLoginCommand(program2) {
+  program2.command("login [code]").description("authorize model downloads on this machine (paste the code from oriro.app)").option("--status", "show whether this machine is authorized").action((code, opts) => {
+    if (opts.status) {
+      info(isLoggedIn() ? "this machine is authorized for downloads" : `not authorized \u2014 run ${accent("oriro login <code>")}`);
+      return;
+    }
+    if (!code) {
+      die(`paste your setup code: ${accent("oriro login <code>")} \u2014 get it on oriro.app \u2192 Download \u2192 \u201CConnect this computer\u201D.`);
+    }
+    if (!/^[a-f0-9]{32,64}$/i.test(code)) die("that doesn't look like a valid setup code (expected a 32\u201364 char hex code).");
+    saveSession(code);
+    heading("Authorized");
+    ok(`this machine can now download models \u2014 run ${accent("oriro models pull")}`);
+    info(dim("stored locally in ~/.oriro/session.json (0600); run `oriro logout` to remove."));
+  });
+  program2.command("logout").description("remove this machine's download authorization").action(() => {
+    clearSession();
+    ok("logged out \u2014 download authorization removed from this machine");
+  });
+}
+
+// src/commands/models.ts
+init_paths();
+import { existsSync as existsSync28, statSync as statSync8 } from "fs";
+import { join as join41 } from "path";
+
+// src/weights/container-stream.ts
+import { createCipheriv, createDecipheriv, randomBytes, createHash } from "crypto";
+import { open, stat } from "fs/promises";
+var MAGIC = Buffer.from("ORX1", "ascii");
+var VERSION = 1;
+var IO_CHUNK = 4 * 1024 * 1024;
+function u32(n) {
+  const b = Buffer.alloc(4);
+  b.writeUInt32BE(n, 0);
+  return b;
+}
+async function packOrxToFile(srcGgufPath, destOrxPath, opts) {
+  if (opts.kek.length !== 32) throw new Error("KEK must be 32 bytes (AES-256)");
+  const { size } = await stat(srcGgufPath);
+  const hash = createHash("sha256");
+  {
+    const fh = await open(srcGgufPath, "r");
+    try {
+      const b = Buffer.alloc(IO_CHUNK);
+      let pos = 0;
+      for (; ; ) {
+        const { bytesRead } = await fh.read(b, 0, IO_CHUNK, pos);
+        if (!bytesRead) break;
+        hash.update(b.subarray(0, bytesRead));
+        pos += bytesRead;
+      }
+    } finally {
+      await fh.close();
+    }
+  }
+  const sha256 = hash.digest("hex");
+  const cek = randomBytes(32);
+  const payloadNonce = randomBytes(12);
+  const aad = Buffer.from(
+    JSON.stringify({ v: VERSION, modelId: opts.meta.modelId, version: opts.meta.version, watermark: opts.watermark, sha256 }),
+    "utf8"
+  );
+  const wrapNonce = randomBytes(12);
+  const wc = createCipheriv("aes-256-gcm", opts.kek, wrapNonce);
+  wc.setAAD(aad);
+  const wrappedCek = Buffer.concat([wc.update(cek), wc.final()]);
+  const wrapTag = wc.getAuthTag();
+  const header2 = {
+    ...opts.meta,
+    cipher: "AES-256-GCM",
+    wrapNonce: wrapNonce.toString("base64"),
+    wrappedCek: wrappedCek.toString("base64"),
+    wrapTag: wrapTag.toString("base64"),
+    payloadNonce: payloadNonce.toString("base64"),
+    watermark: opts.watermark,
+    sha256,
+    payloadLen: size
+    // GCM ciphertext length == plaintext length
+  };
+  const headerJson = Buffer.from(JSON.stringify(header2), "utf8");
+  const out = await open(destOrxPath, "w");
+  try {
+    await out.write(Buffer.concat([MAGIC, Buffer.from([VERSION]), u32(headerJson.length), headerJson]));
+    const pc = createCipheriv("aes-256-gcm", cek, payloadNonce);
+    pc.setAAD(aad);
+    const fh = await open(srcGgufPath, "r");
+    try {
+      const b = Buffer.alloc(IO_CHUNK);
+      let pos = 0;
+      for (; ; ) {
+        const { bytesRead } = await fh.read(b, 0, IO_CHUNK, pos);
+        if (!bytesRead) break;
+        const enc = pc.update(b.subarray(0, bytesRead));
+        if (enc.length) await out.write(enc);
+        pos += bytesRead;
+      }
+    } finally {
+      await fh.close();
+    }
+    const fin = pc.final();
+    await out.write(Buffer.concat([fin, pc.getAuthTag()]));
+  } finally {
+    await out.close();
+  }
+  return header2;
+}
+async function unpackOrxToFile(srcOrxPath, destGgufPath, kek) {
+  if (kek.length !== 32) throw new Error("KEK must be 32 bytes (AES-256)");
+  const src = await open(srcOrxPath, "r");
+  try {
+    const pre = Buffer.alloc(9);
+    const { bytesRead: pr } = await src.read(pre, 0, 9, 0);
+    if (pr < 9 || !pre.subarray(0, 4).equals(MAGIC)) throw new Error("not an ORX container");
+    if (pre[4] !== VERSION) throw new Error(`unsupported ORX version ${pre[4]}`);
+    const headerLen = pre.readUInt32BE(5);
+    const hbuf = Buffer.alloc(headerLen);
+    await src.read(hbuf, 0, headerLen, 9);
+    const header2 = JSON.parse(hbuf.toString("utf8"));
+    const aad = Buffer.from(
+      JSON.stringify({ v: VERSION, modelId: header2.modelId, version: header2.version, watermark: header2.watermark, sha256: header2.sha256 }),
+      "utf8"
+    );
+    const wc = createDecipheriv("aes-256-gcm", kek, Buffer.from(header2.wrapNonce, "base64"));
+    wc.setAAD(aad);
+    wc.setAuthTag(Buffer.from(header2.wrapTag, "base64"));
+    let cek;
+    try {
+      cek = Buffer.concat([wc.update(Buffer.from(header2.wrappedCek, "base64")), wc.final()]);
+    } catch {
+      throw new Error("ORX unlock failed \u2014 wrong device/license, or the container was tampered with");
+    }
+    const cipherStart = 9 + headerLen;
+    const cipherLen = header2.payloadLen;
+    const tag = Buffer.alloc(16);
+    await src.read(tag, 0, 16, cipherStart + cipherLen);
+    const pc = createDecipheriv("aes-256-gcm", cek, Buffer.from(header2.payloadNonce, "base64"));
+    pc.setAAD(aad);
+    pc.setAuthTag(tag);
+    const hash = createHash("sha256");
+    const out = await open(destGgufPath, "w");
+    try {
+      const b = Buffer.alloc(IO_CHUNK);
+      let pos = cipherStart;
+      let remaining = cipherLen;
+      while (remaining > 0) {
+        const { bytesRead } = await src.read(b, 0, Math.min(IO_CHUNK, remaining), pos);
+        if (!bytesRead) break;
+        const dec = pc.update(b.subarray(0, bytesRead));
+        if (dec.length) {
+          await out.write(dec);
+          hash.update(dec);
+        }
+        pos += bytesRead;
+        remaining -= bytesRead;
+      }
+      let fin;
+      try {
+        fin = pc.final();
+      } catch {
+        throw new Error("ORX payload decryption failed \u2014 container corrupt or tampered");
+      }
+      if (fin.length) {
+        await out.write(fin);
+        hash.update(fin);
+      }
+    } finally {
+      await out.close();
+    }
+    if (hash.digest("hex") !== header2.sha256) {
+      throw new Error("ORX integrity check failed \u2014 decrypted weights do not match the manifest");
+    }
+    return header2;
+  } finally {
+    await src.close();
+  }
+}
+
+// src/weights/binding.ts
+init_paths();
+import { randomBytes as randomBytes2, scryptSync, createHash as createHash2 } from "crypto";
+import { existsSync as existsSync24, mkdirSync as mkdirSync18, readFileSync as readFileSync28, writeFileSync as writeFileSync25, chmodSync as chmodSync2 } from "fs";
+import { hostname, userInfo, platform as platform2, arch } from "os";
+import { join as join37 } from "path";
+var SCRYPT_N = 1 << 15;
+var SCRYPT_R = 8;
+var SCRYPT_P = 1;
+function weightsDir() {
+  const d = join37(oriroDir(), "weights");
+  mkdirSync18(d, { recursive: true });
+  return d;
+}
+function installSecret() {
+  const p = join37(weightsDir(), ".install");
+  if (existsSync24(p)) {
+    const b = Buffer.from(readFileSync28(p, "utf8").trim(), "hex");
+    if (b.length === 32) return b;
+  }
+  const secret = randomBytes2(32);
+  writeFileSync25(p, secret.toString("hex"), "utf8");
+  try {
+    chmodSync2(p, 384);
+  } catch {
+  }
+  return secret;
+}
+function deviceFingerprint() {
+  const u = userInfo();
+  return createHash2("sha256").update([hostname(), u.username, platform2(), arch(), String(u.uid)].join("|")).digest("hex");
+}
+function deriveKek(licenseKey) {
+  const salt = createHash2("sha256").update("oriro-orx-v1|" + deviceFingerprint()).digest();
+  const material = Buffer.concat([installSecret(), Buffer.from(licenseKey, "utf8")]);
+  return scryptSync(material, salt, 32, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, maxmem: 128 * 1024 * 1024 });
+}
+
+// src/weights/pull.ts
+init_paths();
+import { createHash as createHash3 } from "crypto";
+import { open as open2, stat as stat2, mkdir, unlink } from "fs/promises";
+import { existsSync as existsSync25 } from "fs";
+import { join as join38 } from "path";
+function nextRange(offset, total, chunk) {
+  if (offset >= total) return null;
+  return { start: offset, end: Math.min(offset + chunk, total) - 1 };
+}
+async function probeSize(url, signal) {
+  const r = await fetch(url, { headers: { Range: "bytes=0-0" }, signal });
+  const cr = r.headers.get("content-range");
+  await r.arrayBuffer().catch(() => void 0);
+  if (!r.ok && r.status !== 206) throw new Error(`size probe HTTP ${r.status}`);
+  if (!cr) throw new Error("server did not return a byte range \u2014 cannot size the model");
+  const total = Number(cr.split("/")[1]);
+  if (!Number.isFinite(total) || total <= 1) throw new Error("could not determine model size");
+  return total;
+}
+async function sha256File(path) {
+  const hash = createHash3("sha256");
+  const fh = await open2(path, "r");
+  try {
+    const b = Buffer.alloc(4 * 1024 * 1024);
+    let pos = 0;
+    for (; ; ) {
+      const { bytesRead } = await fh.read(b, 0, b.length, pos);
+      if (!bytesRead) break;
+      hash.update(b.subarray(0, bytesRead));
+      pos += bytesRead;
+    }
+  } finally {
+    await fh.close();
+  }
+  return hash.digest("hex");
+}
+async function fetchRange(urlRef, range, spec, retries) {
+  let attempt = 0;
+  let refreshes = 0;
+  for (; ; ) {
+    if (spec.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+    try {
+      const r = await fetch(urlRef.url, { headers: { Range: `bytes=${range.start}-${range.end}` }, signal: spec.signal });
+      if ((r.status === 401 || r.status === 403) && spec.refresh && refreshes < 5) {
+        refreshes++;
+        urlRef.url = await spec.refresh();
+        continue;
+      }
+      if (r.status === 200) throw new Error("server ignored Range (200) \u2014 refusing to write a full body at an offset");
+      if (r.status !== 206) throw new Error(`chunk HTTP ${r.status}`);
+      const ab = await r.arrayBuffer();
+      const want = range.end - range.start + 1;
+      if (ab.byteLength !== want) throw new Error(`short chunk (${ab.byteLength}/${want})`);
+      return Buffer.from(ab);
+    } catch (e) {
+      attempt++;
+      if (spec.signal?.aborted || attempt >= retries) throw e;
+      await new Promise((res) => setTimeout(res, Math.min(500 * 2 ** (attempt - 1), 4e3)));
+    }
+  }
+}
+async function pullModelToOrx(spec) {
+  const stageDir = join38(oriroDir(), "weights", "staging");
+  await mkdir(stageDir, { recursive: true });
+  const part = join38(stageDir, `${spec.modelId}.gguf.part`);
+  const chunk = spec.chunkBytes ?? 16 * 1024 * 1024;
+  const retries = spec.retries ?? 5;
+  const urlRef = { url: spec.url };
+  let offset = existsSync25(part) ? (await stat2(part)).size : 0;
+  if (offset > spec.sizeBytes) {
+    await unlink(part);
+    offset = 0;
+  }
+  spec.onProgress?.(offset, spec.sizeBytes);
+  const fh = await open2(part, offset > 0 ? "r+" : "w");
+  try {
+    let cursor = offset;
+    for (let range = nextRange(cursor, spec.sizeBytes, chunk); range; range = nextRange(cursor, spec.sizeBytes, chunk)) {
+      const buf = await fetchRange(urlRef, range, spec, retries);
+      await fh.write(buf, 0, buf.length, cursor);
+      cursor += buf.length;
+      spec.onProgress?.(cursor, spec.sizeBytes);
+    }
+  } finally {
+    await fh.close();
+  }
+  const actual = await sha256File(part);
+  if (spec.sha256 && actual !== spec.sha256) {
+    await unlink(part);
+    throw new Error(`${spec.modelId}: download failed the integrity check (sha256 mismatch) \u2014 please retry`);
+  }
+  const orxPath2 = join38(oriroDir(), "weights", `${spec.modelId}.orx`);
+  await packOrxToFile(part, orxPath2, {
+    kek: deriveKek(spec.licenseKey),
+    watermark: spec.watermark ?? `orx:${spec.modelId}-v${spec.version ?? "2.4"}:${actual.slice(0, 12)}`,
+    meta: { modelId: spec.modelId, version: spec.version ?? "2.4", createdTs: spec.createdTs }
+  });
+  await unlink(part);
+  return { orxPath: orxPath2, modelId: spec.modelId, bytes: spec.sizeBytes };
+}
+
+// src/weights/serve.ts
+import { createServer } from "http";
+import { randomBytes as randomBytes4 } from "crypto";
+import { existsSync as existsSync27 } from "fs";
+import { join as join40 } from "path";
+
+// src/weights/secure-load.ts
+init_paths();
+import {
+  chmodSync as chmodSync3,
+  mkdirSync as mkdirSync19,
+  writeFileSync as writeFileSync26,
+  existsSync as existsSync26,
+  statSync as statSync6,
+  openSync as openSync5,
+  writeSync as writeSync5,
+  closeSync as closeSync5,
+  unlinkSync
+} from "fs";
+import { join as join39 } from "path";
+import { randomBytes as randomBytes3 } from "crypto";
+function secureDir() {
+  const d = join39(ensureOriroDir(), "weights", "run");
+  mkdirSync19(d, { recursive: true });
+  try {
+    chmodSync3(d, 448);
+  } catch {
+  }
+  return d;
+}
+function shredAndUnlink(path) {
+  try {
+    if (!existsSync26(path)) return;
+    const size = statSync6(path).size;
+    const fd = openSync5(path, "r+");
+    try {
+      const chunk = randomBytes3(1024 * 1024);
+      for (let off = 0; off < size; off += chunk.length) {
+        writeSync5(fd, chunk, 0, Math.min(chunk.length, size - off), off);
+      }
+    } finally {
+      closeSync5(fd);
+    }
+    unlinkSync(path);
+  } catch {
+  }
+}
+var live = /* @__PURE__ */ new Set();
+var exitHooked = false;
+function hookExit() {
+  if (exitHooked) return;
+  exitHooked = true;
+  const cleanup = () => {
+    for (const p of live) shredAndUnlink(p);
+    live.clear();
+  };
+  process.once("exit", cleanup);
+  for (const sig of ["SIGINT", "SIGTERM", "SIGHUP"]) {
+    process.once(sig, () => {
+      cleanup();
+      process.exit(130);
+    });
+  }
+}
+async function decryptToSecureFile(orxPath2, licenseKey) {
+  hookExit();
+  const path = join39(secureDir(), `run-${randomBytes3(6).toString("hex")}.gguf`);
+  live.add(path);
+  let header2;
+  try {
+    header2 = await unpackOrxToFile(orxPath2, path, deriveKek(licenseKey));
+  } catch (e) {
+    live.delete(path);
+    shredAndUnlink(path);
+    throw e;
+  }
+  try {
+    chmodSync3(path, 384);
+  } catch {
+  }
+  let disposed = false;
+  return {
+    path,
+    modelId: header2.modelId,
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      live.delete(path);
+      shredAndUnlink(path);
+    }
+  };
+}
+
+// src/weights/template.ts
+var IM_START = "<|im_start|>";
+var IM_END = "<|im_end|>";
+var STOP_SEQUENCES = [IM_END, "<|endoftext|>"];
+var SYSTEM = {
+  gauss: "You are Gauss, ORIRO's builder intelligence \u2014 you help people build websites, apps, and APIs and ship software. Lead with the deliverable immediately, no preamble. You are part of ORIRO (oriro.ai), the free AI platform. You never mention any other AI model \u2014 you are Gauss, and that is all.",
+  avila: "You are Avila, ORIRO's orchestration intelligence. You help users plan, coordinate ORIRO's features, and manage multi-step workflows. You are part of ORIRO (oriro.ai), the free AI platform. You never mention any other AI model \u2014 you are Avila, and that is all."
+};
+function systemFor(modelId) {
+  const s = SYSTEM[modelId.toLowerCase()];
+  if (!s) throw new Error(`no system prompt for model "${modelId}"`);
+  return s;
+}
+function buildPrompt(modelId, messages, systemOverride) {
+  const sys = systemOverride ?? systemFor(modelId);
+  let prompt = `${IM_START}system
+${sys}${IM_END}
+`;
+  for (const m of messages) {
+    if (m.role === "system") continue;
+    prompt += `${IM_START}${m.role}
+${m.content}${IM_END}
+`;
+  }
+  prompt += `${IM_START}assistant
+`;
+  return { prompt, stops: STOP_SEQUENCES };
+}
+
+// src/weights/think-strip.ts
+var OPEN = "<think>";
+var CLOSE = "</think>";
+function thinkFilter() {
+  let state = "before";
+  let buf = "";
+  return {
+    push(chunk) {
+      if (state === "after") return chunk;
+      buf += chunk;
+      if (state === "before") {
+        const trimmed = buf.replace(/^\s+/, "");
+        if (trimmed === "") return "";
+        if (OPEN.startsWith(trimmed)) return "";
+        if (trimmed.startsWith(OPEN)) {
+          state = "inside";
+          buf = trimmed.slice(OPEN.length);
+        } else {
+          state = "after";
+          const out = buf;
+          buf = "";
+          return out;
+        }
+      }
+      const idx = buf.indexOf(CLOSE);
+      if (idx === -1) {
+        const keep = Math.min(buf.length, CLOSE.length - 1);
+        buf = buf.slice(buf.length - keep);
+        return "";
+      }
+      state = "after";
+      const after = buf.slice(idx + CLOSE.length).replace(/^\s+/, "");
+      buf = "";
+      return after;
+    },
+    end() {
+      if (state === "before") {
+        const out = buf;
+        buf = "";
+        return out;
+      }
+      buf = "";
+      return "";
+    }
+  };
+}
+
+// src/weights/engine.ts
+async function importLlama() {
+  try {
+    return await import("node-llama-cpp");
+  } catch {
+    throw new Error(
+      "The on-device engine isn't available. The ORIRO app ships it prebuilt; from source, install the optional dependency with: npm i node-llama-cpp"
+    );
+  }
+}
+async function loadEngine(modelPath, modelId, nCtx, mmprojPath) {
+  const mod = await importLlama();
+  const getLlama = mod.getLlama;
+  const LlamaCompletion = mod.LlamaCompletion;
+  const llama = await getLlama();
+  const model = await llama.loadModel(mmprojPath ? { modelPath, mmproj: mmprojPath } : { modelPath });
+  const context = await model.createContext({ contextSize: nCtx });
+  return {
+    async chat(messages, onToken, opts) {
+      const { prompt, stops } = buildPrompt(modelId, messages, opts?.systemOverride);
+      const completion = new LlamaCompletion({ contextSequence: context.getSequence() });
+      const filter = thinkFilter();
+      let visible = "";
+      await completion.generateCompletion(prompt, {
+        onTextChunk: (t) => {
+          const v = filter.push(t);
+          if (v) {
+            visible += v;
+            onToken(v);
+          }
+        },
+        customStopTriggers: stops,
+        maxTokens: opts?.maxTokens,
+        signal: opts?.signal
+      });
+      const tail = filter.end();
+      if (tail) {
+        visible += tail;
+        onToken(tail);
+      }
+      completion.dispose?.();
+      return visible;
+    },
+    async dispose() {
+      await context.dispose();
+      await model.dispose();
+    }
+  };
+}
+
+// src/weights/preflight.ts
+import { freemem } from "os";
+var MiB = 1024 * 1024;
+var GiB = 1024 * MiB;
+var DEFAULT_CTX = 8192;
+var CTX_FLOOR = 2048;
+var HEADROOM = 1.25;
+function kvBytesPerToken(paramsB) {
+  return Math.max(0.05, paramsB * 0.014) * MiB;
+}
+function planContext(fp, requestedCtx, freeBytes = freemem()) {
+  const weights = fp.fileBytes;
+  const budget = freeBytes / HEADROOM - weights;
+  if (budget <= 0) {
+    return {
+      decision: "refuse",
+      nCtx: 0,
+      reason: `Not enough free memory: this model needs about ${(weights / GiB).toFixed(1)} GB resident and only ${(freeBytes / GiB).toFixed(1)} GB is free. Close some apps and try again.`
+    };
+  }
+  const maxCtxByRam = Math.floor(budget / kvBytesPerToken(fp.paramsB));
+  const want = requestedCtx > 0 ? requestedCtx : DEFAULT_CTX;
+  const nCtx = Math.max(0, Math.min(want, maxCtxByRam));
+  if (nCtx < CTX_FLOOR) {
+    return {
+      decision: "refuse",
+      nCtx: 0,
+      reason: `Not enough free memory for a usable context window (only ${nCtx.toLocaleString()} tokens fit). Close some apps and try again.`
+    };
+  }
+  if (nCtx < want) {
+    return {
+      decision: "reduced",
+      nCtx,
+      reason: `Context set to ${nCtx.toLocaleString()} tokens to fit your free memory (${(freeBytes / GiB).toFixed(1)} GB). The model still works \u2014 just a shorter memory per chat.`
+    };
+  }
+  return { decision: "ok", nCtx, reason: `Ready \u2014 ${nCtx.toLocaleString()} tokens of context.` };
+}
+
+// src/weights/local-runtime.ts
+import { statSync as statSync7 } from "fs";
+async function startLocalModel(orxPath2, licenseKey, paramsB, opts = {}) {
+  const secure = await decryptToSecureFile(orxPath2, licenseKey);
+  let mmproj = null;
+  try {
+    if (opts.mmprojOrxPath) mmproj = await decryptToSecureFile(opts.mmprojOrxPath, licenseKey);
+    const plan = planContext({ paramsB, fileBytes: statSync7(secure.path).size }, opts.requestedCtx ?? 0);
+    if (plan.decision === "refuse") throw new Error(plan.reason);
+    const engine = await loadEngine(secure.path, secure.modelId, plan.nCtx, mmproj?.path);
+    let disposed = false;
+    return {
+      modelId: secure.modelId,
+      plan,
+      async chat(messages, onToken, o) {
+        const last = messages[messages.length - 1];
+        const answer = await engine.chat(messages, onToken, { signal: o?.signal });
+        if (opts.capture && last?.role === "user") {
+          opts.capture.captureConsentedTurn(secure.modelId, last.content, answer);
+        }
+        return answer;
+      },
+      async dispose() {
+        if (disposed) return;
+        disposed = true;
+        await engine.dispose();
+        mmproj?.dispose();
+        secure.dispose();
+      }
+    };
+  } catch (e) {
+    mmproj?.dispose();
+    secure.dispose();
+    throw e;
+  }
+}
+
+// src/weights/serve.ts
+init_paths();
+var KNOWN_MODELS = ["gauss", "avila"];
+var MODEL_PARAMS_B = { gauss: 9, avila: 9 };
+var DEFAULT_PORT = 11435;
+var ORIRO_ORIGIN = /^https:\/\/(www\.)?oriro\.(ai|app)$/;
+function orxPathFor(modelId) {
+  return join40(oriroDir(), "weights", `${modelId}.orx`);
+}
+function normalizeModel(raw) {
+  const s = String(raw ?? "").toLowerCase();
+  for (const m of KNOWN_MODELS) if (s.includes(m)) return m;
+  return "gauss";
+}
+function sseData(obj) {
+  return `data: ${JSON.stringify(obj)}
+
+`;
+}
+function deltaChunk(model, id, content) {
+  return { id, object: "chat.completion.chunk", model, choices: [{ index: 0, delta: { content }, finish_reason: null }] };
+}
+function finalChunk(model, id) {
+  return { id, object: "chat.completion.chunk", model, choices: [{ index: 0, delta: {}, finish_reason: "stop" }] };
+}
+async function readJson2(req) {
+  const chunks = [];
+  for await (const c of req) chunks.push(c);
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch {
+    return {};
+  }
+}
+async function startLocalServer(opts) {
+  const warm = /* @__PURE__ */ new Map();
+  const getModel = (modelId) => {
+    let p = warm.get(modelId);
+    if (!p) {
+      const mmprojPath = orxPathFor(`${modelId}-mmproj`);
+      p = startLocalModel(orxPathFor(modelId), opts.licenseKey, MODEL_PARAMS_B[modelId] ?? 9, {
+        mmprojOrxPath: existsSync27(mmprojPath) ? mmprojPath : void 0
+      });
+      warm.set(modelId, p);
+    }
+    return p;
+  };
+  const server = createServer((req, res) => {
+    void handle(req, res, getModel).catch(() => {
+      if (!res.headersSent) res.writeHead(500);
+      res.end();
+    });
+  });
+  const port = opts.port ?? DEFAULT_PORT;
+  await new Promise((resolve3) => server.listen(port, opts.host ?? "127.0.0.1", resolve3));
+  return {
+    port,
+    async close() {
+      await new Promise((r) => server.close(() => r()));
+      for (const p of warm.values()) {
+        try {
+          (await p).dispose();
+        } catch {
+        }
+      }
+    }
+  };
+}
+async function handle(req, res, getModel) {
+  const origin = req.headers.origin;
+  if (origin && ORIRO_ORIGIN.test(origin)) {
+    res.setHeader("access-control-allow-origin", origin);
+    res.setHeader("vary", "origin");
+  }
+  if (req.method === "OPTIONS") {
+    if (origin && ORIRO_ORIGIN.test(origin)) {
+      res.setHeader("access-control-allow-methods", "GET, POST, OPTIONS");
+      res.setHeader("access-control-allow-headers", "content-type, authorization");
+      res.setHeader("access-control-allow-private-network", "true");
+    }
+    res.writeHead(204).end();
+    return;
+  }
+  const url = new URL(req.url ?? "/", "http://localhost");
+  if (url.pathname === "/health") {
+    res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ status: "ok" }));
+    return;
+  }
+  if (url.pathname === "/v1/models") {
+    const data = KNOWN_MODELS.filter((m) => existsSync27(orxPathFor(m))).map((id) => ({ id, object: "model" }));
+    res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ object: "list", data }));
+    return;
+  }
+  if (url.pathname === "/v1/chat/completions" && req.method === "POST") {
+    await chatCompletions(req, res, getModel);
+    return;
+  }
+  res.writeHead(404).end();
+}
+async function chatCompletions(req, res, getModel) {
+  const body = await readJson2(req);
+  const modelId = normalizeModel(body.model);
+  const messages = Array.isArray(body.messages) ? body.messages : [];
+  const id = `chatcmpl-${randomBytes4(8).toString("hex")}`;
+  let model;
+  try {
+    model = await getModel(modelId);
+  } catch (e) {
+    res.writeHead(503, { "content-type": "application/json" }).end(JSON.stringify({ error: { message: e.message } }));
+    return;
+  }
+  res.writeHead(200, { "content-type": "text/event-stream", "cache-control": "no-cache", connection: "keep-alive" });
+  try {
+    await model.chat(messages, (t) => {
+      res.write(sseData(deltaChunk(modelId, id, t)));
+    });
+    res.write(sseData(finalChunk(modelId, id)));
+    res.write("data: [DONE]\n\n");
+  } catch (e) {
+    res.write(sseData({ error: { message: e.message } }));
+  }
+  res.end();
+}
+
+// src/commands/models.ts
+init_theme();
+var MODELS = [
+  { id: "gauss", label: "Gauss V2.4", paramsB: 9 },
+  { id: "avila", label: "Avila V2.4", paramsB: 9 }
+];
+function orxPath(id) {
+  return join41(oriroDir(), "weights", `${id}.orx`);
+}
+function gb(n) {
+  return (n / 1e9).toFixed(2) + " GB";
+}
+function modelIdFromFilename(p) {
+  const base = (p.replace(/\\/g, "/").split("/").pop() ?? "").toLowerCase().replace(/\.gguf$/, "");
+  const root = base.includes("gauss") ? "gauss" : base.includes("avila") ? "avila" : null;
+  if (!root) return null;
+  return base.includes("mmproj") ? `${root}-mmproj` : root;
+}
+async function fetchManifest(base, setupToken) {
+  const r = await fetch(`${base}/api/weights/manifest`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ setup_token: setupToken })
+  });
+  if (r.status === 401 || r.status === 403) {
+    throw new Error(`downloads refused (HTTP ${r.status}) \u2014 run \`oriro login\` to authorize this machine${r.status === 403 ? " (device attestation required)" : ""}.`);
+  }
+  if (!r.ok) throw new Error(`weights manifest HTTP ${r.status}`);
+  const d = await r.json();
+  return d.models ?? {};
+}
+async function resumeUrl(base, setupToken, modelId) {
+  const r = await fetch(`${base}/api/weights/resume`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ key: `${modelId}.gguf`, setup_token: setupToken })
+  });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok || !d.model?.url) throw new Error("link refresh failed");
+  return d.model.url;
+}
+function registerModelsCommand(program2) {
+  const models = program2.command("models").description("run Gauss & Avila on this machine \u2014 download, serve, status (no Ollama)");
+  models.command("status").description("show which models are installed on this machine").action(() => {
+    heading("ORIRO models \u2014 on this machine");
+    for (const m of MODELS) {
+      const p = orxPath(m.id);
+      if (existsSync28(p)) ok(`${m.label} \u2014 installed (${gb(statSync8(p).size)}, device-locked)`);
+      else info(`${m.label} \u2014 ${dim("not downloaded")}`);
+    }
+    info(dim(`location: ${join41(oriroDir(), "weights")}`));
+  });
+  models.command("pull").description("download Gauss then Avila to this machine (one at a time, resumable)").option("--only <id>", "download just one model (gauss|avila)").action(async (opts) => {
+    const base = process.env.ORIRO_API_BASE ?? "https://oriro.ai";
+    const license = readLicense();
+    const setupToken = readSetupToken();
+    if (!setupToken) die("not authorized for downloads \u2014 run `oriro login <code>` first (code from oriro.app).");
+    const pick = opts.only ? MODELS.filter((m) => m.id === opts.only.toLowerCase()) : [...MODELS];
+    if (!pick.length) die(`unknown model "${opts.only}" (use gauss|avila)`);
+    let manifest;
+    try {
+      manifest = await fetchManifest(base, setupToken);
+    } catch (e) {
+      return die(e.message);
+    }
+    for (const m of pick) {
+      const entry = manifest[m.id];
+      if (!entry?.url) return die(`the weights manifest has no entry for ${m.id}`);
+      heading(m.label);
+      const size = await probeSize(entry.url).catch((e) => die(e.message));
+      info(`downloading ${gb(size)} \u2014 resumable, streams straight to disk`);
+      let lastPct = -1;
+      await pullModelToOrx({
+        modelId: m.id,
+        url: entry.url,
+        sizeBytes: size,
+        sha256: entry.sha256 ?? "",
+        licenseKey: license,
+        createdTs: Date.now(),
+        version: "2.4",
+        refresh: () => resumeUrl(base, setupToken, m.id),
+        onProgress: (done, total) => {
+          const pct = Math.floor(done / total * 100);
+          if (pct !== lastPct) {
+            lastPct = pct;
+            process.stdout.write(`\r  ${accent(String(pct).padStart(3))}%  ${gb(done)} / ${gb(total)}   `);
+          }
+        }
+      });
+      process.stdout.write("\n");
+      ok(`${m.label} ready \u2014 locked to this device`);
+      const vision = manifest[`${m.id}-mmproj`];
+      if (vision?.url) {
+        info(`${m.label} vision projector \u2026`);
+        const vsize = await probeSize(vision.url).catch(() => 0);
+        if (vsize > 0) {
+          await pullModelToOrx({
+            modelId: `${m.id}-mmproj`,
+            url: vision.url,
+            sizeBytes: vsize,
+            sha256: vision.sha256 ?? "",
+            licenseKey: license,
+            createdTs: Date.now(),
+            version: "2.4",
+            refresh: () => resumeUrl(base, setupToken, `${m.id}-mmproj`)
+          });
+          ok(`${m.label} vision ready`);
+        }
+      }
+    }
+    ok("all set \u2014 run `oriro models serve` to use them locally");
+  });
+  models.command("import <files...>").description("device-lock GGUFs you downloaded from oriro.app into runnable .orx (local, no login)").action(async (files) => {
+    const license = readLicense();
+    heading("Import models to this machine");
+    let done = 0;
+    for (const f of files) {
+      if (!existsSync28(f)) {
+        info(`skip ${f} \u2014 file not found`);
+        continue;
+      }
+      const id = modelIdFromFilename(f);
+      if (!id) {
+        info(`skip ${f} \u2014 filename must contain 'gauss' or 'avila'`);
+        continue;
+      }
+      const label = MODELS.find((m) => m.id === id)?.label ?? id;
+      info(`device-locking ${label} \u2026`);
+      await packOrxToFile(f, orxPath(id), {
+        kek: deriveKek(license),
+        watermark: `orx:${id}-import`,
+        meta: { modelId: id, version: "2.4", createdTs: Date.now() }
+      });
+      ok(`${label} imported (${gb(statSync8(orxPath(id)).size)}, locked to this device)`);
+      done++;
+    }
+    if (!done) die("nothing imported \u2014 pass the gauss.gguf / avila.gguf you downloaded from oriro.app");
+    ok("run `oriro models serve` to use them locally (no Ollama)");
+  });
+  models.command("serve").description("run the models locally on an OpenAI-compatible endpoint (no Ollama)").option("-p, --port <n>", "port (default 11435)", (v) => parseInt(v, 10)).action(async (opts) => {
+    const license = readLicense();
+    const installed = MODELS.filter((m) => existsSync28(orxPath(m.id)));
+    if (!installed.length) die("no models installed \u2014 run `oriro models pull` first.");
+    const server = await startLocalServer({ licenseKey: license, port: opts.port });
+    heading("ORIRO local endpoint");
+    ok(`serving ${installed.map((m) => m.label).join(" + ")} on http://127.0.0.1:${server.port}`);
+    info(dim("OpenAI-compatible: POST /v1/chat/completions \xB7 GET /v1/models \xB7 GET /health"));
+    info(dim("oriro.ai / oriro.app reach it directly (CORS built in). Ctrl-C to stop."));
+    await new Promise((resolve3) => {
+      process.on("SIGINT", () => {
+        void server.close().then(resolve3);
+      });
+    });
+  });
+}
+
 // src/commands/import.ts
-import { existsSync as existsSync24, readFileSync as readFileSync27, readdirSync as readdirSync4, statSync as statSync6, cpSync as cpSync2, mkdirSync as mkdirSync18 } from "fs";
-import { join as join36, basename as basename4 } from "path";
+import { existsSync as existsSync29, readFileSync as readFileSync29, readdirSync as readdirSync4, statSync as statSync9, cpSync as cpSync2, mkdirSync as mkdirSync20 } from "fs";
+import { join as join42, basename as basename4 } from "path";
 init_mcp_client();
 init_custom();
 init_loader();
@@ -10049,10 +11014,10 @@ init_theme();
 function registerImportCommand(program2) {
   const imp = program2.command("import").description("migrate from another CLI (MCP servers, skills)");
   imp.command("mcp <file>").description("import MCP servers from a Claude-compatible mcp.json (Guardian-vetted)").action((file6) => {
-    if (!existsSync24(file6)) die(`no such file: ${file6}`);
+    if (!existsSync29(file6)) die(`no such file: ${file6}`);
     let servers;
     try {
-      const j = JSON.parse(readFileSync27(file6, "utf8"));
+      const j = JSON.parse(readFileSync29(file6, "utf8"));
       servers = j.mcpServers ?? j.servers ?? {};
     } catch (e) {
       die(`could not parse ${file6}: ${e instanceof Error ? e.message : String(e)}`);
@@ -10098,14 +11063,14 @@ function registerImportCommand(program2) {
     info(`${imported} imported \xB7 ${blocked2} blocked${imported ? ` \u2014 they connect in-session; see \`oriro connectors custom\`` : ""}`);
   });
   imp.command("skills <dir>").description("import SKILL.md skill folders from another CLI's skills directory").action((dir) => {
-    if (!existsSync24(dir) || !statSync6(dir).isDirectory()) die(`no such directory: ${dir}`);
+    if (!existsSync29(dir) || !statSync9(dir).isDirectory()) die(`no such directory: ${dir}`);
     const dest = userSkillsDir();
-    mkdirSync18(dest, { recursive: true });
+    mkdirSync20(dest, { recursive: true });
     heading("Import skills");
-    const sources = existsSync24(join36(dir, "SKILL.md")) ? [dir] : readdirSync4(dir).map((e) => join36(dir, e)).filter((p) => statSync6(p).isDirectory() && existsSync24(join36(p, "SKILL.md")));
+    const sources = existsSync29(join42(dir, "SKILL.md")) ? [dir] : readdirSync4(dir).map((e) => join42(dir, e)).filter((p) => statSync9(p).isDirectory() && existsSync29(join42(p, "SKILL.md")));
     let n = 0;
     for (const src of sources) {
-      cpSync2(src, join36(dest, basename4(src)), { recursive: true });
+      cpSync2(src, join42(dest, basename4(src)), { recursive: true });
       process.stdout.write(`  ${fgHex(PALETTE.success, "\u2713")} ${accent(basename4(src))}
 `);
       n++;
@@ -10216,6 +11181,8 @@ registerVoiceCommand(program);
 registerAgentsCommand(program);
 registerConfigCommand(program);
 registerSetupCommand(program);
+registerLoginCommand(program);
+registerModelsCommand(program);
 registerImportCommand(program);
 registerCompletionCommand(program);
 enableHelpOnError(program);

@@ -22,11 +22,13 @@ if (existsSync(bundlePath)) {
   for (const needle of ["spike-step", "spike-commands", "spike-channels", "_test-mcp", "openclaw", "orirohub"]) {
     check(!new RegExp(needle, "i").test(bundle), `bundle clean of "${needle}"`, `bundle contains "${needle}" — junk/old-fork leaked in`);
   }
-  // P0-2 lane (incomplete on-device runtime) must NEVER ship. This is the automated version of the
-  // manual "grep registerModelsCommand = 0" discipline — added after v0.3.9 leaked the lane because
-  // a release was built without stashing it first. Markers cover its CLI commands + weights modules.
-  for (const needle of ["registerModelsCommand", "registerLoginCommand", "node-llama-cpp", "weights/secure-load"]) {
-    check(!bundle.includes(needle), `bundle clean of P0-2 "${needle}"`, `bundle contains P0-2 marker "${needle}" — stash the P0-2 lane (src/cli.ts + src/weights + src/commands/{login,models}.ts) and rebuild`);
+  // On-device models (login + `oriro models` + weights) SHIP as of v0.4.3 — Vinay-directed: the CLI
+  // downloads Gauss/Avila V2.4 to the user's machine (same endpoint as oriro.app). So the former
+  // "P0-2 must never ship" block is intentionally removed; presence of registerModelsCommand /
+  // node-llama-cpp in the bundle is now EXPECTED. (The download path is complete; the local runtime
+  // `serve` dynamically imports the optional node-llama-cpp peer and degrades gracefully without it.)
+  for (const needle of ["registerModelsCommand", "registerLoginCommand"]) {
+    check(bundle.includes(needle), `on-device models shipped ("${needle}")`, `expected "${needle}" in the bundle — the models/login lane must be present in v0.4.3+`);
   }
 }
 

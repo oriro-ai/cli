@@ -17,6 +17,7 @@ import {
   hasConnectorsChoice, runConnectorsStep,
   hasModelsChoice, runModelsStep,
 } from "./steps.js";
+import { capabilityTourLines } from "./capability-tour.js";
 import { dim, accent, bold } from "../ui/theme.js";
 import { ask } from "./prompt.js";
 
@@ -73,5 +74,9 @@ export async function runOnboarding(): Promise<void> {
     stdout.write(yes ? `  ${accent("📓 Scriber")} on.\n` : `  ${dim("Scriber off — `oriro scribe on` anytime.")}\n`);
   }
 
-  stdout.write(`\n  ${accent("ORIRO is ready.")} ${dim("Type to chat · /exit to leave")}\n\n`);
+  // Step 10 — Capability tour: REVEAL the power verbs (/plan · /agents · /imagine · /prove · serve ·
+  // sessions · head · on-device models). Onboarding used to end at "Type to chat" and surface none of
+  // them, so a user never knew they existed. This is the first-win + discovery moment.
+  stdout.write("\n" + capabilityTourLines().join("\n") + "\n");
+  stdout.write(`\n  ${accent("ORIRO is ready.")} ${dim("Just type to start — or try the line above.")}\n\n`);
 }
