@@ -4512,6 +4512,90 @@ ${extra}` } : ctx;
   return registry.find(MUX_PROVIDER, MUX_MODEL);
 }
 
+// src/repl-ui/permission.ts
+var MODES = ["manual", "accept_edits", "auto", "plan"];
+var MODE_META = {
+  manual: { label: "Manual", indicator: "\u25CF" },
+  accept_edits: { label: "Accept Edits", indicator: "\u270E" },
+  auto: { label: "Auto", indicator: "\u23F5\u23F5" },
+  plan: { label: "Plan", indicator: "\u25A2" }
+};
+var current2 = "manual";
+function getMode() {
+  return current2;
+}
+function setMode(m) {
+  current2 = m;
+}
+function cycleMode() {
+  const i = MODES.indexOf(current2);
+  current2 = MODES[(i + 1) % MODES.length];
+  return current2;
+}
+var thinking = false;
+function getThinking() {
+  return thinking;
+}
+function toggleThinking() {
+  thinking = !thinking;
+  return thinking;
+}
+var THINKING_PRIMER = "Think step by step and plan your approach before acting. Reason carefully and check your work.";
+function classifyTool(toolName) {
+  const n = toolName.toLowerCase();
+  if (/(^|_)(read|ls|grep|find|glob|inspect|view|cat|list)/.test(n)) return "read";
+  if (/(^|_)(edit|write|apply|patch|create|update|str_replace|multiedit)/.test(n)) return "edit";
+  if (/(^|_)(bash|shell|exec|run|terminal|command|sh)/.test(n)) return "exec";
+  return "other";
+}
+function decideTool(opts) {
+  const mode = opts.mode ?? current2;
+  if (opts.guardianBlocked) return { decision: "block", reason: "ORIRO Guardian" };
+  const kind = classifyTool(opts.toolName);
+  if (mode === "plan") {
+    return kind === "read" ? { decision: "allow" } : { decision: "block", reason: "Plan mode is read-only" };
+  }
+  if (mode === "manual") {
+    return kind === "read" ? { decision: "allow" } : { decision: "ask" };
+  }
+  if (mode === "accept_edits") {
+    if (kind === "read" || kind === "edit") return { decision: "allow" };
+    return { decision: "ask" };
+  }
+  return { decision: "allow" };
+}
+
+// src/repl-ui/posture-gate.ts
+var armed = false;
+function armPostureGate() {
+  armed = true;
+}
+function registerPostureGate(pi) {
+  pi.on("tool_call", async (event, ctx) => {
+    const d = decideTool({ toolName: event.toolName, guardianBlocked: false });
+    if (d.decision === "block") {
+      return {
+        block: true,
+        reason: `\u25A2 ${d.reason ?? "blocked by posture"} \u2014 present the plan as text; the user will /approve to execute`
+      };
+    }
+    if (d.decision === "ask" && armed) {
+      if (!ctx.hasUI) {
+        return { block: true, reason: `posture '${getMode()}' requires approval and no UI is available` };
+      }
+      const choice = await ctx.ui.select(
+        `\u25CF Posture '${getMode()}' \u2014 approve this action?
+Tool: ${event.toolName}
+
+(Shift+Tab cycles postures; \u23F5\u23F5 Auto stops asking)`,
+        ["Allow once", "Deny"]
+      );
+      return choice === "Allow once" ? void 0 : { block: true, reason: "Denied by user (posture gate)" };
+    }
+    return void 0;
+  });
+}
+
 // src/head/pi-tool.ts
 import { Type as Type2 } from "typebox";
 
@@ -5977,6 +6061,7 @@ async function assembleOriroSession(opts = {}) {
     // bundled library + the user's own ~/.oriro/skills
     extensionFactories: [
       registerGuardian,
+      registerPostureGate,
       registerHead,
       registerScribe,
       registerOrchestrator,
@@ -6165,32 +6250,37 @@ async function translateOutgoing(text) {
 // src/repl-ui/tui-repl.ts
 import { ProcessTerminal, TUI, Editor, Text, Container } from "@earendil-works/pi-tui";
 
-// src/repl-ui/permission.ts
-var MODES = ["manual", "accept_edits", "auto", "plan"];
-var MODE_META = {
-  manual: { label: "Manual", indicator: "\u25CF" },
-  accept_edits: { label: "Accept Edits", indicator: "\u270E" },
-  auto: { label: "Auto", indicator: "\u23F5\u23F5" },
-  plan: { label: "Plan", indicator: "\u25A2" }
-};
-var current2 = "manual";
-function getMode() {
-  return current2;
+// src/repl-ui/plan-mode.ts
+var PLAN_PRIMER = "PLAN MODE \u2014 read-only. Produce a concrete implementation plan for the request below: numbered steps, the exact files to change and how, the commands to run, and the risks. Do NOT make any changes \u2014 no edits, no writes, no commands (write/exec tools are blocked in this mode). Finish with a short 'Verify' list of what will prove the work is correct after execution.";
+var EXECUTE_PROMPT = "APPROVED: the plan you presented above has been approved by the user. Execute it now, step by step, exactly as written \u2014 implement, run, and verify each step. Do not re-plan and do not ask for approval again; Guardian still protects against dangerous actions.";
+var prevMode = "manual";
+var ready = false;
+function enterPlan(from) {
+  if (from !== "plan") prevMode = from;
+  ready = false;
 }
-function cycleMode() {
-  const i = MODES.indexOf(current2);
-  current2 = MODES[(i + 1) % MODES.length];
-  return current2;
+function notePlanOutput(output) {
+  ready = output.trim().length > 0;
+  return ready;
 }
-var thinking = false;
-function getThinking() {
-  return thinking;
+function approvePlan() {
+  if (!ready) return { ok: false, reason: "no plan is waiting for approval \u2014 /plan <task> first" };
+  ready = false;
+  return { ok: true, restoreMode: prevMode, prompt: EXECUTE_PROMPT };
 }
-function toggleThinking() {
-  thinking = !thinking;
-  return thinking;
+function rejectPlan() {
+  const had = ready;
+  ready = false;
+  return had;
 }
-var THINKING_PRIMER = "Think step by step and plan your approach before acting. Reason carefully and check your work.";
+function parsePlanSlash(line) {
+  const m = /^\/(plan|approve|reject)(?:\s+(\S[\s\S]*))?$/i.exec(line.trim());
+  if (!m) return void 0;
+  const cmd = m[1].toLowerCase();
+  if (cmd === "plan") return m[2] ? { cmd: "plan", task: m[2].trim() } : { cmd: "plan" };
+  if (cmd === "approve") return { cmd: "approve" };
+  return { cmd: "reject" };
+}
 
 // src/repl-ui/verify-actions.ts
 import { existsSync as existsSync15 } from "fs";
@@ -6656,6 +6746,7 @@ function footerText() {
   return `${bar}   ${think}   ${dim("Shift+Tab posture \xB7 Alt+Shift+T thinking \xB7 /exit")}`;
 }
 async function runTuiRepl(session) {
+  armPostureGate();
   const isEnglish3 = getTerminalLanguage().code.toLowerCase().startsWith("en");
   const term = new ProcessTerminal();
   const tui = new TUI(term, true);
@@ -6675,7 +6766,8 @@ async function runTuiRepl(session) {
   };
   const removeListener = tui.addInputListener((data) => {
     if (data === "\x1B[Z") {
-      cycleMode();
+      const before = getMode();
+      if (cycleMode() === "plan") enterPlan(before);
       refreshFooter();
       return { consume: true };
     }
@@ -6718,6 +6810,7 @@ async function runTuiRepl(session) {
         `  ${accent("/routers")} pool add\xB7rotate   ${accent("/model")} <id\u2026> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity   ${accent("/compact")} free context`,
         `  ${accent("/review")} artifacts   ${accent("/save")} <n> [path]   ${accent("/init")} AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
         `  ${accent("/sessions")} list saved   ${accent("/undo")} rewind a turn   ${dim("resume:")} ${accent("oriro -c")} / ${accent("oriro --resume <id>")}`,
+        `  ${accent("/plan")} <task> plan read-only   ${accent("/approve")} execute it   ${accent("/reject")} discard`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`
       ].join("\n");
       chat.addChild(new Text(help, 0, 0));
@@ -6798,6 +6891,41 @@ async function runTuiRepl(session) {
       })();
       return;
     }
+    const plan = parsePlanSlash(text);
+    let internalPrompt;
+    let turnText = text;
+    if (plan) {
+      if (plan.cmd === "reject") {
+        const had = rejectPlan();
+        chat.addChild(new Text(dim(had ? "  \u25A2 plan discarded \u2014 refine the request (still in Plan) or Shift+Tab out" : "  \u25A2 nothing to reject \u2014 no plan is waiting"), 0, 0));
+        editor.setText("");
+        tui.requestRender();
+        return;
+      }
+      if (plan.cmd === "approve") {
+        const r = approvePlan();
+        if (!r.ok) {
+          chat.addChild(new Text(dim(`  \u25A2 ${r.reason}`), 0, 0));
+          editor.setText("");
+          tui.requestRender();
+          return;
+        }
+        setMode(r.restoreMode);
+        refreshFooter();
+        internalPrompt = r.prompt;
+      } else {
+        enterPlan(getMode());
+        setMode("plan");
+        refreshFooter();
+        if (!plan.task) {
+          chat.addChild(new Text(dim("  \u25A2 Plan mode \u2014 describe the task and I'll plan it (read-only). Then ") + accent("/approve") + dim(" to execute \xB7 ") + accent("/reject") + dim(" to discard."), 0, 0));
+          editor.setText("");
+          tui.requestRender();
+          return;
+        }
+        turnText = plan.task;
+      }
+    }
     if (slash === "/voice") {
       editor.setText("");
       const status = new Text(dim("  \u{1F399} listening\u2026 (needs ffmpeg + the transformers voice peer)"), 0, 0);
@@ -6836,7 +6964,10 @@ async function runTuiRepl(session) {
     busy = true;
     bumpTurns();
     void (async () => {
-      let english = await translateIncoming(text);
+      let english = internalPrompt ?? await translateIncoming(turnText);
+      if (getMode() === "plan") english = `${PLAN_PRIMER}
+
+${english}`;
       if (getThinking()) english = `${THINKING_PRIMER}
 
 ${english}`;
@@ -6876,6 +7007,9 @@ ${english}`;
       const hint = arts.length ? dim(`
   \u2398 ${arts.length} artifact${arts.length === 1 ? "" : "s"} \u2014 /review to save`) : "";
       streaming.setText((finalText || dim("(no response)")) + (warn ? dim(warn) : "") + hint);
+      if (getMode() === "plan" && notePlanOutput(finalText)) {
+        chat.addChild(new Text(dim("  \u25A2 plan ready \u2014 ") + accent("/approve") + dim(" to execute \xB7 ") + accent("/reject") + dim(" to discard"), 0, 0));
+      }
       tui.requestRender();
       busy = false;
     })();
@@ -6983,6 +7117,7 @@ function replHelp() {
   ${dim("Models & routers")}   ${accent("/routers")} list\xB7add\xB7rotate the racing pool   ${accent("/model")} <id\u2026> switch
   ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} activity   ${accent("/compact")} free context   ${accent("/undo")} rewind a turn
   ${dim("Continuity")}         ${accent("/sessions")} list saved sessions   ${dim("resume:")} ${accent("oriro -c")} ${dim("or")} ${accent("oriro --resume <id>")}
+  ${dim("Plan loop")}          ${accent("/plan")} <task> read-only plan   ${accent("/approve")} execute it   ${accent("/reject")} discard
   ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one
   ${dim("Project")}            ${accent("/init")} write a starter AGENTS.md ORIRO reads each session
   ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn
@@ -7082,8 +7217,40 @@ async function runReadlineRepl(session) {
         stdout7.write(handleArtifactSlash(line).join("\n") + "\n");
         continue;
       }
+      const plan = parsePlanSlash(line);
+      let internalPrompt;
+      let turnText = line;
+      if (plan) {
+        if (plan.cmd === "reject") {
+          stdout7.write(`  ${dim(rejectPlan() ? "\u25A2 plan discarded \u2014 refine the request (still in Plan) or /approve a new plan later" : "\u25A2 nothing to reject \u2014 no plan is waiting")}
+`);
+          continue;
+        }
+        if (plan.cmd === "approve") {
+          const r = approvePlan();
+          if (!r.ok) {
+            stdout7.write(`  ${dim(`\u25A2 ${r.reason}`)}
+`);
+            continue;
+          }
+          setMode(r.restoreMode);
+          internalPrompt = r.prompt;
+        } else {
+          enterPlan(getMode());
+          setMode("plan");
+          if (!plan.task) {
+            stdout7.write(`  ${dim("\u25A2 Plan mode \u2014 describe the task and I'll plan it (read-only). Then")} ${accent("/approve")} ${dim("to execute \xB7")} ${accent("/reject")} ${dim("to discard.")}
+`);
+            continue;
+          }
+          turnText = plan.task;
+        }
+      }
       bumpTurns();
-      const english = await translateIncoming(line);
+      let english = internalPrompt ?? await translateIncoming(turnText);
+      if (getMode() === "plan") english = `${PLAN_PRIMER}
+
+${english}`;
       noteUserInput(line);
       let out = "";
       const unsub = session.subscribe(
@@ -7107,6 +7274,10 @@ async function runReadlineRepl(session) {
       stdout7.write(`${shown}${phantomFileWarning(shown)}
 ${hint}
 `);
+      if (getMode() === "plan" && notePlanOutput(shown)) {
+        stdout7.write(`  ${dim("\u25A2 plan ready \u2014")} ${accent("/approve")} ${dim("to execute \xB7")} ${accent("/reject")} ${dim("to discard")}
+`);
+      }
     }
   } finally {
     process.removeListener("SIGINT", onSigint);
