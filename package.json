@@ -1,6 +1,6 @@
 {
   "name": "@oriro/orirocli",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "ORIRO — a free, on-device-friendly terminal AI agent. Built on the Pi agent harness (used as a library).",
   "type": "module",
   "bin": {
@@ -23,7 +23,7 @@
     "dev": "tsx src/cli.ts",
     "build": "tsup",
     "typecheck": "tsc --noEmit",
-    "test:unit": "tsx scripts/test-tool-sanitize.ts && tsx scripts/test-guardian.ts && tsx scripts/test-scribe.ts && tsx scripts/test-race.ts && tsx scripts/test-weights.ts && tsx scripts/test-output.ts && tsx scripts/test-connectors.ts && tsx scripts/test-artifacts.ts && tsx scripts/test-project-md.ts && tsx scripts/test-compact.ts && tsx scripts/test-init.ts && tsx scripts/test-sessions.ts && tsx scripts/test-permission.ts && tsx scripts/test-plan-mode.ts && tsx scripts/test-agents-fanout.ts",
+    "test:unit": "tsx scripts/test-tool-sanitize.ts && tsx scripts/test-guardian.ts && tsx scripts/test-scribe.ts && tsx scripts/test-race.ts && tsx scripts/test-weights.ts && tsx scripts/test-output.ts && tsx scripts/test-connectors.ts && tsx scripts/test-artifacts.ts && tsx scripts/test-project-md.ts && tsx scripts/test-compact.ts && tsx scripts/test-init.ts && tsx scripts/test-sessions.ts && tsx scripts/test-permission.ts && tsx scripts/test-plan-mode.ts && tsx scripts/test-agents-fanout.ts && tsx scripts/test-serve.ts",
     "smoke": "npm run build && node scripts/smoke.mjs",
     "prepublishOnly": "npm run build && npm run test:unit && node scripts/smoke.mjs && node scripts/prepublish-check.mjs",
     "start": "node dist/cli.js"
@@ -34,11 +34,13 @@
     "@earendil-works/pi-coding-agent": "0.79.10",
     "@earendil-works/pi-tui": "0.79.10",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@zed-industries/agent-client-protocol": "^0.4.5",
     "commander": "^12.1.0",
     "discord.js": "^14.26.4",
     "grammy": "^1.44.0",
     "jmespath": "^0.16.0",
-    "typebox": "^1.1.38"
+    "typebox": "^1.1.38",
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "@huggingface/transformers": "*",
