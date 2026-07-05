@@ -29,6 +29,7 @@ import type { ResumeOpts } from "./sessions/store.js";
 import { extractArtifacts, setArtifacts } from "./repl-ui/artifacts.js";
 import { parsePlanSlash, enterPlan, approvePlan, rejectPlan, notePlanOutput, PLAN_PRIMER } from "./repl-ui/plan-mode.js";
 import { isImagineSlash, imagineTask, imagineResultLines, IMAGINE_PRIMER } from "./repl-ui/slash-imagine.js";
+import { isProveSlash, handleProve } from "./repl-ui/slash-prove.js";
 import { getMode, setMode } from "./repl-ui/permission.js";
 import { bumpTurns, toggleTrace } from "./repl-ui/repl-state.js";
 import { dim, accent } from "./ui/theme.js";
@@ -46,6 +47,7 @@ function replHelp(): string {
     `  ${dim("Plan loop")}          ${accent("/plan")} <task> read-only plan   ${accent("/approve")} execute it   ${accent("/reject")} discard\n` +
     `  ${dim("Fan-out")}            ${accent("/agents")} <A> | <B> parallel sub-agents in isolated git worktrees\n` +
     `  ${dim("Images")}             ${accent("/imagine")} <scene> draw an SVG artwork (keyless, auto-saved to cwd)\n` +
+    `  ${dim("Proof")}              ${accent("/prove")} [n|url] [--video] browser-proof an artifact or your running app\n` +
     `  ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one\n` +
     `  ${dim("Project")}            ${accent("/init")} write a starter AGENTS.md ORIRO reads each session\n` +
     `  ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn\n` +
@@ -109,6 +111,7 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       if (isUndoSlash(slash)) { stdout.write((await handleUndo(session)).join("\n") + "\n"); continue; }
       if (isArtifactSlash(slash)) { stdout.write(handleArtifactSlash(line).join("\n") + "\n"); continue; }
       if (isAgentsSlash(slash)) { stdout.write((await handleAgents(line)).join("\n") + "\n"); continue; }
+      if (isProveSlash(slash)) { stdout.write((await handleProve(line)).join("\n") + "\n"); continue; }
 
       // V0.3.5 Plan mode — the same plan → approve → execute loop as the TUI; the posture gate
       // keeps plan-mode turns read-only here too (deterministic block, no UI needed).

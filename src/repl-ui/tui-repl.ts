@@ -16,6 +16,7 @@ import { accent, dim } from "../ui/theme.js";
 import { cycleMode, getMode, setMode, MODE_META, MODES, getThinking, toggleThinking, THINKING_PRIMER } from "./permission.js";
 import { parsePlanSlash, enterPlan, approvePlan, rejectPlan, notePlanOutput, PLAN_PRIMER } from "./plan-mode.js";
 import { isImagineSlash, imagineTask, imagineResultLines, IMAGINE_PRIMER } from "./slash-imagine.js";
+import { isProveSlash, handleProve } from "./slash-prove.js";
 import { armPostureGate } from "./posture-gate.js";
 import { getTerminalLanguage } from "../language/index.js";
 import { translateIncoming, translateOutgoing } from "../language/gateway.js";
@@ -124,7 +125,7 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
         `  ${accent("/review")} artifacts   ${accent("/save")} <n> [path]   ${accent("/init")} AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
         `  ${accent("/sessions")} list saved   ${accent("/undo")} rewind a turn   ${dim("resume:")} ${accent("oriro -c")} / ${accent("oriro --resume <id>")}`,
         `  ${accent("/plan")} <task> plan read-only   ${accent("/approve")} execute it   ${accent("/reject")} discard   ${accent("/agents")} parallel worktree fan-out`,
-        `  ${accent("/imagine")} <scene> draw an SVG artwork (keyless, auto-saved)`,
+        `  ${accent("/imagine")} <scene> draw an SVG artwork (keyless, auto-saved)   ${accent("/prove")} [n|url] browser-proof with screenshot/--video`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`,
       ].join("\n");
       chat.addChild(new Text(help, 0, 0));
@@ -194,6 +195,18 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       tui.requestRender();
       void (async () => {
         const lines = isUndoSlash(slash) ? await handleUndo(session) : await handleSessions();
+        pending.setText(lines.join("\n"));
+        tui.requestRender();
+      })();
+      return;
+    }
+    if (isProveSlash(slash)) {
+      editor.setText("");
+      const pending = new Text(dim("  🔎 proving in Chromium…"), 0, 0);
+      chat.addChild(pending);
+      tui.requestRender();
+      void (async () => {
+        const lines = await handleProve(text);
         pending.setText(lines.join("\n"));
         tui.requestRender();
       })();
