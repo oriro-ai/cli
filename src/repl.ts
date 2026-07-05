@@ -23,6 +23,8 @@ import { isUsageSlash, handleUsage } from "./repl-ui/slash-usage.js";
 import { isArtifactSlash, handleArtifactSlash } from "./repl-ui/slash-artifacts.js";
 import { isCompactSlash, handleCompact } from "./repl-ui/slash-compact.js";
 import { isInitSlash, handleInit } from "./repl-ui/slash-init.js";
+import { isSessionsSlash, handleSessions, isUndoSlash, handleUndo } from "./repl-ui/slash-sessions.js";
+import type { ResumeOpts } from "./sessions/store.js";
 import { extractArtifacts, setArtifacts } from "./repl-ui/artifacts.js";
 import { bumpTurns, toggleTrace } from "./repl-ui/repl-state.js";
 import { dim, accent } from "./ui/theme.js";
@@ -35,7 +37,8 @@ function replHelp(): string {
     `\n  ${accent("ORIRO terminal — help")}\n` +
     `  ${dim("Just type to chat; ORIRO writes and runs code for you (keyless, free).")}\n\n` +
     `  ${dim("Models & routers")}   ${accent("/routers")} list·add·rotate the racing pool   ${accent("/model")} <id…> switch\n` +
-    `  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} show tool + router activity   ${accent("/compact")} free context\n` +
+    `  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} activity   ${accent("/compact")} free context   ${accent("/undo")} rewind a turn\n` +
+    `  ${dim("Continuity")}         ${accent("/sessions")} list saved sessions   ${dim("resume:")} ${accent("oriro -c")} ${dim("or")} ${accent("oriro --resume <id>")}\n` +
     `  ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one\n` +
     `  ${dim("Project")}            ${accent("/init")} write a starter AGENTS.md ORIRO reads each session\n` +
     `  ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn\n` +
@@ -44,11 +47,12 @@ function replHelp(): string {
   );
 }
 
-export async function runRepl(): Promise<void> {
+export async function runRepl(opts: { resume?: ResumeOpts } = {}): Promise<void> {
   if (isFirstRun()) await runOnboarding();
   else stdout.write(banner());
 
-  const { session } = await assembleOriroSession();
+  const { session, sessionNote } = await assembleOriroSession({ resume: opts.resume });
+  if (sessionNote) stdout.write(`  ${dim(sessionNote)}\n`);
   setupVoiceInput(); // wire the on-device Whisper listener into the voice seam (graceful if absent)
 
   // Rich TUI (posture footer + Shift+Tab) on a real terminal; plain readline loop otherwise.
@@ -94,6 +98,8 @@ async function runReadlineRepl(session: AgentSession): Promise<void> {
       if (slash === "/trace") { stdout.write(`  ${dim(`trace ${toggleTrace() ? "ON" : "off"}`)}\n`); continue; }
       if (isCompactSlash(slash)) { stdout.write((await handleCompact(session, line)).join("\n") + "\n"); continue; }
       if (isInitSlash(slash)) { stdout.write(handleInit(line).join("\n") + "\n"); continue; }
+      if (isSessionsSlash(slash)) { stdout.write((await handleSessions()).join("\n") + "\n"); continue; }
+      if (isUndoSlash(slash)) { stdout.write((await handleUndo(session)).join("\n") + "\n"); continue; }
       if (isArtifactSlash(slash)) { stdout.write(handleArtifactSlash(line).join("\n") + "\n"); continue; }
 
       bumpTurns();

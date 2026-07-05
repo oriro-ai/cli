@@ -6,12 +6,12 @@ import {
   createAgentSession,
   AuthStorage,
   ModelRegistry,
-  SessionManager,
   SettingsManager,
   DefaultResourceLoader,
   getAgentDir,
 } from "@earendil-works/pi-coding-agent";
 import type { AgentSession } from "@earendil-works/pi-coding-agent";
+import { resolveSessionManager, type ResumeOpts } from "../sessions/store.js";
 import { registerOriroMux } from "../routers/mux-provider.js";
 import { registerGuardian } from "../guardian/pi-gate.js";
 import { registerHead } from "../head/pi-tool.js";
@@ -25,6 +25,8 @@ import type { KeylessRouter } from "../routers/floor.js";
 export interface AssembledSession {
   session: AgentSession;
   extensionsResult: unknown;
+  /** Human note about how this session started (new / continued / resumed / forked) — shown at launch. */
+  sessionNote?: string;
 }
 
 /**
@@ -33,7 +35,7 @@ export interface AssembledSession {
  * `scribe_recall` tool + turn capture (consent-gated), the `deploy_agents` orchestrator, and the
  * 322 bundled skills (CORE in-prompt / TAIL on-demand). Never a paid key.
  */
-export async function assembleOriroSession(opts: { cwd?: string; routers?: KeylessRouter[] } = {}): Promise<AssembledSession> {
+export async function assembleOriroSession(opts: { cwd?: string; routers?: KeylessRouter[]; resume?: ResumeOpts } = {}): Promise<AssembledSession> {
   const cwd = opts.cwd ?? process.cwd();
   const authStorage = AuthStorage.inMemory();
   const modelRegistry = ModelRegistry.inMemory(authStorage);
@@ -59,15 +61,19 @@ export async function assembleOriroSession(opts: { cwd?: string; routers?: Keyle
   });
   await resourceLoader.reload();
 
+  // V0.3.4 — sessions PERSIST locally (~/.oriro/sessions) so work survives exit and can be
+  // resumed/continued/forked. Was SessionManager.inMemory() (nothing saved). Still on-device only.
+  const { sm, note: sessionNote } = await resolveSessionManager(cwd, opts.resume);
+
   const { session, extensionsResult } = await createAgentSession({
     model,
     authStorage,
     modelRegistry,
     settingsManager,
-    sessionManager: SessionManager.inMemory(),
+    sessionManager: sm,
     resourceLoader,
   });
 
   attachScribe(session); // capture each turn to the Scriber (no-op unless the user consented)
-  return { session, extensionsResult };
+  return { session, extensionsResult, sessionNote };
 }

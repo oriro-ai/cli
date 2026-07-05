@@ -25,6 +25,7 @@ import { isUsageSlash, handleUsage } from "./slash-usage.js";
 import { isArtifactSlash, handleArtifactSlash } from "./slash-artifacts.js";
 import { isCompactSlash, handleCompact } from "./slash-compact.js";
 import { isInitSlash, handleInit } from "./slash-init.js";
+import { isSessionsSlash, handleSessions, isUndoSlash, handleUndo } from "./slash-sessions.js";
 import { extractArtifacts, setArtifacts } from "./artifacts.js";
 import { bumpTurns, getTrace, toggleTrace } from "./repl-state.js";
 import { onRaceStatus } from "../routers/race-status.js";
@@ -114,7 +115,8 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
       const help = [
         "  Just type to chat — ORIRO writes and runs code for you (keyless, free).",
         `  ${accent("/routers")} pool add·rotate   ${accent("/model")} <id…> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity   ${accent("/compact")} free context`,
-        `  ${accent("/review")} artifacts from the last reply   ${accent("/save")} <n> [path]   ${accent("/init")} write AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
+        `  ${accent("/review")} artifacts   ${accent("/save")} <n> [path]   ${accent("/init")} AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
+        `  ${accent("/sessions")} list saved   ${accent("/undo")} rewind a turn   ${dim("resume:")} ${accent("oriro -c")} / ${accent("oriro --resume <id>")}`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`,
       ].join("\n");
       chat.addChild(new Text(help, 0, 0));
@@ -175,6 +177,18 @@ export async function runTuiRepl(session: AgentSession): Promise<void> {
     if (isInitSlash(slash)) {
       chat.addChild(new Text(handleInit(text).join("\n"), 0, 0));
       editor.setText(""); tui.requestRender();
+      return;
+    }
+    if (isSessionsSlash(slash) || isUndoSlash(slash)) {
+      editor.setText("");
+      const pending = new Text(dim("  …"), 0, 0);
+      chat.addChild(pending);
+      tui.requestRender();
+      void (async () => {
+        const lines = isUndoSlash(slash) ? await handleUndo(session) : await handleSessions();
+        pending.setText(lines.join("\n"));
+        tui.requestRender();
+      })();
       return;
     }
     if (slash === "/voice") {

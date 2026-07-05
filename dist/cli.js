@@ -3382,11 +3382,69 @@ import {
   createAgentSession as createAgentSession2,
   AuthStorage as AuthStorage2,
   ModelRegistry as ModelRegistry2,
-  SessionManager as SessionManager2,
   SettingsManager,
   DefaultResourceLoader,
   getAgentDir
 } from "@earendil-works/pi-coding-agent";
+
+// src/sessions/store.ts
+import { join as join16 } from "path";
+import { SessionManager } from "@earendil-works/pi-coding-agent";
+function sessionsDir() {
+  return join16(oriroDir(), "sessions");
+}
+async function findByIdPrefix(cwd, idish, verb) {
+  const infos = await SessionManager.list(cwd, sessionsDir());
+  const exact = infos.find((s) => s.id === idish);
+  if (exact) return exact;
+  const pref = infos.filter((s) => s.id.startsWith(idish));
+  if (pref.length === 1) return pref[0];
+  if (pref.length > 1) throw new Error(`'${idish}' matches ${pref.length} sessions \u2014 use a longer id (oriro sessions)`);
+  throw new Error(`no session '${idish}' to ${verb} here \u2014 see: oriro sessions`);
+}
+async function resolveSessionManager(cwd, opts = {}) {
+  const dir = sessionsDir();
+  if (opts.ephemeral) return { sm: SessionManager.inMemory(cwd), note: "ephemeral \u2014 this session is NOT saved" };
+  if (opts.continue) return { sm: SessionManager.continueRecent(cwd, dir), note: "continuing your most recent session" };
+  if (opts.resumeId) {
+    const hit = await findByIdPrefix(cwd, opts.resumeId, "resume");
+    return { sm: SessionManager.open(hit.path, dir), note: `resumed ${hit.id.slice(0, 8)} (${hit.messageCount} msgs)` };
+  }
+  if (opts.forkId) {
+    const hit = await findByIdPrefix(cwd, opts.forkId, "fork");
+    return { sm: SessionManager.forkFrom(hit.path, cwd, dir), note: `forked a new session from ${hit.id.slice(0, 8)}` };
+  }
+  return { sm: SessionManager.create(cwd, dir), note: "new session (saved locally \u2014 resume with `oriro -c`)" };
+}
+async function listSessions(cwd = process.cwd()) {
+  const infos = await SessionManager.list(cwd, sessionsDir());
+  return infos.sort((a, b) => b.modified.getTime() - a.modified.getTime());
+}
+function shortWhen(d) {
+  const mon = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getMonth()] ?? "";
+  const p = (n) => String(n).padStart(2, "0");
+  return `${mon} ${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function formatSessionList(infos) {
+  if (!infos.length) return [dim("  no saved sessions yet \u2014 they're created as you chat. Resume the last with `oriro -c`.")];
+  const lines = [];
+  for (const s of infos) {
+    const id = s.id.slice(0, 8);
+    const first = (s.firstMessage ?? s.name ?? "(empty)").replace(/\s+/g, " ").trim().slice(0, 56);
+    lines.push(`  ${accent(id)} ${dim(shortWhen(s.modified).padEnd(12))} ${dim(`${String(s.messageCount).padStart(3)} msg`)}  ${first}`);
+  }
+  lines.push(dim(`  ${infos.length} session${infos.length === 1 ? "" : "s"} \xB7 resume: `) + accent("oriro --resume <id>") + dim(" \xB7 continue last: ") + accent("oriro -c"));
+  return lines;
+}
+function sessionRows(infos) {
+  return infos.map((s) => ({
+    id: s.id,
+    messages: s.messageCount,
+    modified: s.modified.toISOString(),
+    cwd: s.cwd,
+    first: (s.firstMessage ?? "").replace(/\s+/g, " ").trim().slice(0, 80)
+  }));
+}
 
 // src/routers/mux-provider.ts
 import { streamSimple as piStreamSimple2, createAssistantMessageEventStream } from "@earendil-works/pi-ai";
@@ -3394,7 +3452,7 @@ import { register as registerOpenAICompletions } from "@earendil-works/pi-ai/ope
 
 // src/routers/mux.ts
 import { existsSync as existsSync7, mkdirSync as mkdirSync9, readFileSync as readFileSync11, writeFileSync as writeFileSync12 } from "fs";
-import { join as join16 } from "path";
+import { join as join17 } from "path";
 var COOLDOWN_DEFAULT_MS = 6e4;
 var UNHEALTHY_AFTER = 3;
 var RouterMux = class {
@@ -3464,11 +3522,11 @@ var RouterMux = class {
   }
 };
 function healthStatePath(dir) {
-  return join16(dir, "routers", "health.json");
+  return join17(dir, "routers", "health.json");
 }
 function saveMuxState(dir, stats) {
   const p = healthStatePath(dir);
-  mkdirSync9(join16(dir, "routers"), { recursive: true });
+  mkdirSync9(join17(dir, "routers"), { recursive: true });
   writeFileSync12(p, JSON.stringify(stats, null, 2), "utf8");
 }
 function loadMuxState(dir) {
@@ -3570,28 +3628,28 @@ import { Type } from "typebox";
 
 // src/scribe/capture.ts
 import { closeSync as closeSync2, fsyncSync as fsyncSync2, mkdirSync as mkdirSync12, openSync as openSync2, writeSync as writeSync2 } from "fs";
-import { join as join18 } from "path";
+import { join as join19 } from "path";
 
 // src/scribe/digest.ts
 import { existsSync as existsSync8, mkdirSync as mkdirSync10, readFileSync as readFileSync12, writeFileSync as writeFileSync13 } from "fs";
 
 // src/scribe/paths.ts
-import { join as join17 } from "path";
+import { join as join18 } from "path";
 function scribeDir() {
   const override = process.env.ORIRO_SCRIBE_DIR?.trim();
-  return override && override.length > 0 ? override : join17(CONFIG_DIR, "scribe");
+  return override && override.length > 0 ? override : join18(CONFIG_DIR, "scribe");
 }
 function journalFile(date) {
-  return join17(scribeDir(), `${date}.md`);
+  return join18(scribeDir(), `${date}.md`);
 }
 function digestFile() {
-  return join17(scribeDir(), "_digest.md");
+  return join18(scribeDir(), "_digest.md");
 }
 function timelineFile() {
-  return join17(scribeDir(), "_timeline.md");
+  return join18(scribeDir(), "_timeline.md");
 }
 function artifactsDir() {
-  return join17(scribeDir(), "artifacts");
+  return join18(scribeDir(), "artifacts");
 }
 
 // src/scribe/digest.ts
@@ -3774,7 +3832,7 @@ var INLINE_CAP = 4e3;
 function sideFile(date, ts, kind, full) {
   mkdirSync12(artifactsDir(), { recursive: true });
   const name = `${date}_${ts.replace(/[:.]/g, "-")}_${kind}.md`;
-  const p = join18(artifactsDir(), name);
+  const p = join19(artifactsDir(), name);
   const fd = openSync2(p, "w");
   try {
     writeSync2(fd, full);
@@ -3866,12 +3924,12 @@ import {
   writeFileSync as writeFileSync14,
   writeSync as writeSync3
 } from "fs";
-import { join as join19 } from "path";
+import { join as join20 } from "path";
 function healthFile() {
-  return join19(scribeDir(), "_health.json");
+  return join20(scribeDir(), "_health.json");
 }
 function faultLogFile() {
-  return join19(scribeDir(), "_faults.log");
+  return join20(scribeDir(), "_faults.log");
 }
 function read2() {
   try {
@@ -3924,9 +3982,9 @@ import {
   writeFileSync as writeFileSync15,
   writeSync as writeSync4
 } from "fs";
-import { join as join20 } from "path";
+import { join as join21 } from "path";
 function walFile() {
-  return join20(scribeDir(), "_wal.jsonl");
+  return join21(scribeDir(), "_wal.jsonl");
 }
 function appendLine(obj) {
   mkdirSync14(scribeDir(), { recursive: true });
@@ -4138,12 +4196,12 @@ function attachScribe(session) {
 
 // src/context/project-md.ts
 import { existsSync as existsSync13, readFileSync as readFileSync18, statSync as statSync2 } from "fs";
-import { join as join21, dirname as dirname3, parse } from "path";
+import { join as join22, dirname as dirname3, parse } from "path";
 var NAMES = ["AGENTS.md", "CLAUDE.md", ".oriro/ORIRO.md"];
 var MAX_BYTES = 32 * 1024;
 var MAX_LEVELS = 24;
 function isRoot(dir) {
-  return existsSync13(join21(dir, ".git")) || existsSync13(join21(dir, ".oriro"));
+  return existsSync13(join22(dir, ".git")) || existsSync13(join22(dir, ".oriro"));
 }
 function discoverProjectInstructions(cwd) {
   const chain = [];
@@ -4151,7 +4209,7 @@ function discoverProjectInstructions(cwd) {
   const rootOfDrive = parse(cwd).root;
   for (let i = 0; i < MAX_LEVELS; i++) {
     for (const name of NAMES) {
-      const p = join21(dir, name);
+      const p = join22(dir, name);
       try {
         if (existsSync13(p) && statSync2(p).isFile()) {
           let text = readFileSync18(p, "utf8");
@@ -4765,7 +4823,7 @@ async function comparePages(opts) {
 
 // src/head/run.ts
 import { writeFile } from "fs/promises";
-import { join as join22 } from "path";
+import { join as join23 } from "path";
 
 // src/head/inspection-html.ts
 var PRIORITY_COLOR = {
@@ -5267,7 +5325,7 @@ async function runInspect(target, competitors, opts = {}) {
   const report = await comparePages({ targetUrl: target, competitorUrls: competitors.length ? competitors : [target] });
   const files = [];
   if (opts.html) {
-    const path = join22(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(target)}-inspect.html`);
+    const path = join23(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(target)}-inspect.html`);
     await writeFile(path, buildInspectionHtml(report), "utf8");
     files.push(path);
   }
@@ -5283,7 +5341,7 @@ function parseHeadTargets(text, selfOrigin) {
 async function runUrlToCode(url, opts = {}) {
   try {
     const res = await urlToCode(url, headModels(), { goal: opts.goal, stack: opts.stack });
-    const codePath = join22(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(url)}${extForStack(opts.stack)}`);
+    const codePath = join23(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(url)}${extForStack(opts.stack)}`);
     await writeFile(codePath, res.code, "utf8");
     return { summary: `Reverse-engineered ${url} into clean code (${res.code.length} chars) \u2192 ${codePath}`, files: [codePath] };
   } catch (e) {
@@ -5293,7 +5351,7 @@ async function runUrlToCode(url, opts = {}) {
 async function runUrlToSpec(url, opts = {}) {
   try {
     const res = await urlToSpec(url, headModels(), { goal: opts.goal });
-    const specPath = join22(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(url)}.spec.yaml`);
+    const specPath = join23(opts.outDir ?? process.cwd(), `oriro-head-${hostSlug(url)}.spec.yaml`);
     await writeFile(specPath, res.spec, "utf8");
     return { summary: `Reverse-engineered ${url} into a YAML build spec \u2192 ${specPath}`, files: [specPath] };
   } catch (e) {
@@ -5305,7 +5363,7 @@ async function runCapture(urls, opts = {}) {
     const { captureScreens: captureScreens2, buildScreenshotFlowHtml: buildScreenshotFlowHtml2 } = await Promise.resolve().then(() => (init_screenshot_flow(), screenshot_flow_exports));
     const caps = await captureScreens2(urls, { video: opts.video });
     const html = buildScreenshotFlowHtml2([{ name: "Captured screens", captures: caps }]);
-    const flowPath = join22(opts.outDir ?? process.cwd(), "oriro-head-flow.html");
+    const flowPath = join23(opts.outDir ?? process.cwd(), "oriro-head-flow.html");
     await writeFile(flowPath, html, "utf8");
     const ok2 = caps.filter((c) => c.ok).length;
     return { summary: `Captured ${ok2}/${caps.length} full-page screenshots \u2192 ${flowPath}`, files: [flowPath] };
@@ -5326,7 +5384,7 @@ async function runVideoToCode(videoPath, opts = {}) {
       { videoPath, frames, mimeType: mime, goal: opts.goal, stack: opts.stack },
       headVideoModels()
     );
-    const codePath = join22(opts.outDir ?? process.cwd(), `oriro-head-video${extForStack(opts.stack)}`);
+    const codePath = join23(opts.outDir ?? process.cwd(), `oriro-head-video${extForStack(opts.stack)}`);
     await writeFile(codePath, res.code, "utf8");
     return { summary: `Watched ${videoPath} \u2192 built code (${res.code.length} chars) \u2192 ${codePath}
 (experimental on the free floor \u2014 add a vision-capable router for pixel-faithful results.)`, files: [codePath] };
@@ -5419,7 +5477,7 @@ function registerHead(pi) {
 }
 
 // src/orchestrate.ts
-import { createAgentSession, AuthStorage, ModelRegistry, SessionManager } from "@earendil-works/pi-coding-agent";
+import { createAgentSession, AuthStorage, ModelRegistry, SessionManager as SessionManager2 } from "@earendil-works/pi-coding-agent";
 import { Type as Type3 } from "typebox";
 var MAX_AGENTS = 8;
 var MAX_CONCURRENCY = 4;
@@ -5432,7 +5490,7 @@ async function runOnce(spec) {
     model,
     authStorage,
     modelRegistry,
-    sessionManager: SessionManager.inMemory(),
+    sessionManager: SessionManager2.inMemory(),
     noTools: "all"
   });
   let out = "";
@@ -5509,19 +5567,19 @@ import { Type as Type4 } from "typebox";
 
 // src/agents/store.ts
 import { mkdirSync as mkdirSync15, readFileSync as readFileSync19, writeFileSync as writeFileSync16, readdirSync as readdirSync2, rmSync as rmSync3, existsSync as existsSync14 } from "fs";
-import { join as join23 } from "path";
+import { join as join24 } from "path";
 var SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
 function isValidAgentName(name) {
   return SLUG.test(name);
 }
 function agentsDir() {
-  return join23(oriroDir(), "agents");
+  return join24(oriroDir(), "agents");
 }
 function agentFile(name) {
-  return join23(agentsDir(), `${name}.json`);
+  return join24(agentsDir(), `${name}.json`);
 }
 function stateFile() {
-  return join23(agentsDir(), ".state.json");
+  return join24(agentsDir(), ".state.json");
 }
 function listAgents() {
   const dir = agentsDir();
@@ -5530,7 +5588,7 @@ function listAgents() {
   for (const f of readdirSync2(dir)) {
     if (!f.endsWith(".json") || f.startsWith(".")) continue;
     try {
-      const def = JSON.parse(readFileSync19(join23(dir, f), "utf8"));
+      const def = JSON.parse(readFileSync19(join24(dir, f), "utf8"));
       if (def && typeof def.name === "string" && typeof def.task === "string") out.push(def);
     } catch {
     }
@@ -5843,9 +5901,9 @@ function registerToolList(pi, serverName, client, tools, seen = /* @__PURE__ */ 
 
 // src/connectors/custom.ts
 import { readFileSync as readFileSync20, writeFileSync as writeFileSync17 } from "fs";
-import { join as join24 } from "path";
+import { join as join25 } from "path";
 function file3() {
-  return join24(oriroDir(), "mcp-custom.json");
+  return join25(oriroDir(), "mcp-custom.json");
 }
 function readCustomServers() {
   try {
@@ -5857,13 +5915,13 @@ function readCustomServers() {
 }
 function saveCustomServer(server) {
   const rest = readCustomServers().filter((s) => s.name.toLowerCase() !== server.name.toLowerCase());
-  writeFileSync17(join24(ensureOriroDir(), "mcp-custom.json"), JSON.stringify([...rest, server], null, 2), "utf8");
+  writeFileSync17(join25(ensureOriroDir(), "mcp-custom.json"), JSON.stringify([...rest, server], null, 2), "utf8");
 }
 function removeCustomServer(name) {
   const before = readCustomServers();
   const after = before.filter((s) => s.name.toLowerCase() !== name.toLowerCase());
   if (after.length === before.length) return false;
-  writeFileSync17(join24(ensureOriroDir(), "mcp-custom.json"), JSON.stringify(after, null, 2), "utf8");
+  writeFileSync17(join25(ensureOriroDir(), "mcp-custom.json"), JSON.stringify(after, null, 2), "utf8");
   return true;
 }
 function trustedServerNames() {
@@ -5928,16 +5986,17 @@ async function assembleOriroSession(opts = {}) {
     ]
   });
   await resourceLoader.reload();
+  const { sm, note: sessionNote } = await resolveSessionManager(cwd, opts.resume);
   const { session, extensionsResult } = await createAgentSession2({
     model,
     authStorage,
     modelRegistry,
     settingsManager,
-    sessionManager: SessionManager2.inMemory(),
+    sessionManager: sm,
     resourceLoader
   });
   attachScribe(session);
-  return { session, extensionsResult };
+  return { session, extensionsResult, sessionNote };
 }
 
 // src/language/nllb-translator.ts
@@ -6405,7 +6464,7 @@ async function handleCompact(session, cmd) {
 
 // src/context/init-agents.ts
 import { existsSync as existsSync17, readFileSync as readFileSync21, readdirSync as readdirSync3, statSync as statSync3, writeFileSync as writeFileSync19 } from "fs";
-import { join as join25, basename } from "path";
+import { join as join26, basename } from "path";
 var CODE_EXT = {
   ts: "TypeScript",
   tsx: "TypeScript",
@@ -6438,7 +6497,7 @@ function readJson(p) {
 }
 function detectProject(cwd) {
   const facts = { name: basename(cwd) || "project", languages: [], commands: [], topDirs: [] };
-  const pkgPath = join25(cwd, "package.json");
+  const pkgPath = join26(cwd, "package.json");
   if (existsSync17(pkgPath)) {
     const pkg = readJson(pkgPath);
     if (typeof pkg.name === "string" && pkg.name) facts.name = pkg.name;
@@ -6447,11 +6506,11 @@ function detectProject(cwd) {
     for (const key of ["dev", "build", "test", "lint", "start"]) {
       if (scripts[key]) facts.commands.push({ label: key, cmd: `npm run ${key}` });
     }
-  } else if (existsSync17(join25(cwd, "pyproject.toml")) || existsSync17(join25(cwd, "requirements.txt"))) {
+  } else if (existsSync17(join26(cwd, "pyproject.toml")) || existsSync17(join26(cwd, "requirements.txt"))) {
     if (!facts.description) facts.description = "Python project";
-  } else if (existsSync17(join25(cwd, "Cargo.toml"))) {
+  } else if (existsSync17(join26(cwd, "Cargo.toml"))) {
     facts.commands.push({ label: "build", cmd: "cargo build" }, { label: "test", cmd: "cargo test" });
-  } else if (existsSync17(join25(cwd, "go.mod"))) {
+  } else if (existsSync17(join26(cwd, "go.mod"))) {
     facts.commands.push({ label: "build", cmd: "go build ./..." }, { label: "test", cmd: "go test ./..." });
   }
   const langCount = /* @__PURE__ */ new Map();
@@ -6466,7 +6525,7 @@ function detectProject(cwd) {
   } catch {
   }
   for (const e of entries) {
-    const full = join25(cwd, e);
+    const full = join26(cwd, e);
     let isDir = false;
     try {
       isDir = statSync3(full).isDirectory();
@@ -6479,7 +6538,7 @@ function detectProject(cwd) {
       try {
         for (const f of readdirSync3(full)) {
           try {
-            if (statSync3(join25(full, f)).isFile()) tallyExt(f);
+            if (statSync3(join26(full, f)).isFile()) tallyExt(f);
           } catch {
           }
         }
@@ -6513,7 +6572,7 @@ function generateAgentsMd(cwd) {
   return lines.join("\n");
 }
 function writeAgentsMd(cwd = process.cwd(), force = false) {
-  const path = join25(cwd, "AGENTS.md");
+  const path = join26(cwd, "AGENTS.md");
   const facts = detectProject(cwd);
   if (existsSync17(path) && !force) return { path, created: false, facts };
   writeFileSync19(path, generateAgentsMd(cwd), "utf8");
@@ -6542,6 +6601,37 @@ function handleInit(cmd, cwd = process.cwd()) {
   lines.push(dim(`    detected: ${f.languages.length ? f.languages.join(", ") : "no languages"}${f.commands.length ? ` \xB7 ${f.commands.length} command${f.commands.length === 1 ? "" : "s"}` : ""}${f.topDirs.length ? ` \xB7 ${f.topDirs.length} dir${f.topDirs.length === 1 ? "" : "s"}` : ""}`));
   lines.push(dim("    edit it to add house rules \u2014 ORIRO reads it automatically each session."));
   return lines;
+}
+
+// src/repl-ui/slash-sessions.ts
+function isSessionsSlash(cmd) {
+  return /^\/sessions?(\s|$)/i.test(cmd.trim());
+}
+function isUndoSlash(cmd) {
+  return /^\/undo(\s|$)/i.test(cmd.trim());
+}
+async function handleSessions() {
+  try {
+    return formatSessionList(await listSessions());
+  } catch (e) {
+    return [`  ${fgHex(PALETTE.error, "sessions failed")}: ${dim(e instanceof Error ? e.message : String(e))}`];
+  }
+}
+async function handleUndo(session) {
+  try {
+    const turns2 = session.getUserMessagesForForking();
+    if (turns2.length < 2) {
+      return [dim("  nothing to undo \u2014 this is the first turn of the session.")];
+    }
+    const target = turns2[turns2.length - 2];
+    if (!target) return [dim("  nothing to undo.")];
+    const res = await session.navigateTree(target.entryId, { label: "undo" });
+    if (res.cancelled) return [dim("  undo cancelled.")];
+    const preview = target.text.replace(/\s+/g, " ").trim().slice(0, 48);
+    return [`  ${fgHex(PALETTE.success, "\u21BA undone")} ${dim("\u2014 rewound to:")} ${accent(preview || "(prev turn)")}`];
+  } catch (e) {
+    return [`  ${fgHex(PALETTE.error, "undo failed")}: ${dim(e instanceof Error ? e.message : String(e))}`];
+  }
 }
 
 // src/repl-ui/tui-repl.ts
@@ -6626,7 +6716,8 @@ async function runTuiRepl(session) {
       const help = [
         "  Just type to chat \u2014 ORIRO writes and runs code for you (keyless, free).",
         `  ${accent("/routers")} pool add\xB7rotate   ${accent("/model")} <id\u2026> switch   ${accent("/usage")} health   ${accent("/trace")} tool+router activity   ${accent("/compact")} free context`,
-        `  ${accent("/review")} artifacts from the last reply   ${accent("/save")} <n> [path]   ${accent("/init")} write AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
+        `  ${accent("/review")} artifacts   ${accent("/save")} <n> [path]   ${accent("/init")} AGENTS.md   ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")}`,
+        `  ${accent("/sessions")} list saved   ${accent("/undo")} rewind a turn   ${dim("resume:")} ${accent("oriro -c")} / ${accent("oriro --resume <id>")}`,
         `  ${dim("Shift+Tab")} posture   ${dim("Alt+Shift+T")} thinking   ${accent("/help")}   ${accent("/exit")}`
       ].join("\n");
       chat.addChild(new Text(help, 0, 0));
@@ -6693,6 +6784,18 @@ async function runTuiRepl(session) {
       chat.addChild(new Text(handleInit(text).join("\n"), 0, 0));
       editor.setText("");
       tui.requestRender();
+      return;
+    }
+    if (isSessionsSlash(slash) || isUndoSlash(slash)) {
+      editor.setText("");
+      const pending = new Text(dim("  \u2026"), 0, 0);
+      chat.addChild(pending);
+      tui.requestRender();
+      void (async () => {
+        const lines = isUndoSlash(slash) ? await handleUndo(session) : await handleSessions();
+        pending.setText(lines.join("\n"));
+        tui.requestRender();
+      })();
       return;
     }
     if (slash === "/voice") {
@@ -6786,7 +6889,7 @@ ${english}`;
 // src/voice/mic.ts
 import { spawn as spawn3 } from "child_process";
 import { tmpdir as tmpdir3 } from "os";
-import { join as join26 } from "path";
+import { join as join27 } from "path";
 import { existsSync as existsSync18, statSync as statSync4 } from "fs";
 function recorders(outFile, seconds) {
   const dur = String(seconds);
@@ -6808,7 +6911,7 @@ function recorders(outFile, seconds) {
   ];
 }
 async function recordMic(seconds = 6) {
-  const outFile = join26(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
+  const outFile = join27(tmpdir3(), `oriro-voice-${process.pid}-${seconds}.wav`);
   for (const r of recorders(outFile, seconds)) {
     const okFile = await new Promise((resolve3) => {
       const child = spawn3(r.cmd, r.args, { stdio: "ignore" });
@@ -6878,7 +6981,8 @@ function replHelp() {
   ${dim("Just type to chat; ORIRO writes and runs code for you (keyless, free).")}
 
   ${dim("Models & routers")}   ${accent("/routers")} list\xB7add\xB7rotate the racing pool   ${accent("/model")} <id\u2026> switch
-  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} show tool + router activity   ${accent("/compact")} free context
+  ${dim("This session")}       ${accent("/usage")} pool health & turns   ${accent("/trace")} activity   ${accent("/compact")} free context   ${accent("/undo")} rewind a turn
+  ${dim("Continuity")}         ${accent("/sessions")} list saved sessions   ${dim("resume:")} ${accent("oriro -c")} ${dim("or")} ${accent("oriro --resume <id>")}
   ${dim("Artifacts")}          ${accent("/review")} code/SVG from the last reply   ${accent("/save")} <n> [path] write one
   ${dim("Project")}            ${accent("/init")} write a starter AGENTS.md ORIRO reads each session
   ${dim("Capabilities")}       ${accent("/skills")}   ${accent("/connectors")}   ${accent("/voice")} speak a turn
@@ -6888,10 +6992,12 @@ function replHelp() {
 
 `;
 }
-async function runRepl() {
+async function runRepl(opts = {}) {
   if (isFirstRun()) await runOnboarding();
   else stdout7.write(banner());
-  const { session } = await assembleOriroSession();
+  const { session, sessionNote } = await assembleOriroSession({ resume: opts.resume });
+  if (sessionNote) stdout7.write(`  ${dim(sessionNote)}
+`);
   setupVoiceInput();
   if (stdin6.isTTY && stdout7.isTTY) {
     await runTuiRepl(session);
@@ -6962,6 +7068,14 @@ async function runReadlineRepl(session) {
       }
       if (isInitSlash(slash)) {
         stdout7.write(handleInit(line).join("\n") + "\n");
+        continue;
+      }
+      if (isSessionsSlash(slash)) {
+        stdout7.write((await handleSessions()).join("\n") + "\n");
+        continue;
+      }
+      if (isUndoSlash(slash)) {
+        stdout7.write((await handleUndo(session)).join("\n") + "\n");
         continue;
       }
       if (isArtifactSlash(slash)) {
@@ -7092,7 +7206,7 @@ async function confirmDestructive(what, opts = {}) {
 
 // src/config/store.ts
 import { readFileSync as readFileSync22, writeFileSync as writeFileSync20, mkdirSync as mkdirSync16 } from "fs";
-import { join as join27 } from "path";
+import { join as join28 } from "path";
 var KEYS = {
   output: {
     desc: "default output format for list commands: text | json | csv",
@@ -7114,7 +7228,7 @@ function validateConfig(key, value) {
   return KEYS[key].validate?.(value) ?? null;
 }
 function file4() {
-  return join27(oriroDir(), "config.json");
+  return join28(oriroDir(), "config.json");
 }
 var cache = null;
 function readAll() {
@@ -7196,6 +7310,27 @@ function isMachineOutput(opts) {
 function outputError(opts) {
   const f = (opts.output ?? configGet("output") ?? "text").toLowerCase();
   return f === "json" || f === "csv" || f === "text" ? null : `invalid --output '${opts.output}' \u2014 use text | json | csv`;
+}
+
+// src/commands/sessions.ts
+function registerSessionsCommand(program2) {
+  program2.command("sessions").description("list your saved chat sessions (resume with `oriro -c` or `oriro --resume <id>`)").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action(async (opts) => {
+    const oerr = outputError(opts);
+    if (oerr) die(oerr);
+    const infos = await listSessions();
+    if (isMachineOutput(opts) || opts.query) {
+      process.stdout.write(
+        renderList2(sessionRows(infos), {
+          output: opts.output,
+          query: opts.query,
+          columns: ["id", "messages", "modified", "first", "cwd"]
+        }) + "\n"
+      );
+      return;
+    }
+    heading("Sessions");
+    process.stdout.write(formatSessionList(infos).join("\n") + "\n");
+  });
 }
 
 // src/commands/routers.ts
@@ -7696,9 +7831,9 @@ function registerConnectorsCommand(program2) {
 
 // src/channels/config.ts
 import { readFileSync as readFileSync25, writeFileSync as writeFileSync21 } from "fs";
-import { join as join28 } from "path";
+import { join as join29 } from "path";
 function file5() {
-  return join28(oriroDir(), "channels.json");
+  return join29(oriroDir(), "channels.json");
 }
 function readChannels() {
   try {
@@ -7711,10 +7846,10 @@ function readChannels() {
 function saveChannel(cfg) {
   const all = readChannels().filter((c) => c.kind !== cfg.kind);
   all.push(cfg);
-  writeFileSync21(join28(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
+  writeFileSync21(join29(ensureOriroDir(), "channels.json"), JSON.stringify(all, null, 2), "utf8");
 }
 function removeChannel(kind) {
-  writeFileSync21(join28(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
+  writeFileSync21(join29(ensureOriroDir(), "channels.json"), JSON.stringify(readChannels().filter((c) => c.kind !== kind), null, 2), "utf8");
 }
 
 // src/channels/telegram.ts
@@ -7831,9 +7966,9 @@ async function startDiscord(token) {
 }
 
 // src/channels/whatsapp.ts
-import { join as join29 } from "path";
+import { join as join30 } from "path";
 function whatsappAuthDir() {
-  return join29(oriroDir(), "whatsapp-auth");
+  return join30(oriroDir(), "whatsapp-auth");
 }
 async function startWhatsApp() {
   let baileys;
@@ -7952,7 +8087,7 @@ function registerChannelsCommand(program2) {
 
 // src/commands/skills.ts
 import { existsSync as existsSync21, statSync as statSync5, mkdirSync as mkdirSync17, cpSync, rmSync as rmSync4 } from "fs";
-import { resolve as resolve2, join as join30, basename as basename2, dirname as dirname4 } from "path";
+import { resolve as resolve2, join as join31, basename as basename2, dirname as dirname4 } from "path";
 function registerSkillsCommand(program2) {
   const skills = program2.command("skills").description("the ORIRO skill library \u2014 bundled + your own");
   skills.command("list").description("show CORE / TAIL skill counts (use --all to list names)").option("-a, --all", "list every skill name").option("-o, --output <fmt>", "output format: text (default) | json | csv").option("-q, --query <expr>", "filter/select: 'field', 'field=value', or 'field=value:selectField'").action(async (opts) => {
@@ -7989,22 +8124,22 @@ function registerSkillsCommand(program2) {
     mkdirSync17(dest, { recursive: true });
     const st = statSync5(src);
     if (st.isDirectory()) {
-      if (!existsSync21(join30(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
+      if (!existsSync21(join31(src, "SKILL.md"))) die(`no SKILL.md in ${src} \u2014 a skill folder must contain SKILL.md`);
       const name = basename2(src);
-      cpSync(src, join30(dest, name), { recursive: true });
-      ok(`added skill ${accent(name)} \u2192 ${join30(dest, name)}`);
+      cpSync(src, join31(dest, name), { recursive: true });
+      ok(`added skill ${accent(name)} \u2192 ${join31(dest, name)}`);
     } else if (basename2(src).toLowerCase() === "skill.md") {
       const name = basename2(dirname4(src)) || "custom-skill";
-      mkdirSync17(join30(dest, name), { recursive: true });
-      cpSync(src, join30(dest, name, "SKILL.md"));
-      ok(`added skill ${accent(name)} \u2192 ${join30(dest, name)}`);
+      mkdirSync17(join31(dest, name), { recursive: true });
+      cpSync(src, join31(dest, name, "SKILL.md"));
+      ok(`added skill ${accent(name)} \u2192 ${join31(dest, name)}`);
     } else {
       die("expected a folder containing SKILL.md, or a SKILL.md file");
     }
     info("It loads on next launch \u2014 and is available in chat via /skill.");
   });
   skills.command("remove <name>").description("remove a skill you added").option("-f, --force", "skip the confirmation prompt").action(async (name, opts) => {
-    const target = join30(userSkillsDir(), name);
+    const target = join31(userSkillsDir(), name);
     if (!existsSync21(target)) {
       info(`'${name}' is not a user-added skill \u2014 nothing to remove`);
       return;
@@ -8593,7 +8728,7 @@ function registerConfigCommand(program2) {
 
 // src/commands/setup.ts
 import { rmSync as rmSync5 } from "fs";
-import { join as join31 } from "path";
+import { join as join32 } from "path";
 import { stdin as stdin12, stdout as stdout11 } from "process";
 var MARKERS = [
   "language.json",
@@ -8601,14 +8736,14 @@ var MARKERS = [
   "skills-onboarded.json",
   "connectors-onboarded.json",
   "models-onboarded.json",
-  join31("routers", "onboarded.json")
+  join32("routers", "onboarded.json")
 ];
 function registerSetupCommand(program2) {
   program2.command("setup").description("run the guided setup wizard (language \xB7 routers \xB7 connectors \xB7 skills \xB7 avatar)").option("--reset", "clear your settled choices and re-ask every step").action(async (opts) => {
     if (opts.reset) {
       for (const m of MARKERS) {
         try {
-          rmSync5(join31(oriroDir(), m), { force: true });
+          rmSync5(join32(oriroDir(), m), { force: true });
         } catch {
         }
       }
@@ -8626,7 +8761,7 @@ function registerSetupCommand(program2) {
 
 // src/commands/import.ts
 import { existsSync as existsSync22, readFileSync as readFileSync27, readdirSync as readdirSync4, statSync as statSync6, cpSync as cpSync2, mkdirSync as mkdirSync18 } from "fs";
-import { join as join32, basename as basename3 } from "path";
+import { join as join33, basename as basename3 } from "path";
 function registerImportCommand(program2) {
   const imp = program2.command("import").description("migrate from another CLI (MCP servers, skills)");
   imp.command("mcp <file>").description("import MCP servers from a Claude-compatible mcp.json (Guardian-vetted)").action((file6) => {
@@ -8683,10 +8818,10 @@ function registerImportCommand(program2) {
     const dest = userSkillsDir();
     mkdirSync18(dest, { recursive: true });
     heading("Import skills");
-    const sources = existsSync22(join32(dir, "SKILL.md")) ? [dir] : readdirSync4(dir).map((e) => join32(dir, e)).filter((p) => statSync6(p).isDirectory() && existsSync22(join32(p, "SKILL.md")));
+    const sources = existsSync22(join33(dir, "SKILL.md")) ? [dir] : readdirSync4(dir).map((e) => join33(dir, e)).filter((p) => statSync6(p).isDirectory() && existsSync22(join33(p, "SKILL.md")));
     let n = 0;
     for (const src of sources) {
-      cpSync2(src, join32(dest, basename3(src)), { recursive: true });
+      cpSync2(src, join33(dest, basename3(src)), { recursive: true });
       process.stdout.write(`  ${fgHex(PALETTE.success, "\u2713")} ${accent(basename3(src))}
 `);
       n++;
@@ -8747,7 +8882,7 @@ function enableHelpOnError(program2) {
 // src/cli.ts
 var version = createRequire(import.meta.url)("../package.json").version;
 var program = new Command();
-program.name("oriro").description("ORIRO \u2014 a free, on-device-friendly terminal AI agent.").version(version, "-v, --version").option("-p, --print <prompt>", "headless one-shot: run a single prompt, print the answer, exit (CI-friendly)").option("--output-format <fmt>", "with --print: text | json | stream-json", "text").action(async (options, command) => {
+program.name("oriro").description("ORIRO \u2014 a free, on-device-friendly terminal AI agent.").version(version, "-v, --version").option("-p, --print <prompt>", "headless one-shot: run a single prompt, print the answer, exit (CI-friendly)").option("--output-format <fmt>", "with --print: text | json | stream-json", "text").option("-c, --continue", "resume your most recent session in this folder").option("--resume <id>", "resume a specific saved session (id or unique prefix \u2014 see: oriro sessions)").option("--fork <id>", "start a new session branched from an existing one").option("--no-session", "don't save this session to disk (ephemeral)").action(async (options, command) => {
   if (options.print !== void 0) {
     const fmt = options.outputFormat ?? "text";
     if (!isOutputFormatMode(fmt)) {
@@ -8774,8 +8909,15 @@ program.name("oriro").description("ORIRO \u2014 a free, on-device-friendly termi
     process.exitCode = 1;
     return;
   }
-  await runRepl();
+  const resume = {
+    continue: options.continue,
+    resumeId: options.resume,
+    forkId: options.fork,
+    ephemeral: options.session === false
+  };
+  await runRepl({ resume });
 });
+registerSessionsCommand(program);
 registerRoutersCommand(program);
 registerScribeCommand(program);
 registerConnectorsCommand(program);

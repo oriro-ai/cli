@@ -7,6 +7,8 @@ import { createRequire } from "node:module";
 import { Command } from "commander";
 import { runRepl } from "./repl.js";
 import { runHeadless, isOutputFormatMode } from "./headless.js";
+import { registerSessionsCommand } from "./commands/sessions.js";
+import type { ResumeOpts } from "./sessions/store.js";
 import { registerRoutersCommand } from "./commands/routers.js";
 import { registerScribeCommand } from "./commands/scribe.js";
 import { registerConnectorsCommand } from "./commands/connectors.js";
@@ -33,8 +35,13 @@ program
   .version(version, "-v, --version")
   .option("-p, --print <prompt>", "headless one-shot: run a single prompt, print the answer, exit (CI-friendly)")
   .option("--output-format <fmt>", "with --print: text | json | stream-json", "text")
+  // Session continuity (V0.3.4): sessions persist locally under ~/.oriro/sessions; resume on launch.
+  .option("-c, --continue", "resume your most recent session in this folder")
+  .option("--resume <id>", "resume a specific saved session (id or unique prefix — see: oriro sessions)")
+  .option("--fork <id>", "start a new session branched from an existing one")
+  .option("--no-session", "don't save this session to disk (ephemeral)")
   // no subcommand → onboarding + chat REPL; an UNKNOWN command must error (not silently open the REPL).
-  .action(async (options: { print?: string; outputFormat?: string }, command: Command) => {
+  .action(async (options: { print?: string; outputFormat?: string; continue?: boolean; resume?: string; fork?: string; session?: boolean }, command: Command) => {
     // Headless one-shot (scriptable / CI). Everything else on the root stays interactive.
     if (options.print !== undefined) {
       const fmt = options.outputFormat ?? "text";
@@ -53,9 +60,17 @@ program
       process.exitCode = 1;
       return;
     }
-    await runRepl();
+    // commander maps --no-session → options.session === false (negatable). Build the resume intent.
+    const resume: ResumeOpts = {
+      continue: options.continue,
+      resumeId: options.resume,
+      forkId: options.fork,
+      ephemeral: options.session === false,
+    };
+    await runRepl({ resume });
   });
 
+registerSessionsCommand(program);
 registerRoutersCommand(program);
 registerScribeCommand(program);
 registerConnectorsCommand(program);
